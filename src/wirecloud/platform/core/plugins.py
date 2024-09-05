@@ -21,18 +21,22 @@
 # TODO Add translations, finish the class implementation
 
 import os
-import json
+import orjson as json
 from hashlib import sha1, md5
 from typing import Any, Optional
 import src.wirecloud.platform as platform
 from src import settings
 from src.wirecloud.platform.plugins import (get_active_features_info, get_plugin_urls, AjaxEndpoint, build_url_template,
                                             WirecloudPlugin)
-from src.wirecloud.platform.context.routes import router as context_router
 from src.wirecloud.platform.context.schemas import BaseContextKey, WorkspaceContextKey
 from src.wirecloud.platform.preferences.schemas import PreferenceKey, SelectEntry, TabPreferenceKey
 from src.wirecloud.platform.urls import patterns
 from src.wirecloud.commons.auth.schemas import UserAll, Session
+
+from src.wirecloud.platform.context.routes import router as context_router
+from src.wirecloud.platform.localcatalogue.routes import (router as localcatalogue_router,
+                                                          resources_router as localcatalogue_resources_router)
+
 
 WIRING_EDITOR_FILES = (
     'js/wirecloud/ui/WiringEditor.js',
@@ -251,7 +255,7 @@ LANDING_DASHBOARD_FILE = os.path.join(BASE_PATH, 'initial', 'WireCloud_landing-d
 
 
 def get_version_hash():
-    return sha1(json.dumps(get_active_features_info(), ensure_ascii=False, sort_keys=True).encode('utf8')).hexdigest()
+    return sha1(json.dumps(get_active_features_info())).hexdigest()
 
 
 class WirecloudCorePlugin(WirecloudPlugin):
@@ -270,6 +274,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
         super().__init__(app)
 
         app.include_router(context_router, prefix="/api/context", tags=["Context"])
+        app.include_router(localcatalogue_resources_router, prefix="/api/resources", tags=["Local Catalogue"])
 
     def get_platform_context_definitions(self) -> dict[str, BaseContextKey]:
         return {

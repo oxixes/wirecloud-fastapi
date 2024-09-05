@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from typing import Any
 
 # Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
 
@@ -18,23 +17,11 @@ from typing import Any
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from src.wirecloud.commons.auth.routes import router as auth_router
-from src.wirecloud.commons.urls import patterns
-from src.wirecloud.platform.plugins import WirecloudPlugin
-from src.wirecloud.commons.auth.schemas import UserLogin
-
-from fastapi import FastAPI
-
-
-class WirecloudCommonsPlugin(WirecloudPlugin):
-    urls = patterns
-
-    def __init__(self, app: FastAPI):
-        super().__init__(app)
-
-        app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
-
-    def get_openapi_extra_schemas(self) -> dict[str, dict[str, Any]]:
-        return {
-            "UserLogin": UserLogin.model_json_schema()
-        }
+# GET /
+get_resource_collection_summary = "Get all available resources"
+get_resource_collection_description = "Get all available resources in the local catalogue. If the user is not authenticated, only public resources will be returned."
+get_resource_collection_process_urls_description = "Process URLs in the response"
+get_resource_collection_response_description = "A dictionary containing the available resources. The keys are the local URI part of the resources and the values are the processed information of the resources"
+get_resource_collection_not_acceptable_response_description = "Invalid request content type"
+get_resource_entry_group_validation_error_response_description = "The request data (the query) was invalid"
+get_resource_collection_response_example = {}

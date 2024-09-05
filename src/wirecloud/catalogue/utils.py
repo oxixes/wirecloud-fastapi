@@ -41,7 +41,7 @@ from src.wirecloud.catalogue.schemas import (CatalogueResource, CatalogueResourc
 from src.wirecloud.catalogue.crud import (create_catalogue_resource, has_resource_user,
                                           get_all_catalogue_resource_versions, get_all_catalogue_resources,
                                           update_catalogue_resource_description, delete_catalogue_resources)
-from src.wirecloud.commons.auth.schemas import UserAll
+from src.wirecloud.commons.auth.schemas import User, UserAll
 from src.wirecloud.commons.utils.downloader import download_http_content, download_local_file
 from src.wirecloud.commons.utils.html import clean_html
 from src.wirecloud.commons.utils.http import get_absolute_reverse_url, force_trailing_slash
@@ -191,7 +191,7 @@ def check_packaged_resource(wgt_file: WgtFile, resource_info: Optional[MACD] = N
     check_invalid_embedded_resources(wgt_file, resource_info)
 
 
-async def add_packaged_resource(db: DBSession, file: Union[str, IO[bytes]], user: UserAll,
+async def add_packaged_resource(db: DBSession, file: Union[str, IO[bytes]], user: Optional[User],
                                 wgt_file: Optional[WgtFile] = None, template: Optional[TemplateParser] = None,
                                 deploy_only: bool = False) -> Optional[CatalogueResource]:
     close_wgt = False
@@ -249,17 +249,14 @@ async def add_packaged_resource(db: DBSession, file: Union[str, IO[bytes]], user
         return resource
 
 
-async def get_resource_data(db: DBSession, resource: CatalogueResource, user: Optional[UserAll],
+async def get_resource_data(db: DBSession, resource: CatalogueResource, user: Optional[User],
                             request: Optional[Request] = None) -> CatalogueResourceDataSummary:
     """Gets all the information related to the given resource."""
     resource_info = resource.get_processed_info(request)
 
-    template_uri = get_absolute_reverse_url('wirecloud_catalogue.media', kwargs={
-        'vendor': resource.vendor,
-        'name': resource.short_name,
-        'version': resource.version,
-        'file_path': resource.template_uri
-    }, request=request)
+    template_uri = get_absolute_reverse_url('wirecloud_catalogue.media', request=request,
+                                            vendor=resource.vendor, name=resource.short_name,
+                                            version=resource.version, file_path=resource.template_uri)
 
     wgt_path = os.path.join(wgt_deployer.get_base_dir(resource.vendor, resource.short_name, resource.version), resource.template_uri)
     size = os.path.getsize(wgt_path)
@@ -285,8 +282,7 @@ async def get_resource_data(db: DBSession, resource: CatalogueResource, user: Op
                 description_code = download_local_file(longdescription_path).decode('utf-8')
                 longdescription = clean_html(markdown.markdown(description_code, output_format='xhtml'), base_url=longdescription_base_url)
             except Exception:
-                longdescription = resource_info['description']
-
+                longdescription = resource_info.description
     else:
         longdescription = resource_info.description
 
@@ -319,12 +315,12 @@ async def get_resource_data(db: DBSession, resource: CatalogueResource, user: Op
     )
 
 
-async def get_resource_group_data(db: DBSession, resources: list[CatalogueResource], user: Optional[UserAll],
+async def get_resource_group_data(db: DBSession, resources: list[CatalogueResource], user: Optional[User],
                                   request: Optional[Request] = None) -> CatalogueResourceDataSummaryGroup:
     data = CatalogueResourceDataSummaryGroup(
         vendor=resources[0].vendor,
         name=resources[0].short_name,
-        type=resources[0].type,
+        type=resources[0].type.name,
         versions=[]
     )
 
@@ -392,7 +388,7 @@ async def check_vendor_permissions(db: DBSession, user: Optional[UserAll], vendo
         return False
 
     vendor = vendor.strip()
-    options = [user.username]
+    options = [user.username.lower()]
 
     # TODO Use migrate this to the fastapi version
     """

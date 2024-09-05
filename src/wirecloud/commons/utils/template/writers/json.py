@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-import json
+import orjson as json
 
 from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACType
 
@@ -56,4 +56,4 @@ def write_json_description(template_info: MACD) -> str:
             remove_empty_string_fields(('title',), tab)
 
     del template_info_json['translation_index_usage']
-    return json.dumps(template_info_json, sort_keys=True, indent=4, ensure_ascii=False)
+    return json.dumps(template_info_json).decode('utf-8')

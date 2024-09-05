@@ -5,7 +5,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from wirecloud.database import get_db_url
+from src.wirecloud.database import get_db_url
 from settings import INSTALLED_APPS
 from os import path
 

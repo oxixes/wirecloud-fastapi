@@ -24,11 +24,12 @@ from urllib.parse import urlparse
 from fastapi import Request
 from typing import Optional
 
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD
+from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACType, Vendor, Name, Version
 from src.wirecloud.commons.utils.template.base import Contact
-from src.wirecloud.commons.auth.schemas import User
+from src.wirecloud.commons.auth.schemas import User, UserAll
 from src.wirecloud.commons.utils.http import get_absolute_reverse_url
 from src.wirecloud.commons.utils.template import TemplateParser
+from src.wirecloud.database import DBSession
 
 from src.wirecloud.catalogue import docs
 
@@ -59,6 +60,21 @@ class CatalogueResourceBase(BaseModel):
     def local_uri_part(self) -> str:
         return self.vendor + '/' + self.short_name + '/' + self.version
 
+    # TODO Take into account user permissions too
+    async def is_removable_by(self, db: DBSession, user: UserAll, vendor: bool = False) -> bool:
+        from src.wirecloud.catalogue.utils import check_vendor_permissions
+
+        if user.is_superuser:
+            return True
+        else:
+            return vendor is False or await check_vendor_permissions(db, user, self.vendor)
+
+    # TODO Take into account user permissions too
+    async def is_available_for(self, db: DBSession, user: UserAll) -> bool:
+        from src.wirecloud.catalogue.crud import is_resource_available_for_user
+
+        return self.public or await is_resource_available_for_user(db, self, user)
+
     def get_template_url(self, request: Optional[Request] = None, for_base: bool = False,
                          url_pattern_name: str = 'wirecloud_catalogue.media') -> str:
         return get_template_url(self.vendor, self.short_name, self.version, '' if for_base else self.template_uri,
@@ -66,11 +82,12 @@ class CatalogueResourceBase(BaseModel):
 
     def get_template(self, request: Optional[Request] = None, url_pattern_name: str = 'wirecloud_catalogue.media') -> TemplateParser:
         template_uri = self.get_template_url(request=request, url_pattern_name=url_pattern_name)
-        parser = TemplateParser(self.json_description, base=template_uri)
+        parser = TemplateParser(self.description.model_dump_json(), base=template_uri)
         return parser
 
-    def get_processed_info(self, request=None, lang=None, process_urls=True, translate=True, process_variables=False,
-                           url_pattern_name='wirecloud_catalogue.media') -> MACD:
+    def get_processed_info(self, request: Optional[Request] = None, lang: Optional[str] = None,
+                           process_urls: bool = True, translate: bool = True, process_variables: bool = False,
+                           url_pattern_name: str = 'wirecloud_catalogue.media') -> MACD:
         # TODO Handle translations
         lang = None
 
@@ -105,7 +122,7 @@ class CatalogueResourceDataSummaryPermissions(BaseModel):
 
 
 class CatalogueResourceDataSummaryBase(BaseModel):
-    version: str = Field(description=docs.catalogue_resource_data_summary_version_description)
+    version: Version = Field(description=docs.catalogue_resource_data_summary_version_description)
     date: float = Field(description=docs.catalogue_resource_data_summary_date_description)
     permissions: CatalogueResourceDataSummaryPermissions = Field(
         description=docs.catalogue_resource_data_summary_permissions_description)
@@ -126,10 +143,10 @@ class CatalogueResourceDataSummaryBase(BaseModel):
     issuetracker: str = Field(description=docs.catalogue_resource_data_summary_issuetracker_description)
 
 
-class CatalogueResourceDataSummaryIdentifier(BaseModel):
-    vendor: str = Field(description=docs.catalogue_resource_data_summary_vendor_description)
-    name: str = Field(description=docs.catalogue_resource_data_summary_name_description)
-    type: str = Field(description=docs.catalogue_resource_data_summary_type_description)
+class CatalogueResourceDataSummaryIdentifier(BaseModel, use_enum_values=True):
+    vendor: Vendor = Field(description=docs.catalogue_resource_data_summary_vendor_description)
+    name: Name = Field(description=docs.catalogue_resource_data_summary_name_description)
+    type: MACType = Field(description=docs.catalogue_resource_data_summary_type_description)
 
 
 class CatalogueResourceDataSummary(CatalogueResourceDataSummaryBase, CatalogueResourceDataSummaryIdentifier):
@@ -140,15 +157,15 @@ class CatalogueResourceDataSummaryGroup(CatalogueResourceDataSummaryIdentifier):
     versions: list[CatalogueResourceDataSummaryBase] = Field(description=docs.catalogue_resource_data_summary_group_versions_description)
 
 
-def get_template_url(vendor: str, name: str, version: str, url: str, request: Optional[Request] = None,
+class CatalogueResourceDeleteResults(BaseModel):
+    affectedVersions: list[Version] = Field(description=docs.catalogue_resource_delete_results_affected_versions_description)
+
+
+def get_template_url(vendor: Vendor, name: Name, version: Version, url: str, request: Optional[Request] = None,
                      url_pattern_name: str = 'wirecloud_catalogue.media') -> str:
     if urlparse(url).scheme == '':
-        template_url = get_absolute_reverse_url(url_pattern_name, kwargs={
-            'vendor': vendor,
-            'name': name,
-            'version': version,
-            'file_path': url
-        }, request=request)
+        template_url = get_absolute_reverse_url(url_pattern_name, request=request, vendor=vendor, name=name,
+                                                version=version, file_path=url)
     else:
         template_url = url
 

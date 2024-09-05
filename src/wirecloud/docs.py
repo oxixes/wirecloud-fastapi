@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
 # Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
 
 # This file is part of Wirecloud.
@@ -19,10 +18,12 @@ import json
 
 # TODO Move into separate files
 
+import orjson as json
 from typing import Optional
 from src.wirecloud.commons.utils.http import get_xml_error_response, get_json_error_response, HTTPError
 
 title = "WireCloud"
+logo_url = "https://raw.githubusercontent.com/Wirecloud/wirecloud/develop/src/wirecloud/defaulttheme/static/images/logos/wc1.png"
 version = "2.0.0"
 summary = "Widgets Container and Mashup edition tools. Reference implementation of the FIWARE Application Mashup GE."
 license_info = {"name": "AGPL-3.0 with classpath-like exception",
@@ -88,24 +89,66 @@ def generate_error_response_json_example(description: str, details: Optional[dic
 
 
 def generate_error_response_openapi_description(model_desc: str, description: str,
-                                                details: Optional[dict] = None) -> dict:
-    return {"description": model_desc,
-            "model": HTTPError,
-            "content": {
-                "application/json": {
-                    "example": json.loads(generate_error_response_json_example(description, details)),
-                },
-                "application/xml": {
-                    "schema": error_response_xml_schema,
-                    "example": generate_error_response_xml_example(description, details)
-                },
-                "text/plain": {
-                    "example": description
-                },
-                "text/html": {
-                    "example": "<h1>{}</h1>".format(description)
-                }
-            }}
+                                                details: Optional[dict] = None, include_schema: bool = True) -> dict:
+    result = {"description": model_desc,
+              "content": {
+                  "application/json": {
+                      "schema": {
+                          "$ref": "#/components/schemas/HTTPError"
+                      },
+                      "example": json.loads(generate_error_response_json_example(description, details)),
+                  },
+                  "application/xml": {
+                      "schema": error_response_xml_schema,
+                      "example": generate_error_response_xml_example(description, details)
+                  },
+                  "text/plain": {
+                      "example": description
+                  },
+                  "text/html": {
+                      "example": "<h1>{}</h1>".format(description)
+                  },
+                  "application/xhtml+xml": {
+                      "example": "<h1>{}</h1>".format(description)
+                  }
+              }}
+
+    if include_schema:
+        result["model"] = HTTPError
+
+    return result
+
+
+def generate_not_found_response_openapi_description(model_desc: str, include_schema: bool = True) -> dict:
+    return generate_error_response_openapi_description(model_desc, 'Page Not Found',
+                                                       include_schema=include_schema)
+
+
+def generate_validation_error_response_openapi_description(model_desc: str, include_schema: bool = True) -> dict:
+    return generate_error_response_openapi_description(model_desc, 'Invalid payload',
+                                                       include_schema=include_schema)
+
+
+def generate_not_acceptable_response_openapi_description(model_desc: str, mime_types: list[str], include_schema: bool = True) -> dict:
+    msg = "The requested resource is only capable of generating content not acceptable according to the Accept headers sent in the request"
+    details = {"mime_types": mime_types}
+    return generate_error_response_openapi_description(model_desc, msg, details, include_schema=include_schema)
+
+
+def generate_unsupported_media_type_response_openapi_description(model_desc: str, include_schema: bool = True) -> dict:
+    msg = "Unsupported request media type"
+    return generate_error_response_openapi_description(model_desc, msg, include_schema=include_schema)
+
+
+def generate_auth_required_response_openapi_description(model_desc: str, include_schema: bool = True) -> dict:
+    return generate_error_response_openapi_description(model_desc, "Authentication required",
+                                                       include_schema=include_schema)
+
+
+def generate_permission_denied_response_openapi_description(model_desc: str, msg: Optional[str], include_schema: bool = True) -> dict:
+    if msg is None:
+        msg = "Permission denied"
+    return generate_error_response_openapi_description(model_desc, msg, include_schema=include_schema)
 
 
 # AUTH

@@ -377,7 +377,7 @@ def get_response_proxy_processors():
     return _wirecloud_response_proxy_processors
 
 
-def build_url_template(urltemplate: URLTemplate, kwargs: Optional[list[str]] = None, prefix: Optional[str] = None):
+def build_url_template(urltemplate: URLTemplate, kwargs: Optional[list[str]] = None, prefix: Optional[str] = None) -> str:
     if kwargs is None:
         kwargs = []
 
@@ -396,6 +396,16 @@ def build_url_template(urltemplate: URLTemplate, kwargs: Optional[list[str]] = N
     template.replace('{', '%(').replace('}', ')s')
 
     return template
+
+
+def get_extra_openapi_schemas() -> dict[str, dict[str, Any]]:
+    plugins = get_plugins()
+    schemas = {}
+
+    for plugin in plugins:
+        schemas.update(plugin.get_openapi_extra_schemas())
+
+    return schemas
 
 
 class WirecloudPlugin:
@@ -460,6 +470,9 @@ class WirecloudPlugin:
         return {}
 
     def get_api_auth_backends(self):
+        return {}
+
+    def get_openapi_extra_schemas(self) -> dict[str, dict[str, Any]]:
         return {}
 
     def populate(self, wirecloud_user, log):

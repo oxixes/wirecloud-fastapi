@@ -8,5 +8,12 @@
       <jdbc-url>jdbc:postgresql://localhost:5432/wirecloud</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="wirecloud_fastapi@localhost" uuid="0a6fadeb-e994-4c1d-88fe-06682d9198b0">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:5432/wirecloud_fastapi</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>

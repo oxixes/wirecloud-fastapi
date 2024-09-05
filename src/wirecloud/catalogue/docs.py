@@ -30,7 +30,7 @@ catalogue_resource_data_summary_authors_description = "Authors of the catalogue 
 catalogue_resource_data_summary_contributors_description = "Contributors of the catalogue resource"
 catalogue_resource_data_summary_title_description = "The title of the catalogue resource"
 catalogue_resource_data_summary_description_description = "The description of the catalogue resource"
-catalogue_resource_data_summary_longdescription_description = "A markdown description of the catalogue resource"
+catalogue_resource_data_summary_longdescription_description = "A HTML description of the catalogue resource"
 catalogue_resource_data_summary_email_description = "The contact email of the catalogue resource author or vendor"
 catalogue_resource_data_summary_image_description = "The image URI of the catalogue resource"
 catalogue_resource_data_summary_homepage_description = "The homepage URL of the catalogue resource"
@@ -50,9 +50,226 @@ catalogue_resource_data_summary_type_description = "The type of the catalogue re
 # CatalogueResourceDataSummaryGroup
 catalogue_resource_data_summary_group_versions_description = "List of version descriptions of the catalogue resource"
 
+# CatalogueResourceDeleteResults
+catalogue_resource_delete_results_affected_versions_description = "The list of affected versions of the catalogue resource"
+
+# POST /resources
+create_resource_entry_request_schema_form = {
+    "type": "object",
+    "properties": {
+        "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "The file to create the catalogue resource from"
+        },
+        "public": {
+            "type": "boolean",
+            "description": "Whether the catalogue resource should be public or not"
+        }
+    },
+    "required": ["file"]
+}
+create_resource_entry_request_schema_binary = {
+    "type": "string",
+    "format": "binary",
+    "description": "The file to create the catalogue resource from"
+}
+create_resource_entry_summary = "Create a catalogue resource"
+create_resource_entry_description = "Creates a catalogue resource from the provided file."
+create_resource_entry_created_response_description = "The catalogue resource was created"
+create_resource_entry_bad_request_response_description = "Missing or invalid data was provided"
+create_resource_entry_auth_required_response_description = "Authentication is required to create the catalogue resource"
+create_resource_entry_permission_denied_response_description = "The user does not have permission to create the catalogue resource"
+create_resource_entry_conflict_response_description = "The catalogue resource already exists"
+
 # GET /resource/{vendor}/{name}
-get_resource_entry_group_summary = "Get version descriptions"
+get_resource_entry_group_summary = "Get catalogue resource version descriptions"
 get_resource_entry_group_description = "Get the version descriptions of a catalogue resource."
 get_resource_entry_group_response_description = "The version descriptions of a catalogue resource"
 get_resource_entry_group_vendor_description = "The vendor of the catalogue resource"
 get_resource_entry_group_name_description = "The name of the catalogue resource"
+get_resource_entry_group_not_found_response_description = "The catalogue resource was not found"
+get_resource_entry_group_not_acceptable_response_description = "Invalid request content type"
+get_resource_entry_group_validation_error_response_description = "The request data was invalid"
+get_resource_entry_group_response_example = {
+  "vendor": "Wirecloud",
+  "name": "awesome-widget",
+  "type": "widget",
+  "versions": [
+    {
+      "version": "1.0.0.",
+      "date": 1722902021135,
+      "permissions": {
+        "delete": False,
+        "uninstall": False
+      },
+      "authors": [
+        {
+          "name": "Wirecloud",
+          "email": "wirecloud@example.com",
+          "url": "https://wirecloud.example.com"
+        }
+      ],
+      "contributors": [
+          {
+            "name": "John Doe",
+            "email": "john.doe@wirecloud.example.com",
+            "url": "https://wirecloud.example.com/johndoe"
+          }
+      ],
+      "title": "Awesome Widget",
+      "description": "This is an awesome widget",
+      "longdescription": "<p>Using this widget makes you</p>\n<h2>awesome</h2>",
+      "email": "wirecloud@example.com",
+      "image": "https://wirecloud.example.com/catalogue/media/Wirecloud/awesome-widget/1.0.0/images/catalogue.png",
+      "homepage": "https://wirecloud.example.com",
+      "doc": "https://wirecloud.example.com/catalogue/media/Wirecloud/awesome-widget/1.0.0/doc/userguide.md",
+      "changelog": "doc/changelog.md",
+      "size": 5208,
+      "uriTemplate": "https://wirecloud.example.com/catalogue/media/Wirecloud/awesome-widget/1.0.0/Wirecloud_awesome-widget_1.0.0.wgt",
+      "license": "MIT",
+      "licenseurl": "https://opensource.org/licenses/MIT",
+      "issuetracker": "https://wirecloud.example.com/awesome-widget/issues"
+    }
+  ]
+}
+
+# DELETE /resource/{vendor}/{name}
+delete_resource_entry_group_summary = "Delete all versions of a catalogue resource"
+delete_resource_entry_group_description = "Delete all versions of a catalogue resource. This action is irreversible."
+delete_resource_entry_group_response_description = "The affected versions of the catalogue resource"
+delete_resource_entry_group_vendor_description = "The vendor of the catalogue resource"
+delete_resource_entry_group_name_description = "The name of the catalogue resource"
+delete_resource_entry_group_auth_required_response_description = "Authentication is required to delete the catalogue resource"
+delete_resource_entry_group_permission_denied_response_description = "The user does not have permission to delete the catalogue resource"
+delete_resource_entry_group_permission_denied_response_example_msg = "User example is not the owner of the resource wirecloud/example"
+delete_resource_entry_group_not_found_response_description = "The catalogue resource was not found"
+delete_resource_entry_group_not_acceptable_response_description = "Invalid request content type"
+delete_resource_entry_group_validation_error_response_description = "The request data was invalid"
+delete_resource_entry_group_response_example = {
+    "affectedVersions": ["1.0.0", "1.0.1-rc1"]
+}
+
+# GET /resource/{vendor}/{name}/{version}
+get_resource_entry_summary = "Get catalogue resource description"
+get_resource_entry_description = "Get the description of a catalogue resource version."
+get_resource_entry_response_description = "The description of a catalogue resource version"
+get_resource_entry_vendor_description = "The vendor of the catalogue resource"
+get_resource_entry_name_description = "The name of the catalogue resource"
+get_resource_entry_version_description = "The version of the catalogue resource"
+get_resource_entry_not_found_response_description = "The catalogue resource was not found"
+get_resource_entry_not_acceptable_response_description = "Invalid request content type"
+get_resource_entry_validation_error_response_description = "The request data was invalid"
+get_resource_entry_response_example = {
+  "vendor": "Wirecloud",
+  "name": "awesome-widget",
+  "type": "widget",
+  "version": "1.0.0",
+  "date": 1722902021135,
+  "permissions": {
+    "delete": False,
+    "uninstall": False
+  },
+  "authors": [
+      {
+        "name": "Wirecloud",
+        "email": "wirecloud@example.com",
+        "url": "https://wirecloud.example.com"
+      }
+  ],
+  "contributors": [
+      {
+        "name": "John Doe",
+        "email": "john.doe@wirecloud.example.com",
+        "url": "https://wirecloud.example.com/johndoe"
+      }
+  ],
+  "title": "Awesome Widget",
+  "description": "This is an awesome widget",
+  "longdescription": "<p>Using this widget makes you</p>\n<h2>awesome</h2>>",
+  "email": "wirecloud@example.com",
+  "image": "https://wirecloud.example.com/catalogue/media/Wirecloud/awesome-widget/1.0.0/images/catalogue.png",
+  "homepage": "https://wirecloud.example.com",
+  "doc": "https://wirecloud.example.com/catalogue/media/Wirecloud/awesome-widget/1.0.0/doc/userguide.md",
+  "changelog": "doc/changelog.md",
+  "size": 5208,
+  "uriTemplate": "https://wirecloud.example.com/catalogue/media/Wirecloud/awesome-widget/1.0.0/Wirecloud_awesome-widget_1.0.0.wgt",
+  "license": "MIT",
+  "licenseurl": "https://opensource.org/licenses/MIT",
+  "issuetracker": "https://wirecloud.example.com/awesome-widget/issues"
+}
+
+# DELETE /resource/{vendor}/{name}/{version}
+delete_resource_entry_summary = "Delete a catalogue resource version"
+delete_resource_entry_description = "Delete a catalogue resource version. This action is irreversible."
+delete_resource_entry_response_description = "The affected version of the catalogue resource"
+delete_resource_entry_vendor_description = "The vendor of the catalogue resource"
+delete_resource_entry_name_description = "The name of the catalogue resource"
+delete_resource_entry_version_description = "The version of the catalogue resource"
+delete_resource_entry_auth_required_response_description = "The user must be authenticated to delete the catalogue resource"
+delete_resource_entry_permission_denied_response_description = "The user does not have permission to delete the catalogue resource"
+delete_resource_entry_permission_denied_response_example_msg = "User example is not the owner of the resource wirecloud/example"
+delete_resource_entry_not_found_response_description = "The catalogue resource was not found"
+delete_resource_entry_not_acceptable_response_description = "Invalid request content type"
+delete_resource_entry_validation_error_response_description = "The request data was invalid"
+delete_resource_entry_response_example = {
+    "affectedVersions": ["1.0.0"]
+}
+
+# GET /resource/{vendor}/{name}/{version}/changelog
+get_resource_changelog_summary = "Get the catalogue resource changelog"
+get_resource_changelog_description = "Get the changelog of a catalogue resource version."
+get_resource_changelog_response_description = "The changelog of a catalogue resource version"
+get_resource_changelog_vendor_description = "The vendor of the catalogue resource"
+get_resource_changelog_name_description = "The name of the catalogue resource"
+get_resource_changelog_version_description = "The version of the catalogue resource"
+get_resource_changelog_from_version_description = "The version of the catalogue resource to start the changelog from (until the requested version). If not provided, the changelog will start from the first version. It is non-inclusive"
+get_resource_changelog_not_found_response_description = "The catalogue resource was not found"
+get_resource_changelog_not_acceptable_response_description = "Invalid request content type"
+get_resource_changelog_validation_error_response_description = "The request data was invalid"
+get_resource_changelog_response_example = """<h2>1.0.1</h2>
+<ul>
+<li>Added some fantastic features</li>
+</ul>
+<h2>1.0.0</h2>
+<p>Initial version</p>"""
+
+# GET /resource/{vendor}/{name}/{version}/userguide
+get_resource_userguide_summary = "Get the catalogue resource user guide"
+get_resource_userguide_description = "Get the user guide of a catalogue resource version."
+get_resource_userguide_response_description = "The user guide of a catalogue resource version"
+get_resource_userguide_vendor_description = "The vendor of the catalogue resource"
+get_resource_userguide_name_description = "The name of the catalogue resource"
+get_resource_userguide_version_description = "The version of the catalogue resource"
+get_resource_userguide_not_found_response_description = "The catalogue resource was not found"
+get_resource_userguide_not_acceptable_response_description = "Invalid request content type"
+get_resource_userguide_validation_error_response_description = "The request data was invalid"
+get_resource_userguide_response_example = """<h2>Introduction</h2>
+<p>Awesome Widget is a widget that makes you awesome.</p>
+<h2>Settings</h2>
+<p><em><strong>Setting 1</strong></em>: This setting makes you awesome.</p>
+<h2>Wiring</h2>
+<p><em>No wiring is used</em></p>
+<h2>Usage</h2>
+<ol>
+  <li>Drag the widget to the workspace</li>
+  <li>Configure the widget</li>
+  <li>Enjoy being awesome</li>
+</ol>
+<h2>Reference</h2>
+<ul>
+  <li><a href="https://mashup.lab.fiware.org/">FIWARE Mashup</a></li>
+</ul>"""
+
+# GET /resource/{vendor}/{name}/{version}/{file_path}
+get_resource_file_summary = "Get a catalogue resource file"
+get_resource_file_description = "Get a file of a catalogue resource version."
+get_resource_file_response_description = "The file of a catalogue resource version"
+get_resource_file_vendor_description = "The vendor of the catalogue resource"
+get_resource_file_name_description = "The name of the catalogue resource"
+get_resource_file_version_description = "The version of the catalogue resource"
+get_resource_file_file_path_description = "The path of the file to retrieve within the catalogue resource"
+get_resource_file_not_found_response_description = "The catalogue resource file was not found"
+get_resource_file_not_acceptable_response_description = "Invalid request content type"
+get_resource_file_validation_error_response_description = "The request data was invalid"
+get_resource_file_response_example = "The contents of the file"

@@ -18,8 +18,9 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 # TODO Add translations of errors
+# TODO Add docs of almost everything here (descriptions)
 
-from pydantic import BaseModel, StringConstraints, Field, model_validator
+from pydantic import BaseModel, StringConstraints, Field, model_validator, field_serializer
 from enum import Enum
 from typing import Optional, Annotated, Union
 
@@ -56,7 +57,7 @@ class MACDTranslationIndexUsage(BaseModel):
     option: Optional[int] = None
 
 
-class MACDBase(BaseModel, use_enum_values=True):
+class MACDBase(BaseModel):
     type: MACType
     macversion: MACVersion = 1
     name: Name
@@ -95,6 +96,11 @@ class MACDBase(BaseModel, use_enum_values=True):
             if 'contributors' in data and isinstance(data['contributors'], (str, list, tuple)):
                 data['contributors'] = parse_contacts_info(data['contributors'])
         return data
+
+    # Serialize the type as a string
+    @field_serializer("type")
+    def serialize_type(self, value):
+        return value.value
 
     def check_translations(self) -> None:
         if len(self.translations.keys()) == 0:

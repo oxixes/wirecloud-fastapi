@@ -42,7 +42,10 @@ class WgtFile:
 
     _zip: zipfile.ZipFile
 
-    def __init__(self, _file: Union[str, IO[bytes]]):
+    def __init__(self, _file: Union[str, IO[bytes], bytes]):
+        if isinstance(_file, bytes):
+            _file = BytesIO(_file)
+
         self._zip = zipfile.ZipFile(_file)
         for filename in self._zip.namelist():
             normalized_filename = os.path.normpath(filename)

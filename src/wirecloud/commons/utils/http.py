@@ -20,19 +20,37 @@
 # TODO Add HTML response
 
 import socket
-import json
+import orjson as json
+import inspect
+import posixpath
+import os
+from functools import wraps
 from lxml import etree
 from fastapi import Request, Response
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from typing import Optional, Any
-from urllib.parse import urljoin
+from typing import Optional, Union, Any
+from collections.abc import Callable
+from urllib.parse import urljoin, unquote
 
 from src.wirecloud.commons.utils import mimeparser
 
 
 class HTTPError(BaseModel):
-    error_msg: str
-    details: Optional[dict[str, Any]] = None
+    description: str
+    details: Union[str, dict[str, Any], None] = None
+
+
+class XHTMLResponse(Response):
+    media_type = 'application/xhtml+xml'
+
+
+class PermissionDenied(Exception):
+    pass
+
+
+class NotFound(Exception):
+    pass
 
 
 def get_xml_error_response(request: Optional[Request], mimetype: str, status_code: int, context: dict) -> str:
@@ -45,23 +63,26 @@ def get_xml_error_response(request: Optional[Request], mimetype: str, status_cod
 
     if context.get('details') is not None:
         details_element = etree.Element('details')
-        for key in context['details']:
-            element = etree.Element(key)
+        if isinstance(context['details'], str):
+            details_element.text = context['details']
+        else:
+            for key in context['details']:
+                element = etree.Element(key)
 
-            if isinstance(context['details'][key], str):
-                element.text = context['details'][key]
-            elif hasattr(context['details'][key], '__iter__'):
-                for value in context['details'][key]:
-                    list_element = etree.Element('element')
-                    list_element.text = value
-                    element.append(list_element)
-            else:
-                for key2 in context['details'][key]:
-                    list_element = etree.Element(key2)
-                    list_element.text = context['details'][key][key2]
-                    element.append(list_element)
+                if isinstance(context['details'][key], str):
+                    element.text = context['details'][key]
+                elif hasattr(context['details'][key], '__iter__'):
+                    for value in context['details'][key]:
+                        list_element = etree.Element('element')
+                        list_element.text = value
+                        element.append(list_element)
+                else:
+                    for key2 in context['details'][key]:
+                        list_element = etree.Element(key2)
+                        list_element.text = context['details'][key][key2]
+                        element.append(list_element)
 
-            details_element.append(element)
+                details_element.append(element)
 
         doc.append(details_element)
 
@@ -75,7 +96,7 @@ def get_json_error_response(request: Optional[Request], mimetype: str, status_co
     if context.get('details') is not None:
         body['details'] = context['details']
 
-    return json.dumps(body, ensure_ascii=False, sort_keys=True)
+    return json.dumps(body).decode("utf-8")
 
 
 def get_plain_text_error_response(request: Optional[Request], mimetype: str, status_code: int, context: dict) -> str:
@@ -92,7 +113,7 @@ ERROR_FORMATTERS = {
 }
 
 
-def build_response(request: Request, status_code: int, context: dict, formatters: dict,
+def build_response(request: Request, status_code: int, context: Union[dict[str, Any]], formatters: dict[str, Callable],
                    headers: dict[str, str] = None) -> Response:
     if request.headers.get('X-Requested-With', '') == 'XMLHttpRequest':
         content_type = 'application/json; charset=utf-8'
@@ -118,7 +139,8 @@ def build_response(request: Request, status_code: int, context: dict, formatters
 
 
 def build_error_response(request: Request, status_code: int, error_msg: str, extra_formats: dict = None,
-                         headers: dict[str, str] = None, details: dict = None, context: dict = None) -> Response:
+                         headers: dict[str, str] = None, details: Union[str, dict[str, Any]] = None,
+                         context: dict = None) -> Response:
     if extra_formats is not None:
         formatters = extra_formats.copy()
         formatters.update(ERROR_FORMATTERS)
@@ -131,6 +153,117 @@ def build_error_response(request: Request, status_code: int, error_msg: str, ext
     context.update({'error_msg': error_msg, 'details': details})
 
     return build_response(request, status_code, context, formatters, headers)
+
+
+def get_content_type(request: Request) -> tuple[str, dict[str, str]]:
+    content_type_header = request.headers.get('Content-Type', None)
+    if content_type_header is not None:
+        try:
+            return mimeparser.parse_mime_type(content_type_header)
+        except mimeparser.InvalidMimeType:
+            pass
+
+    return '', {}
+
+
+def build_not_found_response(request: Request) -> Response:
+    return build_error_response(request, 404, 'Page Not Found')
+
+
+def build_validation_error_response(request: Request) -> Response:
+    return build_error_response(request, 422, 'Invalid Payload')
+
+
+def build_auth_error_response(request: Request) -> Response:
+    return build_error_response(request, 401, 'Authentication Required')
+
+
+def build_permission_denied_response(request: Request, error_msg: str) -> Response:
+    return build_error_response(request, 403, error_msg)
+
+
+def check_decorator_params(handler, params):
+    for param_name in params:
+        if param_name not in inspect.signature(handler).parameters:
+            raise ValueError('The handler must have a %s parameter' % param_name)
+
+
+def authentication_required(handler):
+    # Check that the handler has a user and request parameter
+    check_decorator_params(handler, ['user', 'request'])
+
+    @wraps(handler)
+    async def wrapper(*args, **kwargs):
+        from src.wirecloud.commons.auth.schemas import UserAll
+
+        user: Optional[UserAll] = kwargs.get('user')
+        request: Request = kwargs.get('request')
+
+        if user is None:
+            return build_error_response(request, 401, 'Authentication Required')
+        else:
+            is_async = inspect.iscoroutinefunction(handler)
+
+            if is_async:
+                return await handler(*args, **kwargs)
+            else:
+                return handler(*args, **kwargs)
+
+    return wrapper
+
+
+def produces(mime_types: list[str]):
+    def wrap(handler):
+        check_decorator_params(handler, ['request'])
+
+        @wraps(handler)
+        async def wrapper(*args, **kwargs):
+            request: Request = kwargs.get('request')
+
+            accept_header = request.headers.get('Accept', '*/*')
+            setattr(request, 'best_response_mimetype', mimeparser.best_match(mime_types, accept_header))
+
+            if request.best_response_mimetype == '':
+                # TODO Add translations
+                msg = "The requested resource is only capable of generating content not acceptable according to the Accept headers sent in the request"
+                details = {'supported_mime_types': mime_types}
+                return build_error_response(request, 406, msg, details=details)
+
+            is_async = inspect.iscoroutinefunction(handler)
+
+            if is_async:
+                return await handler(*args, **kwargs)
+            else:
+                return handler(*args, **kwargs)
+
+        return wrapper
+
+    return wrap
+
+
+def consumes(mime_types: list[str]):
+    def wrap(handler):
+        check_decorator_params(handler, ['request'])
+
+        @wraps(handler)
+        async def wrapper(*args, **kwargs):
+            request: Request = kwargs.get('request')
+
+            setattr(request, 'mimetype', get_content_type(request)[0])
+            if request.mimetype not in mime_types:
+                msg = "Unsupported request media type"
+                return build_error_response(request, 415, msg)
+
+            is_async = inspect.iscoroutinefunction(handler)
+
+            if is_async:
+                return await handler(*args, **kwargs)
+            else:
+                return handler(*args, **kwargs)
+
+        return wrapper
+
+    return wrap
 
 
 _servername = None
@@ -195,3 +328,30 @@ def get_absolute_reverse_url(viewname: str, request: Optional[Request] = None, *
         url = url.replace('{' + key + '}', str(kwargs[key]))
 
     return urljoin(get_current_scheme(request) + '://' + get_current_domain(request), url)
+
+
+def build_downloadfile_response(request: Request, file_path: str, base_dir: str) -> Response:
+    from src import settings
+
+    path = posixpath.normpath(unquote(file_path))
+    path = path.lstrip('/')
+    newpath = ''
+    for part in path.split('/'):
+        drive, part = os.path.splitdrive(part)
+        head, part = os.path.split(part)
+        if part in (os.curdir, os.pardir):
+            # Strip '.' and '..' in path.
+            continue
+        newpath = os.path.join(newpath, part).replace('\\', '/')
+    if newpath and path != newpath:
+        return Response(status_code=302, headers={'Location': newpath})
+
+    fullpath = os.path.join(base_dir, newpath)
+
+    if not os.path.isfile(fullpath):
+        return build_not_found_response(request)
+
+    if not getattr(settings, 'USE_XSENDFILE', False):
+        return FileResponse(fullpath, media_type='application/octet-stream')
+    else:
+        return Response(headers={'X-Sendfile': fullpath})

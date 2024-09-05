@@ -20,7 +20,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from enum import Enum
-from src import docs
+from src.wirecloud import docs
 from datetime import datetime
 
 

@@ -19,7 +19,7 @@
 
 # TODO Add translations in pydantic error on version 1.0
 
-from pydantic import BaseModel, Field, StringConstraints, model_validator
+from pydantic import BaseModel, Field, StringConstraints, model_validator, field_serializer
 from typing import Any, Optional, Union, Annotated
 from enum import Enum
 
@@ -38,6 +38,11 @@ class WiringConnectionEndpoint(BaseModel):
     type: WiringType = Field(description=docs.wiring_connection_endpoint_type_description)
     id: IntegerStr = Field(description=docs.wiring_connection_endpoint_id_description)
     endpoint: str = Field(description=docs.wiring_connection_endpoint_endpoint_description)
+
+    # Serialize WiringType as a string
+    @field_serializer("type")
+    def serialize_wiring_type(self, v):
+        return v.value
 
 
 class WiringConnection(BaseModel):
@@ -97,6 +102,13 @@ class WiringVisualDescriptionConnection(BaseModel):
     targethandle: Union[WiringConnectionHandlePositionType, WiringPosition] = (
         Field(description=docs.wiring_visual_description_connection_targethandle_description,
               default=WiringConnectionHandlePositionType.auto))
+
+    # Serialize WiringConnectionHandlePositionType as a string
+    @field_serializer("sourcehandle", "targethandle")
+    def serialize_handle_position_type(self, v):
+        if isinstance(v, WiringConnectionHandlePositionType):
+            return v.value
+        return v
 
 
 class WiringBehaviour(BaseModel):

@@ -22,16 +22,15 @@
 from fastapi import APIRouter, Request
 import jwt
 from datetime import datetime
-from json import JSONDecodeError
 from pydantic import ValidationError
 
 from src.wirecloud.commons.auth.schemas import UserLogin, UserToken, UserWithPassword, UserTokenType
 from src.wirecloud.commons.auth.crud import get_user_with_password, set_login_date_for_user
 from src.wirecloud.commons.auth.utils import check_password
 from src.wirecloud.database import DBDep, commit
-from src.wirecloud.commons.utils.http import build_error_response
+from src.wirecloud.commons.utils.http import build_error_response, build_validation_error_response, produces, consumes
 from src import settings
-from src import docs
+from src.wirecloud import docs
 
 router = APIRouter()
 
@@ -44,35 +43,38 @@ router = APIRouter()
         200: {"content": {"application/json": {"example": docs.login_response_model_example}}},
         401: docs.generate_error_response_openapi_description(docs.login_error_invalid_user_pass_response_model_description,
                                                               "Invalid username or password"),
-        422: docs.generate_error_response_openapi_description(docs.login_error_invalid_payload_response_model_descrition,
-                                                              "Invalid payload")
+        406: docs.generate_not_acceptable_response_openapi_description("Invalid request content type",
+                                                                       ["application/json"]),
+        415: docs.generate_unsupported_media_type_response_openapi_description("Unsupported request content type"),
+        422: docs.generate_validation_error_response_openapi_description(docs.login_error_invalid_payload_response_model_descrition)
     },
     openapi_extra={
         "requestBody": {
             "content": {
                 "application/json": {
-                    "schema": UserLogin.model_json_schema()
+                    "schema": {"$ref": "#/components/schemas/UserLogin"}
                 },
                 "application/x-www-form-urlencoded": {
-                    "schema": UserLogin.model_json_schema()
+                    "schema": {"$ref": "#/components/schemas/UserLogin"}
                 }
             }
         }
     }
 )
-async def login(req: Request, db: DBDep):
+@produces(["application/json"])
+@consumes(["application/json", "application/x-www-form-urlencoded", "multipart/form-data"])
+async def login(request: Request, db: DBDep):
     try:
-        if req.headers.get("Content-Type") == "application/x-www-form-urlencoded" or \
-                req.headers.get("Content-Type") == "multipart/form-data":
-            login_data = UserLogin.model_validate(await req.form())
+        if request.mimetype == "application/x-www-form-urlencoded" or request.mimetype == "multipart/form-data":
+            login_data = UserLogin.model_validate(await request.form(max_files=0, max_fields=50))
         else:
-            login_data = UserLogin.model_validate(await req.json())
-    except (JSONDecodeError, ValidationError):
-        return build_error_response(req, 422, "Invalid payload")
+            login_data = UserLogin.model_validate_json(await request.body())
+    except (ValueError, ValidationError):
+        return build_validation_error_response(request)
 
     user: UserWithPassword = await get_user_with_password(db, login_data.username)
     if user is None or not user.is_active or not check_password(login_data.password, user.password):
-        return build_error_response(req, 401, "Invalid username or password")
+        return build_error_response(request, 401, "Invalid username or password")
 
     await set_login_date_for_user(db, user.id)
     await commit(db)

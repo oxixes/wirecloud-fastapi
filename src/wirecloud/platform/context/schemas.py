@@ -20,7 +20,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Any
 
-import src.docs as docs
+import src.wirecloud.docs as docs
 
 
 class Constant(BaseModel):

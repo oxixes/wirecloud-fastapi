@@ -25,7 +25,7 @@ from lxml import etree
 from lxml.html import fragment_fromstring, XHTMLParser
 from urllib.parse import urljoin, urlparse
 
-from wirecloud.commons.utils.version import Version
+from src.wirecloud.commons.utils.version import Version
 
 
 VERSION_HEADER_RE = re.compile(r"[\s(]")

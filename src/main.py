@@ -24,10 +24,12 @@ if sys.version_info < (3, 9):
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.responses import ORJSONResponse
+from fastapi.openapi.utils import get_openapi
 
 from .wirecloud.database import close, engine
-from .wirecloud.platform.plugins import get_plugins
-from . import docs
+from .wirecloud.platform.plugins import get_plugins, get_extra_openapi_schemas
+from src.wirecloud import docs
 
 
 # TODO Validate settings
@@ -39,14 +41,34 @@ async def lifespan(app: FastAPI):
         await close()
 
 
-app = FastAPI(title=docs.title,
-              version=docs.version,
-              summary=docs.summary,
-              description=docs.description,
-              license_info=docs.license_info,
-              contact=docs.contact,
-              lifespan=lifespan)
+app = FastAPI(lifespan=lifespan,
+              default_response_class=ORJSONResponse)
 
 get_plugins(app)
 
 
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=docs.title,
+        version=docs.version,
+        summary=docs.summary,
+        description=docs.description,
+        license_info=docs.license_info,
+        contact=docs.contact,
+        routes=app.routes
+    )
+
+    openapi_schema["info"]["x-logo"] = {
+        "url": docs.logo_url
+    }
+
+    openapi_schema["components"]["schemas"].update(get_extra_openapi_schemas())
+
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi

@@ -20,7 +20,7 @@
 
 # TODO Add translations
 
-import json
+import orjson as json
 
 from pydantic import ValidationError
 from typing import Union
@@ -34,10 +34,8 @@ class JSONTemplateParser(object):
 
     def __init__(self, template: Union[str, bytes, dict]):
         info: dict
-        if isinstance(template, str):
+        if isinstance(template, str) or isinstance(template, bytes):
             info = json.loads(template)
-        elif isinstance(template, bytes):
-            info = json.loads(template.decode('utf8'))
         elif isinstance(template, dict):
             info = template
         else:
