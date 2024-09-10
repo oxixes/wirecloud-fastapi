@@ -10,12 +10,11 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
-
 # revision identifiers, used by Alembic.
 revision: str = '14398428d2a4'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = ('platform',)
-depends_on: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = '42a7145c4074'
 
 
 def upgrade() -> None:
@@ -32,9 +31,47 @@ def upgrade() -> None:
     )
 
     # Create an index on the wirecloud_constant table for the concept column (varchar_pattern_ops)
-    op.create_index('wirecloud_constant_concept_idx', 'wirecloud_constant', ['concept'], unique=True, postgresql_ops={'concept': 'varchar_pattern_ops'})
+    op.create_index('wirecloud_constant_concept_idx', 'wirecloud_constant', ['concept'], unique=True,
+                    postgresql_ops={'concept': 'varchar_pattern_ops'})
+
+    # Create the wirecloud_market table
+    op.create_table(
+        'wirecloud_market',
+        sa.Column('id', sa.Integer, primary_key=True, autoincrement=True, nullable=False, unique=True),
+        sa.Column('name', sa.String(50), nullable=False),
+        sa.Column('public', sa.Boolean, nullable=False),
+        sa.Column('options', sa.Text, nullable=False),
+        sa.Column('user_id', sa.Integer, sa.ForeignKey('auth_user.id', deferrable=True,
+                                                       initially="DEFERRED", ondelete='CASCADE',
+                                                       onupdate='CASCADE'), nullable=False),
+        sa.UniqueConstraint('user_id', 'name', name='unique_market_name_user')
+    )
+
+    # Create index on the wirecloud_market table for the user_id column
+    op.create_index('wirecloud_market_user_id_idx', 'wirecloud_market', ['user_id'])
+
+    # Create the wirecloud_marketuserdata table
+    op.create_table(
+        'wirecloud_marketuserdata',
+        sa.Column('id', sa.Integer, primary_key=True, autoincrement=True, nullable=False, unique=True),
+        sa.Column('name', sa.String(50), nullable=False),
+        sa.Column('value', sa.String(250), nullable=False),
+        sa.Column('market_id', sa.Integer, sa.ForeignKey('wirecloud_market.id', deferrable=True,
+                                                         initially="DEFERRED", ondelete='CASCADE',
+                                                         onupdate='CASCADE'), nullable=False),
+        sa.Column('user_id', sa.Integer, sa.ForeignKey('auth_user.id', deferrable=True,
+                                                       initially="DEFERRED", ondelete='CASCADE',
+                                                       onupdate='CASCADE'), nullable=False),
+        sa.UniqueConstraint('market_id', 'user_id', 'name', name='unique_marketuserdata_name_user_market')
+    )
+
+    # Create indexes on the wirecloud_marketuserdata table for the market_id and the user_id column
+    op.create_index('wirecloud_marketuserdata_market_id_idx', 'wirecloud_marketuserdata', ['market_id'])
+    op.create_index('wirecloud_marketuserdata_user_id_idx', 'wirecloud_marketuserdata', ['user_id'])
 
 
 def downgrade() -> None:
     # Drop the tables created in the upgrade method
+    op.drop_table('wirecloud_marketuserdata')
+    op.drop_table('wirecloud_market')
     op.drop_table('wirecloud_constant')

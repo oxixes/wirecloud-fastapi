@@ -24,6 +24,9 @@ import os
 import orjson as json
 from hashlib import sha1, md5
 from typing import Any, Optional
+
+from fastapi import FastAPI
+
 import src.wirecloud.platform as platform
 from src import settings
 from src.wirecloud.platform.plugins import (get_active_features_info, get_plugin_urls, AjaxEndpoint, build_url_template,
@@ -36,6 +39,8 @@ from src.wirecloud.commons.auth.schemas import UserAll, Session
 from src.wirecloud.platform.context.routes import router as context_router
 from src.wirecloud.platform.localcatalogue.routes import (router as localcatalogue_router,
                                                           resources_router as localcatalogue_resources_router)
+from src.wirecloud.platform.markets.routes import router as market_router, markets_router
+from src.wirecloud.platform.core.catalogue_manager import WirecloudCatalogueManager
 
 
 WIRING_EDITOR_FILES = (
@@ -270,11 +275,14 @@ class WirecloudCorePlugin(WirecloudPlugin):
 
     urls = patterns
 
-    def __init__(self, app):
+    def __init__(self, app: FastAPI):
         super().__init__(app)
 
         app.include_router(context_router, prefix="/api/context", tags=["Context"])
         app.include_router(localcatalogue_resources_router, prefix="/api/resources", tags=["Local Catalogue"])
+        app.include_router(localcatalogue_router, prefix="/api/resource", tags=["Local Catalogue"])
+        app.include_router(market_router, prefix="/api/market", tags=["Market"])
+        app.include_router(markets_router, prefix="/api/markets", tags=["Market"])
 
     def get_platform_context_definitions(self) -> dict[str, BaseContextKey]:
         return {
@@ -617,6 +625,11 @@ class WirecloudCorePlugin(WirecloudPlugin):
 
         else:
             return common
+
+    def get_market_classes(self) -> dict[str, type]:
+        return {
+            'wirecloud': WirecloudCatalogueManager,
+        }
 
     def get_constants(self) -> dict[str, Any]:
         languages = [{'value': lang[0], 'label': lang[1]} for lang in settings.LANGUAGES]

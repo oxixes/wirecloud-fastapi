@@ -31,7 +31,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, Union, Any
 from collections.abc import Callable
-from urllib.parse import urljoin, unquote
+from urllib.parse import urljoin, unquote, urlparse
 
 from src.wirecloud.commons.utils import mimeparser
 
@@ -184,7 +184,7 @@ def build_permission_denied_response(request: Request, error_msg: str) -> Respon
 
 def check_decorator_params(handler, params):
     for param_name in params:
-        if param_name not in inspect.signature(handler).parameters:
+        if param_name not in inspect.signature(handler).parameters and ("_" + param_name) not in inspect.signature(handler).parameters:
             raise ValueError('The handler must have a %s parameter' % param_name)
 
 
@@ -196,8 +196,8 @@ def authentication_required(handler):
     async def wrapper(*args, **kwargs):
         from src.wirecloud.commons.auth.schemas import UserAll
 
-        user: Optional[UserAll] = kwargs.get('user')
-        request: Request = kwargs.get('request')
+        user: Optional[UserAll] = kwargs.get('user', kwargs.get('_user'))
+        request: Request = kwargs.get('request', kwargs.get('_request'))
 
         if user is None:
             return build_error_response(request, 401, 'Authentication Required')
@@ -218,7 +218,7 @@ def produces(mime_types: list[str]):
 
         @wraps(handler)
         async def wrapper(*args, **kwargs):
-            request: Request = kwargs.get('request')
+            request: Request = kwargs.get('request', kwargs.get('_request'))
 
             accept_header = request.headers.get('Accept', '*/*')
             setattr(request, 'best_response_mimetype', mimeparser.best_match(mime_types, accept_header))
@@ -247,7 +247,7 @@ def consumes(mime_types: list[str]):
 
         @wraps(handler)
         async def wrapper(*args, **kwargs):
-            request: Request = kwargs.get('request')
+            request: Request = kwargs.get('request', kwargs.get('_request'))
 
             setattr(request, 'mimetype', get_content_type(request)[0])
             if request.mimetype not in mime_types:
@@ -328,6 +328,21 @@ def get_absolute_reverse_url(viewname: str, request: Optional[Request] = None, *
         url = url.replace('{' + key + '}', str(kwargs[key]))
 
     return urljoin(get_current_scheme(request) + '://' + get_current_domain(request), url)
+
+
+def validate_url_param(name: str, value: str, force_absolute: bool = True, required: bool = False):
+    # FIXME Figure out if we can translate this, as it's not used in the same way the original code does
+    if required and value.strip() == '':
+        msg = 'Missing required parameter: %(parameter)s' % {"parameter": name}
+        raise ValueError(msg)
+
+    parsed_url = urlparse(value)
+    if force_absolute and not bool(parsed_url.netloc and parsed_url.scheme):
+        msg = "%(parameter)s must be an absolute URL" % {"parameter": name}
+        raise ValueError(msg)
+    elif parsed_url.scheme not in ('', 'http', 'https', 'ftp'):
+        msg = "Invalid schema: %(schema)s" % {"schema": parsed_url.scheme}
+        raise ValueError(msg)
 
 
 def build_downloadfile_response(request: Request, file_path: str, base_dir: str) -> Response:

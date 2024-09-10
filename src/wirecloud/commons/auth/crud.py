@@ -47,6 +47,25 @@ async def get_user_by_id(db: DBSession, user_id: int) -> Optional[User]:
     )
 
 
+async def get_user_by_username(db: DBSession, username: str) -> Optional[User]:
+    user = await db.scalar(select(UserModel).filter(UserModel.username == username))
+    if user is None:
+        return None
+
+    return User(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        is_superuser=user.is_superuser,
+        is_staff=user.is_staff,
+        is_active=user.is_active,
+        date_joined=user.date_joined,
+        last_login=user.last_login
+    )
+
+
 async def get_all_user_permissions(db: DBSession, user_id: int) -> list[Permission]:
     GroupAlias = aliased(GroupModel)
 

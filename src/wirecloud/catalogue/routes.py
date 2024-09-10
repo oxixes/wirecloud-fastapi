@@ -56,9 +56,9 @@ router = APIRouter()
     summary=docs.create_resource_entry_summary,
     description=docs.create_resource_entry_description,
     response_class=Response,
+    response_description=docs.create_resource_entry_response_description,
     status_code=201,
     responses={
-        201: {"description": docs.create_resource_entry_created_response_description},
         400: root_docs.generate_error_response_openapi_description(
             docs.create_resource_entry_bad_request_response_description,
             "The uploaded file is not a zip file"),

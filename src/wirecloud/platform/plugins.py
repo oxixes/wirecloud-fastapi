@@ -21,6 +21,7 @@
 
 from importlib import import_module
 from typing import Optional, Any
+from collections.abc import Callable
 from pydantic import BaseModel
 from fastapi import FastAPI
 import inspect
@@ -31,20 +32,6 @@ from src.wirecloud.commons.utils.encoding import LazyEncoderXHTML
 from src.wirecloud.platform.context.schemas import BaseContextKey, WorkspaceContextKey
 from src.wirecloud.platform.preferences.schemas import PreferenceKey, TabPreferenceKey
 from src.wirecloud.commons.auth.schemas import UserAll, Session
-
-# Get an instance of a logger
-logger = logging.getLogger(__name__)
-
-_wirecloud_plugins = None
-_wirecloud_features = None
-_wirecloud_features_info = None
-_wirecloud_proxy_processors = None
-_wirecloud_request_proxy_processors = []
-_wirecloud_response_proxy_processors = []
-_wirecloud_constants = None
-_wirecloud_api_auth_backends = None
-_wirecloud_tab_preferences = None
-_wirecloud_workspace_preferences = None
 
 
 class URLTemplate(BaseModel):
@@ -61,7 +48,93 @@ class ImproperlyConfigured(Exception):
     pass
 
 
-def find_wirecloud_plugins():
+class WirecloudPlugin:
+    features: dict[str, str] = {}
+    urls: dict[str, URLTemplate] = ()
+
+    def __init__(self, app: FastAPI):
+        self.app = app
+
+    def get_market_classes(self) -> dict[str, type]:
+        return {}
+
+    def get_features(self) -> dict[str, str]:
+        return self.features
+
+    def get_platform_context_definitions(self) -> dict[str, BaseContextKey]:
+        return {}
+
+    def get_platform_context_current_values(self, user: Optional[UserAll], session: Optional[Session]):
+        return {}
+
+    def get_tab_preferences(self) -> list[TabPreferenceKey]:
+        return []
+
+    def get_workspace_context_definitions(self) -> dict[str, WorkspaceContextKey]:
+        return {}
+
+    def get_workspace_context_current_values(self, workspace, user):
+        return {}
+
+    def get_workspace_preferences(self) -> list[PreferenceKey]:
+        return []
+
+    def get_scripts(self, view: str) -> tuple[str, ...]:
+        return ()
+
+    def get_templates(self, view: str) -> list[str]:
+        return []
+
+    def get_urls(self) -> dict[str, URLTemplate]:
+        return self.urls
+
+    def get_constants(self) -> dict[str, Any]:
+        return {}
+
+    def get_ajax_endpoints(self, view: str, prefix: str) -> tuple[AjaxEndpoint, ...]:
+        return ()
+
+    def get_widget_api_extensions(self, view: str, features: list[str]) -> list[str]:
+        return []
+
+    def get_operator_api_extensions(self, view: str, features: list[str]) -> list[str]:
+        return []
+
+    def get_platform_css(self, view: str) -> tuple[str, ...]:
+        return ()
+
+    def get_proxy_processors(self) -> tuple[str, ...]:
+        return ()
+
+    def get_django_template_context_processors(self):
+        return {}
+
+    def get_api_auth_backends(self) -> dict[str, Callable]:
+        return {}
+
+    def get_openapi_extra_schemas(self) -> dict[str, dict[str, Any]]:
+        return {}
+
+    def populate(self, wirecloud_user, log):
+        return False
+
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
+
+_wirecloud_plugins: Optional[tuple[WirecloudPlugin, ...]] = None
+_wirecloud_features: Optional[dict[str, dict[str, str]]] = None
+_wirecloud_features_info: Optional[dict[str, str]] = None
+_wirecloud_proxy_processors: Optional[tuple[type, ...]] = None
+_wirecloud_request_proxy_processors: tuple[type, ...] = ()
+_wirecloud_response_proxy_processors: tuple[type, ...] = ()
+_wirecloud_constants: Optional[list[dict[str, str]]] = None
+_wirecloud_api_auth_backends: Optional[dict[str, Callable]] = None
+_wirecloud_tab_preferences: Optional[list[TabPreferenceKey]] = None
+_wirecloud_workspace_preferences: Optional[list[PreferenceKey]] = None
+
+
+def find_wirecloud_plugins() -> list[WirecloudPlugin]:
     from src import settings
 
     modules = []
@@ -90,7 +163,7 @@ def find_wirecloud_plugins():
     return modules
 
 
-def get_plugins(app: Optional[FastAPI] = None):
+def get_plugins(app: Optional[FastAPI] = None) -> tuple[WirecloudPlugin, ...]:
     from src import settings
     global _wirecloud_plugins
     global _wirecloud_features
@@ -103,7 +176,7 @@ def get_plugins(app: Optional[FastAPI] = None):
         plugins = []
         features = {}
 
-        def add_plugin(module, plugin):
+        def add_plugin(module: str, plugin: WirecloudPlugin) -> None:
             plugin_features = plugin.get_features()
             for feature_name in plugin_features:
                 if feature_name in features:
@@ -148,7 +221,7 @@ def get_plugins(app: Optional[FastAPI] = None):
     return _wirecloud_plugins
 
 
-def get_active_features():
+def get_active_features() -> dict[str, dict[str, str]]:
     global _wirecloud_plugins
     global _wirecloud_features
 
@@ -158,7 +231,7 @@ def get_active_features():
     return _wirecloud_features
 
 
-def get_active_features_info():
+def get_active_features_info() -> dict[str, str]:
     global _wirecloud_features_info
 
     if _wirecloud_features_info is None:
@@ -172,7 +245,7 @@ def get_active_features_info():
     return _wirecloud_features_info
 
 
-def clear_cache():
+def clear_cache() -> None:
     global _wirecloud_plugins
     global _wirecloud_features
     global _wirecloud_features_info
@@ -188,8 +261,8 @@ def clear_cache():
     _wirecloud_features = None
     _wirecloud_features_info = None
     _wirecloud_proxy_processors = None
-    _wirecloud_request_proxy_processors = []
-    _wirecloud_response_proxy_processors = []
+    _wirecloud_request_proxy_processors = ()
+    _wirecloud_response_proxy_processors = ()
     _wirecloud_constants = None
     _wirecloud_api_auth_backends = None
     _wirecloud_tab_preferences = None
@@ -309,7 +382,7 @@ def get_platform_css(view: str) -> tuple[str, ...]:
     return tuple(files)
 
 
-def get_api_auth_backends():
+def get_api_auth_backends() -> dict[str, Callable]:
     global _wirecloud_api_auth_backends
 
     if _wirecloud_api_auth_backends is None:
@@ -322,7 +395,7 @@ def get_api_auth_backends():
     return _wirecloud_api_auth_backends
 
 
-def get_proxy_processors():
+def get_proxy_processors() -> tuple[type, ...]:
     global _wirecloud_proxy_processors
     global _wirecloud_request_proxy_processors
     global _wirecloud_response_proxy_processors
@@ -335,6 +408,8 @@ def get_proxy_processors():
             modules += plugin.get_proxy_processors()
 
         processors = []
+        request_processors = []
+        response_processors = []
         for path in modules:
             i = path.rfind('.')
             module, attr = path[:i], path[i + 1:]
@@ -350,27 +425,27 @@ def get_proxy_processors():
                     'Module "%s" does not define a "%s" instanciable processor processor' % (module, attr))
 
             if hasattr(processor, 'process_request'):
-                _wirecloud_request_proxy_processors.append(processor)
+                request_processors.append(processor)
             if hasattr(processor, 'process_response'):
-                _wirecloud_response_proxy_processors.insert(0, processor)
+                response_processors.insert(0, processor)
 
             processors.append(processor)
 
         _wirecloud_proxy_processors = tuple(processors)
-        _wirecloud_request_proxy_processors = tuple(_wirecloud_request_proxy_processors)
-        _wirecloud_response_proxy_processors = tuple(_wirecloud_response_proxy_processors)
+        _wirecloud_request_proxy_processors = tuple(request_processors)
+        _wirecloud_response_proxy_processors = tuple(response_processors)
 
     return _wirecloud_proxy_processors
 
 
-def get_request_proxy_processors():
+def get_request_proxy_processors() -> tuple[type, ...]:
     if _wirecloud_proxy_processors is None:
         get_proxy_processors()
 
     return _wirecloud_request_proxy_processors
 
 
-def get_response_proxy_processors():
+def get_response_proxy_processors() -> tuple[type, ...]:
     if _wirecloud_proxy_processors is None:
         get_proxy_processors()
 
@@ -406,74 +481,3 @@ def get_extra_openapi_schemas() -> dict[str, dict[str, Any]]:
         schemas.update(plugin.get_openapi_extra_schemas())
 
     return schemas
-
-
-class WirecloudPlugin:
-    features: dict[str, str] = {}
-    urls: dict[str, URLTemplate] = ()
-
-    def __init__(self, app: FastAPI):
-        self.app = app
-
-    def get_market_classes(self):
-        return {}
-
-    def get_features(self) -> dict[str, str]:
-        return self.features
-
-    def get_platform_context_definitions(self) -> dict[str, BaseContextKey]:
-        return {}
-
-    def get_platform_context_current_values(self, user: Optional[UserAll], session: Optional[Session]):
-        return {}
-
-    def get_tab_preferences(self) -> list[TabPreferenceKey]:
-        return []
-
-    def get_workspace_context_definitions(self) -> dict[str, WorkspaceContextKey]:
-        return {}
-
-    def get_workspace_context_current_values(self, workspace, user):
-        return {}
-
-    def get_workspace_preferences(self) -> list[PreferenceKey]:
-        return []
-
-    def get_scripts(self, view: str) -> tuple[str, ...]:
-        return ()
-
-    def get_templates(self, view: str) -> list[str]:
-        return []
-
-    def get_urls(self) -> dict[str, URLTemplate]:
-        return self.urls
-
-    def get_constants(self) -> dict[str, Any]:
-        return {}
-
-    def get_ajax_endpoints(self, view: str, prefix: str) -> tuple[AjaxEndpoint, ...]:
-        return ()
-
-    def get_widget_api_extensions(self, view: str, features: list[str]) -> list[str]:
-        return []
-
-    def get_operator_api_extensions(self, view: str, features: list[str]) -> list[str]:
-        return []
-
-    def get_platform_css(self, view: str) -> tuple[str, ...]:
-        return ()
-
-    def get_proxy_processors(self) -> tuple[str, ...]:
-        return ()
-
-    def get_django_template_context_processors(self):
-        return {}
-
-    def get_api_auth_backends(self):
-        return {}
-
-    def get_openapi_extra_schemas(self) -> dict[str, dict[str, Any]]:
-        return {}
-
-    def populate(self, wirecloud_user, log):
-        return False

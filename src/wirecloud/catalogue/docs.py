@@ -76,7 +76,7 @@ create_resource_entry_request_schema_binary = {
 }
 create_resource_entry_summary = "Create a catalogue resource"
 create_resource_entry_description = "Creates a catalogue resource from the provided file."
-create_resource_entry_created_response_description = "The catalogue resource was created"
+create_resource_entry_response_description = "The catalogue resource was created"
 create_resource_entry_bad_request_response_description = "Missing or invalid data was provided"
 create_resource_entry_auth_required_response_description = "Authentication is required to create the catalogue resource"
 create_resource_entry_permission_denied_response_description = "The user does not have permission to create the catalogue resource"

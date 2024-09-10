@@ -56,8 +56,8 @@ class User(UserBase):
         return f"{self.first_name} {self.last_name}".strip()
 
 
-class UserWithPassword(User):
-    password: str = Field(description=docs.user_login_password_description, min_length=1)
+class UserWithPassword(User, UserLogin):
+    pass
 
 
 class UserAll(User):

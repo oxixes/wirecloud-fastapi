@@ -87,6 +87,9 @@ class User(Base):
     uploaded_resources = relationship('CatalogueResource', back_populates='creator')
     local_resources = relationship('CatalogueResource', secondary='catalogue_catalogueresource_users', back_populates='users')
 
+    markets = relationship('Market', back_populates='user')
+    marketuserdata = relationship('MarketUserData', back_populates='user')
+
 
 class Group(Base):
     __tablename__ = 'auth_group'
