@@ -70,5 +70,5 @@ def custom_openapi():
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
-
+# hola esto es una prueba
 app.openapi = custom_openapi
