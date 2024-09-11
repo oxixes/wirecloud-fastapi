@@ -75,8 +75,8 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer, primary_key=True, autoincrement=True, nullable=False, unique=True),
         sa.Column('name', sa.String(30), nullable=False),
         sa.Column('title', sa.String(255), nullable=False),
-        sa.Column('creation_date', sa.BigInteger, nullable=False),
-        sa.Column('last_modified', sa.BigInteger, nullable=True),
+        sa.Column('creation_date', sa.Date, nullable=False),
+        sa.Column('last_modified', sa.Date, nullable=True),
         sa.Column('searchable', sa.Boolean, nullable=False),
         sa.Column('public', sa.Boolean, nullable=False),
         sa.Column('description', sa.Text, nullable=False),
@@ -88,14 +88,12 @@ def upgrade() -> None:
                                 onupdate='CASCADE'), nullable=False),
         sa.Column('requireauth', sa.Boolean, nullable=False),
 
-        sa.UniqueConstraint('creator_id', 'name', name='wirecloud_workspace_creator_id_name_6f3ab4f2_uniq')
+        sa.UniqueConstraint('creator_id', 'name', name='unique_workspace_name_creator')
     )
 
-    # Set the owner of the wirecloud_workspace table to the postgres user
-    # op.execute('ALTER TABLE wirecloud_workspace OWNER TO postgres')
 
     # Create indexes on the wirecloud_workspace table for the creator_id column
-    op.create_index('wirecloud_workspace_creator_id_5a38c8eb', 'wirecloud_workspace', ['creator_id'])
+    op.create_index('wirecloud_workspace_creator_id_idx', 'wirecloud_workspace', ['creator_id'])
 
     # Create the wirecloud_userworkspace table
     op.create_table(
@@ -110,15 +108,12 @@ def upgrade() -> None:
         sa.Column('accesslevel', sa.SmallInteger, nullable=False),
 
         sa.UniqueConstraint('workspace_id', 'user_id',
-                            name='wirecloud_userworkspace_workspace_id_user_id_dd1e5531_uniq')
+                            name='unique_userworkspace_user_workspace')
     )
 
-    # Set the owner of the wirecloud_workspace table to the postgres user
-    # op.execute('ALTER TABLE wirecloud_workspace OWNER TO postgres')
-
     # Create indexes on the wirecloud_userworkspace table for the user_id and the workspace_id column
-    op.create_index('wirecloud_userworkspace_user_id_2ed22373', 'wirecloud_userworkspace', ['user_id'])
-    op.create_index('wirecloud_userworkspace_workspace_id_8997d673', 'wirecloud_userworkspace', ['workspace_id'])
+    op.create_index('wirecloud_userworkspace_user_id_idx', 'wirecloud_userworkspace', ['user_id'])
+    op.create_index('wirecloud_userworkspace_workspace_id_idx', 'wirecloud_userworkspace', ['workspace_id'])
 
     # Create the wirecloud_tab table
     op.create_table(
@@ -132,13 +127,11 @@ def upgrade() -> None:
                   sa.ForeignKey('wirecloud_workspace.id', deferrable=True, initially="DEFERRED", ondelete='CASCADE',
                                 onupdate='CASCADE'), nullable=False),
 
-        sa.UniqueConstraint('name', 'workspace_id', name='wirecloud_tab_name_workspace_id_f6858f29_uniq')
+        sa.UniqueConstraint('name', 'workspace_id', name='unique_tab_workspace_name')
     )
 
-    # Set the owner of the wirecloud_workspace table to the postgres user
-    # op.execute('ALTER TABLE wirecloud_workspace OWNER TO postgres')
 
-    op.create_index('wirecloud_tab_workspace_id_24287525', 'wirecloud_tab', ['workspace_id'])
+    op.create_index('wirecloud_tab_workspace_id_idx', 'wirecloud_tab', ['workspace_id'])
 
 
 def downgrade() -> None:
