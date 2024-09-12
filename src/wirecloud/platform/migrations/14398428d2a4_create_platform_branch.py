@@ -130,12 +130,31 @@ def upgrade() -> None:
         sa.UniqueConstraint('name', 'workspace_id', name='unique_tab_workspace_name')
     )
 
-
+    # Create indexes on the wirecloud_tab table for the workspace_id column
     op.create_index('wirecloud_tab_workspace_id_idx', 'wirecloud_tab', ['workspace_id'])
+
+    # Create the wirecloud_workspace_groups table
+    op.create_table(
+        'wirecloud_workspace_groups',
+        sa.Column('id', sa.Integer, primary_key=True, autoincrement=True, nullable=False, unique=True),
+        sa.Column('workspace_id', sa.Integer,
+                  sa.ForeignKey('wirecloud_workspace.id', deferrable=True, initially="DEFERRED", ondelete='CASCADE',
+                                onupdate='CASCADE'), nullable=False),
+        sa.Column('group_id', sa.Integer,
+                  sa.ForeignKey('auth_group.id', deferrable=True, initially="DEFERRED", ondelete='CASCADE',
+                                onupdate='CASCADE'), nullable=False),
+
+        sa.UniqueConstraint('workspace_id', 'group_id', name='unique_workspace_groups_group_workspace')
+    )
+
+    # Create indexes on the wirecloud_workspace_groups table for the workspace_id and the group_id column
+    op.create_index('wirecloud_workspace_groups_workspace_id_idx', 'wirecloud_workspace_groups', ['workspace_id'])
+    op.create_index('wirecloud_workspace_groups_group_id_idx', 'wirecloud_workspace_groups', ['group_id'])
 
 
 def downgrade() -> None:
     # Drop the tables created in the upgrade method
+    op.drop_table('wirecloud_workspace_groups')
     op.drop_table('wirecloud_tab')
     op.drop_table('wirecloud_userworkspace')
     op.drop_table('wirecloud_workspace')

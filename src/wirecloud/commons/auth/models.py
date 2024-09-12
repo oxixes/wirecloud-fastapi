@@ -90,6 +90,9 @@ class User(Base):
     markets = relationship('Market', back_populates='user')
     marketuserdata = relationship('MarketUserData', back_populates='user')
 
+    workspaces_created = relationship('Workspace', back_populates='creator')
+    workspaces = relationship('Workspace', secondary='wirecloud_userworkspace', back_populates='users')
+
 
 class Group(Base):
     __tablename__ = 'auth_group'
@@ -101,3 +104,5 @@ class Group(Base):
     permissions = relationship('Permission', secondary='auth_group_permissions')
 
     local_resources = relationship('CatalogueResource', secondary='catalogue_catalogueresource_groups', back_populates='groups')
+
+    workspaces = relationship('Workspace', secondary='wirecloud_workspace_groups', back_populates='groups')

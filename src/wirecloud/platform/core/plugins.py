@@ -41,6 +41,7 @@ from src.wirecloud.platform.localcatalogue.routes import (router as localcatalog
                                                           resources_router as localcatalogue_resources_router)
 from src.wirecloud.platform.markets.routes import router as market_router, markets_router
 from src.wirecloud.platform.core.catalogue_manager import WirecloudCatalogueManager
+import src.wirecloud.platform.workspace.models # FIXME remove
 
 
 WIRING_EDITOR_FILES = (
