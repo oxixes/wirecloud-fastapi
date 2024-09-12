@@ -23,6 +23,7 @@ from typing_extensions import Self
 
 from src.wirecloud.platform.markets import docs
 from src.wirecloud.commons.utils.http import validate_url_param
+from src.wirecloud.platform.wiring.schemas import ResourceName
 
 
 class MarketOptions(BaseModel):
@@ -66,3 +67,13 @@ class Market(BaseModel):
     public: bool
     options: MarketOptions
     user_id: int
+
+
+class MarketEndpoint(BaseModel):
+    market: str = Field(description=docs.market_endpoint_market_description)
+    store: Optional[str] = Field(None, description=docs.market_endpoint_store_description)
+
+
+class PublishData(BaseModel):
+    marketplaces: list[MarketEndpoint] = Field(description=docs.publish_data_marketplaces_description)
+    resource: ResourceName = Field(description=docs.publish_data_resource_description)

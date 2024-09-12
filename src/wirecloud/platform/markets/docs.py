@@ -31,6 +31,14 @@ market_permissions_delete_description = "Whether the user can delete the market"
 # MarketData
 market_permissions_description = "Permissions of the user over the market"
 
+# MarketEndpoint
+market_endpoint_market_description = "Market identifier"
+market_endpoint_store_description = "Store identifier"
+
+# PublishData
+publish_data_marketplaces_description = "Marketplaces where the resource will be published"
+publish_data_resource_description = "Resource to publish"
+
 # GET /markets/
 get_market_collection_summary = "Get the list of available markets"
 get_market_collection_description = "Get the list of available markets for the current user."
@@ -92,3 +100,27 @@ delete_market_entry_not_found_response_description = "Market not found"
 delete_market_entry_user_description = "User who owns the market"
 delete_market_entry_market_description = "Name of the market to delete"
 delete_market_entry_validation_error_response_description = "Validation error"
+
+# POST /markets/publish
+publish_service_process_summary = "Publish on a market"
+publish_service_process_description = "Publish a resource on a market."
+publish_service_process_response_description = "Resource published"
+publish_service_process_auth_required_response_description = "Authentication required"
+publish_service_process_permission_denied_response_description = "Permission denied"
+publish_service_process_not_found_response_description = "Resource not found"
+publish_service_process_not_acceptable_response_description = "Invalid request content type"
+publish_service_process_validation_error_response_description = "Invalid request data"
+publish_service_process_error_response_description = "Error publishing the resource"
+publish_service_process_data_description = "Resource and marketplaces to publish"
+publish_service_process_data_example = {
+    "resource": "wirecloud/example/1.0.0",
+    "marketplaces": [
+        {
+            "market": "user/market1",
+            "store": "store1"
+        },
+        {
+            "market": "user/market2"
+        }
+    ]
+}

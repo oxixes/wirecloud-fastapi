@@ -26,7 +26,7 @@ from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD
 from src.wirecloud.commons.auth.schemas import User
 from src.wirecloud.platform.localcatalogue.utils import install_component
 from src.wirecloud.platform.markets.utils import MarketManager
-from src.wirecloud.platform.markets.schemas import MarketOptions
+from src.wirecloud.platform.markets.schemas import MarketOptions, MarketEndpoint
 from src.wirecloud.database import DBSession
 
 
@@ -42,7 +42,7 @@ class WirecloudCatalogueManager(MarketManager):
         self._options = options
 
     # TODO Type of endpoint
-    async def publish(self, db: DBSession, endpoint: Optional[dict], wgt_file: WgtFile, user: User,
+    async def publish(self, db: DBSession, endpoint: Optional[MarketEndpoint], wgt_file: WgtFile, user: User,
                       request: Request = None, template: Optional[MACD] = None):
         if self._name == 'local':
             added, resource = await install_component(db, wgt_file, users=[user])

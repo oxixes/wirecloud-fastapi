@@ -17,9 +17,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 from fastapi import APIRouter, Request, Body, Path, Response
 
-from src.wirecloud.platform.markets.schemas import MarketData, MarketCreate, Market
+from src.wirecloud.platform.markets.schemas import MarketData, MarketCreate, Market, PublishData
 from src.wirecloud.platform.markets import docs
 from src.wirecloud.platform.markets.crud import (get_markets_for_user, get_market_user, create_market,
                                                  delete_market_by_name)
@@ -27,6 +28,9 @@ from src.wirecloud.platform.markets.utils import get_market_managers
 from src.wirecloud.commons.auth.crud import get_user_by_username
 from src.wirecloud.commons.utils.http import produces, consumes, authentication_required, build_error_response
 from src.wirecloud.commons.auth.utils import UserDep
+from src.wirecloud.commons.utils.wgt import WgtFile
+from src.wirecloud.catalogue.crud import get_catalogue_resource
+from src.wirecloud.catalogue import utils as catalogue
 from src.wirecloud import docs as root_docs
 from src.wirecloud.database import DBDep
 
@@ -181,16 +185,47 @@ async def delete_market_entry(db: DBDep, user: UserDep, request: Request,
             docs.publish_service_process_auth_required_response_description),
         403: root_docs.generate_permission_denied_response_openapi_description(
             docs.publish_service_process_permission_denied_response_description,
-            "You are not allowed to publish in this market"),
+            "Resource not available for user"),
         404: root_docs.generate_not_found_response_openapi_description(
             docs.publish_service_process_not_found_response_description),
         406: root_docs.generate_not_acceptable_response_openapi_description(
             docs.publish_service_process_not_acceptable_response_description, ["application/json"]),
         422: root_docs.generate_validation_error_response_openapi_description(
-            docs.publish_service_process_validation_error_response_description)
+            docs.publish_service_process_validation_error_response_description),
+        502: root_docs.generate_error_response_openapi_description(
+            docs.publish_service_process_error_response_description,
+            "Something went wrong (see details for more info)",
+            {"market1": "Error message 1", "market2": "Error message 2"})
     }
 )
 @authentication_required
 @consumes(["application/json"])
-def publish_service_process(db: DBDep, user: UserDep, request: Request):
-    pass
+async def publish_service_process(db: DBDep, user: UserDep, request: Request,
+                                  data: PublishData = Body(description=docs.publish_service_process_data_description,
+                                                           examples=[docs.publish_service_process_data_example])):
+    (resource_vendor, resource_name, resource_version) = data.resource.split('/')
+    resource = await get_catalogue_resource(db, resource_vendor, resource_name, resource_version)
+    if resource is None:
+        return build_error_response(request, 404, "Resource not found")
+
+    if not await resource.is_available_for(db, user):
+        return build_error_response(request, 403, "Resource not available for user")
+
+    base_dir = catalogue.wgt_deployer.get_base_dir(resource_vendor, resource_name, resource_version)
+    wgt_file = WgtFile(os.path.join(base_dir, resource.template_uri))
+
+    market_managers = await get_market_managers(db, user)
+    errors = {}
+    for market_endpoint in data.marketplaces:
+        try:
+            await market_managers[market_endpoint.market].publish(db, market_endpoint, wgt_file, user, request=request)
+        except Exception as e:
+            errors[market_endpoint.market] = str(e)
+
+    # TODO Translate errors
+    if len(errors) == len(data.marketplaces) and len(errors) != 0:
+        return build_error_response(request, 502, 'Something went wrong (see details for more info)',
+                                    details=errors)
+    elif len(errors) != 0:
+        return build_error_response(request, 200, 'Something went wrong (see details for more info)',
+                                    details=errors)
