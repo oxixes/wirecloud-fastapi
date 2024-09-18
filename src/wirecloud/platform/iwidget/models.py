@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
+# Copyright (c) 2012-2016 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of Wirecloud.
 
@@ -18,21 +18,17 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 Id = str
 
 
-class DBMarketUserData(BaseModel):
-    id: Id
+class DBWidget(BaseModel):
+    widget_uri: str
     name: str
-    value: str
-
-
-class DBMarket(BaseModel, populate_by_name=True):
-    id: Id = Field(alias="_id")
-    name: str
-    public: bool
-    options: str  # TODO check json
-
-    users: list[DBMarketUserData] = []
+    layout: int
+    positions: str  # TODO check json
+    read_only: bool
+    variables: str  # TODO check json
+    widget_id: Id
+    permissions: str  # TODO check json

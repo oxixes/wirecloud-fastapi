@@ -1,83 +1,92 @@
-from src.wirecloud.database import Base
+# -*- coding: utf-8 -*-
 
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, ForeignKey, UniqueConstraint, SmallInteger
-from sqlalchemy.orm import relationship
+# Copyright (c) 2012-2016 CoNWeT Lab., Universidad Politécnica de Madrid
 
+# This file is part of Wirecloud.
 
-class UserWorkspace(Base):
-    __tablename__ = 'wirecloud_userworkspace'
+# Wirecloud is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
-    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False, unique=True)
-    user_id = Column(Integer, ForeignKey('auth_user.id', deferrable=True, initially="DEFERRED", ondelete='CASCADE',
-                                         onupdate='CASCADE'), nullable=False)
-    workspace_id = Column(Integer, ForeignKey('wirecloud_workspace.id', deferrable=True, initially="DEFERRED",
-                                              ondelete='CASCADE',
-                                              onupdate='CASCADE'), nullable=False)
-    accesslevel = Column(SmallInteger, nullable=False)
+# Wirecloud is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
 
-    __table_args__ = (
-        UniqueConstraint('workspace_id', 'user_id', name='unique_userworkspace_user_workspace'),
-    )
+# You should have received a copy of the GNU Affero General Public License
+# along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 
-class WorkspaceGroup(Base):
-    __tablename__ = 'wirecloud_workspace_groups'
+from pydantic import BaseModel, Field
+from typing import Optional
+from datetime import datetime
 
-    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False, unique=True)
-    workspace_id = Column(Integer, ForeignKey('wirecloud_workspace.id', deferrable=True, initially="DEFERRED",
-                                              ondelete='CASCADE',
-                                              onupdate='CASCADE'), nullable=False)
-    group_id = Column(Integer,
-                      ForeignKey('auth_group.id', deferrable=True, initially="DEFERRED", ondelete='CASCADE',
-                                 onupdate='CASCADE'), nullable=False)
+from wirecloud.platform.iwidget.models import DBWidget
 
-    __table_args__ = (
-        UniqueConstraint('workspace_id', 'group_id', name='unique_workspace_groups_group_workspace'),
-    )
+# from bson import ObjectId
 
 
-class Workspace(Base):
-    __tablename__ = 'wirecloud_workspace'
+# Class to handle ObjectId from mongodb, allow pydantic to convert ObjectId to string
+'''
+class Id(ObjectId):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
 
-    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False, unique=True)
-    name = Column(String(30), nullable=False)
-    title = Column(String(255), nullable=False)
-    creation_date = Column(DateTime(timezone=True), nullable=False)
-    last_modified = Column(DateTime(timezone=True), nullable=True)
-    searchable = Column(Boolean, nullable=False)
-    public = Column(Boolean, nullable=False)
-    description = Column(Text, nullable=False)
-    longdescription = Column(Text, nullable=False)
-    forcedValues = Column(Text, nullable=False)
-    wiringStatus = Column(Text, nullable=False)
-    creator_id = Column(Integer, ForeignKey('auth_user.id', deferrable=True, initially="DEFERRED", ondelete='CASCADE',
-                                            onupdate='CASCADE'), nullable=False)
-    requireauth = Column(Boolean, nullable=False)
+    @classmethod
+    def validate(cls, v):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid ObjectId")
+        return ObjectId(v)
 
-    __table_args__ = (
-        UniqueConstraint('creator_id', 'name', name='unique_workspace_name_creator'),
-    )
+    @classmethod
+    def __modify_schema__(cls, field_schema):
+        field_schema.update(type="string")
+'''
 
-    creator = relationship('User', back_populates='workspaces_created')
-    users = relationship('User', secondary='wirecloud_userworkspace', back_populates='workspaces')
-    tabs = relationship('Tab', back_populates='workspace')
-    groups = relationship('Group', secondary='wirecloud_workspace_groups', back_populates='workspaces')
+Id = str
 
 
-class Tab(Base):
-    __tablename__ = 'wirecloud_tab'
+class DBWorkspaceAccessPermissions(BaseModel):
+    id: Id
+    accesslevel: int
 
-    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False, unique=True)
-    name = Column(String(30), nullable=False)
-    tittle = Column(String(30), nullable=False)
-    visible = Column(Boolean, nullable=False)
-    position = Column(Integer, nullable=True)
-    workspace_id = Column(Integer, ForeignKey('wirecloud_workspace.id', deferrable=True, initially="DEFERRED",
-                                              ondelete='CASCADE',
-                                              onupdate='CASCADE'), nullable=False)
 
-    __table_args__ = (
-        UniqueConstraint('name', 'workspace_id', name='unique_tab_workspace_name'),
-    )
+class DBTab(BaseModel, populate_by_name=True):
+    id: Optional[Id] = Field(alias="_id")
+    name: str
+    title: str
+    visible: bool
+    position: Optional[int]
+    widgets: Optional[list[DBWidget]] = []
 
-    workspace = relationship('Workspace', back_populates='tabs')
+    class Config:
+        # arbitrary_types_allowed = True
+        # json_encoders = {ObjectId: str}
+        pass
+
+
+class DBWorkspace(BaseModel, populate_by_name=True):
+    id: Id = Field(alias="_id")
+    name: str
+    title: str
+    creation_date: datetime
+    last_modified: Optional[datetime]
+    searchable: bool
+    public: bool
+    description: str
+    longdescription: str
+    forced_values: str  # TODO check json
+    wiring_status: str  # TODO check json
+    requireauth: bool
+
+    # Relationships
+    users: list[DBWorkspaceAccessPermissions] = []
+    groups: list[DBWorkspaceAccessPermissions] = []
+    tabs: list[DBTab] = []
+
+    class Config:
+        # arbitrary_types_allowed = True
+        # json_encoders = {ObjectId: str}
+        pass
