@@ -25,17 +25,14 @@ from typing import Optional
 Id = str
 
 
-class DBPermissions(BaseModel):
-    name: str
+class DBPermission(BaseModel):
     codename: str
-
-    # TODO relation with django_content_type table
 
 
 class DBUser(BaseModel, populate_by_name=True):
     id: Id = Field(alias="_id")
     password: Optional[str]
-    last_login: datetime
+    last_login: Optional[datetime]
     is_superuser: bool
     username: str
     first_name: str
@@ -43,9 +40,9 @@ class DBUser(BaseModel, populate_by_name=True):
     email: str
     is_staff: bool
     is_active: bool
-    date_joined: Optional[datetime]
+    date_joined: datetime
 
-    user_permissions: list[DBPermissions] = []
+    user_permissions: list[DBPermission] = []
 
 
 class DBGroup(BaseModel, populate_by_name=True):
@@ -53,5 +50,5 @@ class DBGroup(BaseModel, populate_by_name=True):
     name: str
     codename: str
 
-    group_permissions: list[DBPermissions] = []
+    group_permissions: list[DBPermission] = []
     users: list[DBUser] = []

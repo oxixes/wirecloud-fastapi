@@ -25,10 +25,6 @@ from typing import Optional
 Id = str
 
 
-class DBCatalogueResourceAccessPermissions(BaseModel):
-    id: Id
-
-
 class DBXhtml(BaseModel):
     uri: str
     code: str
@@ -53,5 +49,5 @@ class DBCatalogueResource(BaseModel, populate_by_name=True):
     creator_id: Id
 
     xhtml: list[DBXhtml] = []
-    users: list[DBCatalogueResourceAccessPermissions] = []
-    groups: list[DBCatalogueResourceAccessPermissions] = []
+    users: list[Id] = []
+    groups: list[Id] = []

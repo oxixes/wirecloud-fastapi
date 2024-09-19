@@ -18,17 +18,61 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, StringConstraints
+from typing import Annotated, Literal, Any
+
 
 Id = str
+IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
+
+
+class WidgetConfig(BaseModel):
+    top: Annotated[float, Field(ge=0)]
+    left: Annotated[float, Field(ge=0)]
+    zIndex: Annotated[int, Field(ge=0)]
+    height: Annotated[float, Field(ge=0)]
+    width: Annotated[float, Field(ge=0)]
+    minimized: bool
+    titlevisible: bool
+    fulldragboard: bool
+    relx: bool
+    rely: bool
+    relwidth: bool
+    relheight: bool
+    anchor: Literal[
+        "top-left", "top-center", "top-right",
+        "bottom-left", "bottom-center", "bottom-right"
+    ]
+
+
+class SchemaPositions(BaseModel):
+    id: int
+    moreOrEqual: Annotated[int, Field(ge=0)]
+    lessOrEqual: Annotated[int, Field(ge=-1)]
+    widget: WidgetConfig
+
+
+class PermissionsConfig(BaseModel):
+    close: bool
+    configure: bool
+    move: bool
+    rename: bool
+    resize: bool
+    minimize: bool
+    upgrade: bool
+
+
+class SchemaPermissions(BaseModel):
+    editor: PermissionsConfig = {}
+    viewer: PermissionsConfig = {}
 
 
 class DBWidget(BaseModel):
     widget_uri: str
     name: str
     layout: int
-    positions: str  # TODO check json
+    positions: SchemaPositions
     read_only: bool
-    variables: str  # TODO check json
+    variables: dict[str, dict[IntegerStr, Any]] = {}
     widget_id: Id
-    permissions: str  # TODO check json
+    permissions: SchemaPermissions = {}

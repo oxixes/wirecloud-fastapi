@@ -18,13 +18,12 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, StringConstraints
+from typing import Optional, Annotated, Any
 from datetime import datetime
 
 from wirecloud.platform.iwidget.models import DBWidget
-
-# from bson import ObjectId
+from wirecloud.platform.wiring.schemas import Wiring
 
 
 # Class to handle ObjectId from mongodb, allow pydantic to convert ObjectId to string
@@ -45,7 +44,9 @@ class Id(ObjectId):
         field_schema.update(type="string")
 '''
 
+
 Id = str
+IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
 
 
 class DBWorkspaceAccessPermissions(BaseModel):
@@ -61,10 +62,25 @@ class DBTab(BaseModel, populate_by_name=True):
     position: Optional[int]
     widgets: Optional[list[DBWidget]] = []
 
-    class Config:
-        # arbitrary_types_allowed = True
-        # json_encoders = {ObjectId: str}
-        pass
+
+class ExtraPref(BaseModel):
+    name: str
+    inheritable: bool
+    label: str
+    type: str
+    description: str
+    required: bool
+
+
+class ForcedValuesConfig(BaseModel):
+    value: Any
+    hidden: bool
+
+
+class SchemaForcedValues(BaseModel):
+    extra_prefs: list[ExtraPref] = []
+    operator: dict[IntegerStr, dict[str, ForcedValuesConfig]] = []
+    widget: dict[IntegerStr, dict[str, ForcedValuesConfig]] = []
 
 
 class DBWorkspace(BaseModel, populate_by_name=True):
@@ -77,16 +93,11 @@ class DBWorkspace(BaseModel, populate_by_name=True):
     public: bool
     description: str
     longdescription: str
-    forced_values: str  # TODO check json
-    wiring_status: str  # TODO check json
+    forced_values: SchemaForcedValues
+    wiring_status: Wiring
     requireauth: bool
 
     # Relationships
     users: list[DBWorkspaceAccessPermissions] = []
     groups: list[DBWorkspaceAccessPermissions] = []
     tabs: list[DBTab] = []
-
-    class Config:
-        # arbitrary_types_allowed = True
-        # json_encoders = {ObjectId: str}
-        pass

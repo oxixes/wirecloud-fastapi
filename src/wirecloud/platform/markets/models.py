@@ -20,6 +20,9 @@
 
 from pydantic import BaseModel, Field
 
+from wirecloud.platform.markets.schemas import MarketOptions
+
+
 Id = str
 
 
@@ -33,6 +36,6 @@ class DBMarket(BaseModel, populate_by_name=True):
     id: Id = Field(alias="_id")
     name: str
     public: bool
-    options: str  # TODO check json
+    options: MarketOptions
 
     users: list[DBMarketUserData] = []
