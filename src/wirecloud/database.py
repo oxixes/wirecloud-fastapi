@@ -19,10 +19,9 @@
 
 import importlib.util
 
-from typing import AsyncIterator, Annotated
-from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, create_async_engine, async_sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
 from fastapi import Depends
+from motor.motor_asyncio import AsyncIOMotorClient
+from typing import AsyncIterator, Annotated
 
 if importlib.util.find_spec('src') is None:
     from settings import DATABASE
@@ -34,38 +33,23 @@ def get_db_url() -> str:
     database_url = f"{DATABASE['DRIVER']}://{DATABASE['USER']}:{DATABASE['PASSWORD']}@{DATABASE['HOST']}"
     if DATABASE['PORT']:
         database_url += f":{DATABASE['PORT']}"
-    database_url += f"/{DATABASE['NAME']}"
-
-    if 'sqlite' in DATABASE['DRIVER']:
-        database_url = f"{DATABASE['DRIVER']}:///{DATABASE['NAME']}"
 
     return database_url
 
 
-engine: AsyncEngine = create_async_engine(get_db_url(), echo=DATABASE['ECHO'])
-sessionmaker = async_sessionmaker(autocommit=False, bind=engine)
+client = AsyncIOMotorClient()
+database = client[DATABASE['NAME']]
 
 
-async def close() -> None:
-    if engine:
-        await engine.dispose()
+def close() -> None:
+    client.close()
 
 
-async def commit(session: AsyncSession) -> None:
-    await session.commit()
-
-
-async def get_session() -> AsyncIterator[AsyncSession]:
-    session = sessionmaker()
+async def get_session() -> AsyncIterator[AsyncIOMotorClient]:
     try:
-        yield session
-    except Exception:
-        await session.rollback()
-        raise
+        yield database
     finally:
-        await session.close()
+        close()
 
-DBDep = Annotated[AsyncSession, Depends(get_session)]
-DBSession = AsyncSession
 
-Base = declarative_base()
+DBDep = Annotated[AsyncIOMotorClient, Depends(get_session)]
