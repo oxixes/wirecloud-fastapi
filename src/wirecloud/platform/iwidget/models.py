@@ -26,7 +26,16 @@ Id = str
 IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
 
 
-class WidgetConfig(BaseModel):
+class DBWidgetConfigAnchor(BaseModel):
+    top_left = "top-left"
+    top_center = "top-center"
+    top_right = "top-right"
+    bottom_left = "bottom-left"
+    bottom_center = "bottom-center"
+    bottom_right = "bottom-right"
+
+
+class DBWidgetConfig(BaseModel):
     top: Annotated[float, Field(ge=0)]
     left: Annotated[float, Field(ge=0)]
     zIndex: Annotated[int, Field(ge=0)]
@@ -39,20 +48,17 @@ class WidgetConfig(BaseModel):
     rely: bool
     relwidth: bool
     relheight: bool
-    anchor: Literal[
-        "top-left", "top-center", "top-right",
-        "bottom-left", "bottom-center", "bottom-right"
-    ]
+    anchor: DBWidgetConfigAnchor
 
 
-class SchemaPositions(BaseModel):
+class DBWidgetPositions(BaseModel):
     id: int
     moreOrEqual: Annotated[int, Field(ge=0)]
     lessOrEqual: Annotated[int, Field(ge=-1)]
-    widget: WidgetConfig
+    widget: DBWidgetConfig
 
 
-class PermissionsConfig(BaseModel):
+class DBWidgetPermissionsConfig(BaseModel):
     close: bool
     configure: bool
     move: bool
@@ -62,17 +68,21 @@ class PermissionsConfig(BaseModel):
     upgrade: bool
 
 
-class SchemaPermissions(BaseModel):
-    editor: PermissionsConfig = {}
-    viewer: PermissionsConfig = {}
+class DBWidgetPermissions(BaseModel):
+    editor: DBWidgetPermissionsConfig = {}
+    viewer: DBWidgetPermissionsConfig = {}
+
+
+class DBWidgetVariables(BaseModel):
+    users: dict[IntegerStr, Any] = {}
 
 
 class DBWidget(BaseModel):
     widget_uri: str
     name: str
     layout: int
-    positions: SchemaPositions
+    positions: DBWidgetPositions
     read_only: bool
-    variables: dict[str, dict[IntegerStr, Any]] = {}
+    variables: dict[str, DBWidgetVariables] = {}
     widget_id: Id
-    permissions: SchemaPermissions = {}
+    permissions: DBWidgetPermissions = {}

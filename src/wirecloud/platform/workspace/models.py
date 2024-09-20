@@ -63,7 +63,7 @@ class DBTab(BaseModel, populate_by_name=True):
     widgets: Optional[list[DBWidget]] = []
 
 
-class ExtraPref(BaseModel):
+class DBWorkspaceExtraPreference(BaseModel):
     name: str
     inheritable: bool
     label: str
@@ -72,15 +72,15 @@ class ExtraPref(BaseModel):
     required: bool
 
 
-class ForcedValuesConfig(BaseModel):
+class DBWorkspaceForcedValue(BaseModel):
     value: Any
     hidden: bool
 
 
-class SchemaForcedValues(BaseModel):
-    extra_prefs: list[ExtraPref] = []
-    operator: dict[IntegerStr, dict[str, ForcedValuesConfig]] = []
-    widget: dict[IntegerStr, dict[str, ForcedValuesConfig]] = []
+class DBWorkspaceForcedValues(BaseModel):
+    extra_prefs: list[DBWorkspaceExtraPreference] = []
+    operator: dict[IntegerStr, dict[str, DBWorkspaceForcedValue]] = []
+    widget: dict[IntegerStr, dict[str, DBWorkspaceForcedValue]] = []
 
 
 class DBWorkspace(BaseModel, populate_by_name=True):
@@ -93,7 +93,7 @@ class DBWorkspace(BaseModel, populate_by_name=True):
     public: bool
     description: str
     longdescription: str
-    forced_values: SchemaForcedValues
+    forced_values: DBWorkspaceForcedValues
     wiring_status: Wiring
     requireauth: bool
 
