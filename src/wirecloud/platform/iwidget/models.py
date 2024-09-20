@@ -19,7 +19,7 @@
 
 
 from pydantic import BaseModel, Field, StringConstraints
-from typing import Annotated, Any
+from typing import Annotated, Any, Optional
 from enum import Enum
 
 
@@ -27,7 +27,7 @@ Id = str
 IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
 
 
-class DBWidgetConfigAnchor(Enum):
+class DBWidgetConfigAnchor(BaseModel, use_enum_values=True):
     top_left = "top-left"
     top_center = "top-center"
     top_right = "top-right"
@@ -60,18 +60,18 @@ class DBWidgetPositions(BaseModel):
 
 
 class DBWidgetPermissionsConfig(BaseModel):
-    close: bool
-    configure: bool
-    move: bool
-    rename: bool
-    resize: bool
-    minimize: bool
-    upgrade: bool
+    close: Optional[bool]
+    configure: Optional[bool]
+    move: Optional[bool]
+    rename: Optional[bool]
+    resize: Optional[bool]
+    minimize: Optional[bool]
+    upgrade: Optional[bool]
 
 
 class DBWidgetPermissions(BaseModel):
-    editor: DBWidgetPermissionsConfig = {}
-    viewer: DBWidgetPermissionsConfig = {}
+    editor: Optional[DBWidgetPermissionsConfig] = {}
+    viewer: Optional[DBWidgetPermissionsConfig] = {}
 
 
 class DBWidgetVariables(BaseModel):
