@@ -19,14 +19,15 @@
 
 
 from pydantic import BaseModel, Field, StringConstraints
-from typing import Annotated, Literal, Any
+from typing import Annotated, Any
+from enum import Enum
 
 
 Id = str
 IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
 
 
-class DBWidgetConfigAnchor(BaseModel):
+class DBWidgetConfigAnchor(Enum):
     top_left = "top-left"
     top_center = "top-center"
     top_right = "top-right"
