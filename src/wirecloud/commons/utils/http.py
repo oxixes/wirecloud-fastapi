@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import re
 # Copyright (c) 2012-2016 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of Wirecloud.
@@ -31,7 +31,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, Union, Any
 from collections.abc import Callable
-from urllib.parse import urljoin, unquote, urlparse
+from urllib.parse import urljoin, unquote, urlparse, quote
 
 from src.wirecloud.commons.utils import mimeparser
 
@@ -317,6 +317,12 @@ def get_current_domain(request: Optional[Request] = None) -> str:
 
 
 def get_absolute_reverse_url(viewname: str, request: Optional[Request] = None, **kwargs) -> str:
+    url = get_relative_reverse_url(viewname, **kwargs)
+
+    return urljoin(get_current_scheme(request) + '://' + get_current_domain(request), url)
+
+
+def get_relative_reverse_url(viewname: str, **kwargs) -> str:
     from src.wirecloud.platform.plugins import get_plugin_urls
 
     patterns = get_plugin_urls()
@@ -327,7 +333,27 @@ def get_absolute_reverse_url(viewname: str, request: Optional[Request] = None, *
     for key in kwargs:
         url = url.replace('{' + key + '}', str(kwargs[key]))
 
-    return urljoin(get_current_scheme(request) + '://' + get_current_domain(request), url)
+    return url
+
+
+def resolve_url_name(path: str) -> Optional[str]:
+    from src.wirecloud.platform.plugins import get_plugin_urls
+
+    for name, url in get_plugin_urls().items():
+        # Check if the pattern matches the path, to do so, convert the pattern to a regex
+        pattern = re.escape(url.urlpattern).replace('\\{', '{').replace('\\}', '}')
+        pattern = re.sub(r'\{[^/]+:path}', r'(.+)', pattern)
+        pattern = re.sub(r'\{[^/]+}', r'([^/]+)', pattern)
+        pattern = '^' + pattern + '$'
+
+        if re.match(pattern, path):
+            return name
+
+    return None
+
+
+def iri_to_uri(iri: str) -> str:
+    return quote(iri, safe="/#%[]=:;$&()+,!?*@'~")
 
 
 def validate_url_param(name: str, value: str, force_absolute: bool = True, required: bool = False):

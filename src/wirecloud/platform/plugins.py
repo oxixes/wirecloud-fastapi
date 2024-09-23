@@ -126,8 +126,8 @@ _wirecloud_plugins: Optional[tuple[WirecloudPlugin, ...]] = None
 _wirecloud_features: Optional[dict[str, dict[str, str]]] = None
 _wirecloud_features_info: Optional[dict[str, str]] = None
 _wirecloud_proxy_processors: Optional[tuple[type, ...]] = None
-_wirecloud_request_proxy_processors: tuple[type, ...] = ()
-_wirecloud_response_proxy_processors: tuple[type, ...] = ()
+_wirecloud_request_proxy_processors: tuple[Any, ...] = ()
+_wirecloud_response_proxy_processors: tuple[Any, ...] = ()
 _wirecloud_constants: Optional[list[dict[str, str]]] = None
 _wirecloud_api_auth_backends: Optional[dict[str, Callable]] = None
 _wirecloud_tab_preferences: Optional[list[TabPreferenceKey]] = None
@@ -395,7 +395,7 @@ def get_api_auth_backends() -> dict[str, Callable]:
     return _wirecloud_api_auth_backends
 
 
-def get_proxy_processors() -> tuple[type, ...]:
+def get_proxy_processors() -> tuple[Any, ...]:
     global _wirecloud_proxy_processors
     global _wirecloud_request_proxy_processors
     global _wirecloud_response_proxy_processors
@@ -438,14 +438,14 @@ def get_proxy_processors() -> tuple[type, ...]:
     return _wirecloud_proxy_processors
 
 
-def get_request_proxy_processors() -> tuple[type, ...]:
+def get_request_proxy_processors() -> tuple[Any, ...]:
     if _wirecloud_proxy_processors is None:
         get_proxy_processors()
 
     return _wirecloud_request_proxy_processors
 
 
-def get_response_proxy_processors() -> tuple[type, ...]:
+def get_response_proxy_processors() -> tuple[Any, ...]:
     if _wirecloud_proxy_processors is None:
         get_proxy_processors()
 
@@ -462,6 +462,7 @@ def build_url_template(urltemplate: URLTemplate, kwargs: Optional[list[str]] = N
         prefix = ''
 
     template = prefix + urltemplate.urlpattern
+    template = template.replace(':path', '')
 
     # Replace defaults of the non-karg arguments
     for arg in urltemplate.defaults:

@@ -2,10 +2,12 @@ from os import path, pardir
 
 BASEDIR = path.abspath(path.join(path.dirname(path.abspath(__file__)), pardir))
 
+# TODO If platform is installed, the proxy has to be installed too
 INSTALLED_APPS = (
     'wirecloud.commons',
     'wirecloud.platform',
-    'wirecloud.catalogue'
+    'wirecloud.catalogue',
+    'wirecloud.proxy'
 )
 
 DATABASE = {
@@ -30,5 +32,7 @@ JWT_KEY = '15=7f)g=)&spodi3bg8%&4fqt%f3rpg%b$-aer5*#a*(rqm79e'
 SESSION_AGE = 60 * 60 * 24 * 14  # 2 weeks
 
 CATALOGUE_MEDIA_ROOT = path.join(BASEDIR, 'catalogue', 'media')
+
+WIRECLOUD_HTTPS_VERIFY = True
 
 # TODO Allow to define a list of known proxies to trust the X-Forwarded-For header
