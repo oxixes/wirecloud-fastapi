@@ -669,6 +669,9 @@ class WirecloudCorePlugin(WirecloudPlugin):
     def get_ajax_endpoints(self, view: str, prefix: str) -> tuple[AjaxEndpoint, ...]:
         url_patterns = get_plugin_urls()
 
+        if not 'wirecloud|proxy' in url_patterns:
+            raise ValueError('Missing proxy url pattern. Is the proxy plugin enabled?')
+
         endpoints = (
             AjaxEndpoint(id='IWIDGET_COLLECTION', url=build_url_template(url_patterns['wirecloud.iwidget_collection'], ['workspace_id', 'tab_id'], prefix)),
             AjaxEndpoint(id='IWIDGET_ENTRY', url=build_url_template(url_patterns['wirecloud.iwidget_entry'], ['workspace_id', 'tab_id', 'iwidget_id'], prefix)),
@@ -685,7 +688,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
             AjaxEndpoint(id='MARKET_ENTRY', url=build_url_template(url_patterns['wirecloud.market_entry'], ['user', 'market'], prefix)),
             AjaxEndpoint(id='MISSING_WIDGET_CODE_ENTRY', url=build_url_template(url_patterns['wirecloud.missing_widget_code_entry'], [], prefix)),
             AjaxEndpoint(id='OPERATOR_ENTRY', url=build_url_template(url_patterns['wirecloud.operator_entry'], ['vendor', 'name', 'version'], prefix)),
-            # AjaxEndpoint(id='PROXY', url=build_url_template(url_patterns['wirecloud|proxy'], ['protocol', 'domain', 'path'], prefix)),
+            AjaxEndpoint(id='PROXY', url=build_url_template(url_patterns['wirecloud|proxy'], ['protocol', 'domain', 'path'], prefix)),
             AjaxEndpoint(id='PUBLISH_ON_OTHER_MARKETPLACE', url=build_url_template(url_patterns['wirecloud.publish_on_other_marketplace'], [], prefix)),
             AjaxEndpoint(id='ROOT_URL', url=build_url_template(url_patterns['wirecloud.root'], [], prefix)),
             AjaxEndpoint(id='SEARCH_SERVICE', url=build_url_template(url_patterns['wirecloud.search_service'], [], prefix)),
@@ -741,4 +744,4 @@ class WirecloudCorePlugin(WirecloudPlugin):
         return extensions
 
     def get_proxy_processors(self) -> tuple[str, ...]:
-        return ('wirecloud.proxy.processors.SecureDataProcessor',)
+        return ('src.wirecloud.proxy.processors.SecureDataProcessor',)

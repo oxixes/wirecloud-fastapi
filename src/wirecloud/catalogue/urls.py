@@ -36,6 +36,6 @@ patterns: dict[str, URLTemplate] = {
     # Version check
     # FIXME: The version check does not seem to be used. It could be removed
     'wirecloud_catalogue.resource_versions': URLTemplate(urlpattern='/catalogue/versions', defaults={}),
-    'wirecloud_catalogue.media': URLTemplate(urlpattern='/catalogue/media/{vendor}/{name}/{version}/{file_path}',
+    'wirecloud_catalogue.media': URLTemplate(urlpattern='/catalogue/media/{vendor}/{name}/{version}/{file_path:path}',
                                              defaults={})
 }
