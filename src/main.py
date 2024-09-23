@@ -24,6 +24,7 @@ if sys.version_info < (3, 9):
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import ORJSONResponse
 from fastapi.openapi.utils import get_openapi
 
@@ -43,6 +44,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan,
               default_response_class=ORJSONResponse)
+
+app.add_middleware(GZipMiddleware)
 
 get_plugins(app)
 
