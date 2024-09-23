@@ -17,44 +17,25 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from src.wirecloud.database import Base
 
-from sqlalchemy import Column, Integer, String, Boolean, Text, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import relationship
+from pydantic import BaseModel, Field
 
-
-class Market(Base):
-    __tablename__ = 'wirecloud_market'
-
-    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False, unique=True)
-    name = Column(String(50), nullable=False)
-    public = Column(Boolean, nullable=False)
-    options = Column(Text, nullable=False)
-    user_id = Column(Integer, ForeignKey('auth_user.id', deferrable=True, initially="DEFERRED", ondelete='CASCADE',
-                                         onupdate='CASCADE'), nullable=False)
-
-    __table_args__ = (
-        UniqueConstraint('user_id', 'name', name='unique_market_name_user'),
-    )
-
-    user = relationship('User', back_populates='markets')
-    userdata = relationship('MarketUserData', back_populates='market')
+from wirecloud.platform.markets.schemas import MarketOptions
 
 
-class MarketUserData(Base):
-    __tablename__ = 'wirecloud_marketuserdata'
+Id = str
 
-    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False, unique=True)
-    name = Column(String(50), nullable=False)
-    value = Column(String(250), nullable=False)
-    market_id = Column(Integer, ForeignKey('wirecloud_market.id', deferrable=True, initially="DEFERRED",
-                                           ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
-    user_id = Column(Integer, ForeignKey('auth_user.id', deferrable=True, initially="DEFERRED", ondelete='CASCADE',
-                                         onupdate='CASCADE'), nullable=False)
 
-    __table_args__ = (
-        UniqueConstraint('market_id', 'user_id', 'name', name='unique_marketuserdata_name_user_market'),
-    )
+class DBMarketUserData(BaseModel):
+    id: Id
+    name: str
+    value: str
 
-    market = relationship('Market', back_populates='userdata')
-    user = relationship('User', back_populates='marketuserdata')
+
+class DBMarket(BaseModel, populate_by_name=True):
+    id: Id = Field(alias="_id")
+    name: str
+    public: bool
+    options: MarketOptions
+
+    users: list[DBMarketUserData] = []

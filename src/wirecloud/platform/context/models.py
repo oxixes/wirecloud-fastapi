@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+
 # Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
 
 # This file is part of Wirecloud.
@@ -17,14 +18,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from src.wirecloud.database import Base
 
-from sqlalchemy import Column, Integer, String
+from pydantic import BaseModel, Field
+
+Id = str
 
 
-class Constant(Base):
-    __tablename__ = 'wirecloud_constant'
-
-    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False, unique=True)
-    concept = Column(String(255), nullable=False, unique=True)
-    value = Column(String(256), nullable=False)
+class DBConstant(BaseModel, populate_by_name=True):
+    id: Id = Field(alias="_id")
+    concept: str
+    value: str
