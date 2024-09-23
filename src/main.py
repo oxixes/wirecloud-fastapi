@@ -28,8 +28,8 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import ORJSONResponse
 from fastapi.openapi.utils import get_openapi
 
-from .wirecloud.database import close, engine
-from .wirecloud.platform.plugins import get_plugins, get_extra_openapi_schemas
+from src.wirecloud.database import close
+from src.wirecloud.platform.plugins import get_plugins, get_extra_openapi_schemas
 from src.wirecloud import docs
 
 
@@ -38,8 +38,7 @@ from src.wirecloud import docs
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     yield
-    if engine is not None:
-        await close()
+    close()
 
 
 app = FastAPI(lifespan=lifespan,
