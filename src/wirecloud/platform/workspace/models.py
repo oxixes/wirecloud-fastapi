@@ -22,8 +22,8 @@ from pydantic import BaseModel, Field, StringConstraints
 from typing import Optional, Annotated, Any
 from datetime import datetime
 
-from wirecloud.platform.iwidget.models import DBWidget
-from wirecloud.platform.wiring.schemas import Wiring
+from src.wirecloud.platform.iwidget.models import DBWidget
+from src.wirecloud.platform.wiring.schemas import Wiring, WiringOperatorPreference, WiringOperator
 
 
 # Class to handle ObjectId from mongodb, allow pydantic to convert ObjectId to string
@@ -47,6 +47,22 @@ class Id(ObjectId):
 
 Id = str
 IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
+
+
+class DBWiringOperatorPreferenceValue(BaseModel):
+    users: dict[IntegerStr, Any] = {}
+
+
+class DBWiringOperatorPreference(WiringOperatorPreference):
+    value: DBWiringOperatorPreferenceValue
+
+
+class DBWiringOperator(WiringOperator):
+    preferences: dict[str, DBWiringOperatorPreference]
+
+
+class DBWiring(Wiring):
+    operators: dict[IntegerStr, DBWiringOperator] = {}
 
 
 class DBWorkspaceAccessPermissions(BaseModel):
@@ -94,7 +110,7 @@ class DBWorkspace(BaseModel, populate_by_name=True):
     description: str
     longdescription: str
     forced_values: DBWorkspaceForcedValues
-    wiring_status: Wiring
+    wiring_status: DBWiring
     requireauth: bool
 
     # Relationships

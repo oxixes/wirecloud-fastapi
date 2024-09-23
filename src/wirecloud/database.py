@@ -24,6 +24,9 @@ from typing import AsyncIterator, Annotated
 from src.settings import DATABASE
 
 
+ID = str
+
+
 def get_db_url() -> str:
     driver = "mongodb"
     if DATABASE['USER'] and DATABASE['PASSWORD'] and DATABASE['USER'] != "" and DATABASE["PASSWORD"] != "":

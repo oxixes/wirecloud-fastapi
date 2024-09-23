@@ -21,6 +21,9 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 
+from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD
+
+
 Id = str
 
 
@@ -44,7 +47,7 @@ class DBCatalogueResource(BaseModel, populate_by_name=True):
     creation_date: datetime
     template_uri: str
     popularity: float
-    json_description: str  # TODO check json
+    json_description: MACD
     creator_id: Id
 
     xhtml: list[DBXhtml] = []
