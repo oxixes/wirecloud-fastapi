@@ -17,27 +17,29 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-import importlib.util
 
 from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorClient
 from typing import AsyncIterator, Annotated
-
-if importlib.util.find_spec('src') is None:
-    from settings import DATABASE
-else:
-    from src.settings import DATABASE
+from src.settings import DATABASE
 
 
 def get_db_url() -> str:
-    database_url = f"{DATABASE['DRIVER']}://{DATABASE['USER']}:{DATABASE['PASSWORD']}@{DATABASE['HOST']}"
+    driver = "mongodb"
+    if DATABASE['USER'] and DATABASE['PASSWORD'] and DATABASE['USER'] != "" and DATABASE["PASSWORD"] != "":
+        database_url = f"{driver}://{DATABASE['USER']}:{DATABASE['PASSWORD']}@{DATABASE['HOST']}"
+    elif DATABASE['USER'] and DATABASE['USER'] != "":
+        database_url = f"{driver}://{DATABASE['USER']}@{DATABASE['HOST']}"
+    else:
+        database_url = f"{driver}://{DATABASE['HOST']}"
+
     if DATABASE['PORT']:
         database_url += f":{DATABASE['PORT']}"
 
     return database_url
 
 
-client = AsyncIOMotorClient()
+client = AsyncIOMotorClient(get_db_url())
 database = client[DATABASE['NAME']]
 
 
@@ -46,10 +48,16 @@ def close() -> None:
 
 
 async def get_session() -> AsyncIterator[AsyncIOMotorClient]:
+    session = await client.start_session()
     try:
-        yield database
+        yield session
+    except Exception:
+        await session.abort_transaction()
+        raise
     finally:
-        close()
+        await session.end_session()
+
+
 
 
 DBDep = Annotated[AsyncIOMotorClient, Depends(get_session)]

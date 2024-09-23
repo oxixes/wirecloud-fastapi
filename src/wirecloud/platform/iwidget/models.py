@@ -27,7 +27,7 @@ Id = str
 IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
 
 
-class DBWidgetConfigAnchor(BaseModel, use_enum_values=True):
+class DBWidgetConfigAnchor(Enum):
     top_left = "top-left"
     top_center = "top-center"
     top_right = "top-right"
@@ -36,7 +36,7 @@ class DBWidgetConfigAnchor(BaseModel, use_enum_values=True):
     bottom_right = "bottom-right"
 
 
-class DBWidgetConfig(BaseModel):
+class DBWidgetConfig(BaseModel, use_enum_values=True):
     top: Annotated[float, Field(ge=0)]
     left: Annotated[float, Field(ge=0)]
     zIndex: Annotated[int, Field(ge=0)]
