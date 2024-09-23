@@ -24,7 +24,7 @@ from typing import AsyncIterator, Annotated
 from src.settings import DATABASE
 
 
-ID = str
+Id = str
 
 
 def get_db_url() -> str:

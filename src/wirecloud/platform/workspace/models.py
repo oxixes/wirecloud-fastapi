@@ -23,6 +23,7 @@ from typing import Optional, Annotated, Any
 from datetime import datetime
 
 from src.wirecloud.platform.iwidget.models import DBWidget
+from src.wirecloud.database import Id
 from src.wirecloud.platform.wiring.schemas import Wiring, WiringOperatorPreference, WiringOperator
 
 
@@ -44,8 +45,6 @@ class Id(ObjectId):
         field_schema.update(type="string")
 '''
 
-
-Id = str
 IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
 
 

@@ -22,9 +22,7 @@ from datetime import datetime
 from typing import Optional
 
 from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD
-
-
-Id = str
+from src.wirecloud.database import Id
 
 
 class DBXhtml(BaseModel):

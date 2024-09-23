@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 
-Id = str
+from src.wirecloud.database import Id
 
 
 class DBPermission(BaseModel):
