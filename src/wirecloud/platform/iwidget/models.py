@@ -22,8 +22,8 @@ from pydantic import BaseModel, Field, StringConstraints
 from typing import Annotated, Any, Optional
 from enum import Enum
 
+from src.wirecloud.database import Id
 
-Id = str
 IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
 
 

@@ -18,39 +18,29 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from typing import Optional
-from sqlalchemy import select, insert, delete
-from sqlalchemy.exc import IntegrityError
 
 from src.wirecloud.database import DBSession
 from src.wirecloud.commons.auth.schemas import User
-from src.wirecloud.platform.markets.models import Market as MarketModel
-from src.wirecloud.commons.auth.models import User as UserModel
-from src.wirecloud.platform.markets.schemas import Market, MarketOptions
+from src.wirecloud.commons.auth.models import DBUser as UserModel
+from src.wirecloud.platform.markets.schemas import Market
+from src.wirecloud.platform.markets.models import DBMarket as MarketModel
 
 
 async def get_markets_for_user(db: DBSession, user: Optional[User]) -> list[Market]:
+    query = {"public": True}
     if user is not None:
-        query = select(MarketModel).where(MarketModel.public == True or MarketModel.user_id == user.id)
-    else:
-        query = select(MarketModel).where(MarketModel.public == True)
+        query = {"$or": [{"public": True}, {"user_id": user.id}]}
 
-    result = await db.execute(query)
-    resources = result.scalars().all()
-
-    return [Market(
-        id=resource.id,
-        name=resource.name,
-        public=resource.public,
-        options=MarketOptions.model_validate_json(resource.options),
-        user_id=resource.user_id
-    ) for resource in resources]
+    resources = [MarketModel.model_validate(resource) for resource in await db.client.markets.find(query).to_list()]
+    return resources
 
 
 async def get_market_user(db: DBSession, market: Market) -> Optional[User]:
-    query = select(UserModel).where(UserModel.id == market.user_id)
-
-    result = await db.execute(query)
-    user = result.scalar()
+    query = {"_id": market.user_id}
+    user = await db.client.users.find_one(query)
+    if user is None:
+        return None
+    user = UserModel.model_validate(user)
 
     return User(
         id=user.id,
@@ -63,35 +53,32 @@ async def get_market_user(db: DBSession, market: Market) -> Optional[User]:
         is_active=user.is_active,
         date_joined=user.date_joined,
         last_login=user.last_login
-    ) if user else None
+    )
 
 
 async def create_market(db: DBSession, market: Market) -> bool:
-    # Check integrity
-    try:
-        query = insert(MarketModel).values(
-            name=market.name,
-            public=market.public,
-            options=market.options.model_dump_json(),
-            user_id=market.user_id
-        )
-
-        await db.execute(query)
-        await db.commit()
-    except IntegrityError:
-        await db.rollback()
+    if not db.in_transaction():
+        db.start_transaction()
+    query = {"name": market.name, "user_id": market.user_id}
+    found_market = await db.client.markets.find_one(query)
+    if found_market is not None:
         return False
+
+    created_market = MarketModel(**market.model_dump())
+    await db.client.markets.insert_one(created_market.model_dump())
 
     return True
 
 
 async def delete_market_by_name(db: DBSession, user: User, name: str) -> bool:
-    query = delete(MarketModel).where(MarketModel.name == name and MarketModel.user_id == user.id)
+    if not db.in_transaction():
+        db.start_transaction()
+    query = {"name": name, "user_id": user.id}
+    result = await db.client.markets.delete_one(query)
 
-    result = await db.execute(query)
-    await db.commit()
+    await db.commit_transaction()
 
-    if result.rowcount == 0:
+    if result.deleted_count == 0:
         return False
 
     return True

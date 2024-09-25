@@ -19,7 +19,7 @@
 
 
 from fastapi import Depends
-from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorClientSession
 from typing import AsyncIterator, Annotated
 from src.settings import DATABASE
 
@@ -50,7 +50,7 @@ def close() -> None:
     client.close()
 
 
-async def get_session() -> AsyncIterator[AsyncIOMotorClient]:
+async def get_session() -> AsyncIterator[AsyncIOMotorClientSession]:
     session = await client.start_session()
     try:
         yield session
@@ -61,6 +61,5 @@ async def get_session() -> AsyncIterator[AsyncIOMotorClient]:
         await session.end_session()
 
 
-
-
+DBSession = AsyncIOMotorClientSession
 DBDep = Annotated[AsyncIOMotorClient, Depends(get_session)]

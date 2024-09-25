@@ -23,14 +23,15 @@ from enum import Enum
 from src.wirecloud import docs
 from datetime import datetime
 
+from src.wirecloud.database import Id
+from wirecloud.commons.auth.models import DBGroup
+
 
 class Permission(BaseModel):
     codename: str = Field(description=docs.permission_codename_description, min_length=1, max_length=255)
 
 
-class Group(BaseModel):
-    id: int = Field(description=docs.group_id_description)
-    name: str = Field(description=docs.group_name_description, min_length=1, max_length=150)
+Group = DBGroup
 
 
 class UserBase(BaseModel):
@@ -42,7 +43,7 @@ class UserLogin(UserBase):
 
 
 class User(UserBase):
-    id: int = Field(description=docs.user_id_description)
+    id: Id = Field(description=docs.user_id_description)
     email: str = Field(description=docs.user_email_description)
     first_name: str = Field(description=docs.user_first_name_description, max_length=30)
     last_name: str = Field(description=docs.user_last_name_description, max_length=150)

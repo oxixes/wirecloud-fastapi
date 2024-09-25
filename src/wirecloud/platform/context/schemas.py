@@ -21,14 +21,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from typing import Any
 
 import src.wirecloud.docs as docs
+from src.wirecloud.platform.context.models import DBConstant
 
-
-class Constant(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    concept: str = Field(max_length=255)
-    value: str = Field(max_length=256)
+Constant = DBConstant
 
 
 class BaseContextKey(BaseModel):
