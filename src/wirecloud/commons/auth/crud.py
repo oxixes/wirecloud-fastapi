@@ -91,7 +91,7 @@ async def get_user_groups(db: DBSession, user_id: int) -> list[Group]:
 
 async def get_user_with_password(db: DBSession, username: str) -> Optional[UserWithPassword]:
     query = {"username": username}
-    user = await db.client['wirecloud-fastapi'].users.find_one(query)
+    user = await db.client.users.find_one(query)
     return user
 
 

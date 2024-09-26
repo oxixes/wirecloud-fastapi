@@ -14,10 +14,9 @@ DATABASE = {
     'DRIVER': 'mongodb',
     'NAME': 'wirecloud_fastapi',
     'HOST': 'localhost',
-    'PORT': '',  # Set to empty string for default. Not used with sqlite3.
-    'USER': '',  # Not used with sqlite3.
-    'PASSWORD': '',  # Not used with sqlite3.
-    'ECHO': True,
+    'PORT': '',
+    'USER': '',
+    'PASSWORD': ''
 }
 
 LANGUAGES = (

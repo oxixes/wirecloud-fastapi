@@ -17,11 +17,21 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-
 from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorClientSession
 from typing import AsyncIterator, Annotated
 from src.settings import DATABASE
+
+
+class MotorSession:
+    def __init__(self, db: AsyncIOMotorClientSession):
+        self.db = db
+
+    def __getattr__(self, item: str):
+        if item == "client":
+            return self.db.client[DATABASE['NAME']]
+        else:
+            return getattr(self.db, item)
 
 
 Id = str
@@ -50,10 +60,10 @@ def close() -> None:
     client.close()
 
 
-async def get_session() -> AsyncIterator[AsyncIOMotorClientSession]:
+async def get_session() -> AsyncIterator[MotorSession]:
     session = await client.start_session()
     try:
-        yield session
+        yield MotorSession(session)
     except Exception:
         if session.in_transaction:
             await session.abort_transaction()
@@ -66,5 +76,5 @@ async def commit(session: AsyncIOMotorClientSession) -> None:
     await session.commit_transaction()
 
 
-DBSession = AsyncIOMotorClientSession
-DBDep = Annotated[AsyncIOMotorClient, Depends(get_session)]
+DBSession = MotorSession
+DBDep = Annotated[MotorSession, Depends(get_session)]
