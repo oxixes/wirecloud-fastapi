@@ -20,8 +20,7 @@
 import os
 from fastapi import APIRouter, Request, Body, Path, Response
 
-from src.wirecloud.platform.markets.schemas import MarketData, MarketCreate, PublishData
-from src.wirecloud.platform.markets.models import DBMarket as Market
+from src.wirecloud.platform.markets.schemas import MarketData, MarketCreate, Market, PublishData
 from src.wirecloud.platform.markets import docs
 from src.wirecloud.platform.markets.crud import (get_markets_for_user, get_market_user, create_market,
                                                  delete_market_by_name)

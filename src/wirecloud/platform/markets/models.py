@@ -19,9 +19,19 @@
 
 
 from pydantic import BaseModel, Field
+from typing import Optional
 
-from src.wirecloud.platform.markets.schemas import MarketOptions
 from src.wirecloud.database import Id
+from src.wirecloud.platform.markets import docs
+
+
+class MarketOptions(BaseModel):
+    name: str = Field(description=docs.market_options_name_description)
+    type: str = Field(description=docs.market_options_type_description)
+    title: Optional[str] = Field(None, description=docs.market_options_title_description)
+    url: Optional[str] = Field(None, description=docs.market_options_url_description)
+    public: Optional[bool] = Field(None, description=docs.market_options_public_description)
+    user: Optional[str] = Field(None, description=docs.market_options_user_description)
 
 
 class DBMarket(BaseModel, populate_by_name=True):

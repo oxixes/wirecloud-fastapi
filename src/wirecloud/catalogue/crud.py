@@ -82,7 +82,7 @@ async def get_catalogue_resource(db: DBSession, vendor: Vendor, short_name: Name
     if result is None:
         return None
 
-    return result
+    return build_schema_from_resource(CatalogueResourceModel.model_validate(result))
 
 
 async def has_resource_user(db: DBSession, resource_id: int, user_id: int) -> bool:

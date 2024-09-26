@@ -28,7 +28,8 @@ from src.wirecloud.database import DBSession
 
 async def get_user_by_id(db: DBSession, user_id: int) -> Optional[User]:
     query = {"_id": user_id}
-    user = await db.client.users.find_one(query)
+    user = UserModel.model_validate(await db.client.users.find_one(query))
+
     if user is None:
         return None
 
@@ -47,7 +48,8 @@ async def get_user_by_id(db: DBSession, user_id: int) -> Optional[User]:
 
 async def get_user_by_username(db: DBSession, username: str) -> Optional[User]:
     query = {"username": username}
-    user = await db.client.users.find_one(query)
+    user = UserModel.model_validate(await db.client.users.find_one(query))
+
     if user is None:
         return None
 
@@ -92,7 +94,19 @@ async def get_user_groups(db: DBSession, user_id: int) -> list[Group]:
 async def get_user_with_password(db: DBSession, username: str) -> Optional[UserWithPassword]:
     query = {"username": username}
     user = await db.client.users.find_one(query)
-    return user
+    return UserWithPassword(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        is_superuser=user.is_superuser,
+        is_staff=user.is_staff,
+        is_active=user.is_active,
+        date_joined=user.date_joined,
+        last_login=user.last_login,
+        password=user.password
+    )
 
 
 async def set_login_date_for_user(db: DBSession, user_id: int) -> None:
