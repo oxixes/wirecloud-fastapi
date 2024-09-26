@@ -93,7 +93,8 @@ async def get_user_groups(db: DBSession, user_id: int) -> list[Group]:
 
 async def get_user_with_password(db: DBSession, username: str) -> Optional[UserWithPassword]:
     query = {"username": username}
-    user = await db.client.users.find_one(query)
+    user = UserModel.model_validate(await db.client.users.find_one(query))
+
     return UserWithPassword(
         id=user.id,
         username=user.username,
