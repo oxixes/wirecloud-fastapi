@@ -22,8 +22,8 @@ from typing import Optional
 from src.wirecloud.database import DBSession
 from src.wirecloud.commons.auth.schemas import User
 from src.wirecloud.commons.auth.models import DBUser as UserModel
-from src.wirecloud.platform.markets.schemas import Market
 from src.wirecloud.platform.markets.models import DBMarket as MarketModel
+from src.wirecloud.platform.markets.models import DBMarket as Market
 
 
 async def get_markets_for_user(db: DBSession, user: Optional[User]) -> list[Market]:

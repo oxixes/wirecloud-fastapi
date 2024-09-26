@@ -11,12 +11,12 @@ INSTALLED_APPS = (
 )
 
 DATABASE = {
-    'DRIVER': 'postgresql+asyncpg',
+    'DRIVER': 'mongodb',
     'NAME': 'wirecloud_fastapi',
     'HOST': 'localhost',
     'PORT': '',  # Set to empty string for default. Not used with sqlite3.
-    'USER': 'postgres',  # Not used with sqlite3.
-    'PASSWORD': 'pass123',  # Not used with sqlite3.
+    'USER': '',  # Not used with sqlite3.
+    'PASSWORD': '',  # Not used with sqlite3.
     'ECHO': True,
 }
 

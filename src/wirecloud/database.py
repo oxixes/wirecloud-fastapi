@@ -55,10 +55,15 @@ async def get_session() -> AsyncIterator[AsyncIOMotorClientSession]:
     try:
         yield session
     except Exception:
-        await session.abort_transaction()
+        if session.in_transaction:
+            await session.abort_transaction()
         raise
     finally:
         await session.end_session()
+
+
+async def commit(session: AsyncIOMotorClientSession) -> None:
+    await session.commit_transaction()
 
 
 DBSession = AsyncIOMotorClientSession

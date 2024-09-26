@@ -24,7 +24,7 @@ from src.wirecloud import docs
 from datetime import datetime
 
 from src.wirecloud.database import Id
-from wirecloud.commons.auth.models import DBGroup
+from src.wirecloud.commons.auth.models import DBGroup
 
 
 class Permission(BaseModel):
