@@ -19,11 +19,14 @@
 
 from typing import Optional
 
+from bson import ObjectId
+
 from src.wirecloud.catalogue.schemas import (CatalogueResourceCreate, CatalogueResource, CatalogueResourceBase)
 from src.wirecloud.catalogue.models import DBCatalogueResource as CatalogueResourceModel
 from src.wirecloud.commons.auth.schemas import UserAll, User, Group
 from src.wirecloud.commons.utils.template.schemas.macdschemas import (MACD, Vendor, Name, Version)
-from src.wirecloud.database import DBSession
+from src.wirecloud.database import DBSession, Id
+
 
 def build_schema_from_resource(resource: CatalogueResourceModel) -> CatalogueResource:
     return CatalogueResource(
@@ -41,7 +44,7 @@ def build_schema_from_resource(resource: CatalogueResourceModel) -> CatalogueRes
 
 
 async def create_catalogue_resource(db: DBSession, resource: CatalogueResourceCreate) -> CatalogueResource:
-    if not db.in_transaction():
+    if not db.in_transaction:
         db.start_transaction()
 
     catalogue = CatalogueResourceModel(
@@ -85,9 +88,9 @@ async def get_catalogue_resource(db: DBSession, vendor: Vendor, short_name: Name
     return build_schema_from_resource(CatalogueResourceModel.model_validate(result))
 
 
-async def has_resource_user(db: DBSession, resource_id: int, user_id: int) -> bool:
+async def has_resource_user(db: DBSession, resource_id: Id, user_id: Id) -> bool:
     # Checks if the resource is owned by the user (present in CatalogueResource.users)
-    query = {"_id": resource_id, "creator_id": user_id}
+    query = {"_id": ObjectId(resource_id), "creator_id": ObjectId(user_id)}
     result = await db.client.catalogue_resources.find_one(query)
 
     return result is not None
@@ -99,9 +102,9 @@ async def is_resource_available_for_user(db: DBSession, resource: CatalogueResou
         return True
 
     # Check if the resource is available for the user or any of the groups the user belongs to
-    user_query = {"_id": resource.id, "users": user.id}
-    creator_query = {"_id": resource.id, "creator_id": user.id}
-    group_query = {"_id": resource.id, "groups": {"$in": [group.id for group in user.groups]}}
+    user_query = {"_id": ObjectId(resource.id), "users": ObjectId(user.id)}
+    creator_query = {"_id": ObjectId(resource.id), "creator_id": ObjectId(user.id)}
+    group_query = {"_id": ObjectId(resource.id), "groups": {"$in": [ObjectId(group.id) for group in user.groups]}}
 
     result = await db.client.catalogue_resources.find_one({"$or": [user_query, creator_query, group_query]})
 
@@ -128,16 +131,18 @@ async def get_catalogue_resource_versions_for_user(db: DBSession, vendor: Option
         query = public_resources_query
     else:
         user_resources_query = {"vendor": vendor if vendor is not None else True,
-                                "short_name": short_name if short_name is not None else True, "creator_id": user.id}
+                                "short_name": short_name if short_name is not None else True,
+                                "creator_id": ObjectId(user.id)}
         creator_resources_query = {"vendor": vendor if vendor is not None else True,
-                                   "short_name": short_name if short_name is not None else True, "users": user.id}
+                                   "short_name": short_name if short_name is not None else True,
+                                   "users": ObjectId(user.id)}
         group_resources_query = {"vendor": vendor if vendor is not None else True,
                                  "short_name": short_name if short_name is not None else True,
-                                 "groups": {"$in": [group.id for group in user.groups]}}
+                                 "groups": {"$in": [ObjectId(group.id) for group in user.groups]}}
 
         query = {"$or": [public_resources_query, user_resources_query, creator_resources_query, group_resources_query]}
 
-    result = await db.client.catalogue_resources.find(query)
+    result = await db.client.catalogue_resources.find(query).to_list()
     resources = [CatalogueResourceModel.model_validate(resource) for resource in result]
 
     return [build_schema_from_resource(resource) for resource in resources]
@@ -150,57 +155,59 @@ async def get_all_catalogue_resources(db: DBSession) -> list[CatalogueResource]:
     return [build_schema_from_resource(resource) for resource in resources]
 
 
-async def update_catalogue_resource_description(db: DBSession, resource_id: int, description: MACD) -> None:
-    if not db.in_transaction():
+async def update_catalogue_resource_description(db: DBSession, resource_id: Id, description: MACD) -> None:
+    if not db.in_transaction:
         db.start_transaction()
-    query = {"_id": resource_id}
+    query = {"_id": ObjectId(resource_id)}
     update = {"$set": {"description": description.model_dump_json()}}
     await db.client.catalogue_resources.update_one(query, update)
 
 
-async def delete_catalogue_resources(db: DBSession, resource_ids: list[int]) -> None:
-    if not db.in_transaction():
+async def delete_catalogue_resources(db: DBSession, resource_ids: list[Id]) -> None:
+    if not db.in_transaction:
         db.start_transaction()
-    query = {"_id": {"$in": resource_ids}}
+    query = {"_id": {"$in": ObjectId(resource_ids)}}
     await db.client.catalogue_resources.delete_many(query)
 
 
 async def mark_resources_as_not_available(db: DBSession, resources: list[CatalogueResource]) -> None:
-    if not db.in_transaction():
+    if not db.in_transaction:
         db.start_transaction()
     for resource in resources:
-        await db.client.catalogue_resources.update_one({"_id": resource.id}, {"$set": {"template_uri": ""}})
+        await db.client.catalogue_resources.update_one({"_id": ObjectId(resource.id)}, {"$set": {"template_uri": ""}})
 
 
 async def change_resource_publicity(db: DBSession, resource: CatalogueResource, public: bool) -> None:
-    if not db.in_transaction():
+    if not db.in_transaction:
         db.start_transaction()
-    await db.client.catalogue_resources.update_one({"_id": resource.id}, {"$set": {"public": public}})
+    await db.client.catalogue_resources.update_one({"_id": ObjectId(resource.id)}, {"$set": {"public": public}})
 
 
 async def install_resource_to_user(db: DBSession, resource: CatalogueResource, user: User) -> bool:
-    if not db.in_transaction():
+    if not db.in_transaction:
         db.start_transaction()
     # Check integrity
-    query = {"_id": resource.id, "user_id": user.id}
+    query = {"_id": ObjectId(resource.id), "user_id": ObjectId(user.id)}
     result = await db.client.catalogue_resource_users.find_one(query)
     if result is not None:
         return False
     else:
-        await db.client.catalogue_resource_users.insert_one({"_id": resource.id, "user_id": user.id})
+        await db.client.catalogue_resource_users.insert_one(
+            {"_id": ObjectId(resource.id), "user_id": ObjectId(user.id)})
         await db.commit_transaction()
         return True
 
 
 async def install_resource_to_group(db: DBSession, resource: CatalogueResource, group: Group) -> bool:
     # Check integrity
-    if not db.in_transaction():
+    if not db.in_transaction:
         db.start_transaction()
-    query = {"_id": resource.id, "groups": group.id}
+    query = {"_id": ObjectId(resource.id), "groups": ObjectId(group.id)}
     result = await db.client.catalogue_resources.find_one(query)
     if result is not None:
         return False
     else:
-        await db.client.catalogue_resources.update_one({"_id": resource.id}, {"$push": {"groups": group.id}})
+        await db.client.catalogue_resources.update_one({"_id": ObjectId(resource.id)},
+                                                       {"$push": {"groups": ObjectId(group.id)}})
         await db.commit_transaction()
         return True

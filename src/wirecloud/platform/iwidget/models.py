@@ -53,7 +53,7 @@ class DBWidgetConfig(BaseModel, use_enum_values=True):
 
 
 class DBWidgetPositions(BaseModel):
-    id: int
+    id: Id
     moreOrEqual: Annotated[int, Field(ge=0)]
     lessOrEqual: Annotated[int, Field(ge=-1)]
     widget: DBWidgetConfig

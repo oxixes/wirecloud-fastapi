@@ -81,7 +81,7 @@ async def login(request: Request, db: DBDep):
 
     duration = (hasattr(settings, 'SESSION_AGE') and settings.SESSION_AGE) or 14 * 24 * 60 * 60  # 2 weeks
     token_contents = {
-        "sub": user.id,
+        "sub": str(user.id),
         "iss": "Wirecloud",
         "exp": int(datetime.utcnow().timestamp() + duration),
         "iat": int(datetime.utcnow().timestamp())

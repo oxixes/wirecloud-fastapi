@@ -27,24 +27,6 @@ from src.wirecloud.database import Id
 from src.wirecloud.platform.wiring.schemas import Wiring, WiringOperatorPreference, WiringOperator
 
 
-# Class to handle ObjectId from mongodb, allow pydantic to convert ObjectId to string
-'''
-class Id(ObjectId):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid ObjectId")
-        return ObjectId(v)
-
-    @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
-'''
-
 IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
 
 

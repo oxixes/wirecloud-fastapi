@@ -29,7 +29,7 @@ from src.wirecloud.commons.utils.template.base import Contact
 from src.wirecloud.commons.auth.schemas import User, UserAll
 from src.wirecloud.commons.utils.http import get_absolute_reverse_url
 from src.wirecloud.commons.utils.template import TemplateParser
-from src.wirecloud.database import DBSession
+from src.wirecloud.database import DBSession, Id
 
 from src.wirecloud.catalogue import docs
 
@@ -113,7 +113,7 @@ class CatalogueResourceCreate(CatalogueResourceBase):
 
 
 class CatalogueResource(CatalogueResourceBase):
-    id: int
+    id: Id
 
 
 class CatalogueResourceDataSummaryPermissions(BaseModel):

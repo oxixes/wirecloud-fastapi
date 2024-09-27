@@ -19,19 +19,23 @@
 
 from typing import Optional
 from datetime import datetime, timezone
+
+from bson import ObjectId
+
 from src.wirecloud.commons.auth.schemas import User, UserWithPassword, Group, Permission
 from src.wirecloud.commons.auth.models import DBUser as UserModel
-from src.wirecloud.commons.auth.models import DBPermission as PermissionModel
 from src.wirecloud.commons.auth.models import DBGroup as GroupModel
-from src.wirecloud.database import DBSession
+from src.wirecloud.database import DBSession, Id
 
 
-async def get_user_by_id(db: DBSession, user_id: int) -> Optional[User]:
-    query = {"_id": user_id}
-    user = UserModel.model_validate(await db.client.users.find_one(query))
+async def get_user_by_id(db: DBSession, user_id: Id) -> Optional[User]:
+    query = {"_id": ObjectId(user_id)}
+    user = await db.client.users.find_one(query)
 
     if user is None:
         return None
+
+    user = UserModel.model_validate(user)
 
     return User(
         id=user.id,
@@ -48,10 +52,12 @@ async def get_user_by_id(db: DBSession, user_id: int) -> Optional[User]:
 
 async def get_user_by_username(db: DBSession, username: str) -> Optional[User]:
     query = {"username": username}
-    user = UserModel.model_validate(await db.client.users.find_one(query))
+    user = await db.client.users.find_one(query)
 
     if user is None:
         return None
+
+    user = UserModel.model_validate(user)
 
     return User(
         id=user.id,
@@ -67,11 +73,15 @@ async def get_user_by_username(db: DBSession, username: str) -> Optional[User]:
     )
 
 
-async def get_all_user_permissions(db: DBSession, user_id: int) -> list[Permission]:
+async def get_all_user_permissions(db: DBSession, user_id: Id) -> list[Permission]:
     permissions = set()
 
-    individual_permissions_query = {"user_id": user_id}
+    individual_permissions_query = {"user_id": ObjectId(user_id)}
     individual_permissions = await db.client.users.find_one(individual_permissions_query)
+
+    if individual_permissions is None:
+        return []
+
     group_ids = individual_permissions.get("groups")
     for permission in individual_permissions.get("user_permissions"):
         permissions.add(Permission(codename=permission.get("codename")))
@@ -85,15 +95,20 @@ async def get_all_user_permissions(db: DBSession, user_id: int) -> list[Permissi
     return list(permissions)
 
 
-async def get_user_groups(db: DBSession, user_id: int) -> list[Group]:
-    query = {"users": user_id}
+async def get_user_groups(db: DBSession, user_id: Id) -> list[Group]:
+    query = {"users": ObjectId(user_id)}
     results = [GroupModel.model_validate(result) for result in await db.client.groups.find(query).to_list()]
     return results
 
 
 async def get_user_with_password(db: DBSession, username: str) -> Optional[UserWithPassword]:
     query = {"username": username}
-    user = UserModel.model_validate(await db.client.users.find_one(query))
+    user = await db.client.users.find_one(query)
+
+    if user is None:
+        return None
+
+    user = UserModel.model_validate(user)
 
     return UserWithPassword(
         id=user.id,
@@ -110,8 +125,8 @@ async def get_user_with_password(db: DBSession, username: str) -> Optional[UserW
     )
 
 
-async def set_login_date_for_user(db: DBSession, user_id: int) -> None:
-    if not db.in_transaction():
+async def set_login_date_for_user(db: DBSession, user_id: Id) -> None:
+    if not db.in_transaction:
         db.start_transaction()
-    query = {"_id": user_id}, {"$set": {"last_login": datetime.now(timezone.utc)}}
-    await db.client.users.update_one(query)
+    query = {"_id": ObjectId(user_id)}, {"$set": {"last_login": datetime.now(timezone.utc)}}
+    await db.client.users.update_one(*query)

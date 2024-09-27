@@ -19,6 +19,8 @@
 
 from typing import Optional
 
+from bson import ObjectId
+
 from src.wirecloud.database import DBSession
 from src.wirecloud.commons.auth.schemas import User
 from src.wirecloud.commons.auth.models import DBUser as UserModel
@@ -29,14 +31,14 @@ from src.wirecloud.platform.markets.schemas import Market
 async def get_markets_for_user(db: DBSession, user: Optional[User]) -> list[Market]:
     query = {"public": True}
     if user is not None:
-        query = {"$or": [{"public": True}, {"user_id": user.id}]}
+        query = {"$or": [{"public": True}, {"user_id": ObjectId(user.id)}]}
 
     resources = [MarketModel.model_validate(resource) for resource in await db.client.markets.find(query).to_list()]
     return resources
 
 
 async def get_market_user(db: DBSession, market: Market) -> Optional[User]:
-    query = {"_id": market.user_id}
+    query = {"_id": ObjectId(market.user_id)}
     user = await db.client.users.find_one(query)
     if user is None:
         return None
@@ -57,21 +59,21 @@ async def get_market_user(db: DBSession, market: Market) -> Optional[User]:
 
 
 async def create_market(db: DBSession, market: Market) -> bool:
-    if not db.in_transaction():
+    if not db.in_transaction:
         db.start_transaction()
-    query = {"name": market.name, "user_id": market.user_id}
+    query = {"name": market.name, "user_id": ObjectId(market.user_id)}
     found_market = await db.client.markets.find_one(query)
     if found_market is not None:
         return False
 
     created_market = MarketModel(**market.model_dump())
-    await db.client.markets.insert_one(created_market.model_dump())
+    await db.client.markets.insert_one(created_market.model_dump(exclude={"id"}))
 
     return True
 
 
 async def delete_market_by_name(db: DBSession, user: User, name: str) -> bool:
-    if not db.in_transaction():
+    if not db.in_transaction:
         db.start_transaction()
     query = {"name": name, "user_id": user.id}
     result = await db.client.markets.delete_one(query)
