@@ -205,8 +205,9 @@ async def delete_resource_versions(db: DBDep,
             'username': user.username, 'resource_id': '{}/{}'.format(vendor, name)}
         raise PermissionDenied(msg)
 
+    # TODO Actually delete the resources
     await mark_resources_as_not_available(db, resources)
-    await db.commit()
+    await db.commit_transaction()
 
     return CatalogueResourceDeleteResults(affectedVersions=[resource.version for resource in resources])
 
@@ -283,14 +284,15 @@ async def delete_resource_version(db: DBDep,
 
     if resource is None:
         raise NotFound()
-    elif not resource.is_removable_by(db, user, vendor=True):
+    elif not await resource.is_removable_by(db, user, vendor=True):
         # TODO Add translation
         msg = "user %(username)s is not the owner of the resource %(resource_id)s" % {
             'username': user.username, 'resource_id': '{}/{}/{}'.format(vendor, name, version)}
         raise PermissionDenied(msg)
 
+    # TODO Actually delete the resources
     await mark_resources_as_not_available(db, [resource])
-    await db.commit()
+    await db.commit_transaction()
 
     return CatalogueResourceDeleteResults(affectedVersions=[resource.version])
 

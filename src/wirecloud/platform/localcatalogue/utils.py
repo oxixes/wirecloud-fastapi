@@ -56,7 +56,7 @@ async def install_resource(db: DBSession, wgt_file: WgtFile, executor_user: Opti
     elif '-dev' in resource_version:
         # dev version are automatically overwritten
         await delete_catalogue_resources(db, [resource.id])
-        await db.commit()
+        await db.commit_transaction()
         resource = await add_packaged_resource(db, file_contents, executor_user, wgt_file=wgt_file)
 
     return resource

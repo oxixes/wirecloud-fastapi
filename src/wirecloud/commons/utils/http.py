@@ -331,7 +331,10 @@ def get_relative_reverse_url(viewname: str, **kwargs) -> str:
 
     url = patterns[viewname].urlpattern
     for key in kwargs:
-        url = url.replace('{' + key + '}', str(kwargs[key]))
+        if '{' + f"{key}:path" + '}' in url:
+            url = url.replace('{' + f"{key}:path" + '}', kwargs[key])
+        else:
+            url = url.replace('{' + key + '}', str(kwargs[key]))
 
     return url
 

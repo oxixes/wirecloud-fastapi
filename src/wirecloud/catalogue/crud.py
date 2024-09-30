@@ -48,34 +48,28 @@ async def create_catalogue_resource(db: DBSession, resource: CatalogueResourceCr
         db.start_transaction()
 
     catalogue = CatalogueResourceModel(
+        id=ObjectId(),
         vendor=resource.vendor,
         short_name=resource.short_name,
         version=resource.version,
         type=resource.type.value,
         public=resource.public,
         creation_date=resource.creation_date,
-        template=resource.template,
+        template_uri=resource.template_uri,
         popularity=resource.popularity,
-        json_description=resource.description.model_dump_json()
+        description=resource.description,
+        creator_id=ObjectId(resource.creator.id)
     )
-    result = await db.client.catalogue_resources.insert_one(catalogue)
+    result = await db.client.catalogue_resources.insert_one(catalogue.model_dump(by_alias=True))
     await db.commit_transaction()
 
     if result.inserted_id is None:
         raise ValueError('Resource not created')
 
-    return CatalogueResource(
-        id=result.inserted_id,
-        vendor=resource.vendor,
-        short_name=resource.short_name,
-        version=resource.version,
-        type=resource.type,
-        public=resource.public,
-        creation_date=resource.creation_date,
-        template_uri=resource.template_uri,
-        popularity=resource.popularity,
-        description=resource.description,
-    )
+    result_schema = build_schema_from_resource(catalogue)
+    result_schema.id = result.inserted_id
+
+    return result_schema
 
 
 async def get_catalogue_resource(db: DBSession, vendor: Vendor, short_name: Name, version: Version) -> Optional[CatalogueResource]:
@@ -103,10 +97,9 @@ async def is_resource_available_for_user(db: DBSession, resource: CatalogueResou
 
     # Check if the resource is available for the user or any of the groups the user belongs to
     user_query = {"_id": ObjectId(resource.id), "users": ObjectId(user.id)}
-    creator_query = {"_id": ObjectId(resource.id), "creator_id": ObjectId(user.id)}
     group_query = {"_id": ObjectId(resource.id), "groups": {"$in": [ObjectId(group.id) for group in user.groups]}}
 
-    result = await db.client.catalogue_resources.find_one({"$or": [user_query, creator_query, group_query]})
+    result = await db.client.catalogue_resources.find_one({"$or": [user_query, group_query]})
 
     return result is not None
 
@@ -115,7 +108,7 @@ async def get_all_catalogue_resource_versions(db: DBSession, vendor: Vendor, sho
     query = {"vendor": vendor, "short_name": short_name}
 
     resources = [CatalogueResourceModel.model_validate(resource) for resource in
-                 await db.client.catalogue_resources.find(query)]
+                 await db.client.catalogue_resources.find(query).to_list()]
 
     return [build_schema_from_resource(resource) for resource in resources]
 
@@ -192,8 +185,8 @@ async def install_resource_to_user(db: DBSession, resource: CatalogueResource, u
     if result is not None:
         return False
     else:
-        await db.client.catalogue_resource_users.insert_one(
-            {"_id": ObjectId(resource.id), "user_id": ObjectId(user.id)})
+        await db.client.catalogue_resources.update_one({"_id": ObjectId(resource.id)},
+                                                       {"$push": {"users": ObjectId(user.id)}})
         await db.commit_transaction()
         return True
 
