@@ -18,6 +18,8 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+
+from bson import ObjectId
 from fastapi import APIRouter, Request, Body, Path, Response
 
 from src.wirecloud.platform.markets.schemas import MarketData, MarketCreate, Market, PublishData
@@ -116,7 +118,7 @@ async def create_market_collection(db: DBDep, user: UserDep, request: Request,
     market.user = target_user.username
 
     success = await create_market(db, Market(
-        id=-1,
+        id=ObjectId(),
         user_id=target_user.id,
         name=market.name,
         public=market.public,

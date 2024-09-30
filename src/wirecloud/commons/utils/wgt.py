@@ -61,7 +61,7 @@ class WgtFile:
         return self._zip.fp
 
     def read(self, path: str) -> bytes:
-        return self._zip.read(path)
+        return self._zip.read(path.replace('\\', '/'))
 
     def get_template(self) -> bytes:
         try:

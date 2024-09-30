@@ -22,8 +22,8 @@ from pydantic import BaseModel, Field, StringConstraints
 from typing import Annotated, Any, Optional
 from enum import Enum
 
+from src.wirecloud.database import Id
 
-Id = str
 IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
 
 
@@ -53,7 +53,7 @@ class DBWidgetConfig(BaseModel, use_enum_values=True):
 
 
 class DBWidgetPositions(BaseModel):
-    id: int
+    id: Id
     moreOrEqual: Annotated[int, Field(ge=0)]
     lessOrEqual: Annotated[int, Field(ge=-1)]
     widget: DBWidgetConfig

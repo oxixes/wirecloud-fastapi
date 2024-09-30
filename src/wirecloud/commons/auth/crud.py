@@ -19,19 +19,23 @@
 
 from typing import Optional
 from datetime import datetime, timezone
-from sqlalchemy import select, update
-from sqlalchemy.orm import aliased
+
+from bson import ObjectId
+
 from src.wirecloud.commons.auth.schemas import User, UserWithPassword, Group, Permission
-from src.wirecloud.commons.auth.models import User as UserModel
-from src.wirecloud.commons.auth.models import Permission as PermissionModel
-from src.wirecloud.commons.auth.models import Group as GroupModel
-from src.wirecloud.database import DBSession
+from src.wirecloud.commons.auth.models import DBUser as UserModel
+from src.wirecloud.commons.auth.models import DBGroup as GroupModel
+from src.wirecloud.database import DBSession, Id
 
 
-async def get_user_by_id(db: DBSession, user_id: int) -> Optional[User]:
-    user = await db.scalar(select(UserModel).filter(UserModel.id == user_id))
+async def get_user_by_id(db: DBSession, user_id: Id) -> Optional[User]:
+    query = {"_id": ObjectId(user_id)}
+    user = await db.client.users.find_one(query)
+
     if user is None:
         return None
+
+    user = UserModel.model_validate(user)
 
     return User(
         id=user.id,
@@ -45,12 +49,15 @@ async def get_user_by_id(db: DBSession, user_id: int) -> Optional[User]:
         date_joined=user.date_joined,
         last_login=user.last_login
     )
-
 
 async def get_user_by_username(db: DBSession, username: str) -> Optional[User]:
-    user = await db.scalar(select(UserModel).filter(UserModel.username == username))
+    query = {"username": username}
+    user = await db.client.users.find_one(query)
+
     if user is None:
         return None
+
+    user = UserModel.model_validate(user)
 
     return User(
         id=user.id,
@@ -66,41 +73,42 @@ async def get_user_by_username(db: DBSession, username: str) -> Optional[User]:
     )
 
 
-async def get_all_user_permissions(db: DBSession, user_id: int) -> list[Permission]:
-    GroupAlias = aliased(GroupModel)
+async def get_all_user_permissions(db: DBSession, user_id: Id) -> list[Permission]:
+    permissions = set()
 
-    individual_permissions_query = select(PermissionModel.codename)\
-        .join(UserModel.permissions)\
-        .filter(UserModel.id == user_id)
+    individual_permissions_query = {"user_id": ObjectId(user_id)}
+    individual_permissions = await db.client.users.find_one(individual_permissions_query)
 
-    group_permissions_query = select(PermissionModel.codename)\
-        .join(GroupAlias.permissions)\
-        .join(GroupModel.users)\
-        .filter(UserModel.id == user_id)
+    if individual_permissions is None:
+        return []
 
-    combined_query = individual_permissions_query.union(group_permissions_query)
+    group_ids = individual_permissions.get("groups")
+    for permission in individual_permissions.get("user_permissions"):
+        permissions.add(Permission(codename=permission.get("codename")))
 
-    permissions = await db.execute(combined_query)
-    permissions = permissions.scalars().all()
+    group_permissions_query = {"_id": {"$in": group_ids}}
+    group_permissions = await db.client.groups.find(group_permissions_query).to_list()
+    for group in group_permissions:
+        for permission in group.get("group_permissions"):
+            permissions.add(Permission(codename=permission.get("codename")))
 
-    return [Permission(codename=permission) for permission in permissions]
+    return list(permissions)
 
 
-async def get_user_groups(db: DBSession, user_id: int) -> list[Group]:
-    groups_query = select(GroupModel)\
-        .join(UserModel.groups)\
-        .filter(UserModel.id == user_id)
-
-    groups = await db.execute(groups_query)
-    groups = groups.scalars().all()
-
-    return [Group(id=group.id, name=group.name) for group in groups]
+async def get_user_groups(db: DBSession, user_id: Id) -> list[Group]:
+    query = {"users": ObjectId(user_id)}
+    results = [GroupModel.model_validate(result) for result in await db.client.groups.find(query).to_list()]
+    return results
 
 
 async def get_user_with_password(db: DBSession, username: str) -> Optional[UserWithPassword]:
-    user = await db.scalar(select(UserModel).filter(UserModel.username == username))
+    query = {"username": username}
+    user = await db.client.users.find_one(query)
+
     if user is None:
         return None
+
+    user = UserModel.model_validate(user)
 
     return UserWithPassword(
         id=user.id,
@@ -117,5 +125,8 @@ async def get_user_with_password(db: DBSession, username: str) -> Optional[UserW
     )
 
 
-async def set_login_date_for_user(db: DBSession, user_id: int) -> None:
-    await db.execute(update(UserModel).filter(UserModel.id == user_id).values(last_login=datetime.now(timezone.utc)))
+async def set_login_date_for_user(db: DBSession, user_id: Id) -> None:
+    if not db.in_transaction:
+        db.start_transaction()
+    query = {"_id": ObjectId(user_id)}, {"$set": {"last_login": datetime.now(timezone.utc)}}
+    await db.client.users.update_one(*query)

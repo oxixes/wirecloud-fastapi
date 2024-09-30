@@ -26,7 +26,7 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
 from src import settings
-from src.wirecloud.database import DBDep
+from src.wirecloud.database import DBDep, Id
 from src.wirecloud.commons.auth.schemas import Session, UserAll
 from src.wirecloud.commons.auth.crud import get_user_by_id, get_user_groups, get_all_user_permissions
 
@@ -53,7 +53,7 @@ async def get_user(db: DBDep, token: Annotated[Union[dict[str, Union[str, int, N
     if token is None:
         return None
 
-    user = await get_user_by_id(db, token['sub'])
+    user = await get_user_by_id(db, Id(token['sub']))
     if user is None or not user.is_active:
         return None
 

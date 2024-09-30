@@ -24,15 +24,9 @@ from typing_extensions import Self
 from src.wirecloud.platform.markets import docs
 from src.wirecloud.commons.utils.http import validate_url_param
 from src.wirecloud.platform.wiring.schemas import ResourceName
+from src.wirecloud.platform.markets.models import DBMarket, MarketOptions
 
-
-class MarketOptions(BaseModel):
-    name: str = Field(description=docs.market_options_name_description)
-    type: str = Field(description=docs.market_options_type_description)
-    title: Optional[str] = Field(None, description=docs.market_options_title_description)
-    url: Optional[str] = Field(None, description=docs.market_options_url_description)
-    public: Optional[bool] = Field(None, description=docs.market_options_public_description)
-    user: Optional[str] = Field(None, description=docs.market_options_user_description)
+Market = DBMarket
 
 
 class MarketCreate(MarketOptions):
@@ -59,14 +53,6 @@ class MarketPermissions(BaseModel):
 
 class MarketData(MarketOptions):
     permissions: MarketPermissions = Field(description=docs.market_permissions_description)
-
-
-class Market(BaseModel):
-    id: int
-    name: str
-    public: bool
-    options: MarketOptions
-    user_id: int
 
 
 class MarketEndpoint(BaseModel):

@@ -379,7 +379,7 @@ async def update_resource_catalogue_cache(db: DBSession) -> None:
         print('    Removing %s' % (resource.vendor + '/' + resource.short_name + '/' + resource.version))
 
     await delete_catalogue_resources(db, [resource.id for resource in resources_to_remove])
-    await db.commit()
+    await db.commit_transaction()
 
 
 # TODO Use user permissions apart from these checks
