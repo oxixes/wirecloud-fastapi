@@ -17,11 +17,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-# TODO Add translations
-
 from fastapi import APIRouter, Request
 import jwt
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import ValidationError
 
 from src.wirecloud.commons.auth.schemas import UserLogin, UserToken, UserWithPassword, UserTokenType
@@ -31,6 +29,7 @@ from src.wirecloud.database import DBDep, commit
 from src.wirecloud.commons.utils.http import build_error_response, build_validation_error_response, produces, consumes
 from src import settings
 from src.wirecloud import docs
+from src.wirecloud.translation import gettext as _
 
 router = APIRouter()
 
@@ -65,7 +64,7 @@ router = APIRouter()
 @consumes(["application/json", "application/x-www-form-urlencoded", "multipart/form-data"])
 async def login(request: Request, db: DBDep):
     try:
-        if request.mimetype == "application/x-www-form-urlencoded" or request.mimetype == "multipart/form-data":
+        if request.state.mimetype == "application/x-www-form-urlencoded" or request.state.mimetype == "multipart/form-data":
             login_data = UserLogin.model_validate(await request.form(max_files=0, max_fields=50))
         else:
             login_data = UserLogin.model_validate_json(await request.body())
@@ -74,7 +73,7 @@ async def login(request: Request, db: DBDep):
 
     user: UserWithPassword = await get_user_with_password(db, login_data.username)
     if user is None or not user.is_active or not check_password(login_data.password, user.password):
-        return build_error_response(request, 401, "Invalid username or password")
+        return build_error_response(request, 401, _("Invalid username or password"))
 
     await set_login_date_for_user(db, user.id)
     await commit(db)
@@ -83,8 +82,8 @@ async def login(request: Request, db: DBDep):
     token_contents = {
         "sub": str(user.id),
         "iss": "Wirecloud",
-        "exp": int(datetime.utcnow().timestamp() + duration),
-        "iat": int(datetime.utcnow().timestamp())
+        "exp": int(datetime.now(timezone.utc).timestamp() + duration),
+        "iat": int(datetime.now(timezone.utc).timestamp())
     }
     token = jwt.encode(token_contents, settings.JWT_KEY, algorithm="HS256")
     return UserToken(access_token=token, token_type=UserTokenType.bearer)

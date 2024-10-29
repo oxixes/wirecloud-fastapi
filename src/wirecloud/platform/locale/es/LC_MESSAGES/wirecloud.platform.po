@@ -1,0 +1,52 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-10-29 17:21+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../core/catalogue_manager.py:51
+#, python-format
+msgid "Resource already exists %(resource_id)s"
+msgstr "El recurso ya existe %(resource_id)s"
+
+#: ../../../markets/routes.py:113
+msgid "invalid user option"
+msgstr "Opción de usuario inválida"
+
+#: ../../../markets/routes.py:116
+msgid ""
+"You don't have permissions for adding marketplaces in name of other user"
+msgstr "No tienes permisos para añadir mercados en nombre de otro usuario"
+
+#: ../../../markets/routes.py:129
+msgid "Market name already in use"
+msgstr "Nombre de mercado ya en uso"
+
+#: ../../../markets/routes.py:161
+msgid "You are not allowed to delete this market"
+msgstr "No tienes permisos para borrar este mercado"
+
+#: ../../../markets/routes.py:168
+msgid "User not found"
+msgstr "Usuario no encontrado"
+
+#: ../../../markets/routes.py:173
+msgid "Market not found"
+msgstr "Mercado no encontrado"
+
+#: ../../../markets/routes.py:227 ../../../markets/routes.py:230
+msgid "Something went wrong (see details for more info)"
+msgstr "Algo fue mal (ver detalles para más información)"

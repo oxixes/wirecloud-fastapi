@@ -32,6 +32,7 @@ from src.wirecloud.commons.auth.schemas import User
 from src.wirecloud.platform.plugins import get_request_proxy_processors, get_response_proxy_processors
 from src import settings
 from src.wirecloud import docs as root_docs
+from src.wirecloud.translation import gettext as _
 
 router = APIRouter()
 
@@ -149,13 +150,12 @@ class Proxy:
                 auto_decompress=False,
                 ssl=getattr(settings, 'WIRECLOUD_HTTPS_VERIFY', True)
             )
-        # TODO Translate errors
         except aiohttp.ServerTimeoutError as e:
-            return build_error_response(request, 504, 'Gateway Timeout', details=str(e))
+            return build_error_response(request, 504, _('Gateway Timeout'), details=str(e))
         except aiohttp.ClientSSLError as e:
-            return build_error_response(request, 502, 'Bad Gateway', details=str(e))
+            return build_error_response(request, 502, _('Bad Gateway'), details=str(e))
         except aiohttp.ClientError as e:
-            return build_error_response(request, 502, 'Connection Error', details=str(e))
+            return build_error_response(request, 502, _('Connection Error'), details=str(e))
 
         response_data = await res.read()
         await session.close()
@@ -196,14 +196,12 @@ async def proxy_request(request: Request,
     # TODO improve proxy security
     request_method = request.method.upper()
     if protocol not in ('http', 'https'):
-        # TODO Translate this error message
-        return build_error_response(request, 422, "Invalid protocol: %s" % protocol)
+        return build_error_response(request, 422, _("Invalid protocol: %s") % protocol)
 
     try:
         context = parse_context_from_referer(request, request_method)
     except Exception:
-        # TODO Translate this error message
-        return build_error_response(request, 403, "Invalid request")
+        return build_error_response(request, 403, _("Invalid request"))
 
     url = protocol + '://' + domain + "/" + (path[1:] if path.startswith('/') else path)
     # Add query and fragment to the url
@@ -222,8 +220,7 @@ async def proxy_request(request: Request,
         return build_error_response(request, 422, str(e))
     except Exception as e:
         # TODO Log
-        # TODO Translate this error message
-        msg = "Error processing proxy request: %s" % e
+        msg = _("Error processing proxy request: %s") % e
         return build_error_response(request, 500, msg)
 
     return response

@@ -24,12 +24,12 @@ if sys.version_info < (3, 9):
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import ORJSONResponse
 from fastapi.openapi.utils import get_openapi
 
 from src.wirecloud.database import close
 from src.wirecloud.platform.plugins import get_plugins, get_extra_openapi_schemas
+from src.wirecloud.commons.middleware import install_all_middlewares
 from src.wirecloud import docs
 
 
@@ -44,8 +44,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan,
               default_response_class=ORJSONResponse)
 
-app.add_middleware(GZipMiddleware)
-
+install_all_middlewares(app)
 get_plugins(app)
 
 

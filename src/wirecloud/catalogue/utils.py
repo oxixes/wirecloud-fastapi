@@ -18,8 +18,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-# TODO Add translations for errors
-
 import errno
 from io import BytesIO
 import os
@@ -49,6 +47,7 @@ from src.wirecloud.commons.utils.template import ObsoleteFormatError, TemplatePa
 from src.wirecloud.commons.utils.version import Version
 from src.wirecloud.commons.utils.wgt import InvalidContents, WgtDeployer, WgtFile
 from src.wirecloud.database import DBSession
+from src.wirecloud.translation import gettext as _
 
 
 wgt_deployer: WgtDeployer = WgtDeployer(settings.CATALOGUE_MEDIA_ROOT)
@@ -96,18 +95,18 @@ def check_invalid_doc_entry(wgt_file: WgtFile, doc_path: str) -> None:
     try:
         doc_code = wgt_file.read(doc_path)
     except Exception:
-        raise InvalidContents('missing file: %s' % doc_path)
+        raise InvalidContents(_('missing file: %s') % doc_path)
 
     try:
         doc_code = doc_code.decode('utf-8')
     except Exception:
-        raise InvalidContents('file is not encoded using UTF-8: %s' % doc_path)
+        raise InvalidContents(_('file is not encoded using UTF-8: %s') % doc_path)
 
     try:
         markdown.markdown(doc_code, output_format='xhtml', extensions=['markdown.extensions.codehilite',
                                                                        'markdown.extensions.fenced_code'])
     except Exception:
-        raise InvalidContents("file cannot be parsed as markdown: %s" % doc_path)
+        raise InvalidContents(_("file cannot be parsed as markdown: %s") % doc_path)
 
 
 def check_invalid_doc_content(wgt_file: WgtFile, resource_info: MACD, key: str) -> None:
@@ -134,7 +133,7 @@ def check_invalid_image(wgt_file: WgtFile, resource_info: MACD, key: str) -> Non
         try:
             wgt_file.read(image_path)
         except KeyError:
-            raise InvalidContents('missing image file: %s' % image_path)
+            raise InvalidContents(_('missing image file: %s') % image_path)
 
 
 def check_invalid_embedded_resources(wgt_file: WgtFile, resource_info: MACD) -> None:
@@ -144,13 +143,13 @@ def check_invalid_embedded_resources(wgt_file: WgtFile, resource_info: MACD) -> 
     files = wgt_file.namelist()
     for embedded_resource in resource_info.embedded:
         if embedded_resource.src not in files:
-            raise InvalidContents('Missing embedded file: %s' % embedded_resource.src)
+            raise InvalidContents(_('Missing embedded file: %s') % embedded_resource.src)
 
         try:
             embedded_wgt = WgtFile(BytesIO(wgt_file.read(embedded_resource.src)))
             check_packaged_resource(embedded_wgt)
         except Exception as e:
-            raise InvalidContents('Invalid embedded file: %s' % embedded_resource.src, details=e)
+            raise InvalidContents(_('Invalid embedded file: %s') % embedded_resource.src, details=e)
 
 
 def check_packaged_resource(wgt_file: WgtFile, resource_info: Optional[MACD] = None):
@@ -160,12 +159,12 @@ def check_packaged_resource(wgt_file: WgtFile, resource_info: Optional[MACD] = N
             template = TemplateParser(template_contents)
             resource_info = template.get_resource_info()
         except ObsoleteFormatError as e:
-            msg = 'Unable to process component description file: %s'
+            msg = _('Unable to process component description file: %s')
             raise InvalidContents(msg % e)
         except TemplateFormatError:
-            raise InvalidContents('Unable to process component description file')
+            raise InvalidContents(_('Unable to process component description file'))
         except TemplateParseException as e:
-            msg = 'Unable to process component description file: %s'
+            msg = _('Unable to process component description file: %s')
             raise InvalidContents(msg % e)
 
     if resource_info.type == MACType.widget:
@@ -180,7 +179,7 @@ def check_packaged_resource(wgt_file: WgtFile, resource_info: Optional[MACD] = N
             try:
                 code.decode(resource_info.contents.charset)
             except UnicodeDecodeError:
-                msg = '%(file_name)s was not encoded using the specified charset (%(charset)s according to the widget descriptor file).'
+                msg = _('%(file_name)s was not encoded using the specified charset (%(charset)s according to the widget descriptor file).')
                 raise InvalidContents(msg % {'file_name': code_url, 'charset': resource_info.contents.charset})
 
     check_invalid_image(wgt_file, resource_info, 'image')

@@ -18,8 +18,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-# TODO Add translations
-
 from lxml import etree
 from typing import Union, Optional
 
@@ -28,11 +26,13 @@ from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACDM
 from src.wirecloud.platform.wiring.schemas import WiringOperatorPreference, WiringVisualDescription, WiringBehaviour, \
     WiringVisualDescriptionConnection, WiringConnectionHandlePositionType, WiringComponents
 
+from src.wirecloud.translation import gettext as _
+
 
 def process_option(options, field: str, required: bool = False, type: str = 'string') -> Optional[str]:
     if getattr(options, field) is None:
         if required:
-            raise Exception('Missing %s option' % field)
+            raise Exception(_('Missing %s option') % field)
         else:
             return None
     else:

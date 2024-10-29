@@ -25,6 +25,8 @@ LANGUAGES = (
     ('pt', 'Portuguese'),
 )
 
+DEFAULT_LANGUAGE = 'en'
+
 # Make this unique, and don't share it with anybody.
 JWT_KEY = '15=7f)g=)&spodi3bg8%&4fqt%f3rpg%b$-aer5*#a*(rqm79e'
 

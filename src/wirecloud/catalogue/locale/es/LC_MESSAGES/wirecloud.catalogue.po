@@ -1,0 +1,108 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-10-29 17:25+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../../utils.py:98
+#, python-format
+msgid "missing file: %s"
+msgstr "archivo no encontrado: %s"
+
+#: ../../../utils.py:103
+#, python-format
+msgid "file is not encoded using UTF-8: %s"
+msgstr "archivo no codificado en UTF-8: %s"
+
+#: ../../../utils.py:109
+#, python-format
+msgid "file cannot be parsed as markdown: %s"
+msgstr "archivo no puede ser interpretado como markdown: %s"
+
+#: ../../../utils.py:136
+#, python-format
+msgid "missing image file: %s"
+msgstr "archivo de imagen no encontrado: %s"
+
+#: ../../../utils.py:146
+#, python-format
+msgid "Missing embedded file: %s"
+msgstr "Archivo embebido no encontrado: %s"
+
+#: ../../../utils.py:152
+#, python-format
+msgid "Invalid embedded file: %s"
+msgstr "Archivo embebido inválido: %s"
+
+#: ../../../utils.py:162 ../../../utils.py:167
+#, python-format
+msgid "Unable to process component description file: %s"
+msgstr "No se puede procesar el archivo de descripción del componente: %s"
+
+#: ../../../utils.py:165
+msgid "Unable to process component description file"
+msgstr "No se puede procesar el archivo de descripción del componente"
+
+#: ../../../utils.py:182
+#, python-format
+msgid ""
+"%(file_name)s was not encoded using the specified charset (%(charset)s "
+"according to the widget descriptor file)."
+msgstr ""
+"%(file_name)s no fue codificado usando el charset especificado (%(charset)s "
+"según el archivo de descripción del widget)."
+
+#: ../../../routes.py:98
+msgid "Missing component file in the request"
+msgstr "Archivo de componente faltante en la petición"
+
+#: ../../../routes.py:108
+msgid "The uploaded file is not a zip file"
+msgstr "El archivo subido no es un archivo zip"
+
+#: ../../../routes.py:114
+msgid "Resource already exists"
+msgstr "El recurso ya existe"
+
+#: ../../../routes.py:117
+msgid ""
+"Error writing the resource into the filesystem. Please, contact the server "
+"administrator."
+msgstr ""
+"Error escribiendo el recurso en el sistema de archivos. Por favor, contacte "
+"al administrador del servidor."
+
+#: ../../../routes.py:200 ../../../routes.py:284
+#, python-format
+msgid "user %(username)s is not the owner of the resource %(resource_id)s"
+msgstr "el usuario %(username)s no es el propietario del recurso %(resource_id)s"
+
+#: ../../../routes.py:350
+msgid "Error opening the changelog file"
+msgstr "Error abriendo el archivo de registro de cambios"
+
+#: ../../../routes.py:407
+#, python-format
+msgid ""
+"You can find the userguide of this component in this external <a "
+"target=\"_blank\" href=\"%s\">link</a>"
+msgstr ""
+"Puede encontrar la guía de usuario de este componente en este <a "
+"target=\"_blank\" href=\"%s\">enlace</a> externo"
+
+#: ../../../routes.py:426
+msgid "Error opening the userguide file"
+msgstr "Error abriendo el archivo de guía de usuario"

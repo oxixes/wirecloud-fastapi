@@ -19,7 +19,6 @@
 
 # TODO Add translations
 
-from typing import Union
 from copy import deepcopy
 from urllib.parse import urljoin
 from lxml import etree

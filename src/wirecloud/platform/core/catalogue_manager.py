@@ -28,6 +28,7 @@ from src.wirecloud.platform.localcatalogue.utils import install_component
 from src.wirecloud.platform.markets.utils import MarketManager
 from src.wirecloud.platform.markets.schemas import MarketOptions, MarketEndpoint
 from src.wirecloud.database import DBSession
+from src.wirecloud.translation import gettext as _
 
 
 class WirecloudCatalogueManager(MarketManager):
@@ -47,8 +48,7 @@ class WirecloudCatalogueManager(MarketManager):
         if self._name == 'local':
             added, resource = await install_component(db, wgt_file, users=[user])
             if not added:
-                # TODO Translate this
-                raise Exception('Resource already exists %(resource_id)s' % {'resource_id': resource.local_uri_part})
+                raise Exception(_('Resource already exists %(resource_id)s') % {'resource_id': resource.local_uri_part})
 
             return resource
         else:

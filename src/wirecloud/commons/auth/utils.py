@@ -22,7 +22,7 @@ from typing import Union
 from secrets import compare_digest
 from hashlib import pbkdf2_hmac
 from base64 import b64decode
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
 from src import settings
@@ -69,9 +69,12 @@ async def get_user(db: DBDep, token: Annotated[Union[dict[str, Union[str, int, N
 UserDep = Annotated[UserAll, Depends(get_user)]
 
 
-async def get_session(token: Annotated[Union[dict[str, Union[str, int, None]], None], Depends(get_token_contents)]) -> Union[Session, None]:
+async def get_session(db: DBDep, request: Request, token: Annotated[Union[dict[str, Union[str, int, None]], None], Depends(get_token_contents)]) -> Union[Session, None]:
     if token is None:
         return None
+
+    # TODO Alvaro Set the key request.state.lang to the preferences value of language IF AND ONLY IF
+    # TODO the key request.state.lang_prefs is True
 
     return Session(
         real_user=token.get('real_user', None),

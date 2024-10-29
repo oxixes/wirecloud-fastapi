@@ -35,6 +35,7 @@ from src.wirecloud.catalogue.crud import get_catalogue_resource
 from src.wirecloud.catalogue import utils as catalogue
 from src.wirecloud import docs as root_docs
 from src.wirecloud.database import DBDep
+from src.wirecloud.translation import gettext as _
 
 router = APIRouter()
 markets_router = APIRouter()
@@ -102,7 +103,6 @@ async def create_market_collection(db: DBDep, user: UserDep, request: Request,
                                    market: MarketCreate = Body(
                                        description=docs.create_market_collection_market_description,
                                        examples=[docs.create_market_collection_market_example])):
-    # TODO Translate strings
     # TODO More complex user permissions
 
     if market.user is None or market.user == user.username:
@@ -110,10 +110,10 @@ async def create_market_collection(db: DBDep, user: UserDep, request: Request,
     else:
         target_user = await get_user_by_username(db, market.user)
         if target_user is None:
-            return build_error_response(request, 422, "invalid user option")
+            return build_error_response(request, 422, _("invalid user option"))
 
     if target_user.id != user.id and not user.is_superuser:
-        return build_error_response(request, 403, "You don't have permissions for adding marketplaces in name of other user")
+        return build_error_response(request, 403, _("You don't have permissions for adding marketplaces in name of other user"))
 
     market.user = target_user.username
 
@@ -126,7 +126,7 @@ async def create_market_collection(db: DBDep, user: UserDep, request: Request,
     ))
 
     if not success:
-        return build_error_response(request, 409, "Market name already in use")
+        return build_error_response(request, 409, _("Market name already in use"))
 
     market_managers = await get_market_managers(db, target_user)
     market_managers[target_user.username + '/' + market.name].create(target_user)
@@ -155,23 +155,22 @@ async def create_market_collection(db: DBDep, user: UserDep, request: Request,
 async def delete_market_entry(db: DBDep, user: UserDep, request: Request,
                               username: str = Path(alias="user", description=docs.delete_market_entry_user_description),
                               market: str = Path(description=docs.delete_market_entry_market_description)):
-    # TODO Translate strings
     # TODO More complex user permissions
 
     if username != user.username and not user.is_superuser:
-        return build_error_response(request, 403, "You are not allowed to delete this market")
+        return build_error_response(request, 403, _("You are not allowed to delete this market"))
 
     if username == user.username:
         target_user = user
     else:
         target_user = await get_user_by_username(db, username)
         if target_user is None:
-            return build_error_response(request, 404, "User not found")
+            return build_error_response(request, 404, _("User not found"))
 
     market_managers = await get_market_managers(db, target_user)
 
     if not await delete_market_by_name(db, target_user, market):
-        return build_error_response(request, 404, "Market not found")
+        return build_error_response(request, 404, _("Market not found"))
 
     market_managers[target_user.username + '/' + market].delete()
 
@@ -224,10 +223,9 @@ async def publish_service_process(db: DBDep, user: UserDep, request: Request,
         except Exception as e:
             errors[market_endpoint.market] = str(e)
 
-    # TODO Translate errors
     if len(errors) == len(data.marketplaces) and len(errors) != 0:
-        return build_error_response(request, 502, 'Something went wrong (see details for more info)',
+        return build_error_response(request, 502, _('Something went wrong (see details for more info)'),
                                     details=errors)
     elif len(errors) != 0:
-        return build_error_response(request, 200, 'Something went wrong (see details for more info)',
+        return build_error_response(request, 200, _('Something went wrong (see details for more info)'),
                                     details=errors)

@@ -18,8 +18,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-# TODO Add translations
-
 # WARNING: RDF is deprecated and Wirecloud will stop supporting it in the future. Use JSON (preferred) or XML instead.
 
 import rdflib
@@ -31,6 +29,8 @@ from src.wirecloud.commons.utils.template.base import is_valid_name, is_valid_ve
 from src.wirecloud.commons.utils.template.schemas.macdschemas import *
 from src.wirecloud.platform.wiring.schemas import *
 from src.wirecloud.platform.wiring.utils import get_wiring_skeleton
+
+from src.wirecloud.translation import gettext as _
 
 # Namespaces used by rdflib
 WIRE = rdflib.Namespace("http://wirecloud.conwet.fi.upm.es/ns/widget#")
@@ -77,18 +77,18 @@ class RDFTemplateParser(object):
                     # declaration are not supported.
                     doc = etree.fromstring(template.encode('utf-8'))
                 else:
-                    raise ValueError("Invalid template type")
+                    raise ValueError(_("Invalid template type"))
 
                 root_element_qname = etree.QName(doc)
 
                 if root_element_qname.namespace is None:
-                    raise ValueError("XML document does not contain a valid rdf namespace")
+                    raise ValueError(_("XML document does not contain a valid rdf namespace"))
 
                 if root_element_qname.namespace != RDF_NS:
-                    raise ValueError("Invalid namespace: " + root_element_qname.namespace)
+                    raise ValueError(_("Invalid namespace: ") + root_element_qname.namespace)
 
                 if root_element_qname.localname != 'RDF':
-                    raise ValueError("Invalid root element: " + root_element_qname.localname)
+                    raise ValueError(_("Invalid root element: ") + root_element_qname.localname)
 
                 self._graph = rdflib.Graph()
                 self._graph.parse(data=template, format='xml')
@@ -107,7 +107,7 @@ class RDFTemplateParser(object):
                     self._type = MACType.mashup
                     break
                 else:
-                    raise TemplateParseException('RDF document does not describe a widget, operator or mashup component')
+                    raise TemplateParseException(_('RDF document does not describe a widget, operator or mashup component'))
 
         self._parse_basic_info()
 
@@ -123,7 +123,7 @@ class RDFTemplateParser(object):
 
         for field_element in self._graph.objects(subject, namespace[element]):
             if not isinstance(field_element, rdflib.Literal):
-                msg = 'Invalid content for field: %(field)s'
+                msg = _('Invalid content for field: %(field)s')
                 raise TemplateParseException(msg % {'field': element})
 
             if field_element.language:
@@ -146,7 +146,7 @@ class RDFTemplateParser(object):
             self._add_translation_index(translation_name, **kwargs)
             return '__MSG_' + translation_name + '__'
         elif base_value is None and required:
-            msg = 'Missing required field: %(field)s'
+            msg = _('Missing required field: %(field)s')
             raise TemplateParseException(msg % {'field': element})
         elif base_value is not None:
             return base_value
@@ -161,7 +161,7 @@ class RDFTemplateParser(object):
             break
         else:
             if required:
-                msg = 'Missing required field: %(field)s'
+                msg = _('Missing required field: %(field)s')
                 raise TemplateParseException(msg % {'field': element})
             else:
                 result = default
@@ -215,22 +215,22 @@ class RDFTemplateParser(object):
         try:
             macversion = int(macversion)
         except ValueError:
-            raise TemplateParseException('The format of the macversion is invalid. It must be an integer.')
+            raise TemplateParseException(_('The format of the macversion is invalid. It must be an integer.'))
         if macversion != 1 and macversion != 2:
-            raise TemplateParseException('The macversion is invalid. Currently only macversion 1 or 2 are supported.')
+            raise TemplateParseException(_('The macversion is invalid. Currently only macversion 1 or 2 are supported.'))
 
         vendor_node = self._get_field(USDL, 'hasProvider', self._rootURI, id_=True)
         vendor = self._get_field(FOAF, 'name', vendor_node)
         if not is_valid_vendor(vendor):
-            raise TemplateParseException('The format of the vendor is invalid.')
+            raise TemplateParseException(_('The format of the vendor is invalid.'))
 
         name = self._get_field(DCTERMS, 'title', self._rootURI)
         if not is_valid_name(name):
-            raise TemplateParseException('The format of the name is invalid.')
+            raise TemplateParseException(_('The format of the name is invalid.'))
 
         version = self._get_field(USDL, 'versionInfo', self._rootURI)
         if not is_valid_version(version):
-            raise TemplateParseException('The format of the version number is invalid. Format: X.X.X where X is an integer. Ex. "0.1", "1.11" NOTE: "1.01" should be changed to "1.0.1" or "1.1"')
+            raise TemplateParseException(_('The format of the version number is invalid. Format: X.X.X where X is an integer. Ex. "0.1", "1.11" NOTE: "1.01" should be changed to "1.0.1" or "1.1"'))
 
         if self._type == MACType.widget:
             self._info = MACDWidget(type=MACType.widget, macversion=MACVersion(macversion), name=Name(name),
@@ -328,7 +328,7 @@ class RDFTemplateParser(object):
             self._parse_wiring_operator_info(wiring_element)
 
             if self._info.wiring.version == '1.0':
-                raise TemplateParseException("Only wiring version 2.0 is supported. The old 1.0 version is no longer supported.")
+                raise TemplateParseException(_("Only wiring version 2.0 is supported. The old 1.0 version is no longer supported."))
             else:
                 self._parse_wiring_behaviours(wiring_element)
 
@@ -354,7 +354,7 @@ class RDFTemplateParser(object):
                 )
                 break
             else:
-                raise TemplateParseException('Missing required field: target')
+                raise TemplateParseException(_('Missing required field: target'))
 
             connection_info = WiringConnection(
                 readonly=self._get_field(WIRE_M, 'readonly', connection, required=False).lower() == 'true',
@@ -393,7 +393,7 @@ class RDFTemplateParser(object):
             elif type_ == 'operator':
                 component_view_description = behaviour.components.operator[id_] = WiringComponent()
             else:
-                raise TemplateParseException('Invalid component type in wiring: %s' % type_)
+                raise TemplateParseException(_('Invalid component type in wiring: %s') % type_)
 
             component_view_description.collapsed = self._get_field(WIRE_M, 'collapsed', entity_view, required=False).lower() == 'true'
 
@@ -436,7 +436,7 @@ class RDFTemplateParser(object):
                 sourcename = self._join_endpoint_name(source)
                 break
             else:
-                raise TemplateParseException('missing required field: hasSourceEndpoint')
+                raise TemplateParseException(_('missing required field: hasSourceEndpoint'))
 
             sourcehandle = self._parse_position(connection, relation_name='hasSourceHandlePosition',
                                                 default=WiringConnectionHandlePositionType.auto)
@@ -445,7 +445,7 @@ class RDFTemplateParser(object):
                 targetname = self._join_endpoint_name(target)
                 break
             else:
-                raise TemplateParseException('missing required field: hasTargetEndpoint')
+                raise TemplateParseException(_('missing required field: hasTargetEndpoint'))
 
             targethandle = self._parse_position(connection, relation_name='hasTargetHandlePosition',
                                                 default=WiringConnectionHandlePositionType.auto)
@@ -545,7 +545,7 @@ class RDFTemplateParser(object):
                     try:
                         contenttype, parameters = parse_mime_type(contents_format)
                     except InvalidMimeType:
-                        raise TemplateParseException('Invalid code content type: %s' % contents_format)
+                        raise TemplateParseException(_('Invalid code content type: %s') % contents_format)
 
                     contents_info.contenttype = contenttype
                     if 'charset' in parameters:
@@ -553,7 +553,7 @@ class RDFTemplateParser(object):
                         del parameters['charset']
 
                     if len(parameters) > 0:
-                        raise TemplateParseException('Invalid code content type: %s' % contents_format)
+                        raise TemplateParseException(_('Invalid code content type: %s') % contents_format)
 
                 if contents_info.scope == '':
                     self._info.contents = MACDWidgetContents(
@@ -568,7 +568,7 @@ class RDFTemplateParser(object):
                     self._info.altcontents.append(contents_info)
 
             if not has_main_content:
-                raise TemplateParseException('Missing required field: Main content')
+                raise TemplateParseException(_('Missing required field: Main content'))
 
             rendering_element = self._get_field(WIRE, 'hasPlatformRendering', self._rootURI, id_=True, required=True)
 
@@ -587,7 +587,7 @@ class RDFTemplateParser(object):
 
             # JS files are optional on v1 widgets
             if (self._type == MACType.operator or (self._type == MACType.widget and self._info.macversion > 1)) and not len(self._info.js_files) > 0:
-                raise TemplateParseException('Missing required field: Javascript files')
+                raise TemplateParseException(_('Missing required field: Javascript files'))
 
             if self._info.macversion > 1:
                 self._info.entrypoint = self._get_field(WIRE, 'entryPoint', self._rootURI, required=False, default=None)
@@ -647,7 +647,7 @@ class RDFTemplateParser(object):
                 rendering = self._get_field(WIRE_M, 'hasiWidgetRendering', widget, id_=True, required=False)
                 screen_sizes = self._graph.objects(widget, WIRE_M['hasScreenSize'])
                 vendor = self._get_field(USDL, 'hasProvider', widget, id_=True, required=True)
-                for _ in screen_sizes:
+                for __ in screen_sizes:
                     has_screen_sizes = True
                     break
                 else:
@@ -744,7 +744,7 @@ class RDFTemplateParser(object):
         self._info.tabs = tabs
 
         if not self._info.is_valid_screen_sizes():
-            raise TemplateParseException("Invalid screen sizes present in the template.")
+            raise TemplateParseException(_("Invalid screen sizes present in the template."))
 
         self._parse_wiring_info(wiring_property='hasMashupWiring')
 
@@ -765,6 +765,6 @@ class RDFTemplateParser(object):
             try:
                 self._parse_extra_info()
             except ValidationError as e:
-                raise TemplateParseException("Invalid template: %s" % e)
+                raise TemplateParseException(_("Invalid template: %s") % e)
 
         return self._info

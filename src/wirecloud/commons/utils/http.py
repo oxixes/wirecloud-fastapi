@@ -20,10 +20,14 @@ import re
 # TODO Add HTML response
 
 import socket
+from inspect import Signature
+
 import orjson as json
 import inspect
 import posixpath
 import os
+import random
+import string
 from functools import wraps
 from lxml import etree
 from fastapi import Request, Response
@@ -34,6 +38,7 @@ from collections.abc import Callable
 from urllib.parse import urljoin, unquote, urlparse, quote
 
 from src.wirecloud.commons.utils import mimeparser
+from src.wirecloud.translation import gettext as _
 
 
 class HTTPError(BaseModel):
@@ -182,22 +187,46 @@ def build_permission_denied_response(request: Request, error_msg: str) -> Respon
     return build_error_response(request, 403, error_msg)
 
 
-def check_decorator_params(handler, params):
-    for param_name in params:
-        if param_name not in inspect.signature(handler).parameters and ("_" + param_name) not in inspect.signature(handler).parameters:
-            raise ValueError('The handler must have a %s parameter' % param_name)
+def generate_new_param_signature(sig: Signature, new_param_name: str, new_param_type: type,
+                                 default_value: Any = inspect.Parameter.empty) -> tuple[Signature, str]:
+    params = list(sig.parameters.values())
+    new_sig = sig
+
+    # Check if a parameter with type 'Request' already exists
+    request_param_exists = any(param.annotation == Request for param in params)
+    request_name_exists = any(param.name == f'{new_param_name}' and param.annotation != new_param_type for param in params)
+
+    if request_name_exists and not request_param_exists:
+        new_param_name = f"_{new_param_name}_"
+        # Add extra text to the parameter name to avoid conflicts
+        new_param_name += ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
+
+    if not request_param_exists:
+        # Add a 'request' parameter to the handler
+        request_param = inspect.Parameter(new_param_name, inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                                          annotation=new_param_type, default=default_value)
+        params.append(request_param)
+
+        new_sig = sig.replace(parameters=params)
+    else:
+        # Find the parameter with the name 'request'
+        new_param_name = [param.name for param in params if param.annotation == Request][0]
+
+    return new_sig, new_param_name
 
 
 def authentication_required(handler):
+    from src.wirecloud.commons.auth.schemas import UserAll
+    from src.wirecloud.commons.auth.utils import UserDep
+
     # Check that the handler has a user and request parameter
-    check_decorator_params(handler, ['user', 'request'])
+    new_sig, request_param = generate_new_param_signature(inspect.signature(handler), 'request', Request)
+    new_sig, user_param = generate_new_param_signature(new_sig, 'user', UserDep)
 
     @wraps(handler)
     async def wrapper(*args, **kwargs):
-        from src.wirecloud.commons.auth.schemas import UserAll
-
-        user: Optional[UserAll] = kwargs.get('user', kwargs.get('_user'))
-        request: Request = kwargs.get('request', kwargs.get('_request'))
+        user: Optional[UserAll] = kwargs.get(user_param)
+        request: Request = kwargs.get(request_param)
 
         if user is None:
             return build_error_response(request, 401, 'Authentication Required')
@@ -209,23 +238,24 @@ def authentication_required(handler):
             else:
                 return handler(*args, **kwargs)
 
+    wrapper.__signature__ = new_sig
+
     return wrapper
 
 
 def produces(mime_types: list[str]):
     def wrap(handler):
-        check_decorator_params(handler, ['request'])
+        new_sig, request_param = generate_new_param_signature(inspect.signature(handler), 'request', Request)
 
         @wraps(handler)
         async def wrapper(*args, **kwargs):
-            request: Request = kwargs.get('request', kwargs.get('_request'))
+            request: Request = kwargs.get(request_param)
 
             accept_header = request.headers.get('Accept', '*/*')
-            setattr(request, 'best_response_mimetype', mimeparser.best_match(mime_types, accept_header))
+            request.state.best_response_mimetype = mimeparser.best_match(mime_types, accept_header)
 
-            if request.best_response_mimetype == '':
-                # TODO Add translations
-                msg = "The requested resource is only capable of generating content not acceptable according to the Accept headers sent in the request"
+            if request.state.best_response_mimetype == '':
+                msg = _("The requested resource is only capable of generating content not acceptable according to the Accept headers sent in the request")
                 details = {'supported_mime_types': mime_types}
                 return build_error_response(request, 406, msg, details=details)
 
@@ -236,6 +266,8 @@ def produces(mime_types: list[str]):
             else:
                 return handler(*args, **kwargs)
 
+        wrapper.__signature__ = new_sig
+
         return wrapper
 
     return wrap
@@ -243,15 +275,15 @@ def produces(mime_types: list[str]):
 
 def consumes(mime_types: list[str]):
     def wrap(handler):
-        check_decorator_params(handler, ['request'])
+        new_sig, request_param = generate_new_param_signature(inspect.signature(handler), 'request', Request)
 
         @wraps(handler)
         async def wrapper(*args, **kwargs):
-            request: Request = kwargs.get('request', kwargs.get('_request'))
+            request: Request = kwargs.get(request_param)
 
-            setattr(request, 'mimetype', get_content_type(request)[0])
-            if request.mimetype not in mime_types:
-                msg = "Unsupported request media type"
+            request.state.mimetype = get_content_type(request)[0]
+            if request.state.mimetype not in mime_types:
+                msg = _("Unsupported request media type")
                 return build_error_response(request, 415, msg)
 
             is_async = inspect.iscoroutinefunction(handler)
@@ -260,6 +292,8 @@ def consumes(mime_types: list[str]):
                 return await handler(*args, **kwargs)
             else:
                 return handler(*args, **kwargs)
+
+        wrapper.__signature__ = new_sig
 
         return wrapper
 

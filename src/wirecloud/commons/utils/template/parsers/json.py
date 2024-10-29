@@ -18,8 +18,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-# TODO Add translations
-
 import orjson as json
 
 from pydantic import ValidationError
@@ -27,6 +25,7 @@ from typing import Union
 from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACDWidget, MACDOperator, MACDMashup, MACDTranslationIndexUsage, MACType, Name, Vendor, Version
 from src.wirecloud.commons.utils.template.base import TemplateParseException
 from src.wirecloud.commons.utils.translation import get_trans_index
+from src.wirecloud.translation import gettext as _
 
 
 class JSONTemplateParser(object):
@@ -39,13 +38,13 @@ class JSONTemplateParser(object):
         elif isinstance(template, dict):
             info = template
         else:
-            raise ValueError('Invalid input data')
+            raise ValueError(_('Invalid input data'))
 
         if 'type' not in info:
-            raise ValueError('Missing component type.')
+            raise ValueError(_('Missing component type.'))
 
         if info['type'] not in ('widget', 'operator', 'mashup'):
-            raise ValueError('Invalid component type: %s' % info['type'])
+            raise ValueError(_('Invalid component type: %s') % info['type'])
 
         try:
             if info['type'] == 'widget':
@@ -71,7 +70,7 @@ class JSONTemplateParser(object):
         self._info.translation_index_usage = {}
 
         if self._info.type == MACType.mashup and not self._info.is_valid_screen_sizes():
-            raise TemplateParseException('Invalid screen sizes range present in the template')
+            raise TemplateParseException(_('Invalid screen sizes range present in the template'))
 
         self._add_translation_index(self._info.title, type='resource', field='title')
         self._add_translation_index(self._info.description, type='resource', field='description')

@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-# TODO Add translations of errors
 # TODO Add docs of almost everything here (descriptions)
 
 from pydantic import BaseModel, StringConstraints, Field, model_validator, field_serializer
@@ -26,6 +25,8 @@ from typing import Optional, Annotated, Union
 
 from src.wirecloud.platform.wiring.schemas import WiringEndpoints, Wiring
 from src.wirecloud.commons.utils.template.base import Contact, parse_contacts_info, TemplateParseException
+
+from src.wirecloud.translation import gettext as _
 
 
 IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
@@ -113,22 +114,22 @@ class MACDBase(BaseModel):
             if index not in self.translations[self.default_lang]:
                 missing_translations.append(index)
 
-        for _, translation in self.translations.items():
+        for __, translation in self.translations.items():
             for index in translation:
                 if index not in self.translation_index_usage:
                     extra_translations.add(index)
 
         if self.default_lang not in self.translations:
             raise TemplateParseException(
-                "There isn't a translation element for the default translation language: (%(default_lang)s)" %
+                _("There isn't a translation element for the default translation language: (%(default_lang)s)") %
                 {'default_lang': self.default_lang})
 
         if len(missing_translations) > 0:
-            msg = "The following translation indexes need a default value: %(indexes)s."
+            msg = _("The following translation indexes need a default value: %(indexes)s.")
             raise TemplateParseException(msg % {'indexes': ', '.join(missing_translations)})
 
         if len(extra_translations) > 0:
-            msg = "The following translation indexes are not used: %(indexes)s."
+            msg = _("The following translation indexes are not used: %(indexes)s.")
             raise TemplateParseException(msg % {'indexes': ', '.join(extra_translations)})
 
 

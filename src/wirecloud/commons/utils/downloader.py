@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-# TODO Add translations
 # TODO Use async requests
 
 import codecs
@@ -26,6 +25,7 @@ import requests
 from urllib.parse import urlparse
 
 from src.wirecloud import platform as wirecloud
+from src.wirecloud.translation import gettext as _
 
 VERSIONS = {
     'wirecloud_version': wirecloud.__version__,
@@ -43,7 +43,7 @@ def download_local_file(path: str) -> bytes:
 def download_http_content(url: str) -> bytes:
     parsed_url = urlparse(url)
     if parsed_url.scheme not in ('http', 'https'):
-        raise requests.exceptions.InvalidSchema('Invalid schema: %(schema)s' % {"schema": parsed_url.scheme})
+        raise requests.exceptions.InvalidSchema(_('Invalid schema: %(schema)s') % {"schema": parsed_url.scheme})
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (%(system)s %(machine)s;U) Wirecloud/%(wirecloud_version)s python-requests/%(requests_version)s' % VERSIONS,

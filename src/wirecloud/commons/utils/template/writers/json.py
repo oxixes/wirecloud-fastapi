@@ -21,6 +21,7 @@
 import orjson as json
 
 from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACType
+from src.wirecloud.translation import gettext as _
 
 
 def remove_empty_string_fields(fields: tuple[str, ...], data: dict) -> None:
@@ -28,7 +29,7 @@ def remove_empty_string_fields(fields: tuple[str, ...], data: dict) -> None:
         value = data.get(field)
 
         if value is not None and not isinstance(value, str):
-            raise Exception("Invalid value for field %s" % field)
+            raise Exception(_("Invalid value for field %s") % field)
 
         if field in data and (value is None or value == ''):
             del data[field]
@@ -39,7 +40,7 @@ def remove_empty_array_fields(fields: tuple[str, ...], data: dict) -> None:
         value = data.get(field)
 
         if value is not None and not isinstance(value, (list, tuple)):
-            raise Exception("Invalid value for field %s" % field)
+            raise Exception(_("Invalid value for field %s") % field)
 
         if field in data and (value is None or len(value) == 0):
             del data[field]

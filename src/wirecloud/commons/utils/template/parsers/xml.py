@@ -18,8 +18,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-# TODO Add translations
-
 import codecs
 import os
 
@@ -31,6 +29,8 @@ from src.wirecloud.commons.utils.template.schemas.macdschemas import *
 from src.wirecloud.commons.utils.translation import get_trans_index
 from src.wirecloud.platform.wiring.schemas import *
 from src.wirecloud.platform.wiring.utils import get_behaviour_skeleton, get_wiring_skeleton
+
+from src.wirecloud.translation import gettext as _
 
 XMLSCHEMA_FILE = codecs.open(os.path.join(os.path.dirname(__file__), '../schemas/xml_schema.xsd'), 'rb')
 XMLSCHEMA_DOC = etree.parse(XMLSCHEMA_FILE)
@@ -128,14 +128,14 @@ class ApplicationMashupTemplateParser(object):
         xmlns = root_element_qname.namespace
 
         if xmlns is None:
-            raise ValueError("Missing document namespace")
+            raise ValueError(_("Missing document namespace"))
         elif xmlns in OLD_TEMPLATE_NAMESPACES:
             raise ObsoleteFormatError()
         elif xmlns != WIRECLOUD_TEMPLATE_NS:
-            raise ValueError("Invalid namespace: " + xmlns)
+            raise ValueError(_("Invalid namespace: ") + xmlns)
 
         if root_element_qname.localname not in ('widget', 'operator', 'mashup'):
-            raise TemplateParseException("Invalid root element (%s)" % root_element_qname.localname)
+            raise TemplateParseException(_("Invalid root element (%s)") % root_element_qname.localname)
 
         self._type = MACType(root_element_qname.localname)
 
@@ -155,7 +155,7 @@ class ApplicationMashupTemplateParser(object):
         elements = self._xpath(query, element)
 
         if len(elements) == 0 and required:
-            raise TemplateParseException('Missing %s element' % query.replace('t:', ''))
+            raise TemplateParseException(_('Missing %s element') % query.replace('t:', ''))
         elif len(elements) > 0:
             return elements[0]
         else:
@@ -194,7 +194,7 @@ class ApplicationMashupTemplateParser(object):
         elif not required:
             return ''
         else:
-            msg = 'missing required field: %(field)s'
+            msg = _('Missing required field: %(field)s')
             raise TemplateParseException(msg % {'field': xpath})
 
     def _parse_basic_info(self) -> None:
@@ -355,13 +355,13 @@ class ApplicationMashupTemplateParser(object):
             self._parse_wiring_operator_info(mashup_wiring_element)
 
             if self._info.wiring.version == '1.0':
-                raise TemplateParseException("Only wiring version 2.0 is supported. The old 1.0 version is no longer supported.")
+                raise TemplateParseException(_("Only wiring version 2.0 is supported. The old 1.0 version is no longer supported."))
             elif self._info.wiring.version == '2.0':
                 visualdescription_element = self.get_xpath(VISUALDESCRIPTION_XPATH, mashup_wiring_element, required=False)
                 if visualdescription_element is not None:
                     self._parse_visualdescription_info(visualdescription_element)
             else:
-                raise TemplateParseException("Invalid wiring version: %s" % self._info.wiring.version)
+                raise TemplateParseException(_("Invalid wiring version: %s") % self._info.wiring.version)
 
     def _parse_wiring_connection_info(self, wiring_element: etree.Element) -> None:
         for connection in self._xpath(CONNECTION_XPATH, wiring_element):
@@ -440,7 +440,7 @@ class ApplicationMashupTemplateParser(object):
         else:
             js_files = self._xpath(SCRIPT_XPATH, self._doc)
             if len(js_files) > 0:
-                raise TemplateParseException("The use of the script element is not allowed in version 1.0 widgets")
+                raise TemplateParseException(_("The use of the script element is not allowed in version 1.0 widgets"))
 
     def _parse_operator_info(self) -> None:
         self._parse_component_preferences()
@@ -547,10 +547,10 @@ class ApplicationMashupTemplateParser(object):
                 rendering = self.get_xpath(RENDERING_XPATH, widget, required=False)
 
                 if (position is None or rendering is None) and screenSizes is None:
-                    raise TemplateParseException("Missing position/rendering or screensizes element")
+                    raise TemplateParseException(_("Missing position/rendering or screensizes element"))
 
                 if (rendering is None and not widget.get('layout')):
-                    raise TemplateParseException("Missing layout in resource or rendering element")
+                    raise TemplateParseException(_("Missing layout in resource or rendering element"))
 
                 if rendering is None:
                     layout = int(str(widget.get('layout')))
@@ -643,7 +643,7 @@ class ApplicationMashupTemplateParser(object):
         self._info.tabs = tabs
 
         if not self._info.is_valid_screen_sizes():
-            raise TemplateParseException("Invalid screen sizes present in the template.")
+            raise TemplateParseException(_("Invalid screen sizes present in the template."))
 
         self._parse_wiring_info()
 
@@ -685,6 +685,6 @@ class ApplicationMashupTemplateParser(object):
             try:
                 self._parse_extra_info()
             except ValidationError as e:
-                raise TemplateParseException("Invalid template: %s" % e)
+                raise TemplateParseException(_("Invalid template: %s") % e)
 
         return self._info

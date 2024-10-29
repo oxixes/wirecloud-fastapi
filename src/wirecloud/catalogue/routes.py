@@ -47,6 +47,7 @@ from src.wirecloud.catalogue.crud import (get_catalogue_resource_versions_for_us
 from src.wirecloud.catalogue.utils import get_resource_group_data, get_resource_data
 from src.wirecloud.platform.localcatalogue.utils import install_component
 from src.wirecloud.database import DBDep
+from src.wirecloud.translation import gettext as _
 
 router = APIRouter()
 
@@ -88,15 +89,13 @@ router = APIRouter()
 @consumes(["multipart/form-data", "application/octet-stream"])
 @authentication_required
 async def create_resource(db: DBDep, request: Request, user: UserDep):
-    file_contents = None
-    if request.mimetype == 'multipart/form-data':
+    if request.state.mimetype == 'multipart/form-data':
         # Get the file contents from the file 'file'
         form = await request.form(max_files=1000, max_fields=1000)
 
         public = form.get('public', 'true').strip().lower() == 'true'
         if 'file' not in form:
-            # TODO Translate this message
-            return build_error_response(request, 400, 'Missing component file in the request')
+            return build_error_response(request, 400, _('Missing component file in the request'))
 
         downloaded_file = await form['file'].read()
     else:  # if request.mimetype == 'application/octet-stream'
@@ -106,18 +105,16 @@ async def create_resource(db: DBDep, request: Request, user: UserDep):
     try:
         file_contents = WgtFile(downloaded_file)
     except zipfile.BadZipfile:
-        return build_error_response(request, 400, 'The uploaded file is not a zip file')
+        return build_error_response(request, 400, _('The uploaded file is not a zip file'))
 
     try:
         added, resource = await install_component(db, file_contents, executor_user=user, public=public,
                                                   users=[user], restricted=True)
         if not added:
-            # TODO Translate this message
-            return build_error_response(request, 409, 'Resource already exists')
+            return build_error_response(request, 409, _('Resource already exists'))
     except OSError as e:
         if e.errno == errno.EACCES:
-            # TODO Translate this message
-            return build_error_response(request, 500, 'Error writing the resource into the filesystem. Please, contact the server administrator.')
+            return build_error_response(request, 500, _('Error writing the resource into the filesystem. Please, contact the server administrator.'))
         else:
             raise
     except TemplateParseException as e:
@@ -200,8 +197,7 @@ async def delete_resource_versions(db: DBDep,
     if len(resources) == 0:
         raise NotFound()
     elif not resources[0].is_removable_by(db, user, vendor=True):
-        # TODO Add translation
-        msg = "user %(username)s is not the owner of the resource %(resource_id)s" % {
+        msg = _("user %(username)s is not the owner of the resource %(resource_id)s") % {
             'username': user.username, 'resource_id': '{}/{}'.format(vendor, name)}
         raise PermissionDenied(msg)
 
@@ -285,8 +281,7 @@ async def delete_resource_version(db: DBDep,
     if resource is None:
         raise NotFound()
     elif not await resource.is_removable_by(db, user, vendor=True):
-        # TODO Add translation
-        msg = "user %(username)s is not the owner of the resource %(resource_id)s" % {
+        msg = _("user %(username)s is not the owner of the resource %(resource_id)s") % {
             'username': user.username, 'resource_id': '{}/{}/{}'.format(vendor, name, version)}
         raise PermissionDenied(msg)
 
@@ -352,8 +347,7 @@ async def get_resource_changelog(db: DBDep,
         try:
             doc_code = download_local_file(doc_path).decode('utf-8')
         except Exception:
-            # TODO Translate this message
-            msg = 'Error opening the changelog file'
+            msg = _('Error opening the changelog file')
             doc_code = '<div class="margin-top: 10px"><p>%s</p></div>' % msg
 
     doc_pre_html = markdown.markdown(doc_code, output_format='xhtml',
@@ -410,8 +404,7 @@ async def get_resource_user_guide(db: DBDep,
 
     doc_base_url = None
     if resource_info.doc.startswith(('http://', 'https://')):
-        # TODO Translate this message
-        doc_code = 'You can find the userguide of this component in this external <a target="_blank" href="%s">link</a>' % \
+        doc_code = _('You can find the userguide of this component in this external <a target="_blank" href="%s">link</a>') % \
                    resource_info.doc
         doc_code = '<div style="margin-top: 10px"><p>%s</p></div>' % doc_code
     else:
@@ -430,8 +423,7 @@ async def get_resource_user_guide(db: DBDep,
             try:
                 doc_code = download_local_file(doc_path).decode('utf-8')
             except Exception:
-                # TODO Translate this
-                msg = 'Error opening the userguide file'
+                msg = _('Error opening the userguide file')
                 doc_code = '<div class="margin-top: 10px"><p>%s</p></div>' % msg
 
     doc_pre_html = markdown.markdown(doc_code, output_format='xhtml',
