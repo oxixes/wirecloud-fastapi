@@ -2,3 +2,6 @@ venv/
 __pycache__/
 catalogue/
 .idea/
+src/wirecloud/dist/
+node_modules/
+dist/
