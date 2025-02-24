@@ -47,7 +47,6 @@ app = FastAPI(lifespan=lifespan,
 install_all_middlewares(app)
 get_plugins(app)
 
-
 def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema

@@ -1,0 +1,12 @@
+@use 'variables';
+@use 'styledelements/input_mixins';
+
+.se-code-area {
+    @include input_mixins.input-base();
+    height: 25em;
+    width: 100%;
+}
+
+.se-code-area.focused {
+    @include input_mixins.input-focus();
+}

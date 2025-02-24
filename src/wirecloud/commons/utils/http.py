@@ -356,6 +356,7 @@ def get_absolute_reverse_url(viewname: str, request: Optional[Request] = None, *
     return urljoin(get_current_scheme(request) + '://' + get_current_domain(request), url)
 
 
+# FIXME Request.url_for could be used instead of this
 def get_relative_reverse_url(viewname: str, **kwargs) -> str:
     from src.wirecloud.platform.plugins import get_plugin_urls
 

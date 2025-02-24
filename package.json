@@ -1,0 +1,31 @@
+{
+    "name": "wirecloud",
+    "version": "2.0.0",
+    "scripts": {
+        "build:css": "ts-node -r tsconfig-paths/register --project src/wirecloud/webpack/webpack-tsconfig.json ./node_modules/webpack/bin/webpack --config src/wirecloud/webpack/webpack.sass.ts",
+        "build:js": "ts-node -r tsconfig-paths/register --project src/wirecloud/webpack/webpack-tsconfig.json ./node_modules/webpack/bin/webpack --config src/wirecloud/webpack/webpack.js.ts --progress",
+        "build": "ts-node -r tsconfig-paths/register --project src/wirecloud/webpack/webpack-tsconfig.json ./node_modules/webpack/bin/webpack --config src/wirecloud/webpack/webpack.all.ts --progress"
+    },
+    "devDependencies": {
+        "@types/node": "^22.10.2",
+        "@types/webpack": "^5.28.5",
+        "css-loader": "^7.1.2",
+        "esbuild": "^0.24.2",
+        "esbuild-loader": "^4.2.2",
+        "mini-css-extract-plugin": "^2.9.2",
+        "monaco-editor-webpack-plugin": "^7.1.0",
+        "sass": "^1.83.0",
+        "sass-loader": "^16.0.4",
+        "style-loader": "^4.0.0",
+        "ts-node": "^10.9.2",
+        "tsconfig-paths": "^4.2.0",
+        "typescript": "^5.7.2",
+        "webpack": "^5.97.1",
+        "webpack-cli": "^5.1.4",
+        "webpack-merge": "^6.0.1",
+        "webpack-remove-empty-scripts": "^1.0.4"
+    },
+    "dependencies": {
+        "monaco-editor": "^0.52.2"
+    }
+}

@@ -23,7 +23,7 @@ from importlib import import_module
 from typing import Optional, Any
 from collections.abc import Callable
 from pydantic import BaseModel
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 import inspect
 import logging
 import json
@@ -64,7 +64,7 @@ class WirecloudPlugin:
     def get_platform_context_definitions(self) -> dict[str, BaseContextKey]:
         return {}
 
-    def get_platform_context_current_values(self, user: Optional[UserAll], session: Optional[Session]):
+    def get_platform_context_current_values(self, request: Request, user: Optional[UserAll], session: Optional[Session]):
         return {}
 
     def get_tab_preferences(self) -> list[TabPreferenceKey]:
@@ -78,9 +78,6 @@ class WirecloudPlugin:
 
     def get_workspace_preferences(self) -> list[PreferenceKey]:
         return []
-
-    def get_scripts(self, view: str) -> tuple[str, ...]:
-        return ()
 
     def get_templates(self, view: str) -> list[str]:
         return []
@@ -99,9 +96,6 @@ class WirecloudPlugin:
 
     def get_operator_api_extensions(self, view: str, features: list[str]) -> list[str]:
         return []
-
-    def get_platform_css(self, view: str) -> tuple[str, ...]:
-        return ()
 
     def get_proxy_processors(self) -> tuple[str, ...]:
         return ()
@@ -290,16 +284,6 @@ def get_wirecloud_ajax_endpoints(view: str, prefix: str) -> list[AjaxEndpoint]:
     return endpoints
 
 
-def get_extra_javascripts(view: str) -> list[str]:
-    plugins = get_plugins()
-    files = []
-
-    for plugin in plugins:
-        files += plugin.get_scripts(view)
-
-    return files
-
-
 def get_tab_preferences() -> list[TabPreferenceKey]:
     global _wirecloud_tab_preferences
 
@@ -339,8 +323,8 @@ def get_constants() -> list[dict[str, str]]:
         for plugin in plugins:
             constants_dict.update(plugin.get_constants())
 
-        constants_dict['WORKSPACE_PREFERENCES'] = get_workspace_preferences()
-        constants_dict['TAB_PREFERENCES'] = get_tab_preferences()
+        constants_dict['WORKSPACE_PREFERENCES'] = [pref.model_dump() for pref in get_workspace_preferences()]
+        constants_dict['TAB_PREFERENCES'] = [pref.model_dump() for pref in get_tab_preferences()]
 
         constants = []
         for constant_key in constants_dict:
@@ -370,16 +354,6 @@ def get_operator_api_extensions(view: str, features: list[str]) -> list[str]:
         files += plugin.get_operator_api_extensions(view, features)
 
     return files
-
-
-def get_platform_css(view: str) -> tuple[str, ...]:
-    plugins = get_plugins()
-    files = []
-
-    for plugin in plugins:
-        files += plugin.get_platform_css(view)
-
-    return tuple(files)
 
 
 def get_api_auth_backends() -> dict[str, Callable]:
@@ -456,7 +430,7 @@ def build_url_template(urltemplate: URLTemplate, kwargs: Optional[list[str]] = N
     if kwargs is None:
         kwargs = []
 
-    if prefix is not None and prefix[-1] == '/':
+    if prefix is not None and prefix != '' and prefix[-1] == '/':
         prefix = prefix[:-1]
     else:
         prefix = ''
@@ -469,7 +443,7 @@ def build_url_template(urltemplate: URLTemplate, kwargs: Optional[list[str]] = N
         if arg not in kwargs:
             template = template.replace('{' + arg + '}', str(urltemplate.defaults[arg]))
 
-    template.replace('{', '%(').replace('}', ')s')
+    template = template.replace('{', '%(').replace('}', ')s')
 
     return template
 

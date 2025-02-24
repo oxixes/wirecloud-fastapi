@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from typing import Optional
 
 from src.wirecloud.platform.context.schemas import Context
@@ -28,10 +28,10 @@ router = APIRouter()
 
 
 @router.get("/", response_model=Context)
-async def get_context(user: UserDep, session: SessionDep, theme: Optional[str] = None):
+async def get_context(request: Request, user: UserDep, session: SessionDep, theme: Optional[str] = None):
     # TODO Provide user and session
     context = Context(
-        platform=get_platform_context(user=user, session=session),
+        platform=get_platform_context(request, user=user, session=session),
         workspace=get_workspace_context_definitions()
     )
 

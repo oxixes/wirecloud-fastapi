@@ -1,0 +1,230 @@
+@use 'variables' as *;
+@use "defaults";
+@use "sass:color";
+@use "sass:string";
+@use "sass:list";
+@use "support" as *;
+
+
+@mixin children-display($selectors: (), $value: none) {
+    @each $selector in $selectors {
+        #{$selector} { display: $value; }
+    }
+}
+
+@mixin positioned-border-radius($direction) {
+    @if $direction == top { border-radius: $border-radius-base $border-radius-base 0px 0px; }
+    @if $direction == right { border-radius: 0px $border-radius-base $border-radius-base 0px; }
+    @if $direction == bottom { border-radius: 0px 0px $border-radius-base $border-radius-base; }
+    @if $direction == left { border-radius: $border-radius-base 0px 0px $border-radius-base; }
+}
+
+@mixin positioned-element($top: false, $right: false, $left: false, $bottom: false) {
+    position: absolute;
+
+    @if $top { top: $top; }
+    @if $right { right: $right; }
+    @if $left { left: $left; }
+    @if $bottom { bottom: $bottom; }
+}
+
+@function adapt-image-size($size) {
+    @if $high-resolution-images {
+        @return $size * 0.5;
+    } @else {
+        @return $size;
+    }
+}
+
+$contrasted-dark-default:   #000 !default;
+$contrasted-light-default:  #fff !default;
+$contrasted-lightness-threshold: 30% !default;
+
+// Returns the `$light` color when the `$color` is dark
+// and the `$dark` color when the `$color` is light.
+// The `$threshold` is a percent between `0%` and `100%` and it determines
+// when the lightness of `$color` changes from "dark" to "light".
+@function contrast-color(
+  $color,
+  $dark: $contrasted-dark-default,
+  $light: $contrasted-light-default,
+  $threshold: $contrasted-lightness-threshold
+) {
+  @return if(color.channel($color, "lightness", $space: hsl) < $threshold, $light, $dark);
+}
+
+// This mixin provides basic support for CSS3 properties and
+// their corresponding experimental CSS2 properties when
+// the implementations are identical except for the property
+// prefix.
+@mixin experimental($property, $value,
+  $moz      : $experimental-support-for-mozilla,
+  $webkit   : $experimental-support-for-webkit,
+  $o        : $experimental-support-for-opera,
+  $ms       : $experimental-support-for-microsoft,
+  $khtml    : $experimental-support-for-khtml,
+  $official : true
+) {
+  @if $webkit  and $experimental-support-for-webkit    { -webkit-#{$property} : $value; }
+  @if $khtml   and $experimental-support-for-khtml     {  -khtml-#{$property} : $value; }
+  @if $moz     and $experimental-support-for-mozilla   {    -moz-#{$property} : $value; }
+  @if $ms      and $experimental-support-for-microsoft {     -ms-#{$property} : $value; }
+  @if $o       and $experimental-support-for-opera     {      -o-#{$property} : $value; }
+  @if $official                                        {         #{$property} : $value; }
+}
+
+@mixin transform(
+  $transform,
+  $only3d: false
+) {
+  @if $only3d {
+    @include experimental(transform, $transform,
+      not -moz, -webkit, not -o, not -ms, not -khtml, official
+    );
+  } @else {
+    @include experimental(transform, $transform,
+      -moz, -webkit, -o, -ms, not -khtml, official
+    );
+  }
+}
+
+@mixin user-select($select) {
+  $select: string.unquote($select);
+  @include experimental(user-select, $select,
+    -moz, -webkit, not -o, not -ms, -khtml, official
+  );
+}
+
+$default-background-clip: padding-box !default;
+
+// Clip the background (image and color) at the edge of the padding or border.
+//
+// Legal Values:
+//
+//   * padding-box
+//   * border-box
+//   * text
+
+@mixin background-clip($clip: $default-background-clip) {
+  // webkit and mozilla use the deprecated short [border | padding]
+  $clip: string.unquote($clip);
+  $deprecated: $clip;
+  @if $clip == padding-box { $deprecated: padding; }
+  @if $clip == border-box { $deprecated: border; }
+  // Support for webkit and mozilla's use of the deprecated short form
+  @include experimental(background-clip, $deprecated,
+    -moz,
+    -webkit,
+    not -o,
+    not -ms,
+    not -khtml,
+    not official
+  );
+  @include experimental(background-clip, $clip,
+    not -moz,
+    not -webkit,
+    not -o,
+    not -ms,
+    -khtml,
+    official
+  );
+}
+
+$transitionable-prefixed-values: transform, transform-origin !default;
+
+@mixin build-prefix-values($property, $values, $delay: false) {
+  $raw-values: ($values);
+  $index: compact(false);
+
+  $webkit-value: compact(false);
+  $moz-value: compact(false);
+  $ms-value: compact(false);
+  $o-value: compact(false);
+
+  @each $value in $raw-values {
+    $value: compact(list.join($value, false));
+    $match: false;
+
+    @each $prefixed-value in $transitionable-prefixed-values {
+      @if list.index($value, $prefixed-value) {
+        $index: list.index($value, $prefixed-value);
+        $match: true;
+      }
+    }
+
+    @if $match {
+      $value-prefix: nth($value, $index);
+      $value-suffix: compact(false);
+
+      @for $i from 2 through length($value) {
+        $value-suffix: list.append($value-suffix, nth($value, $i), space);
+      }
+
+      $non-webkit-suffix: compact(list.append($value-suffix, $delay, space));
+
+      $webkit-value: list.append($webkit-value, compact(list.join(-webkit-#{$value-prefix}, $value-suffix)), comma);
+      $moz-value: list.append($moz-value, compact(list.join(-moz-#{$value-prefix}, $non-webkit-suffix)), comma);
+      $ms-value: list.append($ms-value, compact(list.join(-ms-#{$value-prefix}, $non-webkit-suffix)), comma);
+      $o-value: list.append($o-value, compact(list.join(-o-#{$value-prefix}, $non-webkit-suffix)), comma);
+    } @else {
+      $non-webkit-value: compact(list.append($value, $delay, space));
+
+      $webkit-value: list.append($webkit-value, $value, comma);
+      $moz-value: list.append($moz-value, $non-webkit-value, comma);
+      $ms-value: list.append($ms-value, $non-webkit-value, comma);
+      $o-value: list.append($o-value, $non-webkit-value, comma);
+    }
+  }
+
+  @if $experimental-support-for-webkit    { -webkit-#{$property} : $webkit-value; @if $delay { -webkit-#{$property}-delay : $delay; } }
+  @if $experimental-support-for-mozilla   {    -moz-#{$property} :    $moz-value; }
+  @if $experimental-support-for-microsoft {     -ms-#{$property} :     $ms-value; }
+  @if $experimental-support-for-opera     {      -o-#{$property} :      $o-value; }
+                                                    #{$property} :      compact($values $delay);
+}
+
+@mixin animation($animation) {
+    @include build-prefix-values(animation, $animation);
+}
+
+@mixin keyframes($name) {
+
+    @-webkit-keyframes #{$name} {
+        @content
+    }
+
+    @-moz-keyframes #{$name} {
+        @content
+    }
+
+    @keyframes #{$name} {
+        @content
+    }
+
+}
+
+@mixin font-styled($text-size, $text-weight) {
+    @if $text-size == "large" {
+        font-size: $font-size-large;
+        line-height: $line-height-large;
+    } @else if $text-size == "base" {
+        font-size: $font-size-base;
+        line-height: $line-height-base;
+    } @else if $text-size == "small" {
+        font-size: $font-size-small;
+        line-height: $line-height-small;
+    } @else if $text-size == "xs" {
+        font-size: $font-size-xs;
+        line-height: $line-height-xs;
+    }
+
+    @if $text-weight == "normal" {
+        font-weight: $font-weight-base;
+    } @else if $text-weight == "bold" {
+        font-weight: $font-weight-bold;
+    }
+}
+
+@function contrast-text-color($component-bg) {
+    @return contrast-color($component-bg, $text-color-light, $text-color-dark, $text-color-threshold);
+}

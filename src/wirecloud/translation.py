@@ -20,7 +20,8 @@
 import inspect
 import gettext as gt
 import os
-from typing import Optional
+from gettext import NullTranslations
+from typing import Optional, Callable
 from fastapi import Request
 
 from src import settings
@@ -56,42 +57,49 @@ def find_request_language() -> Optional[str]:
     return None
 
 
-def gettext(text: str, lang: Optional[str] = None) -> str:
+def gettext(text: str, lang: Optional[str] = None, translation: Optional[NullTranslations] = None) -> str:
     lang = lang or find_request_language()
-    if lang is None:
+    if lang is None and translation is None:
         raise ValueError("Was not able to find the request language for gettext. Was this function called from a request context?")
 
     # WireCloud is written in English, so we return the text as is if the language is English
     if lang == "en" or lang == "en-GB":
         return text
 
-    # Find the plugin that requested the translation
-    plugin: Optional[str] = None
-    module_name = inspect.stack()[1].frame.f_globals.get('__name__')
-    for plugin_name in settings.INSTALLED_APPS:
-
-        if module_name.startswith(f"src.{plugin_name}"):
-            plugin = plugin_name
-            break
-
-    if plugin is None:
-        raise ValueError("Was not able to find the plugin name for gettext. Was this function called from a plugin?")
-
-    # Get the locale directory for the plugin
-    src_path = os.path.dirname(os.path.dirname(__file__))
-    locale_path = os.path.join(src_path, plugin.replace(".", "/"), "locale")
-
-    if not os.path.exists(locale_path) or not os.path.isdir(locale_path):
-        raise ValueError(f"Could not find the locale directory for plugin {plugin}, but a translation was requested")
-
-    # Load the translation
-    translation = translations.get((plugin, lang)) if translations else None
-
     if translation is None:
-        print(f"WARNING: Translation for language {lang} in module {plugin} not found, but was requested")
-        return text
+        # Find the plugin that requested the translation
+        plugin: Optional[str] = None
+        module_name = inspect.stack()[1].frame.f_globals.get('__name__')
+        for plugin_name in settings.INSTALLED_APPS:
+            if module_name.startswith(f"src.{plugin_name}"):
+                plugin = plugin_name
+                break
+
+        if plugin is None:
+            raise ValueError("Was not able to find the plugin name for gettext. Was this function called from a plugin?")
+
+        # Get the locale directory for the plugin
+        src_path = os.path.dirname(os.path.dirname(__file__))
+        locale_path = os.path.join(src_path, plugin.replace(".", "/"), "locale")
+
+        if not os.path.exists(locale_path) or not os.path.isdir(locale_path):
+            raise ValueError(f"Could not find the locale directory for plugin {plugin}, but a translation was requested")
+
+        # Load the translation
+        if translation is None:
+            translation = translations.get((plugin, lang)) if translations else None
+
+        if translation is None:
+            print(f"WARNING: Translation for language {lang} in module {plugin} not found, but was requested")
+            return text
 
     return translation.gettext(text)
 
+
+def gettext_lazy(text: str) -> Callable[[], str]:
+    def _gettext(lang: Optional[str] = None, translation: Optional[NullTranslations] = None):
+        return gettext(text, lang, translation)
+
+    return _gettext
 
 generate_translations()

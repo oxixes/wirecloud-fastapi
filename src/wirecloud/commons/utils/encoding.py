@@ -19,7 +19,6 @@
 
 from json import JSONEncoder
 
-
 class LazyEncoderXHTML(JSONEncoder):
 
     def encode(self, o):

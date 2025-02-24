@@ -32,7 +32,7 @@ class PreferenceKey(BaseModel):
     type: str
     hidden: bool = False
     description: str = ''
-    initialEntries: Optional[list[SelectEntry]]
+    initialEntries: Optional[list[SelectEntry]] = None
     defaultValue: Any = None
 
 

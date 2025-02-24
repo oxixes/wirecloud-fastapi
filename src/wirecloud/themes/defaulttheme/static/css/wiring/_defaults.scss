@@ -1,0 +1,88 @@
+@use "sass:color";
+@use 'variables' as *;
+
+
+// ============================================================================
+// WIRING VIEW - COMPONENTS
+// ============================================================================
+
+$component-title-max-width: 180px !default;
+$component-body-bg:         rgba(255, 255, 255, 0.9) !default;
+$component-z-index:         10 !default;
+
+$component-options-padding-horizontal: 10px !default;
+
+$component-text-color:        rgb(255, 255, 255) !default;
+$component-text-shadow:       0 -1px 0 rgba(0, 0, 0, 0.2) !default;
+$component-text-hover-shadow: 0 1px 0 rgba(0, 0, 0, 0.75) !default;
+
+$component-operator-bg:           color.adjust($brand-operator, $alpha: -0.1) !default;
+$component-operator-border-color: color.adjust($component-operator-bg, $lightness: -15%) !default;
+$component-operator-text-color:   color.adjust($component-operator-bg, $lightness: -25%) !default;
+
+$component-widget-bg:           color.adjust($brand-widget, $alpha: -0.1) !default;
+$component-widget-border-color: color.adjust($component-widget-bg, $lightness: -15%) !default;
+$component-widget-text-color:   color.adjust($component-widget-bg, $lightness: -25%) !default;
+
+$component-background-text-color: rgba(0, 0, 0, 0.2) !default;
+$component-background-body-bg:    transparent !default;
+$component-background-z-index:    ($component-z-index * 0.5) !default;
+
+$component-background-operator-bg:           color.adjust(color.adjust($component-operator-bg, $lightness: 25%), $alpha: -0.5) !default;
+$component-background-operator-border-color: color.adjust(color.adjust($component-operator-border-color, $lightness: 25%), $alpha: -0.5) !default;
+
+$component-background-widget-bg:           color.adjust(color.adjust($component-widget-bg, $lightness: 25%), $alpha: -0.5) !default;
+$component-background-widget-border-color: color.adjust(color.adjust($component-widget-border-color, $lightness: 25%), $alpha: -0.5) !default;
+
+$component-active-bg:           rgb(180, 230, 250) !default;
+$component-active-border-color: color.adjust($component-active-bg, $lightness: -20%) !default;
+$component-active-z-index:      ($component-z-index * 0.5) * 3 !default;
+
+$component-active-text-color:       rgb(050, 150, 200) !default;
+$component-active-text-shadow:      0 1px 0 rgb(255, 255, 255) !default;
+$component-active-text-hover-color: color.adjust($component-active-text-color, $lightness: -10%) !default;
+
+// ============================================================================
+// WIRING VIEW - ENDPOINTS
+// ============================================================================
+
+$endpoint-margin-vertical:    5px !default;
+$endpoint-padding-horizontal: 5px !default;
+$endpoint-max-width:          120px !default;
+
+$endpoint-text-size:   12px !default;
+$endpoint-text-height: 20px !default;
+$endpoint-text-color:  rgb(70, 70, 70) !default;
+
+$endpoint-anchor-width:       10px !default;
+$endpoint-anchor-offsetwidth: - ($endpoint-anchor-width + 1) !default;
+
+$source-endpoint-anchor-bg:   rgba(100, 200, 230, 0.9) !default;
+$target-endpoint-anchor-bg:   rgba(030, 170, 220, 0.9) !default;
+
+$endpoint-active-bg:         rgb(090, 155, 235) !default;
+$endpoint-active-text-color: rgb(255, 255, 255) !default;
+
+$endpoint-background-text-color:       rgba(0, 0, 0, 0.3) !default;
+$source-endpoint-background-anchor-bg: color.adjust(color.adjust($source-endpoint-anchor-bg, $lightness: 20%), $alpha: -0.3) !default;
+$target-endpoint-background-anchor-bg: color.adjust(color.adjust($target-endpoint-anchor-bg, $lightness: 20%), $alpha: -0.3) !default;
+
+$endpoint-missing-bg:            rgba($brand-danger, 0.9) !default;
+$endpoint-missing-active-bg:     color.adjust($brand-danger, $lightness: -10%) !default;
+$endpoint-missing-background-bg: color.adjust(color.adjust($endpoint-missing-bg, $lightness: 20%), $alpha: -0.3) !default;
+
+$endpoint-orderable-box-shadow:        0 1px 5px rgba(0, 0, 0, 0.25) !default;
+$endpoint-orderable-active-box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.35) !default;
+$endpoint-orderable-active-bg:         #f9f9f9 !default;
+
+$endpoint-orderable-active-text-color: color.adjust($endpoint-text-color, $alpha: -0.3) !default;
+
+$endpoint-cloned-z-index: ($component-z-index * 0.5) * 4 !default;
+
+// ============================================================================
+// WIRING VIEW - BEHAVIOURS
+// ============================================================================
+
+$behaviour-description-maxheight: ($line-height-base * 5) !default;
+$behaviour-description-font-color: rgb(70, 80, 90) !default;
+$behaviour-title-width: 75%;

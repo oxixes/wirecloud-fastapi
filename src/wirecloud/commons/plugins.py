@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from typing import Any
 
 # Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
 
@@ -22,8 +21,10 @@ from src.wirecloud.commons.auth.routes import router as auth_router
 from src.wirecloud.commons.urls import patterns
 from src.wirecloud.platform.plugins import WirecloudPlugin
 from src.wirecloud.commons.auth.schemas import UserLogin
+from src.wirecloud.commons.routes import router as commons_router
 
 from fastapi import FastAPI
+from typing import Any
 
 
 class WirecloudCommonsPlugin(WirecloudPlugin):
@@ -33,6 +34,7 @@ class WirecloudCommonsPlugin(WirecloudPlugin):
         super().__init__(app)
 
         app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
+        app.include_router(commons_router, prefix="", tags=["Other"])
 
     def get_openapi_extra_schemas(self) -> dict[str, dict[str, Any]]:
         return {

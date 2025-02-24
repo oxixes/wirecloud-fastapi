@@ -1,0 +1,19 @@
+/* Error: $color: spin(rgb(244.8, 244.8, 244.8), -5) is not a color.
+ *    ,
+ * 93 | $state-default-border:      color.adjust(spin($state-default-bg, -5), $lightness: -10%) !default;
+ *    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ *    '
+ *   ../../../../../../themes/defaulttheme/static/css/_defaults.scss 93:29  @use
+ *   ../../../../../../themes/defaulttheme/static/css/_variables.scss 1:1   @use
+ *   ../../../../../../themes/defaulttheme/static/css/tutorial.scss 1:1     root stylesheet */
+
+body::before {
+  font-family: "Source Code Pro", "SF Mono", Monaco, Inconsolata, "Fira Mono",
+      "Droid Sans Mono", monospace, monospace;
+  white-space: pre;
+  display: block;
+  padding: 1em;
+  margin-bottom: 1em;
+  border-bottom: 2px solid black;
+  content: "Error: $color: spin(rgb(244.8, 244.8, 244.8), -5) is not a color.\a    \2577 \a 93 \2502  $state-default-border:      color.adjust(spin($state-default-bg, -5), $lightness: -10%) !default;\a    \2502                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\a    \2575 \a   ../../../../../../themes/defaulttheme/static/css/_defaults.scss 93:29  @use\a   ../../../../../../themes/defaulttheme/static/css/_variables.scss 1:1   @use\a   ../../../../../../themes/defaulttheme/static/css/tutorial.scss 1:1     root stylesheet";
+}

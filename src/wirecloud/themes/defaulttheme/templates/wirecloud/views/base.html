@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:og="http://ogp.me/ns#"
+      xml:lang="{{ LANGUAGE_CODE }}"
+      lang="{{ LANGUAGE_CODE }}"
+      translate="no">
+<head>
+    <title>{% block title %}{{ title }}{% endblock %}</title>
+    <meta property="og:title" content="{{ title }}"/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:description" content="{{ description }}"/>
+    <meta property="og:url" content="{{ uri }}" />
+
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
+    <link rel="shortcut icon" type="image/x-icon" href="{{ static("images/favicon.ico") }}" />
+
+    {% block css %}
+    <link rel="stylesheet" href="{{ static("css/cache.css") }}">
+    {% block extra_css %}{% endblock %}
+    {% endblock %}
+</head>
+<body>
+
+<!-- Loading indicator -->
+<div id="loading-window" class="fade in">
+  <div id="loading-background"></div>
+  <div id="loading-message" class="window_menu">
+    <div class="window_top">
+      <h3 id="loading-task-title" class="window_title">{{ trans("Loading WireCloud") }} 0%</h3>
+    </div>
+    <div class="window_content">
+      <div id="loading-indicator"></div>
+      <div id="loading-subtask-title" class="msg">{{ trans("Retrieving WireCloud code") }}: 0%</div>
+    </div>
+  </div>
+</div>
+
+<div id="unsupported-browser-msg" class="alert alert-error" style="display: none; text-align: left;">
+    <h4>{{ trans("Your browser seems to lack some required features") }}</h4>
+    <p>{{ trans("We recommend you to upgrade your browser to the newest version of either <a href=\"https://www.mozilla.org/firefox\">Firefox</a> or <a href=\"https://www.google.com/chrome\">Google Chrome</a> as these are the browsers currently supported by WireCloud.") }}</p>
+</div>
+
+<div class="se-vertical-layout">
+
+    <div class="se-container se-vl-north-container">
+        {% block header %}
+        {% include "wirecloud/views/header.html" %}
+        {% endblock %}
+    </div>
+
+    <div class="se-container se-vl-center-container" id="wc-body">
+    </div>
+
+    <div class="se-container se-vl-south-container">
+        {% block footer %}
+        {% include "wirecloud/views/footer.html" %}
+        {% endblock %}
+    </div>
+
+</div>
+
+{% block bootstrap %}
+{{ wirecloud_bootstrap("classic")|safe }}
+{% endblock %}
+
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,7 @@
+@use 'variables' as *;
+@use 'styledelements/input_mixins';
+
+.se-text-area {
+    @include input_mixins.input-base();
+    height: 5em;
+}

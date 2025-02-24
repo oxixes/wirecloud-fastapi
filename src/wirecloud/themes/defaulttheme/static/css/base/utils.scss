@@ -1,0 +1,17 @@
+@use 'variables' as *;
+
+.hidden {
+    display: none !important;
+}
+
+.disabled {
+    opacity: 0.4;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.text-muted {
+    color: $gray-light;
+}

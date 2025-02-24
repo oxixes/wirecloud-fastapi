@@ -18,6 +18,7 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from typing import Optional, Any
+from urllib.request import Request
 
 from src.wirecloud.platform.context.crud import get_all_constants
 from src.wirecloud.platform.plugins import get_plugins
@@ -47,19 +48,19 @@ def get_platform_context_definitions() -> dict[str, BaseContextKey]:
     return _wirecloud_platform_context_definitions
 
 
-def get_platform_context_current_values(user: Optional[UserAll], session: Optional[Session] = None) -> dict[str, Any]:
+def get_platform_context_current_values(request: Request, user: Optional[UserAll], session: Optional[Session] = None) -> dict[str, Any]:
     plugins = get_plugins()
     values = {}
 
     for plugin in plugins:
-        values.update(plugin.get_platform_context_current_values(user, session=session))
+        values.update(plugin.get_platform_context_current_values(request, user, session=session))
 
     return values
 
 
-def get_platform_context(user: Optional[UserAll], session: Optional[Session] = None) -> dict[str, PlatformContextKey]:
+def get_platform_context(request: Request, user: Optional[UserAll], session: Optional[Session] = None) -> dict[str, PlatformContextKey]:
     context = get_platform_context_definitions()
-    values = get_platform_context_current_values(user, session=session)
+    values = get_platform_context_current_values(request, user, session=session)
     result = {}
     for key in context:
         result[key] = PlatformContextKey(
@@ -107,9 +108,9 @@ async def get_constant_context_values(db: DBSession) -> dict[str, str]:
 
 
 # TODO Cache get_constant_context_values of this function
-async def get_context_values(db: DBSession, workspace, user: UserAll, session: Session = None) -> dict[str, dict[str, Any]]:
+async def get_context_values(db: DBSession, workspace, request: Request, user: UserAll, session: Session = None) -> dict[str, dict[str, Any]]:
     platform_context = await get_constant_context_values(db)
-    platform_context.update(get_platform_context_current_values(user, session=session))
+    platform_context.update(get_platform_context_current_values(request, user, session=session))
 
     return {
         'platform': platform_context,

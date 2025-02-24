@@ -1,0 +1,55 @@
+<!-- JavaScript code -->
+<script type="text/javascript" src="{{ static("js/lib/moment-with-locales.min.js") }}"></script>
+<script type="text/javascript" src="{{ static("js/lib/moment-timezone-with-data.min.js") }}"></script>
+<script type="text/javascript" src="{{ static("js/lib/urlify.js") }}"></script>
+
+<script type="text/javascript" src="{{ url("wirecloud.javascript_translation_catalogue") }}?language={{ LANGUAGE_CODE }}&amp;themeactive={{ THEME }}&amp;v={{ WIRECLOUD_VERSION_HASH }}"></script>
+
+<script type="text/javascript">
+    const Wirecloud = {
+        constants: {
+            {% for entry in wirecloud_constants %}
+            {{ entry.key|safe }}: {{ entry.value|safe }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+        },
+        location: {
+            'domain': document.location.protocol + '//' + document.location.host,
+            'host': document.location.host,
+            'protocol': document.location.protocol.slice(0, -1)
+        },
+        ui: {}
+    };
+
+    window.Wirecloud = Wirecloud;
+</script>
+<script type="text/javascript" src="{{ static("js/cache.js?view=bootstrap") }}" ></script>
+<script type="text/javascript">
+    {{ wirecloud_bootstrap_script|safe }}
+    Wirecloud.location.base = Wirecloud.location.domain + Wirecloud.URLs.ROOT_URL;
+</script>
+<script type="text/javascript" src="{{ static("js/cache.js") }}" ></script>
+
+<!-- Initialization code -->
+{% if plain == false %}
+<script type="text/javascript">
+    var unsupported_browser_msg = document.getElementById('unsupported-browser-msg');
+    try {
+        Wirecloud.check_basic_requirements();
+    } catch (e) {
+        document.getElementById('loading-window').style.display = "none";
+        unsupported_browser_msg.style.display = "";
+        throw e;
+    }
+    unsupported_browser_msg.parentNode.removeChild(unsupported_browser_msg);
+
+    Wirecloud.init();
+</script>
+{% else %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        Wirecloud.init({
+            preventDefault: true
+        });
+    }, true);
+</script>
+{% endif %}
