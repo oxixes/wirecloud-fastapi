@@ -126,6 +126,7 @@ _wirecloud_constants: Optional[list[dict[str, str]]] = None
 _wirecloud_api_auth_backends: Optional[dict[str, Callable]] = None
 _wirecloud_tab_preferences: Optional[list[TabPreferenceKey]] = None
 _wirecloud_workspace_preferences: Optional[list[PreferenceKey]] = None
+_wirecloud_templates: Optional[dict[str, list[str]]] = {}
 
 
 def find_wirecloud_plugins() -> list[WirecloudPlugin]:
@@ -456,3 +457,17 @@ def get_extra_openapi_schemas() -> dict[str, dict[str, Any]]:
         schemas.update(plugin.get_openapi_extra_schemas())
 
     return schemas
+
+def get_templates(view: str) -> list[str]:
+    global _wirecloud_templates
+
+    if view not in _wirecloud_templates:
+        plugins = get_plugins()
+        templates = []
+
+        for plugin in plugins:
+            templates.extend(plugin.get_templates(view))
+
+        _wirecloud_templates[view] = templates
+
+    return _wirecloud_templates[view]

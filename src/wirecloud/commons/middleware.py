@@ -84,7 +84,24 @@ class LocaleMiddleware(BaseHTTPMiddleware):
 
         return response
 
+class ContentTypeUTF8Middleware(BaseHTTPMiddleware):
+    def __init__(self, app: FastAPI):
+        super().__init__(app)
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        if "Content-Type" not in response.headers:
+            return response
+
+        if "charset" in response.headers["Content-Type"]:
+            return response
+
+        response.headers["Content-Type"] += "; charset=utf-8"
+
+        return response
+
 
 def install_all_middlewares(app: FastAPI) -> None:
     app.add_middleware(LocaleMiddleware)
     app.add_middleware(GZipMiddleware)
+    app.add_middleware(ContentTypeUTF8Middleware)

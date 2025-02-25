@@ -43,12 +43,14 @@ def get_current_theme(request: Request) -> str:
 
     return settings.THEME_ACTIVE
 
+
 def get_current_view(request: Request, ignore_query: bool = False) -> str:
     if "mode" in request.query_params and not ignore_query:
         return request.query_params["mode"]
 
     user_agent = user_agents.parse(request.headers["User-Agent"])
     return "smartphone" if user_agent.is_mobile else "classic"
+
 
 @router.get(
     "/",
@@ -59,6 +61,7 @@ def get_current_view(request: Request, ignore_query: bool = False) -> str:
 )
 def render_root_page(request: Request):
     return render_wirecloud(request, title="landing")
+
 
 @router.get(
     "/static/{path:path}",
@@ -87,6 +90,7 @@ def serve_static(path: str, themeactive: str = settings.THEME_ACTIVE, view: str 
             raise NotFound(f"File not found. If you're an admin, compile JS by running npm run build:js.")
 
     return FileResponse(get_theme_static_path(themeactive, path))
+
 
 def render_wirecloud(request: Request, view: Optional[str] = None, title: str = "", description: str = ""):
     from src.wirecloud.platform.core.plugins import get_version_hash

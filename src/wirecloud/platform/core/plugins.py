@@ -43,6 +43,7 @@ from src.wirecloud.platform.localcatalogue.routes import (router as localcatalog
                                                           resources_router as localcatalogue_resources_router)
 from src.wirecloud.platform.markets.routes import router as market_router, markets_router
 from src.wirecloud.platform.routes import router as platform_router
+from src.wirecloud.platform.theme.routes import router as theme_router
 from src.wirecloud.platform.core.catalogue_manager import WirecloudCatalogueManager
 import src.wirecloud.platform.workspace.models # FIXME remove
 
@@ -78,6 +79,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
         app.include_router(localcatalogue_router, prefix="/api/resource", tags=["Local Catalogue"])
         app.include_router(market_router, prefix="/api/market", tags=["Market"])
         app.include_router(markets_router, prefix="/api/markets", tags=["Market"])
+        app.include_router(theme_router, prefix="/api/theme", tags=["Theme"])
         app.include_router(platform_router, prefix="", tags=["Platform"])
 
     def get_platform_context_definitions(self) -> dict[str, BaseContextKey]:
@@ -303,7 +305,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
         }
 
     def get_templates(self, view: str) -> list[str]:
-        if view == 'classic':
+        if view == 'classic' or view == 'smartphone':
             return [
                 "wirecloud/component_sidebar",
                 "wirecloud/catalogue/main_resource_details",
