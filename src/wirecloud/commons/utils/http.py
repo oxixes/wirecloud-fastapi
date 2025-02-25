@@ -20,6 +20,7 @@ import re
 # TODO Add HTML response
 
 import socket
+from distutils.dep_util import newer
 from inspect import Signature
 
 import orjson as json
@@ -192,25 +193,25 @@ def generate_new_param_signature(sig: Signature, new_param_name: str, new_param_
     params = list(sig.parameters.values())
     new_sig = sig
 
-    # Check if a parameter with type 'Request' already exists
-    request_param_exists = any(param.annotation == Request for param in params)
-    request_name_exists = any(param.name == f'{new_param_name}' and param.annotation != new_param_type for param in params)
+    # Check if a parameter with type new_param_type already exists
+    new_param_exists = any(param.annotation == new_param_type for param in params)
+    new_param_name_exists = any(param.name == f'{new_param_name}' and param.annotation != new_param_type for param in params)
 
-    if request_name_exists and not request_param_exists:
+    if new_param_name_exists and not new_param_exists:
         new_param_name = f"_{new_param_name}_"
         # Add extra text to the parameter name to avoid conflicts
         new_param_name += ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
 
-    if not request_param_exists:
-        # Add a 'request' parameter to the handler
+    if not new_param_exists:
+        # Add a new parameter to the handler
         request_param = inspect.Parameter(new_param_name, inspect.Parameter.POSITIONAL_OR_KEYWORD,
                                           annotation=new_param_type, default=default_value)
         params.append(request_param)
 
         new_sig = sig.replace(parameters=params)
     else:
-        # Find the parameter with the name 'request'
-        new_param_name = [param.name for param in params if param.annotation == Request][0]
+        # Find the parameter with the new_param_type
+        new_param_name = [param.name for param in params if param.annotation == new_param_type][0]
 
     return new_sig, new_param_name
 
