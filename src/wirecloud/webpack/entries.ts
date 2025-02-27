@@ -85,8 +85,8 @@ const resolveCSSIncludePaths = (theme: string): string[] => {
     return includePaths;
 };
 
-const createCSSEntries = (): { [key: string]: string[] } => {
-    const entries: { [key: string]: string[] } = {};
+const createCSSEntries = (): { [key: string]: any } => {
+    const entries: { [key: string]: any } = {};
 
     Object.keys(themes).forEach((theme) => {
         Object.keys(VIEWS).forEach((view) => {
@@ -117,7 +117,10 @@ const createCSSEntries = (): { [key: string]: string[] } => {
 
             const filteredFiles = files.filter((file) => file !== null);
             if (filteredFiles.length > 0) {
-                entries[entryKey] = filteredFiles;
+                entries[entryKey] = {
+                    import: filteredFiles,
+                    layer: theme
+                };
             }
         });
     });
@@ -125,8 +128,8 @@ const createCSSEntries = (): { [key: string]: string[] } => {
     return entries;
 };
 
-const getOrderedScriptsEntries = (): { [key: string]: string[] } => {
-    const entries: { [key: string]: string[] } = {};
+const getOrderedScriptsEntries = (): { [key: string]: any } => {
+    const entries: { [key: string]: any } = {};
     const pluginMaps: { [key: string]: Map<string, [string, number, boolean]> } = {};
 
     JS_VIEWS.forEach((view) => {
@@ -186,9 +189,12 @@ const getOrderedScriptsEntries = (): { [key: string]: string[] } => {
                 currentTheme = themes[currentTheme].parent;
             }
 
-            entries[`main-${theme}-${view}`] = Array.from(scripts.values())
-                .sort((a, b) => a[1] - b[1])
-                .map((value) => value[0]);
+            entries[`main-${theme}-${view}`] = {
+                import: Array.from(scripts.values())
+                    .sort((a, b) => a[1] - b[1])
+                    .map((value) => value[0]),
+                layer: theme
+            };
         });
     });
 
@@ -208,4 +214,8 @@ const getScriptAliases = (): { [key: string]: string } => {
     return aliases;
 };
 
-export { createCSSEntries, resolveCSSIncludePaths, getOrderedScriptsEntries, getScriptAliases };
+const getThemeNames = (): string[] => {
+    return Object.keys(themes);
+}
+
+export { createCSSEntries, resolveCSSIncludePaths, getOrderedScriptsEntries, getScriptAliases, getThemeNames };

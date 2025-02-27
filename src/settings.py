@@ -38,8 +38,9 @@ CACHE_DIR = path.join(BASEDIR, 'cache')
 WIRECLOUD_HTTPS_VERIFY = True
 
 AVAILABLE_THEMES = [
-    "defaulttheme"
+    "defaulttheme",
+    "fiwaretheme"
 ]
-THEME_ACTIVE = "defaulttheme"
+THEME_ACTIVE = "fiwaretheme"
 
 # TODO Allow to define a list of known proxies to trust the X-Forwarded-For header
