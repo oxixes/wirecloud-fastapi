@@ -19,6 +19,7 @@
 from urllib.parse import urlparse
 from http.cookies import SimpleCookie
 from fastapi import APIRouter, Path, Response, Request
+from fastapi.responses import StreamingResponse
 from typing import Optional
 import re
 import aiohttp
@@ -56,10 +57,8 @@ async def parse_request_headers(request: Request, request_data: ProxyRequestData
         elif header_name == 'content_length' and header[1]:
             # Only take into account request body if the request has a
             # Content-Length header (we don't support chunked requests)
-            request_data.data = await request.body()
-            if len(request_data.data) == 0:
-                request_data.data = None
-            request_data.headers["Content-Length"] = "%s" % len(request_data.data)
+            request_data.data = request.stream()
+            request_data.headers["Content-Length"] = "%s" % header[1]
         elif header_name == 'cookie' or header_name == 'http_cookie':
             cookie_parser = SimpleCookie(str(header[1]))
             request_data.cookies.update(cookie_parser)
@@ -157,10 +156,13 @@ class Proxy:
         except aiohttp.ClientError as e:
             return build_error_response(request, 502, _('Connection Error'), details=str(e))
 
-        response_data = await res.read()
-        await session.close()
+        async def stream_response(s: aiohttp.ClientSession, r: aiohttp.ClientResponse):
+            async for chunk in r.content.iter_any():
+                yield chunk
 
-        response = Response(response_data, status_code=res.status)
+            await s.close()
+
+        response = StreamingResponse(stream_response(session, res), status_code=res.status)
         for header in res.headers:
             header_lower = header.lower()
             if header_lower == 'set-cookie':
@@ -169,7 +171,8 @@ class Proxy:
                         key=cookie.key,
                         value=cookie.value,
                         path=cookie['path'] if cookie['path'] != '' else
-                            get_relative_reverse_url('wirecloud|proxy', protocol=protocol, domain=domain, path=path),
+                            get_relative_reverse_url('wirecloud|proxy', request=request, protocol=protocol,
+                                                     domain=domain, path=path),
                         expires=cookie['expires']
                     )
             elif header_lower == 'via':
@@ -226,12 +229,13 @@ async def proxy_request(request: Request,
     return response
 
 
-router.add_api_route('/{protocol}/{domain}/{path:path}', proxy_request,
+for method in ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD']:
+    router.add_api_route('/{protocol}/{domain}/{path:path}', proxy_request,
                      response_class=Response,
                      summary=docs.proxy_request_summary,
                      description=docs.proxy_request_description,
                      response_description=docs.proxy_request_response_description,
-                     methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
+                     methods=[method],
                      responses={
                         403: root_docs.generate_permission_denied_response_openapi_description(
                              docs.proxy_request_permission_denied_description,
