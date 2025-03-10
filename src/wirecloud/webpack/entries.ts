@@ -49,7 +49,7 @@ const plugins: { [key: string]: Plugin } = {};
 
 // Search for theme directories in the themes directory. A theme is valid if it contains a theme.js file.
 fs.readdirSync(themePath).forEach((theme) => {
-    const themeDir = path.resolve(themePath, theme);
+    const themeDir = path.resolve(themePath, theme.replace(".", "/"));
     const themeFile = path.resolve(themeDir, 'theme.ts');
 
     if (fs.existsSync(themeFile)) {
@@ -106,10 +106,10 @@ const createCSSEntries = (): { [key: string]: any } => {
             const files = Array.from(css_files).map((file) => {
                 let currentTheme: string | null = theme;
 
-                let absolutePath = path.resolve(__dirname, `../themes/${currentTheme}/static/${file}`);
+                let absolutePath = "";
                 while (!fs.existsSync(absolutePath) && currentTheme) {
+                    absolutePath = path.resolve(__dirname, `../themes/${currentTheme!.replace(".", "/")}/static/${file}`);
                     currentTheme = themes[currentTheme].parent;
-                    absolutePath = path.resolve(__dirname, `../themes/${currentTheme}/static/${file}`);
                 }
 
                 return (fs.existsSync(absolutePath)) ? absolutePath : null;
@@ -130,71 +130,71 @@ const createCSSEntries = (): { [key: string]: any } => {
 
 const getOrderedScriptsEntries = (): { [key: string]: any } => {
     const entries: { [key: string]: any } = {};
-    const pluginMaps: { [key: string]: Map<string, [string, number, boolean]> } = {};
-
-    JS_VIEWS.forEach((view) => {
-        // The order of the scripts is important
-        const scripts = new Map<string, [string, number, boolean]>();
-
-        let accumulatedOrder = 0;
-        Object.keys(plugins).forEach((plugin) => {
-            let addedScripts = 0;
-            plugins[plugin].get_scripts(view).forEach((script, i) => {
-                if (scripts.has(script)) {
-                    return;
-                }
-
-                // NOTE: Plugins may import scripts from other plugins, while this will be changed in the future,
-                // for now, we will need to search in all the plugins directories
-                for (const key of Object.keys(plugins)) {
-                    const scriptPath = path.resolve(__dirname, `../${key}/static/${script}`);
-                    if (fs.existsSync(scriptPath)) {
-                        scripts.set(script, [scriptPath, i + accumulatedOrder, false]);
-                        addedScripts += 1;
-                        break;
-                    }
-                }
-            });
-
-            accumulatedOrder += addedScripts;
-        });
-
-        pluginMaps[view] = scripts;
-    });
 
     Object.keys(themes).forEach((theme) => {
         JS_VIEWS.forEach((view) => {
-            // Duplicate the plugin scripts map
-            const scripts = new Map<string, [string, number, boolean]>(
-                Array.from(pluginMaps[view]).map(([key, value]) => [key, [...value] as [string, number, boolean]])
-            );
+            const entryKey = `main-${theme}-${view}`;
 
-            let accumulatedOrder = scripts.size;
-
+            const js_files = new Map<string, number>();
             let currentTheme: string | null = theme;
+
+            // Add files from the plugins
+            let order = 0;
+            Object.keys(plugins).forEach((plugin) => {
+                plugins[plugin].get_scripts(view).forEach((file) => {
+                    js_files.set(file, order);
+                    order += 1;
+                });
+            });
+
+            // Add files from the themes
             while (currentTheme) {
-                themes[currentTheme].get_scripts(view).forEach((script, i) => {
-                    const scriptPath = path.resolve(__dirname, `../themes/${currentTheme}/static/${script}`);
-                    if (fs.existsSync(scriptPath)) {
-                        if (scripts.has(script) && !scripts.get(script)![2]) {
-                            scripts.get(script)![0] = scriptPath;
-                            scripts.get(script)![2] = true;
-                        } else if (!scripts.has(script)) {
-                            scripts.set(script, [scriptPath, i + accumulatedOrder, true]);
-                        }
+                themes[currentTheme].get_scripts(view).forEach((file) => {
+                    if (!js_files.has(file)) {
+                        js_files.set(file, order);
+                        order += 1;
                     }
                 });
 
-                accumulatedOrder += themes[currentTheme].get_scripts(view).length;
                 currentTheme = themes[currentTheme].parent;
             }
 
-            entries[`main-${theme}-${view}`] = {
-                import: Array.from(scripts.values())
-                    .sort((a, b) => a[1] - b[1])
-                    .map((value) => value[0]),
-                layer: theme
-            };
+            const files = Array.from(js_files.keys()).map((file) => {
+                let currentTheme: string | null = theme;
+
+                let absolutePath = "";
+                while (!fs.existsSync(absolutePath) && currentTheme) {
+                    absolutePath = path.resolve(__dirname, `../themes/${currentTheme!.replace(".", "/")}/static/${file}`);
+                    currentTheme = themes[currentTheme].parent;
+                }
+
+                // If the file does not exist in the themes, search in the plugins
+                if (!fs.existsSync(absolutePath)) {
+                    for (const plugin of Object.keys(plugins)) {
+                        absolutePath = path.resolve(__dirname, `../${plugin}/static/${file}`);
+                        if (fs.existsSync(absolutePath)) {
+                            break;
+                        }
+                    }
+                }
+
+                return (fs.existsSync(absolutePath)) ? absolutePath : null;
+            });
+
+            const filteredFiles = files.filter((file) => file !== null);
+            // Sort files by the order specified in the map
+            filteredFiles.sort((a, b) => {
+                const fileA = a as string;
+                const fileB = b as string;
+                return js_files.get(fileA)! - js_files.get(fileB)!;
+            });
+
+            if (filteredFiles.length > 0) {
+                entries[entryKey] = {
+                    import: filteredFiles,
+                    layer: theme
+                };
+            }
         });
     });
 

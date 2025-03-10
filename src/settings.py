@@ -41,6 +41,6 @@ AVAILABLE_THEMES = [
     "defaulttheme",
     "fiwaretheme"
 ]
-THEME_ACTIVE = "fiwaretheme"
+THEME_ACTIVE = "defaulttheme"
 
 # TODO Allow to define a list of known proxies to trust the X-Forwarded-For header
