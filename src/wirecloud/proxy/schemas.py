@@ -18,10 +18,10 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from http.cookies import BaseCookie, SimpleCookie
-from typing import AsyncGenerator, Optional
+from typing import AsyncGenerator, Optional, Union
 
 from pydantic import BaseModel
-from fastapi import Request
+from fastapi import Request, WebSocket
 
 from src.wirecloud.commons.auth.schemas import User
 
@@ -34,6 +34,7 @@ class ProxyRequestData(BaseModel, arbitrary_types_allowed=True):
     data: Optional[AsyncGenerator[bytes, None]] = None
     method: str = "GET"
     url: Optional[str] = None
-    original_request: Optional[Request] = None
+    original_request: Union[Request, WebSocket, None] = None
     cookies: BaseCookie = SimpleCookie()
     user: Optional[User] = None
+    is_ws: bool = False

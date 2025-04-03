@@ -36,9 +36,11 @@ SUPPORTED_HASHES = ['pbkdf2_sha256']
 login_scheme = OAuth2PasswordBearer(scheme_name="User authentication", tokenUrl="api/auth/login/", auto_error=False)
 
 
-async def get_token_contents(token: Annotated[str, Depends(login_scheme)]) -> Union[dict[str, Union[str, int, None]], None]:
+async def get_token_contents(token: Annotated[str, Depends(login_scheme)], request: Request) -> Union[dict[str, Union[str, int, None]], None]:
     if token is None:
-        return None
+        token = request.query_params.get('api_key')
+        if token is None:
+            return None
 
     try:
         token_contents = jwt.decode(token, settings.JWT_KEY, algorithms=["HS256"],
@@ -72,9 +74,6 @@ UserDep = Annotated[UserAll, Depends(get_user)]
 async def get_session(db: DBDep, request: Request, token: Annotated[Union[dict[str, Union[str, int, None]], None], Depends(get_token_contents)]) -> Union[Session, None]:
     if token is None:
         return None
-
-    # TODO Alvaro Set the key request.state.lang to the preferences value of language IF AND ONLY IF
-    # TODO the key request.state.lang_prefs is True
 
     return Session(
         real_user=token.get('real_user', None),
