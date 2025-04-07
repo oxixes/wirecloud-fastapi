@@ -69,7 +69,6 @@ class UserAll(User):
 class Session(BaseModel):
     real_user: Optional[str] = Field(default=None)
     real_fullname: Optional[str] = Field(default=None)
-    language: Optional[str] = Field(default=None)
 
 
 class UserTokenType(str, Enum):

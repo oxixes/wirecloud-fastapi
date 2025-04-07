@@ -18,10 +18,14 @@
 
 from urllib.parse import urlparse
 from http.cookies import SimpleCookie
-from fastapi import APIRouter, Path, Response, Request
-from typing import Optional
-import re
+from fastapi import APIRouter, Path, Response, Request, WebSocket, WebSocketException, status, WebSocketDisconnect
+from fastapi.responses import StreamingResponse
+from typing import Optional, Union
+import asyncio
 import aiohttp
+import base64
+import hashlib
+import logging
 
 from src.wirecloud.proxy import docs
 from src.wirecloud.proxy.schemas import ProxyRequestData
@@ -35,43 +39,38 @@ from src.wirecloud import docs as root_docs
 from src.wirecloud.translation import gettext as _
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
-HTTP_HEADER_RE = re.compile('^http_')
 BLACKLISTED_HTTP_HEADERS = [
-    'http_host', 'http_forwarded', 'http_x_forwarded_by',
-    'http_x_forwarded_host', 'http_x_forwarded_port',
-    'http_x_forwarded_proto', 'http_x_forwarded_server'
+    'host', 'forwarded', 'x-forwarded-by',
+    'x-forwarded-host', 'x-forwarded-port',
+    'x-forwarded-proto', 'x-forwarded-server'
 ]
 
 
-async def parse_request_headers(request: Request, request_data: ProxyRequestData) -> None:
-    if 'Transfer-Encoding' in request.headers:
+async def parse_request_headers(request: Union[Request, WebSocket], request_data: ProxyRequestData) -> None:
+    if 'Transfer-Encoding' in request.headers and request.headers['Transfer-Encoding'] != 'identity' and not request_data.is_ws:
         raise ValueError("WireCloud doesn't support requests using the Transfer-Encoding header")
 
     for header in request.headers.items():
         header_name = header[0].lower()
 
-        if header_name == 'content_type' and header[1]:
-            request_data.headers['Content-Type'] = header[1]
-        elif header_name == 'content_length' and header[1]:
+        if header_name == 'content-length' and header[1] and not request_data.is_ws:
             # Only take into account request body if the request has a
             # Content-Length header (we don't support chunked requests)
-            request_data.data = await request.body()
-            if len(request_data.data) == 0:
-                request_data.data = None
-            request_data.headers["Content-Length"] = "%s" % len(request_data.data)
-        elif header_name == 'cookie' or header_name == 'http_cookie':
+            request_data.data = request.stream()
+            request_data.headers["Content-Length"] = "%s" % header[1]
+        elif header_name == 'cookie':
             cookie_parser = SimpleCookie(str(header[1]))
             request_data.cookies.update(cookie_parser)
-        elif HTTP_HEADER_RE.match(header_name) and header_name not in BLACKLISTED_HTTP_HEADERS:
-            fixed_name = header_name.replace("http_", "", 1).replace('_', '-')
-            request_data.headers[fixed_name] = header[1]
+        elif header_name not in BLACKLISTED_HTTP_HEADERS:
+            request_data.headers[header_name] = header[1]
 
     if request_data.data is None and 'Content-Type' in request_data.headers:
         del request_data.headers['Content-Type']
 
 
-def parse_context_from_referer(request: Request, request_method: str = "GET") -> ProxyRequestData:
+def parse_context_from_referer(request: Union[Request, WebSocket], request_method: str = "GET") -> ProxyRequestData:
     referrer = request.headers.get('Referer')
     if referrer is None:
         raise Exception()
@@ -86,7 +85,7 @@ def parse_context_from_referer(request: Request, request_method: str = "GET") ->
         print("TODO: Check if workspace is accessible by the user")
         raise Exception()
     elif referer_view_name is not None and referer_view_name == 'wirecloud.showcase_media' or referer_view_name == 'wirecloud|proxy':
-        if request_method not in ('GET', 'POST'):
+        if request_method not in ('GET', 'POST', 'WS'):
             raise Exception()
 
         workspace = None
@@ -102,10 +101,52 @@ def parse_context_from_referer(request: Request, request_method: str = "GET") ->
         component_id=component_id
     )
 
+def generate_ws_accept_header_from_key(key: str) -> str:
+    # Generate the accept key using SHA-1 and base64 encoding
+    accept_key = base64.b64encode(hashlib.sha1((key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').encode()).digest()).decode()
+    return accept_key
 
 class Proxy:
-    async def do_request(self, request: Request, url: str, method: str, request_data: ProxyRequestData,
-                         protocol: str, domain: str, path: str, user: Optional[User] = None) -> Response:
+    async def read_ws_from_client(self, ws: WebSocket) -> tuple[str, Union[bytes, None], Union[bool, None], Union[tuple[int, str], None]]:
+        try:
+            # Receive data in text or binary mode
+            data = await ws.receive()
+
+            if data["type"] == "websocket.connect":
+                return await self.read_ws_from_client(ws)
+            elif data["type"] == "websocket.receive":
+                if "bytes" in data and data["bytes"] is not None:
+                    return 'client', data["bytes"], True, None
+                else:
+                    return 'client', data["text"], False, None
+            elif data["type"] == "websocket.disconnect":
+                return 'client', None, None, (data["code"], data.get("reason", ''))
+        except Exception as e:
+            return 'client', None, None, (1014, 'Gateway Error')
+
+        return 'client', None, None, (1014, 'Gateway Error')
+
+
+    async def read_ws_from_server(self, response: aiohttp.ClientWebSocketResponse) -> tuple[str, Union[bytes, None], Union[bool, None], Union[tuple[int, str], None]]:
+        try:
+            data = await response.receive()
+
+            if data.type == aiohttp.WSMsgType.CLOSE:
+                return 'server', None, None, (data.data, data.extra)
+            elif data.type == aiohttp.WSMsgType.ERROR:
+                return 'server', None, None, (1014, 'Connection Error')
+            elif data.type == aiohttp.WSMsgType.CLOSED:
+                return 'server', None, None, (1000, 'Gateway Disconnected')
+            elif data.type == aiohttp.WSMsgType.BINARY or data.type == aiohttp.WSMsgType.TEXT:
+                return 'server', data.data, data.type == aiohttp.WSMsgType.BINARY, None
+            else:
+                return 'server', None, None, (1014, 'Connection Error')
+        except Exception:
+            return 'server', None, None, (1014, 'Gateway Error')
+
+
+    async def do_request(self, request: Union[Request, WebSocket], url: str, method: str, request_data: ProxyRequestData,
+                         protocol: str, domain: str, path: str, user: Optional[User] = None) -> Optional[Response]:
         url = iri_to_uri(url)
 
         request_data.method = method
@@ -132,35 +173,157 @@ class Proxy:
             for processor in get_request_proxy_processors():
                 processor.process_request(request_data)
         except ValueError as e:
-            return build_error_response(request, 422, str(e))
+            if not request_data.is_ws:
+                return build_error_response(request, 422, str(e))
+            else:
+                raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=str(e))
 
         # Cookies
         cookie_header_content = ', '.join([request_data.cookies[key].OutputString() for key in request_data.cookies])
         if cookie_header_content != '':
             request_data.headers['Cookie'] = cookie_header_content
 
+        session = None
         try:
             session = aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True))
-            res = await session.request(
-                method=request_data.method,
-                url=request_data.url,
-                headers=request_data.headers,
-                data=request_data.data,
-                timeout=60,
-                auto_decompress=False,
-                ssl=getattr(settings, 'WIRECLOUD_HTTPS_VERIFY', True)
-            )
+            if not request_data.is_ws:
+                res = await session.request(
+                    method=request_data.method,
+                    url=request_data.url,
+                    headers=request_data.headers,
+                    data=request_data.data,
+                    timeout=60,
+                    auto_decompress=False,
+                    ssl=getattr(settings, 'WIRECLOUD_HTTPS_VERIFY', True)
+                )
+            else:
+                # Obtain subprotocols from the request
+                subprotocols = request.headers.get('Sec-WebSocket-Protocol')
+                if subprotocols:
+                    subprotocols = [subprotocol.strip() for subprotocol in subprotocols.split(',')]
+
+                pending_tasks = set()
+                read_from_client = True
+                read_from_server = True
+                logger.info("Connecting to %s" % request_data.url)
+                async with session.ws_connect(
+                    url=request_data.url,
+                    headers=request_data.headers,
+                    timeout=60,
+                    protocols=subprotocols if subprotocols else (),
+                    ssl=getattr(settings, 'WIRECLOUD_HTTPS_VERIFY', True),
+                    max_msg_size=getattr(settings, 'PROXY_WS_MAX_MSG_SIZE', 4 * 1024 * 1024),
+                ) as ws:
+                    logger.info("Connected to %s" % request_data.url)
+
+                    # Convert the dict to a list of tuples
+                    headers_dict = {}
+                    for key, value in ws._response.headers.items():
+                        headers_dict[key.lower()] = value
+
+                    if 'date' in headers_dict:
+                        del headers_dict['date']
+
+                    if 'sec-websocket-accept' in headers_dict:
+                        if 'sec-websocket-key' in request.headers:
+                            headers_dict['sec-websocket-accept'] = generate_ws_accept_header_from_key(request.headers['sec-websocket-key'])
+                        else:
+                            del headers_dict['sec-websocket-accept']
+                    elif 'sec-websocket-key' in request.headers:
+                            headers_dict['sec-websocket-accept'] = generate_ws_accept_header_from_key(request.headers['sec-websocket-key'])
+
+                    for processor in get_response_proxy_processors():
+                        headers_dict = processor.process_response(request_data, headers_dict)
+
+                    headers = [(key.encode(), value.encode()) for key, value in headers_dict.items()]
+
+                    accept_success = True
+                    try:
+                        await request.accept(subprotocol=ws.protocol, headers=headers)
+                    except Exception:
+                        await ws.close(code=status.WS_1014_BAD_GATEWAY, message='Gateway Error'.encode())
+                        accept_success = False
+
+                    while accept_success:
+                        tasks = []
+                        if read_from_server:
+                            tasks.append(self.read_ws_from_server(ws))
+                        if read_from_client:
+                            tasks.append(self.read_ws_from_client(request))
+
+                        if pending_tasks:
+                            tasks.extend(pending_tasks)
+
+                        read_from_server = False
+                        read_from_client = False
+
+                        done, pending_tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+
+                        for task in done:
+                            source, data, is_binary, close = await task
+                            if source == 'client':
+                                read_from_client = True
+                                if data is None:
+                                    await ws.close(code=close[0], message=close[1].encode())
+                                    break
+                                else:
+                                    if is_binary:
+                                        await ws.send_bytes(data)
+                                    else:
+                                        await ws.send_str(data)
+                            else:
+                                try:
+                                    read_from_server = True
+                                    if data is None:
+                                        await request.close(code=close[0], reason=close[1])
+                                        break
+                                    else:
+                                        if is_binary:
+                                            await request.send_bytes(data)
+                                        else:
+                                            await request.send_text(data)
+                                except RuntimeError:
+                                    await ws.close(code=status.WS_1014_BAD_GATEWAY, message='Gateway Error'.encode())
+                                    break
+                        else: # no break, allows to break the outer loop from the inner loop
+                            continue
+                        break
+
+                logger.info("Disconnected from %s" % request_data.url)
         except aiohttp.ServerTimeoutError as e:
-            return build_error_response(request, 504, _('Gateway Timeout'), details=str(e))
+            await session.close()
+            if not request_data.is_ws:
+                return build_error_response(request, 504, _('Gateway Timeout'), details=str(e))
+            else:
+                raise WebSocketException(code=status.WS_1014_BAD_GATEWAY, reason=_('Gateway Timeout'))
         except aiohttp.ClientSSLError as e:
-            return build_error_response(request, 502, _('Bad Gateway'), details=str(e))
+            await session.close()
+            if not request_data.is_ws:
+                return build_error_response(request, 502, _('SSL error'), details=str(e))
+            else:
+                raise WebSocketException(code=status.WS_1014_BAD_GATEWAY, reason=_('SSL error'))
         except aiohttp.ClientError as e:
-            return build_error_response(request, 502, _('Connection Error'), details=str(e))
+            await session.close()
+            if not request_data.is_ws:
+                return build_error_response(request, 502, _('Connection Error'), details=str(e))
+            else:
+                raise WebSocketException(code=status.WS_1014_BAD_GATEWAY, reason=_('Connection Error'))
 
-        response_data = await res.read()
-        await session.close()
+        if request_data.is_ws:
+            await session.close()
+            try:
+                await request.close(code=status.WS_1014_BAD_GATEWAY, reason=_('Connection Error'))
+            except Exception:
+                pass
+            return None
 
-        response = Response(response_data, status_code=res.status)
+        async def stream_response(s: aiohttp.ClientSession, r: aiohttp.ClientResponse):
+            async for chunk in r.content.iter_any():
+                yield chunk
+
+            await s.close()
+
+        response = StreamingResponse(stream_response(session, res), status_code=res.status)
         for header in res.headers:
             header_lower = header.lower()
             if header_lower == 'set-cookie':
@@ -169,7 +332,8 @@ class Proxy:
                         key=cookie.key,
                         value=cookie.value,
                         path=cookie['path'] if cookie['path'] != '' else
-                            get_relative_reverse_url('wirecloud|proxy', protocol=protocol, domain=domain, path=path),
+                            get_relative_reverse_url('wirecloud|proxy', request=request, protocol=protocol,
+                                                     domain=domain, path=path),
                         expires=cookie['expires']
                     )
             elif header_lower == 'via':
@@ -219,19 +383,50 @@ async def proxy_request(request: Request,
     except ValueError as e:
         return build_error_response(request, 422, str(e))
     except Exception as e:
-        # TODO Log
         msg = _("Error processing proxy request: %s") % e
         return build_error_response(request, 500, msg)
 
     return response
 
 
-router.add_api_route('/{protocol}/{domain}/{path:path}', proxy_request,
+async def proxy_ws_request(ws: WebSocket,
+                           protocol: str = Path(description=docs.proxy_request_protocol_description, regex='ws|wss'),
+                           domain: str = Path(description=docs.proxy_request_domain_description, regex='[A-Za-z0-9-.]+'),
+                           path: str = Path(description=docs.proxy_request_path_description)):
+    # TODO improve proxy security
+    if protocol not in ('ws', 'wss'):
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=_("Invalid protocol: %s") % protocol)
+
+    # Browsers do not allow custom headers in websocket requests, so we have to accept the connection
+    context = ProxyRequestData(workspace="", component_type="", component_id="", is_ws=True)
+
+    url = protocol + '://' + domain + "/" + (path[1:] if path.startswith('/') else path)
+    # Add query and fragment to the url
+    for query_param in ws.query_params.items():
+        url += ('&' if '?' in url else '?') + query_param[0] + '=' + query_param[1]
+
+    if ws.url.fragment:
+        url += '#' + ws.url.fragment
+
+    try:
+        # Extract headers from META
+        await parse_request_headers(ws, context)
+
+        await WIRECLOUD_PROXY.do_request(ws, url, "WS", context, protocol, domain, path)
+    except ValueError as e:
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=str(e))
+    except Exception as e:
+        msg = _("Error processing proxy request: %s") % e
+        raise WebSocketException(code=status.WS_1011_INTERNAL_ERROR, reason=msg)
+
+
+for method in ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD']:
+    router.add_api_route('/{protocol}/{domain}/{path:path}', proxy_request,
                      response_class=Response,
                      summary=docs.proxy_request_summary,
                      description=docs.proxy_request_description,
                      response_description=docs.proxy_request_response_description,
-                     methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
+                     methods=[method],
                      responses={
                         403: root_docs.generate_permission_denied_response_openapi_description(
                              docs.proxy_request_permission_denied_description,
@@ -245,3 +440,5 @@ router.add_api_route('/{protocol}/{domain}/{path:path}', proxy_request,
                              docs.proxy_request_gateway_timeout_description,
                              "Gateway Timeout")
                      })
+
+router.add_api_websocket_route('/{protocol}/{domain}/{path:path}', proxy_ws_request)

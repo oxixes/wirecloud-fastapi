@@ -20,7 +20,6 @@ import re
 # TODO Add HTML response
 
 import socket
-from distutils.dep_util import newer
 from inspect import Signature
 
 import orjson as json
@@ -352,13 +351,13 @@ def get_current_domain(request: Optional[Request] = None) -> str:
 
 
 def get_absolute_reverse_url(viewname: str, request: Optional[Request] = None, **kwargs) -> str:
-    url = get_relative_reverse_url(viewname, **kwargs)
+    url = get_relative_reverse_url(viewname, request, **kwargs)
 
     return urljoin(get_current_scheme(request) + '://' + get_current_domain(request), url)
 
 
 # FIXME Request.url_for could be used instead of this
-def get_relative_reverse_url(viewname: str, **kwargs) -> str:
+def get_relative_reverse_url(viewname: str, request: Optional[Request] = None, **kwargs) -> str:
     from src.wirecloud.platform.plugins import get_plugin_urls
 
     patterns = get_plugin_urls()
@@ -372,7 +371,11 @@ def get_relative_reverse_url(viewname: str, **kwargs) -> str:
         else:
             url = url.replace('{' + key + '}', str(kwargs[key]))
 
-    return url
+    mount_path = request.scope.get("root_path") if request else ""
+    if mount_path and mount_path[-1] == '/':
+        mount_path = mount_path[:-1]
+
+    return mount_path + url
 
 
 def resolve_url_name(path: str) -> Optional[str]:

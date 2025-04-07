@@ -1,0 +1,79 @@
+$brand-primary:             #0093C6;
+$brand-success:             #5BB75B;
+$brand-info:                #49AFCD;
+$brand-warning:             #F89406;
+$brand-danger:              #DA4F49;
+
+$font-size-base:            13px;
+$font-size-large:           15px;
+$font-size-small:           10px;
+$font-size-xs:              10px;
+
+$font-family-base:          "Open Sans", Arial, sans-serif;
+$headings-font-family:      Comfortaa;
+$headings-color:            #60C1CF;
+
+$line-height-base:          18px;
+
+$padding-vertical-base:      4px;
+$padding-horizontal-base:   12px;
+
+$padding-vertical-large:     8px;
+$padding-horizontal-large:  14px;
+
+$padding-vertical-small:     5px;
+$padding-horizontal-small:   9px;
+
+$padding-vertical-xs:        2px;
+$padding-horizontal-xs:      6px;
+
+$panel-bg:                  #FFFFFF;
+
+$button-gradients:          false;
+
+$button-background-default: #FFF;
+$button-border-default:     #CCC;
+
+$button-background-primary: $brand-primary;
+$button-border-primary:     #50BCBC;
+
+@forward "defaults" with (
+    $brand-primary: $brand-primary,
+    $brand-success: $brand-success,
+    $brand-info: $brand-info,
+    $brand-warning: $brand-warning,
+    $brand-danger: $brand-danger,
+
+    $font-size-base: $font-size-base,
+    $font-size-large: $font-size-large,
+    $font-size-small: $font-size-small,
+    $font-size-xs: $font-size-xs,
+
+    $font-family-base: $font-family-base,
+    $headings-font-family: $headings-font-family,
+    $headings-color: $headings-color,
+
+    $line-height-base: $line-height-base,
+
+    $padding-vertical-base: $padding-vertical-base,
+    $padding-horizontal-base: $padding-horizontal-base,
+
+    $padding-vertical-large: $padding-vertical-large,
+    $padding-horizontal-large: $padding-horizontal-large,
+
+    $padding-vertical-small: $padding-vertical-small,
+    $padding-horizontal-small: $padding-horizontal-small,
+
+    $padding-vertical-xs: $padding-vertical-xs,
+    $padding-horizontal-xs: $padding-horizontal-xs,
+
+    $panel-bg: $panel-bg,
+
+    $button-gradients: $button-gradients,
+
+    $button-background-default: $button-background-default,
+    $button-border-default: $button-border-default,
+
+    $button-background-primary: $button-background-primary,
+    $button-border-primary: $button-border-primary
+);

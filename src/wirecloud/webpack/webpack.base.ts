@@ -19,10 +19,57 @@
 
 import * as path from 'path';
 import { Configuration } from 'webpack';
-import { resolveCSSIncludePaths } from "./entries";
+import { resolveCSSIncludePaths, getThemeNames } from "./entries";
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 import RemoveEmptyScriptsPlugin = require('webpack-remove-empty-scripts');
 import * as esbuild from 'esbuild';
+
+const generateCSSRules = (themeName: string): any => {
+    return {
+        issuerLayer: themeName,
+        use: [
+            MiniCssExtractPlugin.loader,
+            {
+                loader: 'css-loader',
+                options: {
+                    url: {
+                        filter: (_: string, resourcePath: string): boolean => {
+                            return !resourcePath.includes('src/wirecloud');
+                        }
+                    }
+                }
+            },
+            {
+                loader: 'sass-loader',
+                options: {
+                    sassOptions: (loaderContext: any) => {
+                        // Check if it's sass
+                        if (!loaderContext.resourcePath.endsWith('.scss')) {
+                            return {};
+                        }
+
+                        return {
+                            loadPaths: resolveCSSIncludePaths(themeName)
+                        };
+                    },
+                    additionalData: (content: string, loaderContext: any): string => {
+                        // Dynamically extract the context from the entry name
+                        const isPlainCss = loaderContext.resourcePath.endsWith('.css');
+
+                        if (isPlainCss) return content;
+
+                        const contextMatch = loaderContext.resourcePath.match(/dist[\\/].*-([a-zA-Z0-9_-]+)$/);
+                        const context = contextMatch?.[1] || 'platform';
+
+                        return `$context: '${context}';\n${content}`;
+                    }
+                }
+            }
+        ]
+    }
+};
+
+const cssRules = getThemeNames().map((pluginName) => generateCSSRules(pluginName));
 
 const config: Configuration = {
     mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
@@ -41,6 +88,9 @@ const config: Configuration = {
         },
         chunkFilename: 'js/[name].js'
     },
+    experiments: {
+        layers: true
+    },
     resolve: {
         extensions: ['.js', '.ts', '.scss', '.css', '.ttf'] // Resolve these file extensions
     },
@@ -48,47 +98,8 @@ const config: Configuration = {
         rules: [
             {
                 test: /\.(scss|css)$/,
-                use: [
-                    MiniCssExtractPlugin.loader,
-                    {
-                        loader: 'css-loader',
-                        options: {
-                            url: {
-                                filter: (_: string, resourcePath: string): boolean => {
-                                    return !resourcePath.includes('src/wirecloud');
-                                }
-                            }
-                        }
-                    },
-                    {
-                        loader: 'sass-loader',
-                        options: {
-                            sassOptions: (loaderContext: any) => {
-                                // Check if it's sass
-                                if (!loaderContext.resourcePath.endsWith('.scss')) {
-                                    return {};
-                                }
-
-                                const themeName = loaderContext.resourcePath.match(/src[\\/]wirecloud[\\/]themes[\\/]([^/]+)[\\/]/)?.[1];
-
-                                return {
-                                    loadPaths: resolveCSSIncludePaths(themeName)
-                                };
-                            },
-                            additionalData: (content: string, loaderContext: any): string => {
-                                // Dynamically extract the context from the entry name
-                                const isPlainCss = loaderContext.resourcePath.endsWith('.css');
-
-                                if (isPlainCss) return content;
-
-                                const contextMatch = loaderContext.resourcePath.match(/dist[\\/].*-([a-zA-Z0-9_-]+)$/);
-                                const context = contextMatch?.[1] || 'platform';
-
-                                return `$context: '${context}';\n${content}`;
-                            }
-                        }
-                    }
-                ]
+                exclude: /node_modules/,
+                oneOf: cssRules
             },
             {
                 test: /\.[jt]sx?$/,

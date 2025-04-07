@@ -36,9 +36,11 @@ SUPPORTED_HASHES = ['pbkdf2_sha256']
 login_scheme = OAuth2PasswordBearer(scheme_name="User authentication", tokenUrl="api/auth/login/", auto_error=False)
 
 
-async def get_token_contents(token: Annotated[str, Depends(login_scheme)]) -> Union[dict[str, Union[str, int, None]], None]:
+async def get_token_contents(token: Annotated[str, Depends(login_scheme)], request: Request) -> Union[dict[str, Union[str, int, None]], None]:
     if token is None:
-        return None
+        token = request.query_params.get('api_key')
+        if token is None:
+            return None
 
     try:
         token_contents = jwt.decode(token, settings.JWT_KEY, algorithms=["HS256"],
@@ -73,13 +75,9 @@ async def get_session(db: DBDep, request: Request, token: Annotated[Union[dict[s
     if token is None:
         return None
 
-    # TODO Alvaro Set the key request.state.lang to the preferences value of language IF AND ONLY IF
-    # TODO the key request.state.lang_prefs is True
-
     return Session(
         real_user=token.get('real_user', None),
-        real_fullname=token.get('real_fullname', None),
-        language=token.get('language', None)
+        real_fullname=token.get('real_fullname', None)
     )
 
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -99,4 +97,3 @@ def check_password(password: str, password_hash: str) -> bool:
         _, iterations, salt, expected_password_hash = password_hash.split('$')
         hashed_password = pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('ascii'), int(iterations))
         return compare_digest(hashed_password, b64decode(expected_password_hash))
-
