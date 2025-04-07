@@ -67,7 +67,7 @@ async def create_market(db: DBSession, market: Market) -> bool:
         return False
 
     created_market = MarketModel(**market.model_dump())
-    await db.client.markets.insert_one(created_market.model_dump(exclude={"id"}))
+    await db.client.markets.insert_one(created_market.model_dump(by_alias=True))
 
     return True
 

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 # Copyright (c) 2012-2016 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of Wirecloud.
@@ -19,6 +18,8 @@
 
 # TODO Add translations
 
+import re
+from typing import Any
 from copy import deepcopy
 from urllib.parse import urljoin
 from lxml import etree
@@ -26,6 +27,7 @@ import rdflib
 
 from src.wirecloud.commons.utils.template.base import ObsoleteFormatError, TemplateFormatError, TemplateParseException
 from src.wirecloud.commons.utils.template.schemas.macdschemas import *
+from src.wirecloud.database import Id
 from src.wirecloud.platform.wiring.schemas import WiringInput, WiringOutput
 from src.wirecloud.commons.utils.template.parsers.json import JSONTemplateParser
 from src.wirecloud.commons.utils.template.parsers.xml import ApplicationMashupTemplateParser
@@ -195,3 +197,34 @@ class TemplateParser(object):
             dependencies.add(op.name)
 
         return dependencies
+
+
+class TemplateValueProcessor(BaseModel):
+    user: Id
+    context: dict[str, dict[str, Any]]
+    params: Any = {} # TODO create a schema for this
+
+    _RE = re.compile(r'(%+)\(([a-zA-Z][\w-]*(?:\.[a-zA-Z][\w-]*)*)\)')
+
+    def __repl(self, matching):
+        plen = len(matching.group(1))
+        if (plen % 2) == 0:
+            return '%' * (plen // 2) + '(' + matching.group(2) + ')'
+
+        var_path = matching.group(2).split('.')
+        current_context = self.context
+
+        for key in var_path:
+            if isinstance(current_context, dict) and key in current_context:
+                current_context = current_context[key]
+            else:
+                return matching.group(0)
+
+        return str(current_context)
+
+    def process(self, value: str) -> str:
+        return self._RE.sub(self.__repl, value)
+
+
+
+

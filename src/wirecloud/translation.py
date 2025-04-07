@@ -22,7 +22,7 @@ import gettext as gt
 import os
 from gettext import NullTranslations
 from typing import Optional, Callable
-from fastapi import Request, WebSocket
+from fastapi import Request
 
 from src import settings
 
@@ -51,7 +51,7 @@ def find_request_language() -> Optional[str]:
         frame = frame_info.frame
 
         for value in frame.f_locals.values():
-            if isinstance(value, Request) or isinstance(value, WebSocket):
+            if isinstance(value, Request):
                 return value.state.lang
 
     return None

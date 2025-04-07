@@ -21,55 +21,11 @@
 from fastapi import Request, FastAPI
 from fastapi.middleware.gzip import GZipMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import ASGIApp, Receive, Scope, Send
-from starlette.datastructures import Headers, QueryParams
-from starlette.requests import cookie_parser
 
-from typing import Optional
 from src import settings
 
 DEFAULT_LANGUAGE = getattr(settings, "DEFAULT_LANGUAGE", "en")
 AVAILABLE_LANGUAGES = [lang[0] for lang in settings.LANGUAGES]
-
-
-def get_language_from_req_data(accept_lang_header: Optional[str], lang_param: Optional[str], cookie: Optional[str]) -> str:
-    if accept_lang_header is None:
-        browser_language = DEFAULT_LANGUAGE
-    else:
-        # Parse the header and get a list of languages sorted by priority
-        languages = []
-        for lang in accept_lang_header.split(","):
-            parts = lang.strip().split(";")
-            lang = parts[0].strip()
-            quality = 1.0
-            if len(parts) == 2:
-                if parts[1].strip().startswith("q="):
-                    try:
-                        quality = float(parts[1].strip()[2:])
-                    except ValueError:
-                        pass
-            if lang in AVAILABLE_LANGUAGES:
-                languages.append((lang, quality))
-
-        # Sort the languages by quality
-        languages.sort(key=lambda x: x[1], reverse=True)
-
-        language = None
-        for lang, _ in languages:
-            if lang in AVAILABLE_LANGUAGES:
-                language = lang
-                break
-
-        browser_language = language if language is not None else DEFAULT_LANGUAGE
-
-    if lang_param in AVAILABLE_LANGUAGES:
-        language = lang_param
-    elif cookie in AVAILABLE_LANGUAGES:
-        language = cookie
-    else:
-        language = browser_language
-
-    return language
 
 
 class LocaleMiddleware(BaseHTTPMiddleware):
@@ -79,37 +35,54 @@ class LocaleMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Get the language from the request
         accept_lang_header = request.headers.get("Accept-Language")
-        request.state.lang = get_language_from_req_data(accept_lang_header, request.query_params.get("lang"), request.cookies.get("lang"))
+        if accept_lang_header is None:
+            browser_language = DEFAULT_LANGUAGE
+        else:
+            # Parse the header and get a list of languages sorted by priority
+            languages = []
+            for lang in accept_lang_header.split(","):
+                parts = lang.strip().split(";")
+                lang = parts[0].strip()
+                quality = 1.0
+                if len(parts) == 2:
+                    if parts[1].strip().startswith("q="):
+                        try:
+                            quality = float(parts[1].strip()[2:])
+                        except ValueError:
+                            pass
+                if lang in AVAILABLE_LANGUAGES:
+                    languages.append((lang, quality))
+
+            # Sort the languages by quality
+            languages.sort(key=lambda x: x[1], reverse=True)
+
+            language = None
+            for lang, _ in languages:
+                if lang in AVAILABLE_LANGUAGES:
+                    language = lang
+                    break
+
+            browser_language = language if language is not None else DEFAULT_LANGUAGE
+
+        if request.query_params.get("lang") in AVAILABLE_LANGUAGES:
+            language = request.query_params["lang"]
+            request.state.lang_prefs = True
+        elif request.cookies.get("lang") in AVAILABLE_LANGUAGES:
+            language = request.cookies["lang"]
+            request.state.lang_prefs = True
+        else:
+            language = browser_language
+            request.state.lang_prefs = False
+
+        request.state.lang = language
 
         # Call the next middleware
         response = await call_next(request)
 
         # Add a Content-Language header to the response
-        response.headers["Content-Language"] = request.state.lang
+        response.headers["Content-Language"] = language
 
         return response
-
-
-class LocaleWSMiddleware:
-    def __init__(self, app: ASGIApp) -> None:
-        self.app = app
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] != "websocket":
-            return await self.app(scope, receive, send)
-
-        headers = Headers(scope=scope)
-        query_params = QueryParams(scope["query_string"])
-        cookies: dict[str, str] = {}
-        cookie_header = headers.get("cookie")
-
-        if cookie_header:
-            cookies = cookie_parser(cookie_header)
-
-        language = get_language_from_req_data(headers.get("accept-language"), query_params.get("lang"), cookies.get("lang"))
-        scope["state"]["lang"] = language
-
-        await self.app(scope, receive, send)
 
 class ContentTypeUTF8Middleware(BaseHTTPMiddleware):
     def __init__(self, app: FastAPI):
@@ -130,6 +103,5 @@ class ContentTypeUTF8Middleware(BaseHTTPMiddleware):
 
 def install_all_middlewares(app: FastAPI) -> None:
     app.add_middleware(LocaleMiddleware)
-    app.add_middleware(LocaleWSMiddleware)
     app.add_middleware(GZipMiddleware)
     app.add_middleware(ContentTypeUTF8Middleware)

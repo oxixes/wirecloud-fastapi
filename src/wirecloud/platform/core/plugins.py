@@ -30,9 +30,12 @@ from fastapi import FastAPI, Request
 
 import src.wirecloud.platform as platform
 from src import settings
+from src.wirecloud.platform.iwidget.routes import iwidget_router
+from src.wirecloud.platform.workspace.routes import workspace_router
 from src.wirecloud.platform.plugins import (get_active_features_info, get_plugin_urls, AjaxEndpoint, build_url_template,
                                             WirecloudPlugin)
 from src.wirecloud.platform.context.schemas import BaseContextKey, WorkspaceContextKey
+from src.wirecloud.platform.preferences.routes import preferences_router
 from src.wirecloud.platform.preferences.schemas import PreferenceKey, SelectEntry, TabPreferenceKey
 from src.wirecloud.platform.urls import patterns
 from src.wirecloud.platform.routes import get_current_theme
@@ -45,7 +48,6 @@ from src.wirecloud.platform.markets.routes import router as market_router, marke
 from src.wirecloud.platform.routes import router as platform_router
 from src.wirecloud.platform.theme.routes import router as theme_router
 from src.wirecloud.platform.core.catalogue_manager import WirecloudCatalogueManager
-import src.wirecloud.platform.workspace.models # FIXME remove
 
 BASE_PATH = os.path.dirname(__file__)
 WORKSPACE_BROWSER_FILE = os.path.join(BASE_PATH, 'initial', 'WireCloud_workspace-browser_0.1.4a1.wgt')
@@ -79,6 +81,9 @@ class WirecloudCorePlugin(WirecloudPlugin):
         app.include_router(localcatalogue_router, prefix="/api/resource", tags=["Local Catalogue"])
         app.include_router(market_router, prefix="/api/market", tags=["Market"])
         app.include_router(markets_router, prefix="/api/markets", tags=["Market"])
+        app.include_router(preferences_router, prefix="/api/preferences", tags=["Preferences"])
+        app.include_router(workspace_router, prefix="/api/workspace", tags=["Workspace"])
+        app.include_router(iwidget_router, prefix="/api/workspace", tags=["Iwidget"])
         app.include_router(theme_router, prefix="/api/theme", tags=["Theme"])
         app.include_router(platform_router, prefix="", tags=["Platform"])
 
@@ -146,7 +151,8 @@ class WirecloudCorePlugin(WirecloudPlugin):
             ),
         }
 
-    def get_platform_context_current_values(self, request: Request, user: Optional[UserAll], session: Optional[Session]):
+    def get_platform_context_current_values(self, request: Request, user: Optional[UserAll],
+                                            session: Optional[Session]):
         if user:
             username = user.username
             fullname = user.get_full_name()
@@ -339,43 +345,87 @@ class WirecloudCorePlugin(WirecloudPlugin):
             raise ValueError('Missing proxy url pattern. Is the proxy plugin enabled?')
 
         endpoints = (
-            AjaxEndpoint(id='IWIDGET_COLLECTION', url=build_url_template(url_patterns['wirecloud.iwidget_collection'], ['workspace_id', 'tab_id'], prefix)),
-            AjaxEndpoint(id='IWIDGET_ENTRY', url=build_url_template(url_patterns['wirecloud.iwidget_entry'], ['workspace_id', 'tab_id', 'iwidget_id'], prefix)),
-            AjaxEndpoint(id='IWIDGET_PREFERENCES', url=build_url_template(url_patterns['wirecloud.iwidget_preferences'], ['workspace_id', 'tab_id', 'iwidget_id'], prefix)),
-            AjaxEndpoint(id='IWIDGET_PROPERTIES', url=build_url_template(url_patterns['wirecloud.iwidget_properties'], ['workspace_id', 'tab_id', 'iwidget_id'], prefix)),
+            AjaxEndpoint(id='IWIDGET_COLLECTION', url=build_url_template(url_patterns['wirecloud.iwidget_collection'],
+                                                                         ['workspace_id', 'tab_id'], prefix)),
+            AjaxEndpoint(id='IWIDGET_ENTRY', url=build_url_template(url_patterns['wirecloud.iwidget_entry'],
+                                                                    ['workspace_id', 'tab_id', 'iwidget_id'], prefix)),
+            AjaxEndpoint(id='IWIDGET_PREFERENCES', url=build_url_template(url_patterns['wirecloud.iwidget_preferences'],
+                                                                          ['workspace_id', 'tab_id', 'iwidget_id'],
+                                                                          prefix)),
+            AjaxEndpoint(id='IWIDGET_PROPERTIES', url=build_url_template(url_patterns['wirecloud.iwidget_properties'],
+                                                                         ['workspace_id', 'tab_id', 'iwidget_id'],
+                                                                         prefix)),
             AjaxEndpoint(id='LOCAL_REPOSITORY', url=build_url_template(url_patterns['wirecloud.root'], [], prefix)),
-            AjaxEndpoint(id='LOCAL_RESOURCE_COLLECTION', url=build_url_template(url_patterns['wirecloud.resource_collection'], ['vendor', 'name', 'version'], prefix)),
-            AjaxEndpoint(id='LOCAL_RESOURCE_ENTRY', url=build_url_template(url_patterns['wirecloud.resource_entry'], ['vendor', 'name', 'version'], prefix)),
-            AjaxEndpoint(id='LOCAL_UNVERSIONED_RESOURCE_ENTRY', url=build_url_template(url_patterns['wirecloud.unversioned_resource_entry'], ['vendor', 'name'], prefix)),
+            AjaxEndpoint(id='LOCAL_RESOURCE_COLLECTION',
+                         url=build_url_template(url_patterns['wirecloud.resource_collection'],
+                                                ['vendor', 'name', 'version'], prefix)),
+            AjaxEndpoint(id='LOCAL_RESOURCE_ENTRY',
+                         url=build_url_template(url_patterns['wirecloud.resource_entry'], ['vendor', 'name', 'version'],
+                                                prefix)),
+            AjaxEndpoint(id='LOCAL_UNVERSIONED_RESOURCE_ENTRY',
+                         url=build_url_template(url_patterns['wirecloud.unversioned_resource_entry'],
+                                                ['vendor', 'name'], prefix)),
             AjaxEndpoint(id='LOGIN_API', url=build_url_template(url_patterns['wirecloud.login'], [], prefix)),
             AjaxEndpoint(id='LOGIN_VIEW', url=build_url_template(url_patterns['login'], [], prefix)),
             AjaxEndpoint(id='LOGOUT_VIEW', url=build_url_template(url_patterns['logout'], [], prefix)),
-            AjaxEndpoint(id='MAC_BASE_URL', url=build_url_template(url_patterns['wirecloud.showcase_media'], ['vendor', 'name', 'version', 'file_path'], prefix)),
-            AjaxEndpoint(id='MARKET_COLLECTION', url=build_url_template(url_patterns['wirecloud.market_collection'], [], prefix)),
-            AjaxEndpoint(id='MARKET_ENTRY', url=build_url_template(url_patterns['wirecloud.market_entry'], ['user', 'market'], prefix)),
-            AjaxEndpoint(id='MISSING_WIDGET_CODE_ENTRY', url=build_url_template(url_patterns['wirecloud.missing_widget_code_entry'], [], prefix)),
-            AjaxEndpoint(id='OPERATOR_ENTRY', url=build_url_template(url_patterns['wirecloud.operator_code_entry'], ['vendor', 'name', 'version'], prefix)),
-            AjaxEndpoint(id='PLATFORM_CONTEXT_COLLECTION', url=build_url_template(url_patterns['wirecloud.platform_context_collection'], [], prefix)),
-            AjaxEndpoint(id='PLATFORM_PREFERENCES', url=build_url_template(url_patterns['wirecloud.platform_preferences'], [], prefix)),
-            AjaxEndpoint(id='PROXY', url=build_url_template(url_patterns['wirecloud|proxy'], ['protocol', 'domain', 'path'], prefix)),
-            AjaxEndpoint(id='PUBLISH_ON_OTHER_MARKETPLACE', url=build_url_template(url_patterns['wirecloud.publish_on_other_marketplace'], [], prefix)),
+            AjaxEndpoint(id='MAC_BASE_URL', url=build_url_template(url_patterns['wirecloud.showcase_media'],
+                                                                   ['vendor', 'name', 'version', 'file_path'], prefix)),
+            AjaxEndpoint(id='MARKET_COLLECTION',
+                         url=build_url_template(url_patterns['wirecloud.market_collection'], [], prefix)),
+            AjaxEndpoint(id='MARKET_ENTRY',
+                         url=build_url_template(url_patterns['wirecloud.market_entry'], ['user', 'market'], prefix)),
+            AjaxEndpoint(id='MISSING_WIDGET_CODE_ENTRY',
+                         url=build_url_template(url_patterns['wirecloud.missing_widget_code_entry'], [], prefix)),
+            AjaxEndpoint(id='OPERATOR_ENTRY', url=build_url_template(url_patterns['wirecloud.operator_code_entry'],
+                                                                     ['vendor', 'name', 'version'], prefix)),
+            AjaxEndpoint(id='PLATFORM_CONTEXT_COLLECTION',
+                         url=build_url_template(url_patterns['wirecloud.platform_context_collection'], [], prefix)),
+            AjaxEndpoint(id='PLATFORM_PREFERENCES',
+                         url=build_url_template(url_patterns['wirecloud.platform_preferences'], [], prefix)),
+            AjaxEndpoint(id='PROXY',
+                         url=build_url_template(url_patterns['wirecloud|proxy'], ['protocol', 'domain', 'path'],
+                                                prefix)),
+            AjaxEndpoint(id='PUBLISH_ON_OTHER_MARKETPLACE',
+                         url=build_url_template(url_patterns['wirecloud.publish_on_other_marketplace'], [], prefix)),
             AjaxEndpoint(id='ROOT_URL', url=build_url_template(url_patterns['wirecloud.root'], [], prefix)),
-            AjaxEndpoint(id='SEARCH_SERVICE', url=build_url_template(url_patterns['wirecloud.search_service'], [], prefix)),
-            AjaxEndpoint(id='SWITCH_USER_SERVICE', url=build_url_template(url_patterns['wirecloud.switch_user_service'], [], prefix)),
-            AjaxEndpoint(id='TAB_COLLECTION', url=build_url_template(url_patterns['wirecloud.tab_collection'], ['workspace_id'], prefix)),
-            AjaxEndpoint(id='TAB_ENTRY', url=build_url_template(url_patterns['wirecloud.tab_entry'], ['workspace_id', 'tab_id'], prefix)),
-            AjaxEndpoint(id='TAB_PREFERENCES', url=build_url_template(url_patterns['wirecloud.tab_preferences'], ['workspace_id', 'tab_id'], prefix)),
-            AjaxEndpoint(id='THEME_ENTRY', url=build_url_template(url_patterns['wirecloud.theme_entry'], ['name'], prefix)),
-            AjaxEndpoint(id='WIRING_ENTRY', url=build_url_template(url_patterns['wirecloud.workspace_wiring'], ['workspace_id'], prefix)),
-            AjaxEndpoint(id='OPERATOR_VARIABLES_ENTRY', url=build_url_template(url_patterns['wirecloud.operator_variables'], ['workspace_id', 'operator_id'], prefix)),
-            AjaxEndpoint(id='WORKSPACE_COLLECTION', url=build_url_template(url_patterns['wirecloud.workspace_collection'], [], prefix)),
-            AjaxEndpoint(id='WORKSPACE_ENTRY_OWNER_NAME', url=build_url_template(url_patterns['wirecloud.workspace_entry_owner_name'], ['owner', 'name'], prefix)),
-            AjaxEndpoint(id='WORKSPACE_ENTRY', url=build_url_template(url_patterns['wirecloud.workspace_entry'], ['workspace_id'], prefix)),
-            AjaxEndpoint(id='WORKSPACE_MERGE', url=build_url_template(url_patterns['wirecloud.workspace_merge'], ['to_ws_id'], prefix)),
-            AjaxEndpoint(id='WORKSPACE_PREFERENCES', url=build_url_template(url_patterns['wirecloud.workspace_preferences'], ['workspace_id'], prefix)),
-            AjaxEndpoint(id='WORKSPACE_PUBLISH', url=build_url_template(url_patterns['wirecloud.workspace_publish'], ['workspace_id'], prefix)),
-            AjaxEndpoint(id='WORKSPACE_RESOURCE_COLLECTION', url=build_url_template(url_patterns['wirecloud.workspace_resource_collection'], ['workspace_id'], prefix)),
-            AjaxEndpoint(id='WORKSPACE_VIEW', url=build_url_template(url_patterns['wirecloud.workspace_view'], ['owner', 'name'], prefix)),
+            AjaxEndpoint(id='SEARCH_SERVICE',
+                         url=build_url_template(url_patterns['wirecloud.search_service'], [], prefix)),
+            AjaxEndpoint(id='SWITCH_USER_SERVICE',
+                         url=build_url_template(url_patterns['wirecloud.switch_user_service'], [], prefix)),
+            AjaxEndpoint(id='TAB_COLLECTION',
+                         url=build_url_template(url_patterns['wirecloud.tab_collection'], ['workspace_id'], prefix)),
+            AjaxEndpoint(id='TAB_ENTRY',
+                         url=build_url_template(url_patterns['wirecloud.tab_entry'], ['workspace_id', 'tab_id'],
+                                                prefix)),
+            AjaxEndpoint(id='TAB_PREFERENCES',
+                         url=build_url_template(url_patterns['wirecloud.tab_preferences'], ['workspace_id', 'tab_id'],
+                                                prefix)),
+            AjaxEndpoint(id='THEME_ENTRY',
+                         url=build_url_template(url_patterns['wirecloud.theme_entry'], ['name'], prefix)),
+            AjaxEndpoint(id='WIRING_ENTRY',
+                         url=build_url_template(url_patterns['wirecloud.workspace_wiring'], ['workspace_id'], prefix)),
+            AjaxEndpoint(id='OPERATOR_VARIABLES_ENTRY',
+                         url=build_url_template(url_patterns['wirecloud.operator_variables'],
+                                                ['workspace_id', 'operator_id'], prefix)),
+            AjaxEndpoint(id='WORKSPACE_COLLECTION',
+                         url=build_url_template(url_patterns['wirecloud.workspace_collection'], [], prefix)),
+            AjaxEndpoint(id='WORKSPACE_ENTRY_OWNER_NAME',
+                         url=build_url_template(url_patterns['wirecloud.workspace_entry_owner_name'], ['owner', 'name'],
+                                                prefix)),
+            AjaxEndpoint(id='WORKSPACE_ENTRY',
+                         url=build_url_template(url_patterns['wirecloud.workspace_entry'], ['workspace_id'], prefix)),
+            AjaxEndpoint(id='WORKSPACE_MERGE',
+                         url=build_url_template(url_patterns['wirecloud.workspace_merge'], ['to_ws_id'], prefix)),
+            AjaxEndpoint(id='WORKSPACE_PREFERENCES',
+                         url=build_url_template(url_patterns['wirecloud.workspace_preferences'], ['workspace_id'],
+                                                prefix)),
+            AjaxEndpoint(id='WORKSPACE_PUBLISH',
+                         url=build_url_template(url_patterns['wirecloud.workspace_publish'], ['workspace_id'], prefix)),
+            AjaxEndpoint(id='WORKSPACE_RESOURCE_COLLECTION',
+                         url=build_url_template(url_patterns['wirecloud.workspace_resource_collection'],
+                                                ['workspace_id'], prefix)),
+            AjaxEndpoint(id='WORKSPACE_VIEW',
+                         url=build_url_template(url_patterns['wirecloud.workspace_view'], ['owner', 'name'], prefix)),
         )
 
         return endpoints

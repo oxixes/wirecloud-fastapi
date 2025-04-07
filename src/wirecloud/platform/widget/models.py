@@ -17,37 +17,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from pydantic import BaseModel, Field
-from datetime import datetime
-from typing import Optional
 
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD
+from pydantic import BaseModel
+
 from src.wirecloud.database import Id
 
 
-class DBXhtml(BaseModel):
-    uri: str
-    code: str
-    code_timestamp: Optional[datetime]
-    url: str
-    content_type: Optional[str]
-    use_platform_style: bool
-    cacheable: bool
-
-
-class DBCatalogueResource(BaseModel, populate_by_name=True):
-    id: Id = Field(alias="_id")
-    vendor: str
-    short_name: str
-    version: str
-    type: int
-    public: bool
-    creation_date: datetime
-    template_uri: str
-    popularity: float
-    description: MACD
-    creator_id: Optional[Id]
-
-    xhtml: list[DBXhtml] = []
-    users: list[Id] = []
-    groups: list[Id] = []
+class DBWidget(BaseModel):
+    resource: Id
+    xhtml: str
