@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
     <meta name="google" value="notranslate" />
-    <link rel="shortcut icon" type="image/x-icon" href="{{ static("images/favicon.ico") }}" />
+    <link rel="shortcut icon" type="image/x-icon" href="{% theme_static "images/favicon.ico" %}" />
     {% endblock %}
 
     {% block css %}
@@ -20,10 +20,8 @@
     {% endblock %}
 
     {% block bootstrap %}
-        {{ wirecloud_bootstrap(VIEW_MODE, true)|safe }}
+        {{ wirecloud_bootstrap("classic", true)|safe }}
     {% endblock %}
-
-    {% block extra_scripts %}{% endblock %}
 </head>
 
 <body>

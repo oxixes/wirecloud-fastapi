@@ -383,6 +383,8 @@ def get_proxy_processors() -> tuple[Any, ...]:
             modules += plugin.get_proxy_processors()
 
         processors = []
+        request_processors = []
+        response_processors = []
         for path in modules:
             i = path.rfind('.')
             module, attr = path[:i], path[i + 1:]
@@ -397,17 +399,16 @@ def get_proxy_processors() -> tuple[Any, ...]:
                 raise ImproperlyConfigured(
                     'Module "%s" does not define a "%s" instanciable processor processor' % (module, attr))
 
+            if hasattr(processor, 'process_request'):
+                request_processors.append(processor)
+            if hasattr(processor, 'process_response'):
+                response_processors.insert(0, processor)
+
             processors.append(processor)
 
         _wirecloud_proxy_processors = tuple(processors)
-        _wirecloud_request_proxy_processors = tuple([
-            processor for processor in processors
-            if hasattr(processor, 'process_request')
-        ])
-        _wirecloud_response_proxy_processors = tuple([
-            processor for processor in reversed(processors)
-            if hasattr(processor, 'process_response')
-        ])
+        _wirecloud_request_proxy_processors = tuple(request_processors)
+        _wirecloud_response_proxy_processors = tuple(response_processors)
 
     return _wirecloud_proxy_processors
 

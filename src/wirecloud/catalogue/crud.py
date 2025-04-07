@@ -21,7 +21,8 @@ from typing import Optional
 
 from bson import ObjectId
 
-from src.wirecloud.catalogue.schemas import (CatalogueResourceCreate, CatalogueResource, CatalogueResourceBase)
+from src.wirecloud.catalogue.schemas import (CatalogueResourceCreate, CatalogueResource, CatalogueResourceBase,
+                                             CatalogueResourceType)
 from src.wirecloud.catalogue.models import DBCatalogueResource as CatalogueResourceModel
 from src.wirecloud.commons.auth.schemas import UserAll, User, Group
 from src.wirecloud.commons.utils.template.schemas.macdschemas import (MACD, Vendor, Name, Version)
@@ -34,7 +35,7 @@ def build_schema_from_resource(resource: CatalogueResourceModel) -> CatalogueRes
         vendor=resource.vendor,
         short_name=resource.short_name,
         version=resource.version,
-        type=resource.type,
+        type=CatalogueResourceType(resource.type),
         public=resource.public,
         creation_date=resource.creation_date,
         template_uri=resource.template_uri,
@@ -58,7 +59,7 @@ async def create_catalogue_resource(db: DBSession, resource: CatalogueResourceCr
         template_uri=resource.template_uri,
         popularity=resource.popularity,
         description=resource.description,
-        creator_id=ObjectId(resource.creator.id)
+        creator_id=ObjectId(resource.creator.id) if resource.creator is not None else None
     )
     result = await db.client.catalogue_resources.insert_one(catalogue.model_dump(by_alias=True))
     await db.commit_transaction()
@@ -72,8 +73,19 @@ async def create_catalogue_resource(db: DBSession, resource: CatalogueResourceCr
     return result_schema
 
 
-async def get_catalogue_resource(db: DBSession, vendor: Vendor, short_name: Name, version: Version) -> Optional[CatalogueResource]:
+async def get_catalogue_resource(db: DBSession, vendor: Vendor, short_name: Name, version: Version) -> Optional[
+    CatalogueResource]:
     query = {"vendor": vendor, "short_name": short_name, "version": version}
+    result = await db.client.catalogue_resources.find_one(query)
+
+    if result is None:
+        return None
+
+    return build_schema_from_resource(CatalogueResourceModel.model_validate(result))
+
+
+async def get_catalogue_resource_by_id(db: DBSession, resource_id: Id) -> Optional[CatalogueResource]:
+    query = {"_id": ObjectId(resource_id)}
     result = await db.client.catalogue_resources.find_one(query)
 
     if result is None:
@@ -104,7 +116,8 @@ async def is_resource_available_for_user(db: DBSession, resource: CatalogueResou
     return result is not None
 
 
-async def get_all_catalogue_resource_versions(db: DBSession, vendor: Vendor, short_name: Name) -> list[CatalogueResource]:
+async def get_all_catalogue_resource_versions(db: DBSession, vendor: Vendor, short_name: Name) -> list[
+    CatalogueResource]:
     query = {"vendor": vendor, "short_name": short_name}
 
     resources = [CatalogueResourceModel.model_validate(resource) for resource in
@@ -159,7 +172,8 @@ async def update_catalogue_resource_description(db: DBSession, resource_id: Id, 
 async def delete_catalogue_resources(db: DBSession, resource_ids: list[Id]) -> None:
     if not db.in_transaction:
         db.start_transaction()
-    query = {"_id": {"$in": ObjectId(resource_ids)}}
+
+    query = {"_id": {"$in": [ObjectId(rid) for rid in resource_ids]}}
     await db.client.catalogue_resources.delete_many(query)
 
 
@@ -204,3 +218,24 @@ async def install_resource_to_group(db: DBSession, resource: CatalogueResource, 
                                                        {"$push": {"groups": ObjectId(group.id)}})
         await db.commit_transaction()
         return True
+
+
+async def get_catalogues_with_regex(db: DBSession, vendor: Vendor, name: Name, version: Version) -> list[
+    CatalogueResource]:
+    query = {
+        "$and": [
+            {"vendor": vendor},
+            {"version": version},
+            {
+                "$or": [
+                    {"short_name": name},
+                    {"short_name": {"$regex": f"^{name}@"}}
+                ]
+            }
+        ]
+    }
+
+    results = await db.client.catalogue_resources.find(query).to_list()
+    resources = [build_schema_from_resource(CatalogueResourceModel.model_validate(resource)) for resource in results]
+
+    return resources

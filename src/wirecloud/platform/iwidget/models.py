@@ -18,13 +18,11 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, field_serializer, model_serializer
 from typing import Annotated, Any, Optional
 from enum import Enum
 
 from src.wirecloud.database import Id
-
-IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
 
 
 class DBWidgetConfigAnchor(Enum):
@@ -37,53 +35,78 @@ class DBWidgetConfigAnchor(Enum):
 
 
 class DBWidgetConfig(BaseModel, use_enum_values=True):
-    top: Annotated[float, Field(ge=0)]
-    left: Annotated[float, Field(ge=0)]
-    zIndex: Annotated[int, Field(ge=0)]
-    height: Annotated[float, Field(ge=0)]
-    width: Annotated[float, Field(ge=0)]
-    minimized: bool
-    titlevisible: bool
-    fulldragboard: bool
-    relx: bool
-    rely: bool
-    relwidth: bool
-    relheight: bool
-    anchor: DBWidgetConfigAnchor
+    id: int = 0
+    top: Annotated[float, Field(ge=0)] = 0
+    left: Annotated[float, Field(ge=0)] = 0
+    zIndex: Annotated[int, Field(ge=0)] = 0
+    height: Annotated[float, Field(ge=0)] = 1
+    width: Annotated[float, Field(ge=0)] = 1
+    minimized: bool = False
+    titlevisible: bool = True
+    fulldragboard: bool = False
+    relx: bool = True
+    rely: bool = False
+    relwidth: bool = True
+    relheight: bool = False
+    anchor: DBWidgetConfigAnchor = DBWidgetConfigAnchor.top_left
+    moreOrEqual: int = 0
+    lessOrEqual: int = -1
+
+    @field_serializer("anchor")
+    def serialize_enum(self, value, _info) -> str:
+        if isinstance(value, DBWidgetConfigAnchor):
+            return value.value
+        return value
+
+
+class DBWidgetPositionsConfig(BaseModel):
+    id: int
+    moreOrEqual: Annotated[int, Field(ge=0)]
+    lessOrEqual: Annotated[int, Field(ge=-1)]
+    widget: DBWidgetConfig = DBWidgetConfig()
 
 
 class DBWidgetPositions(BaseModel):
-    id: Id
-    moreOrEqual: Annotated[int, Field(ge=0)]
-    lessOrEqual: Annotated[int, Field(ge=-1)]
-    widget: DBWidgetConfig
+    configurations: list[DBWidgetPositionsConfig]
 
 
 class DBWidgetPermissionsConfig(BaseModel):
-    close: Optional[bool]
-    configure: Optional[bool]
-    move: Optional[bool]
-    rename: Optional[bool]
-    resize: Optional[bool]
-    minimize: Optional[bool]
-    upgrade: Optional[bool]
+    close: Optional[bool] = None
+    configure: Optional[bool] = None
+    move: Optional[bool] = None
+    rename: Optional[bool] = None
+    resize: Optional[bool] = None
+    minimize: Optional[bool] = None
+    upgrade: Optional[bool] = None
+
+    def filtered_dict(self):
+        return {k: v for k, v in self.model_dump().items() if v is not None}
 
 
 class DBWidgetPermissions(BaseModel):
-    editor: Optional[DBWidgetPermissionsConfig] = {}
+    editor: Optional[DBWidgetPermissionsConfig] = None
     viewer: Optional[DBWidgetPermissionsConfig] = {}
+
+    @model_serializer()
+    def serialize(self):
+        return {
+            "editor": self.editor.filtered_dict() if self.editor else {},
+            "viewer": self.viewer.filtered_dict() if self.viewer else {}
+        }
+
 
 
 class DBWidgetVariables(BaseModel):
-    users: dict[IntegerStr, Any] = {}
+    users: dict[str, Any] = {}
 
 
-class DBWidget(BaseModel):
-    widget_uri: str
-    name: str
-    layout: int
-    positions: DBWidgetPositions
-    read_only: bool
+class DBWidgetInstance(BaseModel):
+    id: str
+    resource: Id = None
+    widget_uri: str = ''
+    name: str = ''
+    layout: int = 0
+    positions: DBWidgetPositions = {}
+    read_only: bool = False
     variables: dict[str, DBWidgetVariables] = {}
-    widget_id: Id
-    permissions: DBWidgetPermissions = {}
+    permissions: DBWidgetPermissions = DBWidgetPermissions()

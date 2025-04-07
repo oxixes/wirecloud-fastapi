@@ -20,12 +20,13 @@
 
 from pydantic import BaseModel, Field, StringConstraints
 from typing import Optional, Annotated, Any
-from datetime import datetime
+from datetime import datetime, timezone
 
-from src.wirecloud.platform.iwidget.models import DBWidget
+from src.wirecloud.platform.iwidget.models import DBWidgetInstance
 from src.wirecloud.database import Id
+from src.wirecloud.platform.preferences.schemas import WorkspacePreference
 from src.wirecloud.platform.wiring.schemas import Wiring, WiringOperatorPreference, WiringOperator
-
+from src.wirecloud.platform.wiring.utils import get_wiring_skeleton
 
 IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
 
@@ -39,7 +40,7 @@ class DBWiringOperatorPreference(WiringOperatorPreference):
 
 
 class DBWiringOperator(WiringOperator):
-    preferences: dict[str, DBWiringOperatorPreference]
+    properties: dict[str, DBWiringOperatorPreference]
 
 
 class DBWiring(Wiring):
@@ -48,16 +49,24 @@ class DBWiring(Wiring):
 
 class DBWorkspaceAccessPermissions(BaseModel):
     id: Id
-    accesslevel: int
+    accesslevel: int = 1
+
+
+class DBWorkspacePreference(WorkspacePreference):
+    name: str
+
+
+DBTabPreference = DBWorkspacePreference
 
 
 class DBTab(BaseModel, populate_by_name=True):
-    id: Optional[Id] = Field(alias="_id")
+    id: str
     name: str
     title: str
-    visible: bool
-    position: Optional[int]
-    widgets: Optional[list[DBWidget]] = []
+    visible: bool = False
+    last_modified: Optional[datetime] = datetime.now(timezone.utc)
+    widgets: list[DBWidgetInstance] = []
+    preferences: list[DBTabPreference] = []
 
 
 class DBWorkspaceExtraPreference(BaseModel):
@@ -71,30 +80,33 @@ class DBWorkspaceExtraPreference(BaseModel):
 
 class DBWorkspaceForcedValue(BaseModel):
     value: Any
-    hidden: bool
+    hidden: bool = False
 
 
 class DBWorkspaceForcedValues(BaseModel):
     extra_prefs: list[DBWorkspaceExtraPreference] = []
-    operator: dict[IntegerStr, dict[str, DBWorkspaceForcedValue]] = []
-    widget: dict[IntegerStr, dict[str, DBWorkspaceForcedValue]] = []
+    operator: dict[IntegerStr, dict[str, DBWorkspaceForcedValue]] = {}
+    widget: dict[IntegerStr, dict[str, DBWorkspaceForcedValue]] = {}
+    empty_params: Any = []  # TODO: create a schema for this
 
 
 class DBWorkspace(BaseModel, populate_by_name=True):
     id: Id = Field(alias="_id")
     name: str
     title: str
-    creation_date: datetime
-    last_modified: Optional[datetime]
-    searchable: bool
-    public: bool
-    description: str
-    longdescription: str
-    forced_values: DBWorkspaceForcedValues
-    wiring_status: DBWiring
-    requireauth: bool
+    creation_date: datetime = datetime.now(timezone.utc)
+    last_modified: Optional[datetime] = datetime.now(timezone.utc)
+    searchable: bool = True
+    public: bool = False
+    creator: Id
+    description: str = ''
+    longdescription: str = ''
+    forced_values: DBWorkspaceForcedValues = DBWorkspaceForcedValues()
+    wiring_status: DBWiring = get_wiring_skeleton()
+    requireauth: bool = False
 
     # Relationships
     users: list[DBWorkspaceAccessPermissions] = []
     groups: list[DBWorkspaceAccessPermissions] = []
     tabs: list[DBTab] = []
+    preferences: list[DBWorkspacePreference] = []
