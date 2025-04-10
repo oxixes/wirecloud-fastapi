@@ -20,6 +20,7 @@ import re
 # TODO Add HTML response
 
 import socket
+from email.utils import formatdate
 from inspect import Signature
 
 import orjson as json
@@ -438,3 +439,6 @@ def build_downloadfile_response(request: Request, file_path: str, base_dir: str)
         return FileResponse(fullpath, media_type='application/octet-stream')
     else:
         return Response(headers={'X-Sendfile': fullpath})
+
+def http_date(timestamp: int) -> str:
+    return formatdate(timestamp)

@@ -20,6 +20,7 @@
 from typing import Optional, Any
 from urllib.request import Request
 
+from src.settings import cache
 from src.wirecloud.platform.context.crud import get_all_constants
 from src.wirecloud.platform.plugins import get_plugins
 from src.wirecloud.platform.context.schemas import BaseContextKey, PlatformContextKey
@@ -107,9 +108,14 @@ async def get_constant_context_values(db: DBSession) -> dict[str, str]:
     return res
 
 
-# TODO Cache get_constant_context_values of this function
 async def get_context_values(db: DBSession, workspace, request: Request, user: UserAll, session: Session = None) -> dict[str, dict[str, Any]]:
-    platform_context = await get_constant_context_values(db)
+    cache_key = f'constant_context/{str(user.id)}'
+    constant_context = await cache.get(cache_key)
+    if constant_context is None:
+        constant_context = await get_constant_context_values(db)
+        await cache.set(cache_key, constant_context)
+
+    platform_context = constant_context
     platform_context.update(get_platform_context_current_values(request, user, session=session))
 
     return {

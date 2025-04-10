@@ -46,7 +46,7 @@ class DBCatalogueResource(BaseModel, populate_by_name=True):
     template_uri: str
     popularity: float
     description: MACD
-    creator_id: Id
+    creator_id: Optional[Id]
 
     xhtml: list[DBXhtml] = []
     users: list[Id] = []

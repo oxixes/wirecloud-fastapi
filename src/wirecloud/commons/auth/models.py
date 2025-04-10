@@ -29,6 +29,20 @@ class DBPermission(BaseModel):
     codename: str
 
 
+class DBPlatformPreference(BaseModel):
+    name: str
+    value: str = ""
+
+
+class DBGroup(BaseModel, populate_by_name=True):
+    id: Id = Field(alias="_id")
+    name: str
+    codename: str
+
+    group_permissions: list[DBPermission] = []
+    users: list[Id] = []
+
+
 class DBUser(BaseModel, populate_by_name=True):
     id: Id = Field(alias="_id")
     password: Optional[str]
@@ -43,13 +57,5 @@ class DBUser(BaseModel, populate_by_name=True):
     date_joined: datetime
 
     user_permissions: list[DBPermission] = []
-    groups: list[Id] = []
-
-
-class DBGroup(BaseModel, populate_by_name=True):
-    id: Id = Field(alias="_id")
-    name: str
-    codename: str
-
-    group_permissions: list[DBPermission] = []
-    users: list[Id] = []
+    groups: list[DBGroup] = []
+    preferences: list[DBPlatformPreference] = []

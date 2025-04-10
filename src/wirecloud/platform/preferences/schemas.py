@@ -18,7 +18,8 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from pydantic import BaseModel
-from typing import Any, Optional
+from typing import Any, Optional, Union
+from enum import Enum
 
 
 class SelectEntry(BaseModel):
@@ -34,9 +35,41 @@ class PreferenceKey(BaseModel):
     description: str = ''
     initialEntries: Optional[list[SelectEntry]] = None
     defaultValue: Any = None
+    inheritByDefault: bool = False
 
 
 class TabPreferenceKey(PreferenceKey):
     inheritable: bool = True
     inheritByDefault: bool = True
 
+
+class PlatformPreferenceCreateValue(BaseModel):
+    value: str
+
+
+class PlatformPreferenceCreate(BaseModel):
+    preferences: dict[str, Union[str, PlatformPreferenceCreateValue]]
+
+
+class WorkspacePreference(BaseModel):
+    inherit: bool = False
+    value: Optional[str] = None
+
+
+from src.wirecloud.platform.workspace.models import DBWorkspacePreference
+
+WorkspacePreferenceWithName = DBWorkspacePreference
+
+TabPreference = WorkspacePreference
+
+
+class ShareListEnum(Enum):
+    user = 'user'
+    group = 'group'
+    organization = 'organization'
+
+
+class ShareListPreference(BaseModel, use_enum_values=True):
+    type: ShareListEnum = ShareListEnum.user
+    name: str
+    value: Optional[str] = None

@@ -365,6 +365,7 @@ class MACDMashup(MACDBase):
     preferences: dict[str, str] = {}
     params: list[MACDMashupPreference] = []
     tabs: list[MACDTab] = []
+    embedmacs: bool = False
     embedded: list[MACDMashupEmbedded] = []
     wiring: MACDMashupWiring = MACDMashupWiring()
 
@@ -395,6 +396,35 @@ class MACDMashup(MACDBase):
                     return False
 
         return True
+
+
+class MACDParametrizationOptionsSource(Enum):
+    custom = 'custom'
+    default = 'default'
+    current = 'current'
+
+
+class MACDParametrizationOptionsStatus(Enum):
+    readonly = 'readonly'
+    hidden = 'hidden'
+    normal = 'normal'
+
+
+class MACDParametrizationOptions(BaseModel, use_enum_values=True):
+    source: MACDParametrizationOptionsSource = MACDParametrizationOptionsSource.current
+    status: MACDParametrizationOptionsStatus = MACDParametrizationOptionsStatus.normal
+    value: str
+
+
+class MACDParametrization(BaseModel):
+    iwidgets: dict[IntegerStr, dict[str, MACDParametrizationOptions]] = {}
+    ioperators: dict[IntegerStr, dict[str, MACDParametrizationOptions]] = {}
+
+
+class MACDMashupWithParametrization(MACDMashup):
+    readOnlyWidgets: bool = False
+    parametrization: MACDParametrization = MACDParametrization()
+    readOnlyConnectables: bool = False
 
 
 MACD = Union[MACDWidget, MACDOperator, MACDMashup]

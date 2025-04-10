@@ -33,7 +33,6 @@ from src.wirecloud.database import DBSession, Id
 
 from src.wirecloud.catalogue import docs
 
-
 RESOURCE_MIMETYPES = ('application/x-widget+mashable-application-component',
                       'application/x-mashup+mashable-application-component',
                       'application/x-operator+mashable-application-component')
@@ -80,7 +79,8 @@ class CatalogueResourceBase(BaseModel):
         return get_template_url(self.vendor, self.short_name, self.version, '' if for_base else self.template_uri,
                                 request=request, url_pattern_name=url_pattern_name)
 
-    def get_template(self, request: Optional[Request] = None, url_pattern_name: str = 'wirecloud_catalogue.media') -> TemplateParser:
+    def get_template(self, request: Optional[Request] = None,
+                     url_pattern_name: str = 'wirecloud_catalogue.media') -> TemplateParser:
         template_uri = self.get_template_url(request=request, url_pattern_name=url_pattern_name)
         parser = TemplateParser(self.description.model_dump_json(), base=template_uri)
         return parser
@@ -109,7 +109,7 @@ class CatalogueResourceBase(BaseModel):
 
 
 class CatalogueResourceCreate(CatalogueResourceBase):
-    creator: User
+    creator: Optional[User]
 
 
 class CatalogueResource(CatalogueResourceBase):
@@ -154,11 +154,13 @@ class CatalogueResourceDataSummary(CatalogueResourceDataSummaryBase, CatalogueRe
 
 
 class CatalogueResourceDataSummaryGroup(CatalogueResourceDataSummaryIdentifier):
-    versions: list[CatalogueResourceDataSummaryBase] = Field(description=docs.catalogue_resource_data_summary_group_versions_description)
+    versions: list[CatalogueResourceDataSummaryBase] = Field(
+        description=docs.catalogue_resource_data_summary_group_versions_description)
 
 
 class CatalogueResourceDeleteResults(BaseModel):
-    affectedVersions: list[Version] = Field(description=docs.catalogue_resource_delete_results_affected_versions_description)
+    affectedVersions: list[Version] = Field(
+        description=docs.catalogue_resource_delete_results_affected_versions_description)
 
 
 def get_template_url(vendor: Vendor, name: Name, version: Version, url: str, request: Optional[Request] = None,
