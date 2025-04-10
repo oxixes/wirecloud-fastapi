@@ -64,6 +64,8 @@ AVAILABLE_THEMES = [
 THEME_ACTIVE = "defaulttheme"
 
 # TODO Allow to define a list of known proxies to trust the X-Forwarded-For header
+PROXY_WS_MAX_MSG_SIZE = 4 * 1024 * 1024 # 4MiB
+
 caches.set_config({
     'default': {
         'cache': 'aiocache.SimpleMemoryCache',

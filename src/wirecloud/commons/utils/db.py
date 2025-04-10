@@ -21,7 +21,8 @@
 from typing import Any
 
 from src.wirecloud.database import DBSession, Id
-from src.wirecloud.platform.workspace.schemas import Tab
+from src.wirecloud.platform.workspace.models import Tab
+from src.wirecloud.platform.workspace.utils import is_there_a_tab_with_that_name
 
 
 async def save_alternative(db: DBSession, collection: str, variant_field: str, instance: Any) -> None:
@@ -37,13 +38,6 @@ async def save_alternative(db: DBSession, collection: str, variant_field: str, i
     setattr(instance, variant_field, new_field)
     await db_collection.insert_one(instance.model_dump(by_alias=True))
 
-def is_a_tab_with_that_name(tab_name:str, tabs: list[Tab]) -> bool:
-    found = False
-    for tab in tabs:
-        if tab.name == tab_name:
-            found = True
-            break
-    return found
 
 async def save_alternative_tab(db: DBSession, tab: Tab) -> Tab:
     workspace_id = tab.id.split('-')[0]
@@ -53,11 +47,8 @@ async def save_alternative_tab(db: DBSession, tab: Tab) -> Tab:
         raise ValueError('Workspace not found')
     index = 1
     new_tab_name = tab.name
-    while is_a_tab_with_that_name(new_tab_name, workspace.tabs):
+    while is_there_a_tab_with_that_name(new_tab_name, workspace.tabs):
         index += 1
         new_tab_name = f'{tab.name}-{index}'
     tab.name = new_tab_name
     return tab
-
-
-

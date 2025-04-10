@@ -29,7 +29,7 @@ from src.wirecloud.commons.auth.models import DBPlatformPreference as PlatformPr
 from src.wirecloud.database import DBSession, Id
 
 
-async def get_user_by_id(db: DBSession, user_id: Id, user_all: bool = False) -> Union[User, UserAll, None]:
+async def get_user_by_id(db: DBSession, user_id: Id) -> Optional[User]:
     query = {"_id": ObjectId(user_id)}
     user_data = await db.client.users.find_one(query)
 
@@ -37,38 +37,42 @@ async def get_user_by_id(db: DBSession, user_id: Id, user_all: bool = False) -> 
         return None
 
     user = UserModel.model_validate(user_data)
-    if not user_all:
 
-        return User(
-            id=user.id,
-            username=user.username,
-            email=user.email,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            is_superuser=user.is_superuser,
-            is_staff=user.is_staff,
-            is_active=user.is_active,
-            date_joined=user.date_joined,
-            last_login=user.last_login
-        )
+    return User(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        is_superuser=user.is_superuser,
+        is_staff=user.is_staff,
+        is_active=user.is_active,
+        date_joined=user.date_joined,
+        last_login=user.last_login
+    )
 
-    else:
+async def get_user_with_all_info(db: DBSession, user_id: Id) -> Optional[UserAll]:
+    query = {"_id": ObjectId(user_id)}
+    user_data = await db.client.users.find_one(query)
 
-        return UserAll(
-            id=user.id,
-            username=user.username,
-            email=user.email,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            is_superuser=user.is_superuser,
-            is_staff=user.is_staff,
-            is_active=user.is_active,
-            date_joined=user.date_joined,
-            last_login=user.last_login,
-            groups=user.groups,
-            permissions=[Permission(**perm.model_dump()) for perm in user.user_permissions]
-        )
+    if user_data is None:
+        return None
 
+    user = UserModel.model_validate(user_data)
+    return UserAll(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        is_superuser=user.is_superuser,
+        is_staff=user.is_staff,
+        is_active=user.is_active,
+        date_joined=user.date_joined,
+        last_login=user.last_login,
+        groups=user.groups,
+        permissions=[Permission(**perm.model_dump()) for perm in user.user_permissions]
+    )
 
 async def get_user_by_username(db: DBSession, username: str) -> Optional[User]:
     query = {"username": username}

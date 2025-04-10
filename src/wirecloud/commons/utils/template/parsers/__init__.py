@@ -224,7 +224,3 @@ class TemplateValueProcessor(BaseModel):
 
     def process(self, value: str) -> str:
         return self._RE.sub(self.__repl, value)
-
-
-
-

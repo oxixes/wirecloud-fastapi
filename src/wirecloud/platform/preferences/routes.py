@@ -37,6 +37,7 @@ from src.wirecloud.platform.workspace.crud import get_workspace_by_id, clear_wor
     clear_workspace_groups, add_user_to_workspace, add_group_to_workspace, change_workspace
 from src.wirecloud import docs as root_docs
 from src.wirecloud.platform.preferences import docs
+from src.wirecloud.translation import gettext as _
 
 preferences_router = APIRouter()
 
@@ -62,7 +63,7 @@ async def get_platform_preferences(db: DBDep, request: Request, user: UserDep):
     if user is not None:
         preferences = await get_user_preferences(db, user.id)
         if preferences is None:
-            return build_error_response(request, 404, "Platform preferences not found")
+            return build_error_response(request, 404, _("Platform preferences not found"))
         result = parse_values(preferences)
     else:
         result = {}
@@ -125,9 +126,9 @@ async def get_workspace_preferences(db: DBDep, request: Request, user: UserDep, 
     description=docs.get_workspace_preference_collection_workspace_id_description)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
-        return build_error_response(request, 404, "Workspace not found")
+        return build_error_response(request, 404, _("Workspace not found"))
     if not await workspace.is_accsessible_by(db, user):
-        return build_error_response(request, 403, "You are not allowed to read this workspace")
+        return build_error_response(request, 403, _("You are not allowed to read this workspace"))
 
     return await get_workspace_preference_values(workspace)
 
@@ -165,9 +166,9 @@ async def create_workspace_preferences(db: DBDep, request: Request, user: UserDe
                                            example=docs.create_workspace_preference_collection_platform_preference_create_example)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
-        return build_error_response(request, 404, "Workspace not found")
+        return build_error_response(request, 404, _("Workspace not found"))
     if not workspace.is_editable_by(user):
-        return build_error_response(request, 403, "You are not allowed to update this workspace")
+        return build_error_response(request, 403, _("You are not allowed to update this workspace"))
 
     save_workspace = False
     save_public = False
@@ -251,15 +252,15 @@ async def get_tab_preferences(db: DBDep, request: Request, user: UserDep, worksp
     description=docs.get_tab_preference_collection_tab_position_description)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
-        return build_error_response(request, 404, "Workspace not found")
+        return build_error_response(request, 404, _("Workspace not found"))
 
     try:
         tab = workspace.tabs[tab_position]
     except IndexError:
-        return build_error_response(request, 404, "Tab not found")
+        return build_error_response(request, 404, _("Tab not found"))
 
     if not await workspace.is_accsessible_by(db, user):
-        return build_error_response(request, 403, "You are not allowed to read this workspace")
+        return build_error_response(request, 403, _("You are not allowed to read this workspace"))
 
     result = await get_tab_preference_values(tab)
 
@@ -295,15 +296,15 @@ async def create_tab_preferences(db: DBDep, request: Request, user: UserDep, wor
                                      example=docs.create_tab_preference_collection_platform_preference_create_example)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
-        return build_error_response(request, 404, "Workspace not found")
+        return build_error_response(request, 404, _("Workspace not found"))
 
     try:
         tab = workspace.tabs[tab_position]
     except IndexError:
-        return build_error_response(request, 404, "Tab not found")
+        return build_error_response(request, 404, _("Tab not found"))
 
     if not await workspace.is_accsessible_by(db, user):
-        return build_error_response(request, 403, "You are not allowed to read this workspace")
+        return build_error_response(request, 403, _("You are not allowed to read this workspace"))
 
     await update_tab_preferences(db, user, workspace, tab, preferences)
     await db.commit_transaction()

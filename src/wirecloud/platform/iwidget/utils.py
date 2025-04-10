@@ -26,13 +26,14 @@ from src.wirecloud.commons.auth.schemas import User, UserAll
 from src.wirecloud.commons.utils.http import NotFound
 from src.wirecloud.commons.utils.template.schemas.macdschemas import MACDWidget, MACDProperty, MACDPreference
 from src.wirecloud.database import DBSession
-from src.wirecloud.platform.iwidget.schemas import WidgetInstance, WidgetPositions, WidgetConfig, \
-    WidgetVariables, WidgetPositionsConfig, LayoutConfig, IWidgetDataCreate, IWidgetDataUpdate, \
-    WidgetPermissionsConfig
-from src.wirecloud.platform.workspace.schemas import Tab, Workspace
+from src.wirecloud.platform.iwidget.models import WidgetVariables, WidgetInstance, WidgetPositionsConfig, WidgetConfig, \
+    WidgetPermissionsConfig, WidgetPositions
+from src.wirecloud.platform.iwidget.schemas import WidgetInstanceDataUpdate, WidgetInstanceDataCreate, LayoutConfig
+from src.wirecloud.platform.workspace.models import Workspace, Tab
+from src.wirecloud.translation import gettext as _
 
 
-def update_iwidget_ids(workspace: Workspace, tab: Tab) -> None:
+def update_widget_instance_ids(workspace: Workspace, tab: Tab) -> None:
     for i in range(len(tab.widgets)):
         iwidget = tab.widgets[i]
         iwidget.id = str(workspace.id) + '-' + str(tab.id).split('-')[1] + '-' + str(i)
@@ -69,19 +70,19 @@ def process_initial_value(vardef: Union[MACDProperty, MACDPreference],
     return value
 
 
-async def update_widget_value(db: DBSession, iwidget: WidgetInstance, data: Union[IWidgetDataCreate, IWidgetDataUpdate], user: UserAll,
-                              required=False) -> Optional[CatalogueResource]:
+async def update_widget_value(db: DBSession, iwidget: WidgetInstance, data: Union[WidgetInstanceDataCreate, WidgetInstanceDataUpdate], user: UserAll,
+                              required: bool = False) -> Optional[CatalogueResource]:
     if data.widget != '' and data.widget is not None:
         (widget_vendor, widget_name, widget_version) = data.widget.split('/')
         resource = await get_catalogue_resource(db, widget_vendor, widget_name, widget_version)
         if resource is None:
-            raise ValueError('Widget not found')
+            raise ValueError(_('Widget not found'))
 
         if not await resource.is_available_for(db, user):
-            raise NotFound('Widget not available')
+            raise NotFound(_('Widget not available'))
 
         if resource.resource_type() != 'widget':
-            raise ValueError('%(uri)s is not a widget' % {"uri": data.widget})  # TODO translate this
+            raise ValueError(_('%(uri)s is not a widget' % {"uri": data.widget}))
 
         iwidget.resource = resource.id
         return resource
@@ -90,7 +91,7 @@ async def update_widget_value(db: DBSession, iwidget: WidgetInstance, data: Unio
         raise ValueError('Missing widget info')
 
 
-async def update_title_value(db: DBSession, iwidget: WidgetInstance, data: Union[IWidgetDataCreate, IWidgetDataUpdate]) -> None:
+async def update_title_value(db: DBSession, iwidget: WidgetInstance, data: Union[WidgetInstanceDataCreate, WidgetInstanceDataUpdate]) -> None:
     if data.title is not None:
         if data.title.strip() == '':
             resource = await get_catalogue_resource_by_id(db, iwidget.resource)
@@ -104,10 +105,10 @@ def update_screen_size_value(model: WidgetPositionsConfig, data: LayoutConfig, f
     value = getattr(data, field)
 
     if type(value) is not int:
-        raise TypeError(f'Field {field} must contain a number value')  # TODO translate this
+        raise TypeError(_(f'Field {field} must contain a number value'))
 
     if value < -1:
-        raise ValueError(f'Invalid value for {field} field')  # TODO translate this
+        raise ValueError(_(f'Invalid value for {field} field'))
 
     setattr(model, field, value)
 
@@ -117,10 +118,10 @@ def update_position_value(model: WidgetConfig, data: LayoutConfig, field: str, d
     size = getattr(data, data_field)
 
     if type(size) not in (int, float):
-        raise TypeError(f'Field {data_field} must contain a number value')  # TODO translate this
+        raise TypeError(_(f'Field {data_field} must contain a number value'))
 
     if size < 0:
-        raise ValueError(f'Invalid value for {data_field} field')  # TODO translate this
+        raise ValueError(_(f'Invalid value for {data_field} field'))
 
     setattr(model, field, size)
 
@@ -129,19 +130,19 @@ def update_size_value(model: WidgetConfig, data: LayoutConfig, field: str) -> No
     size = getattr(data, field)
 
     if type(size) not in (int, float):
-        raise TypeError(f'Field {field} must contain a number value')  # TODO translate this
+        raise TypeError(_(f'Field {field} must contain a number value'))
 
     if size <= 0:
-        raise ValueError(f'Invalid value for {field} field')  # TODO translate this
+        raise ValueError(_(f'Invalid value for {field} field'))
 
     setattr(model, field, size)
 
 
-def update_boolean_value(model: Union[WidgetConfig, WidgetPermissionsConfig], data: Union[WidgetConfig, IWidgetDataUpdate], field: str) -> None:
+def update_boolean_value(model: Union[WidgetConfig, WidgetPermissionsConfig], data: Union[WidgetConfig, WidgetInstanceDataUpdate], field: str) -> None:
     value = getattr(data, field)
 
     if not isinstance(value, bool):
-        raise TypeError(f'Field {field} must contain a boolean value')  # TODO translate this
+        raise TypeError(_(f'Field {field} must contain a boolean value'))
 
     setattr(model, field, value)
 
@@ -149,7 +150,7 @@ def update_boolean_value(model: Union[WidgetConfig, WidgetPermissionsConfig], da
 def update_anchor_value(model: WidgetConfig, data: LayoutConfig) -> None:
     model.anchor = data.anchor
 
-def update_permissions(iwidget: WidgetInstance, data: IWidgetDataUpdate) -> None:
+def update_permissions(iwidget: WidgetInstance, data: WidgetInstanceDataUpdate) -> None:
     permissions = iwidget.permissions.viewer
     if data.move is not None:
         update_boolean_value(permissions, data, 'move')
@@ -183,7 +184,7 @@ def check_intervals(data: list[WidgetPositionsConfig]) -> None:
 
 
 
-def update_position(iwidget: WidgetInstance, key: str, data: Union[IWidgetDataCreate, IWidgetDataUpdate]) -> None:
+def update_position(iwidget: WidgetInstance, key: str, data: Union[WidgetInstanceDataCreate, WidgetInstanceDataUpdate]) -> None:
     ids = set()
     for layout_config in data.layout_config:
         if layout_config.id in ids:
@@ -239,7 +240,7 @@ def update_position(iwidget: WidgetInstance, key: str, data: Union[IWidgetDataCr
     iwidget.positions.configurations = new_positions
 
 
-async def save_iwidget(db: DBSession, workspace: Workspace, iwidget: IWidgetDataCreate, user: UserAll, tab: Tab,
+async def save_widget_instance(db: DBSession, workspace: Workspace, iwidget: WidgetInstanceDataCreate, user: UserAll, tab: Tab,
                        initial_variable_values: dict[str, WidgetVariables] = None,
                        commit: bool = True) -> WidgetInstance:
 
@@ -290,20 +291,15 @@ async def save_iwidget(db: DBSession, workspace: Workspace, iwidget: IWidgetData
     return new_iwidget
 
 
-async def get_iwidgets_from_workspace(workspace: Workspace) -> list[WidgetInstance]:
-    iwidgets = []
-    for tab in workspace.tabs:
-        for iwidget in tab.widgets:
-            iwidgets.append(WidgetInstance(**iwidget.__dict__))
-
-    return iwidgets
+def get_widget_instances_from_workspace(workspace: Workspace) -> list[WidgetInstance]:
+    return [widget for tab in workspace.tabs for widget in tab.widgets]
 
 
-async def update_iwidget(db: DBSession, data: IWidgetDataUpdate, user: UserAll, workspace: Workspace, tab: Tab, update_cache: bool = True):
+async def update_widget_instance(db: DBSession, data: WidgetInstanceDataUpdate, user: UserAll, workspace: Workspace, tab: Tab, update_cache: bool = True) -> None:
     if data.id is None:
         raise ValueError('Missing id field')
 
-    iwidget = WidgetInstance(**tab.widgets[data.id].model_dump())
+    iwidget = tab.widgets[data.id]
 
     await update_widget_value(db, iwidget, data, user)
     await update_title_value(db, iwidget, data)
@@ -324,7 +320,7 @@ async def update_iwidget(db: DBSession, data: IWidgetDataUpdate, user: UserAll, 
     if data.tab is not None:
         if data.tab != tab_position:
             workspace.tabs[tab_position].widgets.pop(iwidget_position)
-            update_iwidget_ids(workspace, tab)
+            update_widget_instance_ids(workspace, tab)
             iwidget.id = str(workspace.id) + '-' + str(data.tab) + '-' + str(len(workspace.tabs[data.tab].widgets))
             workspace.tabs[data.tab].widgets.append(iwidget)
 

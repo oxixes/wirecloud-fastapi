@@ -22,27 +22,14 @@ from typing import Any, Optional
 
 from pydantic import BaseModel
 
-from src.wirecloud.catalogue.crud import get_catalogue_resource_by_id
-from src.wirecloud.commons.auth.schemas import User
-from src.wirecloud.database import DBSession
-from src.wirecloud.platform.iwidget.models import DBWidgetPositions, DBWidgetInstance, DBWidgetConfig, \
-    DBWidgetVariables, DBWidgetConfigAnchor, DBWidgetPermissions, DBWidgetPositionsConfig, DBWidgetPermissionsConfig
-
-
-WidgetPositions = DBWidgetPositions
-WidgetPositionsConfig = DBWidgetPositionsConfig
-WidgetConfig = DBWidgetConfig
-WidgetVariables = DBWidgetVariables
-WidgetAnchor = DBWidgetConfigAnchor
-WidgetPermissions = DBWidgetPermissions
-WidgetPermissionsConfig = DBWidgetPermissionsConfig
+from src.wirecloud.platform.iwidget.models import WidgetPermissions, WidgetConfig, WidgetVariables
 
 
 class LayoutConfig(WidgetConfig):
     action: Optional[str] = None
 
 
-class IWidgetDataCreate(BaseModel):
+class WidgetInstanceDataCreate(BaseModel):
     title: str
     layout: int = 0
     widget: str
@@ -53,7 +40,7 @@ class IWidgetDataCreate(BaseModel):
     permissions: WidgetPermissions = WidgetPermissions()
     variable_values: Optional[dict[str, WidgetVariables]] = None
 
-class IwidgetDataPreference(BaseModel):
+class WidgetInstanceDataPreference(BaseModel):
     name: str
     secure: bool
     readonly: bool
@@ -61,46 +48,16 @@ class IwidgetDataPreference(BaseModel):
     value: Any
 
 
-IwidgetDataProperty = IwidgetDataPreference
+WidgetInstanceDataProperty = WidgetInstanceDataPreference
 
 
-class IWidgetData(IWidgetDataCreate):
+class WidgetInstanceData(WidgetInstanceDataCreate):
     id: str = ''
-    preferences: dict[str, IwidgetDataPreference] = {}
-    properties: dict[str, IwidgetDataProperty] = {}
+    preferences: dict[str, WidgetInstanceDataPreference] = {}
+    properties: dict[str, WidgetInstanceDataProperty] = {}
 
 
-class WidgetInstance(DBWidgetInstance):
-    async def set_variable_value(self, db: DBSession, var_name: str, value: Any, user: User):
-        resource = await get_catalogue_resource_by_id(db, self.resource)
-        if resource is None:
-            raise ValueError('Widget not found')
-
-        iwidget_info = resource.get_processed_info(translate=False, process_variables=True)
-
-        vardef = iwidget_info.variables.all[var_name]
-        print(vardef)
-        if vardef.secure:
-            from src.wirecloud.platform.workspace.utils import encrypt_value
-            value = encrypt_value(value)
-        elif vardef.type == 'boolean':
-            if isinstance(value, str):
-                value = value.strip().lower() == 'true'
-            else:
-                value = bool(value)
-        elif vardef.type == 'number':
-            value = float(value)
-
-        if "users" in self.variables.get(var_name, ""):
-            self.variables[var_name].users = {"%s" % user.id: value}
-        else:
-            print(self.variables)
-            self.variables[var_name] = WidgetVariables(users={str(user.id): value})
-            print()
-            print(self.variables)
-
-
-class IWidgetDataUpdate(BaseModel):
+class WidgetInstanceDataUpdate(BaseModel):
     id: Optional[int] = None
     tab: Optional[int] = None
     layout: Optional[int] = None

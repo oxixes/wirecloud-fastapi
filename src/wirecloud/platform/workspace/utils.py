@@ -20,19 +20,20 @@
 
 import base64
 import json
+import os
 from copy import deepcopy
 from typing import Any, Union, Optional
 from fastapi import Request, Response
 
 import markdown
 from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
 
 from src.wirecloud.catalogue.crud import get_catalogue_resource_by_id, get_catalogue_resource
 from src.wirecloud.catalogue.schemas import CatalogueResource
-from src.wirecloud.commons.auth.crud import get_username_by_id, get_user_by_id, get_group_by_id
+from src.wirecloud.commons.auth.crud import get_username_by_id, get_user_by_id, get_group_by_id, get_user_with_all_info
 from src.wirecloud.commons.auth.utils import UserDep
 from src.wirecloud.commons.utils.cache import CacheableData, check_if_modified_since, patch_cache_headers
-from src.wirecloud.commons.utils.db import save_alternative_tab
 from src.wirecloud.commons.utils.html import clean_html
 from src.wirecloud.commons.utils.http import build_error_response
 from src.wirecloud.commons.utils.template.parsers import TemplateValueProcessor
@@ -40,16 +41,17 @@ from src.wirecloud.commons.utils.template.schemas.macdschemas import MACDPrefere
 from src.wirecloud.commons.utils.urlify import URLify
 from src.wirecloud.database import DBSession, Id, DBDep
 from src.wirecloud.platform.context.utils import get_context_values
-from src.wirecloud.platform.iwidget.schemas import WidgetVariables, WidgetInstance, IWidgetData, WidgetConfig, \
-    WidgetPermissions
-from src.wirecloud.platform.iwidget.utils import parse_value_from_text, get_iwidgets_from_workspace
+from src.wirecloud.platform.iwidget.models import WidgetVariables, WidgetInstance, WidgetConfig
+from src.wirecloud.platform.iwidget.schemas import WidgetInstanceData
+from src.wirecloud.platform.iwidget.utils import parse_value_from_text, get_widget_instances_from_workspace
 from src.wirecloud.platform.preferences.schemas import WorkspacePreference
 from src.wirecloud.platform.preferences.utils import get_workspace_preference_values, get_tab_preference_values
-from src.wirecloud.platform.workspace.schemas import WorkspaceData, Tab, CacheEntry, WorkspaceForcedValues, \
-    UserWorkspaceData, GroupWorkspaceData, CacheVariableData, TabData, WorkspaceGlobalData
 from src.wirecloud.commons.auth.schemas import User, UserAll
-from src.wirecloud.platform.workspace.schemas import Workspace
 from src.settings import cache, SECRET_KEY
+from src.wirecloud.platform.workspace.models import Workspace, Tab
+from src.wirecloud.platform.workspace.schemas import WorkspaceForcedValues, CacheEntry, CacheVariableData, \
+    WorkspaceData, TabData, WorkspaceGlobalData, UserWorkspaceData, GroupWorkspaceData
+from src.wirecloud.translation import gettext as _
 
 
 def _variable_values_cache_key(workspace: Workspace, user: User) -> str:
@@ -61,10 +63,13 @@ def _workspace_cache_key(workspace: Workspace, user: User) -> str:
 
 
 def encrypt_value(value: str) -> str:
-    cipher = AES.new(SECRET_KEY[:32].encode("utf-8"), mode=AES.MODE_ECB)
-    json_value = json.dumps(value, ensure_ascii=False).encode('utf8')
-    padded_value = json_value + (cipher.block_size - len(json_value) % cipher.block_size) * b' '
-    return base64.b64encode(cipher.encrypt(padded_value)).decode('utf-8')
+    key = SECRET_KEY[:32].encode("utf-8")
+    iv = os.urandom(16)
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    json_value = json.dumps(value, ensure_ascii=False).encode('utf-8')
+    padded_value = pad(json_value, AES.block_size)
+    encrypted = cipher.encrypt(padded_value)
+    return base64.b64encode(iv + encrypted).decode('utf-8')
 
 
 def decrypt_value(value: str) -> str:
@@ -173,11 +178,12 @@ async def _populate_variables_values_cache(db: DBSession, workspace: Workspace, 
         preferences = await get_workspace_preference_values(workspace)
         forced_values = process_forced_values(workspace, user.id, context_values, preferences)
 
-    for iwidget in await get_iwidgets_from_workspace(workspace):
+    for iwidget in get_widget_instances_from_workspace(workspace):
         svariwidget = str(iwidget.id)
         values_by_varname["iwidget"][svariwidget] = {}
 
-        # if iwidget.widget is None: continue TODO check this
+        if iwidget.resource is None:
+            continue
 
         resource = await get_catalogue_resource_by_id(db, iwidget.resource)
         iwidget_info = resource.get_processed_info()
@@ -309,6 +315,7 @@ async def create_tab(db: DBSession, user: User, title: str, workspace: Workspace
     )
 
     if allow_renaming:
+        from src.wirecloud.commons.utils.db import save_alternative_tab
         tab = await save_alternative_tab(db, tab)
 
     workspace.tabs.append(tab)
@@ -318,10 +325,10 @@ async def create_tab(db: DBSession, user: User, title: str, workspace: Workspace
     return tab
 
 
-async def get_iwidget_data(db: DBSession, request: Request, iwidget: WidgetInstance, workspace: Workspace,
-                           cache_manager: VariableValueCacheManager = None, user: UserAll = None) -> IWidgetData:
+async def get_widget_instance_data(db: DBSession, request: Request, iwidget: WidgetInstance, workspace: Workspace,
+                           cache_manager: VariableValueCacheManager = None, user: UserAll = None) -> WidgetInstanceData:
 
-    data_ret = IWidgetData(
+    data_ret = WidgetInstanceData(
         id=iwidget.id,
         title=iwidget.name,
         layout=iwidget.layout,
@@ -353,6 +360,9 @@ async def get_iwidget_data(db: DBSession, request: Request, iwidget: WidgetInsta
         )
 
         data_ret.layout_config.append(data_layout)
+
+    if iwidget.resource is None:
+        return data_ret
 
     resource = await get_catalogue_resource_by_id(db, iwidget.resource)
     if resource is None or not await resource.is_available_for(db, user):
@@ -389,7 +399,7 @@ async def get_tab_data(db: DBSession, request: Request, tab: Tab, workspace: Wor
         visible=tab.visible,
         preferences=await get_tab_preference_values(tab),
         widgets=[
-            await get_iwidget_data(db, request, WidgetInstance(**widget.model_dump()), workspace, cache_manager, user)
+            await get_widget_instance_data(db, request, widget, workspace, cache_manager, user)
             for widget in tab.widgets]
     )
 
@@ -405,7 +415,7 @@ async def _get_global_workspace_data(db: DBSession, request: Request, workspaceD
 
     if workspaceDAO.creator == user.id:
         for u in workspaceDAO.users:
-            u_all = await get_user_by_id(db, u.id, user_all=True)
+            u_all = await get_user_with_all_info(db, u.id)
             # TODO: organization
             data_ret.users.append(UserWorkspaceData(
                 fullname=u_all.get_full_name(),
@@ -434,7 +444,7 @@ async def _get_global_workspace_data(db: DBSession, request: Request, workspaceD
     # Tabs processing
     tabs = workspaceDAO.tabs
     if tabs.count == 0:
-        tabs = [await create_tab(db, user, 'Tab', workspaceDAO)]  # TODO: translate this
+        tabs = [await create_tab(db, user, _('Tab'), workspaceDAO)]
 
     data_ret.tabs = [
         await get_tab_data(db, request, tab, workspace=workspaceDAO, cache_manager=cache_manager, user=user) for tab in
@@ -449,7 +459,7 @@ async def _get_global_workspace_data(db: DBSession, request: Request, workspaceD
         try:
             resource = await get_catalogue_resource(db, vendor, name, version)
             operator_info = resource.get_processed_info(process_variables=True)
-            if not resource.is_available_for(db, await get_user_by_id(db, workspaceDAO.creator, user_all=True)):
+            if not resource.is_available_for(db, await get_user_with_all_info(db, workspaceDAO.creator)):
                 raise CatalogueResource.DoesNotExist
         except CatalogueResource.DoesNotExist:
             operator.preferences = {}
@@ -508,10 +518,10 @@ async def get_global_workspace_data(db: DBSession, request: Request, workspace: 
 
 async def get_workspace_entry(db: DBDep, user: UserDep, request: Request, workspace: Optional[Workspace]) -> Response:
     if workspace is None:
-        return build_error_response(request, 404, "Workspace not found")
+        return build_error_response(request, 404, _("Workspace not found"))
 
     if not await workspace.is_accsessible_by(db, user):
-        return build_error_response(request, 403, "You don't have permission to access this workspace")
+        return build_error_response(request, 403, _("You don't have permission to access this workspace"))
 
     last_modified = workspace.last_modified
 
@@ -523,3 +533,12 @@ async def get_workspace_entry(db: DBDep, user: UserDep, request: Request, worksp
     workspace_data = await get_global_workspace_data(db, request, workspace, user)
 
     return workspace_data.get_response()
+
+
+def is_there_a_tab_with_that_name(tab_name:str, tabs: list[Tab]) -> bool:
+    found = False
+    for tab in tabs:
+        if tab.name == tab_name:
+            found = True
+            break
+    return found

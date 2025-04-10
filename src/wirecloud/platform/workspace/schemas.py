@@ -23,18 +23,12 @@ from typing import Optional, Any, Union
 
 from pydantic import BaseModel, model_validator, Field, field_serializer
 
-from src.wirecloud.commons.auth.crud import get_user_by_id, get_user_groups
-from src.wirecloud.commons.auth.schemas import User
-from src.wirecloud.database import DBSession
-from src.wirecloud.platform.iwidget.schemas import IWidgetData
+from src.wirecloud.commons.utils.template.schemas.macdschemas import IntegerStr
+from src.wirecloud.platform.iwidget.schemas import WidgetInstanceData
 from src.wirecloud.platform.preferences.schemas import TabPreference, WorkspacePreference
-from src.wirecloud.platform.workspace.models import DBWorkspace, DBWorkspaceAccessPermissions, \
-    DBWorkspaceExtraPreference, DBWorkspaceForcedValue, DBWiringOperator, IntegerStr, DBWiring, DBTab
+from src.wirecloud.platform.workspace.models import WorkspaceExtraPreference, WorkspaceWiring, WorkspaceForcedValue
+from src.wirecloud.translation import gettext as _
 
-WorkspaceForcedValue = DBWorkspaceForcedValue
-WorkspaceExtraPreference = DBWorkspaceExtraPreference
-Wiring = DBWiring
-Tab = DBTab
 
 
 class TabData(BaseModel):
@@ -42,36 +36,13 @@ class TabData(BaseModel):
     name: str
     title: str
     visible: bool = False
-    widgets: list[IWidgetData] = []
+    widgets: list[WidgetInstanceData] = []
     preferences: dict[str, TabPreference] = {}
     last_modified: Optional[datetime] = datetime.now()
 
     @field_serializer("last_modified")
     def serialize_last_modified(self, dt: datetime, _info) -> int:
         return int(datetime.timestamp(dt) * 1000)
-
-
-class Workspace(DBWorkspace):
-    def is_editable_by(self, user: User) -> bool:
-        return user.is_superuser or self.creator == user.id
-        # TODO check more permissions
-
-    def is_shared(self) -> bool:
-        return self.public or len(self.users) > 1 or len(self.groups) > 1
-
-    async def is_accsessible_by(self, db: DBSession, user: Optional[User]) -> bool:
-        from src.wirecloud.platform.workspace.crud import get_workspace_groups
-        if user is None:
-            return self.public and not self.requireauth
-        return (user.is_superuser
-                or self.public and not self.requireauth
-                or self.public and user is None
-                or not user is None and (
-                        self.creator == user.id
-                        or get_user_by_id(db, user.id) is not None
-                        or len(set(await get_workspace_groups(db, self)) & set(await get_user_groups(db, user.id))) > 0
-                )
-                )  # TODO check more permissions
 
 
 class UserWorkspaceData(BaseModel):
@@ -110,7 +81,7 @@ class WorkspaceGlobalData(WorkspaceData):
     groups: list[GroupWorkspaceData] = []
     empty_params: list[str] = []
     extra_prefs: list[WorkspaceExtraPreference] = []
-    wiring: Wiring = Wiring()
+    wiring: WorkspaceWiring = WorkspaceWiring()
     tabs: list[TabData] = []
 
 
@@ -126,9 +97,9 @@ class WorkspaceCreate(BaseModel):
     @model_validator(mode="after")
     def check_missing_parameters(self):
         if self.mashup == '' and self.workspace == '' and (self.name == '' and self.title == ''):
-            raise ValueError("Missing name or title parameter")
+            raise ValueError(_("Missing name or title parameter"))
         elif self.mashup != '' and self.workspace != '':
-            raise ValueError("Workspace and mashup parameters cannot be used at the same time")
+            raise ValueError(_("Workspace and mashup parameters cannot be used at the same time"))
 
         return self
 
@@ -137,11 +108,7 @@ class WorkspaceForcedValues(BaseModel):
     extra_prefs: list[WorkspaceExtraPreference] = []
     ioperator: dict[IntegerStr, dict[str, WorkspaceForcedValue]] = {}
     iwidget: dict[IntegerStr, dict[str, WorkspaceForcedValue]] = {}
-    empty_params: Any = []  # TODO: create a schema for this
-
-
-WorkspaceAccessPermissions = DBWorkspaceAccessPermissions
-WiringOperator = DBWiringOperator
+    empty_params: list[str] = []
 
 
 class IdMappingOperator(BaseModel):

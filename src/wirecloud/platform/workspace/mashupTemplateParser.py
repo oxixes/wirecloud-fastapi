@@ -23,7 +23,7 @@ from bson import ObjectId
 from fastapi import Request
 
 from src.wirecloud.catalogue.crud import get_catalogue_resource, is_resource_available_for_user
-from src.wirecloud.commons.auth.crud import get_user_by_id
+from src.wirecloud.commons.auth.crud import get_user_by_id, get_user_with_all_info
 from src.wirecloud.commons.auth.schemas import UserAll, User
 from src.wirecloud.commons.utils.db import save_alternative
 from src.wirecloud.commons.utils.template import TemplateParser
@@ -32,20 +32,23 @@ from src.wirecloud.commons.utils.template.schemas.macdschemas import MACType
 from src.wirecloud.commons.utils.urlify import URLify
 from src.wirecloud.database import DBSession
 from src.wirecloud.platform.context.utils import get_context_values
-from src.wirecloud.platform.iwidget.crud import insert_iwidget_into_tab
-from src.wirecloud.platform.iwidget.schemas import IWidgetData, LayoutConfig
-from src.wirecloud.platform.iwidget.utils import save_iwidget, set_initial_values
+from src.wirecloud.platform.iwidget.crud import insert_widget_instance_into_tab
+from src.wirecloud.platform.iwidget.schemas import WidgetInstanceData, LayoutConfig
+from src.wirecloud.platform.iwidget.utils import save_widget_instance, set_initial_values
 from src.wirecloud.platform.preferences.crud import update_workspace_preferences, update_tab_preferences
 from src.wirecloud.platform.preferences.schemas import WorkspacePreference, TabPreference
 from src.wirecloud.platform.widget.utils import get_or_add_widget_from_catalogue
-from src.wirecloud.platform.wiring.schemas import WiringConnection, WiringConnectionEndpoint, WiringType, \
+from src.wirecloud.platform.wiring.schemas import WiringConnectionEndpoint, WiringType, WiringConnection, \
     WiringComponents, WiringVisualDescription, WiringVisualDescriptionConnection, WiringBehaviour
 from src.wirecloud.platform.wiring.utils import get_endpoint_name, is_empty_wiring
 from src.wirecloud.platform.workspace.crud import change_workspace, \
     is_a_workspace_with_that_name, insert_workspace
-from src.wirecloud.platform.workspace.schemas import Workspace, WorkspaceAccessPermissions, WorkspaceForcedValues, \
-    WorkspaceExtraPreference, WorkspaceForcedValue, WiringOperator, IdMapping, IdMappingWidget, IdMappingOperator
+from src.wirecloud.platform.workspace.models import Workspace, WorkspaceExtraPreference, WorkspaceForcedValue, \
+    WorkspaceWiringOperator, WorkspaceAccessPermissions
+from src.wirecloud.platform.workspace.schemas import IdMapping, WorkspaceForcedValues, IdMappingOperator, \
+    IdMappingWidget
 from src.wirecloud.platform.workspace.utils import create_tab
+from src.wirecloud.translation import gettext as _
 
 
 class MissingDependencies(Exception):
@@ -54,7 +57,7 @@ class MissingDependencies(Exception):
         self.missing_dependencies = missing_dependencies
 
     def __str__(self):
-        return 'Missing dependencies'
+        return _('Missing dependencies')
 
 
 async def check_mashup_dependencies(db: DBSession, template: TemplateParser, user: UserAll) -> None:
@@ -153,10 +156,10 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
     user = workspace.creator
 
     if template.get_resource_type() != MACType.mashup:
-        raise TypeError(f'Unssoported resource type {template.get_resource_type()}')
+        raise TypeError(_(f'Unssoported resource type {template.get_resource_type()}'))
 
     context_values = await get_context_values(db, workspace, request,
-                                              await get_user_by_id(db, workspace.creator, user_all=True))
+                                              await get_user_with_all_info(db, workspace.creator))
     processor = TemplateValueProcessor(
         user=user,
         context=context_values
@@ -210,20 +213,19 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
             await update_tab_preferences(db, user_func, workspace, tab, new_values)
 
         for resource in tab_entry.resources:
-            user_all = await get_user_by_id(db, user, True)
+            user_all = await get_user_with_all_info(db, user)
             result = await get_or_add_widget_from_catalogue(db, resource.vendor, resource.name, resource.version,
                                                             user_all)
             widget = result[0]
             widget_resource = result[1]
 
-            iwidget_data = IWidgetData(
+            iwidget_data = WidgetInstanceData(
                 widget=widget_resource.local_uri_part,
                 title=resource.title,
                 icon_left=0,
                 icon_top=0,
                 layout=resource.layout,
-                layout_config=[],
-                tab=int(tab.id.split('-')[1])
+                layout_config=[]
             )
 
             for configuration in resource.screenSizes:
@@ -247,7 +249,7 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
 
                 iwidget_data.layout_config.append(iwidget_layout_config)
 
-            iwidget = await save_iwidget(db, workspace, iwidget_data, await get_user_by_id(db, user, user_all=True),
+            iwidget = await save_widget_instance(db, workspace, iwidget_data, await get_user_with_all_info(db, user),
                                          tab, commit=False)
             if resource.readonly:
                 iwidget.readonly = True
@@ -282,7 +284,7 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
 
             await set_initial_values(db, iwidget, initial_variable_values, iwidget_info,
                                      await get_user_by_id(db, workspace.creator))
-            await insert_iwidget_into_tab(db, tab, iwidget)
+            await insert_widget_instance_into_tab(db, tab, iwidget)
 
             if len(iwidget_forced_values) > 0:
                 new_forced_values.iwidget[str(iwidget.id)] = iwidget_forced_values
@@ -306,7 +308,7 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
             id=new_id
         )
 
-        workspace.wiring_status.operators[new_id] = WiringOperator(
+        workspace.wiring_status.operators[new_id] = WorkspaceWiringOperator(
             id=new_id,
             name=operator.name,
             preferences=operator.preferences,
@@ -357,13 +359,11 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
         if len(workspace.wiring_status.visualdescription.behaviours) == 0 and not is_empty_wiring(
                 workspace.wiring_status.visualdescription):
             # TODO flag to check if the user is really want to merge both workspaces
-            _create_new_behaviour(workspace.wiring_status.visualdescription, "Original wiring",
-                                  "This is the wiring description of the original workspace")
-            # TODO translate both strings
+            _create_new_behaviour(workspace.wiring_status.visualdescription, _("Original wiring"),
+                                  _("This is the wiring description of the original workspace"))
         if len(mashup_description.wiring.visualdescription.behaviours) == 0:
-            _create_new_behaviour(mashup_description.wiring.visualdescription, "Merged wiring",
-                                  "This is the wiring description of the merged mashup")
-            # TODO translate both strings
+            _create_new_behaviour(mashup_description.wiring.visualdescription, _("Merged wiring"),
+                                  _("This is the wiring description of the merged mashup"))
 
         workspace.wiring_status.visualdescription.behaviours += mashup_description.wiring.visualdescription.behaviours
 

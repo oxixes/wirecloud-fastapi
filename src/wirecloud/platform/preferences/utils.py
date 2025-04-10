@@ -24,7 +24,7 @@ from typing import Any
 from src.wirecloud.platform.plugins import get_workspace_preferences, get_tab_preferences
 from src.wirecloud.platform.preferences.schemas import WorkspacePreference
 from src.wirecloud.platform.workspace.models import DBWorkspacePreference
-from src.wirecloud.platform.workspace.schemas import Workspace, Tab
+from src.wirecloud.platform.workspace.models import Workspace, Tab
 from src.settings import cache
 
 def make_workspace_preferences_cache_key(workspace: Workspace):

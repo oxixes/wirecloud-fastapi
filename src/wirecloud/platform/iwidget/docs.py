@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-iwidget_data = [
+widget_instance_data = [
     {
         "id": "67af66aa3ac952bc88cc1a63-0-0",
         "title": "string",
@@ -167,31 +167,31 @@ iwidget_data = [
         "properties": {}
     }
 ]
-# GET /workspace/{workspace_id}/tab/{tab_position}/iwidgets/
-get_iwidget_collection_summary = "Get all iwidgets in a tab"
-get_iwidget_collection_description = "Gets all iwidgets in a tab"
-get_iwidget_collection_response_description = "List of iwidgets"
-get_iwidget_collection_auth_required_response_description = "Authentication required"
-get_iwidget_collection_permission_denied_response_description = "Permission denied"
-get_iwidget_collection_not_found_response_description = "Workspace or Tab not found"
-get_iwidget_collection_workspace_id_description = "Workspace identifier"
-get_iwidget_collection_tab_position_description = "Tab position"
-get_iwidget_collection_response_example = iwidget_data
+# GET /workspace/{workspace_id}/tab/{tab_position}/widget_instances/
+get_widget_instance_collection_summary = "Get all widget instances in a tab"
+get_widget_instance_collection_description = "Gets all widget instances in a tab"
+get_widget_instance_collection_response_description = "List of widget instances"
+get_widget_instance_collection_auth_required_response_description = "Authentication required"
+get_widget_instance_collection_permission_denied_response_description = "Permission denied"
+get_widget_instance_collection_not_found_response_description = "Workspace or Tab not found"
+get_widget_instance_collection_workspace_id_description = "Workspace identifier"
+get_widget_instance_collection_tab_position_description = "Tab position"
+get_widget_instance_collection_response_example = widget_instance_data
 
-# POST /workspace/{workspace_id}/tab/{tab_position}/iwidgets/
-create_iwidget_collection_summary = "Create a new iwidget"
-create_iwidget_collection_description = "Creates a new iwidget"
-create_iwidget_collection_response_description = "IWidget created"
-create_iwidget_collection_auth_required_response_description = "Authentication required"
-create_iwidget_collection_permission_denied_response_description = "Permission denied"
-create_iwidget_collection_not_found_response_description = "Workspace or Tab not found"
-create_iwidget_collection_validation_error_response_description = "Validation error"
-create_iwidget_collection_not_acceptable_response_description = "Invalid request content type"
-create_iwidget_collection_workspace_id_description = "Workspace identifier"
-create_iwidget_collection_tab_position_description = "Tab position"
-create_iwidget_collection_iwidget_description = "IWidget data"
-create_iwidget_collection_iwidget_example = {
-    "title": "IWidget",
+# POST /workspace/{workspace_id}/tab/{tab_position}/widget_instances/
+create_widget_instance_collection_summary = "Create a new widget instance"
+create_widget_instance_collection_description = "Creates a new widget instance"
+create_widget_instance_collection_response_description = "Widget instance created"
+create_widget_instance_collection_auth_required_response_description = "Authentication required"
+create_widget_instance_collection_permission_denied_response_description = "Permission denied"
+create_widget_instance_collection_not_found_response_description = "Workspace or Tab not found"
+create_widget_instance_collection_validation_error_response_description = "Validation error"
+create_widget_instance_collection_not_acceptable_response_description = "Invalid request content type"
+create_widget_instance_collection_workspace_id_description = "Workspace identifier"
+create_widget_instance_collection_tab_position_description = "Tab position"
+create_widget_instance_collection_widget_instance_description = "Widget instance data"
+create_widget_instance_collection_widget_instance_example = {
+    "title": "widget instance",
     "layout": 0,
     "widget": "vendor/name/version",
     "layout_config": [
@@ -221,21 +221,21 @@ create_iwidget_collection_iwidget_example = {
     "permissions": {},
     "variable_values": {}
 }
-create_iwidget_collection_response_example = iwidget_data
+create_widget_instance_collection_response_example = widget_instance_data
 
-# POST /workspace/{workspace_id}/tab/{tab_position}/iwidgets/
-update_iwidget_collection_summary = "Update a iwidget or iwidgets"
-update_iwidget_collection_description = "Updates a iwidget or iwidgets"
-update_iwidget_collection_response_description = "IWidget(s) updated"
-update_iwidget_collection_auth_required_response_description = "Authentication required"
-update_iwidget_collection_permission_denied_response_description = "Permission denied"
-update_iwidget_collection_not_found_response_description = "Workspace or Tab not found"
-update_iwidget_collection_validation_error_response_description = "Validation error"
-update_iwidget_collection_bad_request_response_description = "Missing or invalid data was provided"
-update_iwidget_collection_workspace_id_description = "Workspace identifier"
-update_iwidget_collection_tab_position_description = "Tab position"
-update_iwidget_collection_iwidget_description = "IWidget data"
-update_iwidget_collection_iwidget_example = [{
+# POST /workspace/{workspace_id}/tab/{tab_position}/widget_instances/
+update_widget_instance_collection_summary = "Update a widget instance or widget instances"
+update_widget_instance_collection_description = "Updates a widget instance or widget instances"
+update_widget_instance_collection_response_description = "Widget instance(s) updated"
+update_widget_instance_collection_auth_required_response_description = "Authentication required"
+update_widget_instance_collection_permission_denied_response_description = "Permission denied"
+update_widget_instance_collection_not_found_response_description = "Workspace or Tab not found"
+update_widget_instance_collection_validation_error_response_description = "Validation error"
+update_widget_instance_collection_bad_request_response_description = "Missing or invalid data was provided"
+update_widget_instance_collection_workspace_id_description = "Workspace identifier"
+update_widget_instance_collection_tab_position_description = "Tab position"
+update_widget_instance_collection_widget_instance_description = "Widget instance data"
+update_widget_instance_collection_widget_instance_example = [{
     "id": 0,
     "tab": 0,
     "layout": 0,
@@ -260,36 +260,36 @@ update_iwidget_collection_iwidget_example = [{
             "lessOrEqual": -1
         }
     ],
-    "title": "new-name-for-iwidget",
+    "title": "new-name-for-widget instance",
     "widget": "vendor/name/version",
     "move": False
 }]
 
-# GET /workspace/{workspace_id}/tab/{tab_position}/iwidgets/{iwidget_position}
-get_iwidget_entry_summary = "Get a iwidget"
-get_iwidget_entry_description = "Gets a iwidget"
-get_iwidget_entry_response_description = "IWidget information"
-get_iwidget_entry_auth_required_response_description = "Authentication required"
-get_iwidget_entry_not_found_response_description = "Workspace, Tab or IWidget not found"
-get_iwidget_entry_workspace_id_description = "Workspace identifier"
-get_iwidget_entry_tab_position_description = "Tab position"
-get_iwidget_entry_iwidget_position_description = "IWidget position"
-get_iwidget_entry_response_example = iwidget_data
+# GET /workspace/{workspace_id}/tab/{tab_position}/widget_instances/{iwidget_position}
+get_widget_instance_entry_summary = "Get a widget instance"
+get_widget_instance_entry_description = "Gets a widget instance"
+get_widget_instance_entry_response_description = "widget instanceinformation"
+get_widget_instance_entry_auth_required_response_description = "Authentication required"
+get_widget_instance_entry_not_found_response_description = "Workspace, Tab or widget instancenot found"
+get_widget_instance_entry_workspace_id_description = "Workspace identifier"
+get_widget_instance_entry_tab_position_description = "Tab position"
+get_widget_instance_entry_widget_instance_position_description = "widget instanceposition"
+get_widget_instance_entry_response_example = widget_instance_data
 
-# POST /workspace/{workspace_id}/tab/{tab_position}/iwidgets/{iwidget_position}
-update_iwidget_entry_summary = "Update a iwidget"
-update_iwidget_entry_description = "Updates a iwidget"
-update_iwidget_entry_response_description = "IWidget updated"
-update_iwidget_entry_auth_required_response_description = "Authentication required"
-update_iwidget_entry_permission_denied_response_description = "Permission denied"
-update_iwidget_entry_not_found_response_description = "Workspace, Tab or IWidget not found"
-update_iwidget_entry_validation_error_response_description = "Validation error"
-update_iwidget_entry_bad_request_response_description = "Missing or invalid data was provided"
-update_iwidget_entry_workspace_id_description = "Workspace identifier"
-update_iwidget_entry_tab_position_description = "Tab position"
-update_iwidget_entry_iwidget_position_description = "IWidget position"
-update_iwidget_entry_iwidget_description = "IWidget data"
-update_iwidget_entry_iwidget_example = {
+# POST /workspace/{workspace_id}/tab/{tab_position}/widget_instances/{iwidget_position}
+update_widget_instance_entry_summary = "Update a widget instance"
+update_widget_instance_entry_description = "Updates a widget instance"
+update_widget_instance_entry_response_description = "widget instanceupdated"
+update_widget_instance_entry_auth_required_response_description = "Authentication required"
+update_widget_instance_entry_permission_denied_response_description = "Permission denied"
+update_widget_instance_entry_not_found_response_description = "Workspace, Tab or widget instancenot found"
+update_widget_instance_entry_validation_error_response_description = "Validation error"
+update_widget_instance_entry_bad_request_response_description = "Missing or invalid data was provided"
+update_widget_instance_entry_workspace_id_description = "Workspace identifier"
+update_widget_instance_entry_tab_position_description = "Tab position"
+update_widget_instance_entry_widget_instance_position_description = "widget instanceposition"
+update_widget_instance_entry_widget_instance_description = "widget instancedata"
+update_widget_instance_entry_widget_instance_example = {
     "tab": 0,
     "layout": 0,
     "layout_config": [
@@ -313,82 +313,82 @@ update_iwidget_entry_iwidget_example = {
             "lessOrEqual": -1
         }
     ],
-    "title": "new-name-for-iwidget",
+    "title": "new-name-for-widget-instance",
     "widget": "vendor/name/version",
     "move": False
 }
 
-# DELETE /workspace/{workspace_id}/tab/{tab_position}/iwidgets/{iwidget_position}
-delete_iwidget_entry_summary = "Delete a iwidget"
-delete_iwidget_entry_description = "Deletes a iwidget"
-delete_iwidget_entry_response_description = "IWidget deleted"
-delete_iwidget_entry_auth_required_response_description = "Authentication required"
-delete_iwidget_entry_permission_denied_response_description = "Permission denied"
-delete_iwidget_entry_not_found_response_description = "Workspace, Tab or IWidget not found"
-delete_iwidget_entry_workspace_id_description = "Workspace identifier"
-delete_iwidget_entry_tab_position_description = "Tab position"
-delete_iwidget_entry_iwidget_position_description = "IWidget position"
+# DELETE /workspace/{workspace_id}/tab/{tab_position}/widget_instances/{iwidget_position}
+delete_widget_instance_entry_summary = "Delete a widget instance"
+delete_widget_instance_entry_description = "Deletes a widget instance"
+delete_widget_instance_entry_response_description = "Widget instance deleted"
+delete_widget_instance_entry_auth_required_response_description = "Authentication required"
+delete_widget_instance_entry_permission_denied_response_description = "Permission denied"
+delete_widget_instance_entry_not_found_response_description = "Workspace, Tab or widget instance not found"
+delete_widget_instance_entry_workspace_id_description = "Workspace identifier"
+delete_widget_instance_entry_tab_position_description = "Tab position"
+delete_widget_instance_entry_widget_instance_position_description = "Widget instance position"
 
-# POST /workspace/{workspace_id}/tab/{tab_position}/iwidgets/{iwidget_position}/preferences
-update_iwidget_preferences_summary = "Update a iwidget preference"
-update_iwidget_preferences_description = "Updates iwidget preferences"
-update_iwidget_preferences_response_description = "IWidget preferences updated"
-update_iwidget_preferences_auth_required_response_description = "Authentication required"
-update_iwidget_preferences_permission_denied_response_description = "Permission denied"
-update_iwidget_preferences_not_found_response_description = "Workspace, Tab, IWidget or Resource not found"
-update_iwidget_preferences_validation_error_response_description = "Validation error"
-update_iwidget_preferences_bad_request_response_description = "Missing or invalid data was provided"
-update_iwidget_preferences_workspace_id_description = "Workspace identifier"
-update_iwidget_preferences_tab_position_description = "Tab position"
-update_iwidget_preferences_iwidget_position_description = "IWidget position"
-update_iwidget_preferences_new_values_description = "New values for iwidget preferences"
-update_iwidget_preferences_new_values_example = {
+# POST /workspace/{workspace_id}/tab/{tab_position}/widget_instances/{iwidget_position}/preferences
+update_widget_instance_preferences_summary = "Update a widget instance preference"
+update_widget_instance_preferences_description = "Updates widget instance preferences"
+update_widget_instance_preferences_response_description = "Widget instance preferences updated"
+update_widget_instance_preferences_auth_required_response_description = "Authentication required"
+update_widget_instance_preferences_permission_denied_response_description = "Permission denied"
+update_widget_instance_preferences_not_found_response_description = "Workspace, Tab, widget instance or Resource not found"
+update_widget_instance_preferences_validation_error_response_description = "Validation error"
+update_widget_instance_preferences_bad_request_response_description = "Missing or invalid data was provided"
+update_widget_instance_preferences_workspace_id_description = "Workspace identifier"
+update_widget_instance_preferences_tab_position_description = "Tab position"
+update_widget_instance_preferences_widget_instance_position_description = "Widget instance position"
+update_widget_instance_preferences_new_values_description = "New values for widget instance preferences"
+update_widget_instance_preferences_new_values_example = {
     "pref1": 2,
     "pref2": "string",
 }
 
-# GET /workspace/{workspace_id}/tab/{tab_position}/iwidgets/{iwidget_position}/preferences
-get_iwidget_preferences_summary = "Get iwidget preferences"
-get_iwidget_preferences_description = "Gets iwidget preferences"
-get_iwidget_preferences_response_description = "IWidget preferences"
-get_iwidget_preferences_auth_required_response_description = "Authentication required"
-get_iwidget_preferences_permission_denied_response_description = "Permission denied"
-get_iwidget_preferences_not_found_response_description = "Workspace, Tab, IWidget or Resource not found"
-get_iwidget_preferences_workspace_id_description = "Workspace identifier"
-get_iwidget_preferences_tab_position_description = "Tab position"
-get_iwidget_preferences_iwidget_position_description = "IWidget position"
-get_iwidget_preferences_response_example = {
+# GET /workspace/{workspace_id}/tab/{tab_position}/widget_instances/{iwidget_position}/preferences
+get_widget_instance_preferences_summary = "Get widget instance preferences"
+get_widget_instance_preferences_description = "Gets widget instance preferences"
+get_widget_instance_preferences_response_description = "Widget instance preferences"
+get_widget_instance_preferences_auth_required_response_description = "Authentication required"
+get_widget_instance_preferences_permission_denied_response_description = "Permission denied"
+get_widget_instance_preferences_not_found_response_description = "Workspace, Tab, widget instance or Resource not found"
+get_widget_instance_preferences_workspace_id_description = "Workspace identifier"
+get_widget_instance_preferences_tab_position_description = "Tab position"
+get_widget_instance_preferences_widget_instance_position_description = "Widget instance position"
+get_widget_instance_preferences_response_example = {
     "pref1": 2,
     "pref2": "string",
 }
 
-# POST /workspace/{workspace_id}/tab/{tab_position}/iwidgets/{iwidget_position}/properties
-update_iwidget_properties_summary = "Get iwidget properties"
-update_iwidget_properties_description = "Gets iwidget properties"
-update_iwidget_properties_response_description = "IWidget properties"
-update_iwidget_properties_auth_required_response_description = "Authentication required"
-update_iwidget_properties_permission_denied_response_description = "Permission denied"
-update_iwidget_properties_not_found_response_description = "Workspace, Tab, IWidget or Resource not found"
-update_iwidget_properties_validation_error_response_description = "Validation error"
-update_iwidget_properties_bad_request_response_description = "Missing or invalid data was provided"
-update_iwidget_properties_workspace_id_description = "Workspace identifier"
-update_iwidget_properties_tab_position_description = "Tab position"
-update_iwidget_properties_iwidget_position_description = "IWidget position"
-update_iwidget_properties_new_values_description = "New values for iwidget properties"
-update_iwidget_properties_new_values_example = {
+# POST /workspace/{workspace_id}/tab/{tab_position}/widget_instances/{iwidget_position}/properties
+update_widget_instance_properties_summary = "Get widget instance properties"
+update_widget_instance_properties_description = "Gets widget instance properties"
+update_widget_instance_properties_response_description = "Widget instance properties"
+update_widget_instance_properties_auth_required_response_description = "Authentication required"
+update_widget_instance_properties_permission_denied_response_description = "Permission denied"
+update_widget_instance_properties_not_found_response_description = "Workspace, Tab, widget instance or Resource not found"
+update_widget_instance_properties_validation_error_response_description = "Validation error"
+update_widget_instance_properties_bad_request_response_description = "Missing or invalid data was provided"
+update_widget_instance_properties_workspace_id_description = "Workspace identifier"
+update_widget_instance_properties_tab_position_description = "Tab position"
+update_widget_instance_properties_widget_instance_position_description = "Widget instance position"
+update_widget_instance_properties_new_values_description = "New values for widget instance properties"
+update_widget_instance_properties_new_values_example = {
     "name-pref": "new-value-for-pref"
 }
 
-# GET /workspace/{workspace_id}/tab/{tab_position}/iwidgets/{iwidget_position}/properties
-get_iwidget_properties_summary = "Get iwidget properties"
-get_iwidget_properties_description = "Gets iwidget properties"
-get_iwidget_properties_response_description = "IWidget properties"
-get_iwidget_properties_auth_required_response_description = "Authentication required"
-get_iwidget_properties_permission_denied_response_description = "Permission denied"
-get_iwidget_properties_not_found_response_description = "Workspace, Tab, IWidget or Resource not found"
-get_iwidget_properties_workspace_id_description = "Workspace identifier"
-get_iwidget_properties_tab_position_description = "Tab position"
-get_iwidget_properties_iwidget_position_description = "IWidget position"
-get_iwidget_properties_response_example = {
+# GET /workspace/{workspace_id}/tab/{tab_position}/widget_instances/{iwidget_position}/properties
+get_widget_instance_properties_summary = "Get widget instance properties"
+get_widget_instance_properties_description = "Gets widget instance properties"
+get_widget_instance_properties_response_description = "Widget instance properties"
+get_widget_instance_properties_auth_required_response_description = "Authentication required"
+get_widget_instance_properties_permission_denied_response_description = "Permission denied"
+get_widget_instance_properties_not_found_response_description = "Workspace, Tab, widget instance or Resource not found"
+get_widget_instance_properties_workspace_id_description = "Workspace identifier"
+get_widget_instance_properties_tab_position_description = "Tab position"
+get_widget_instance_properties_widget_instance_position_description = "Widget instance position"
+get_widget_instance_properties_response_example = {
     "name-prop": "new-value-for-prop"
 }

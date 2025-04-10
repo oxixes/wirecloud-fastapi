@@ -17,7 +17,6 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import copy
 import os.path
 import zipfile
 from typing import Optional
@@ -43,11 +42,12 @@ from src.wirecloud.platform.workspace.mashupTemplateGenerator import build_json_
 from src.wirecloud.platform.workspace.mashupTemplateParser import check_mashup_dependencies, MissingDependencies, \
     fill_workspace_using_template
 from src.wirecloud.platform.workspace.schemas import WorkspaceData, WorkspaceCreate, WorkspaceGlobalData, \
-    WorkspaceEntry, TabCreate, TabData, TabCreateEntry, MashupMergeService, TabOrderService
+    WorkspaceEntry, TabCreate, TabData, TabCreateEntry, MashupMergeService
 from src.wirecloud.database import DBDep, Id
 from src.wirecloud.platform.workspace.utils import get_workspace_data, get_global_workspace_data, create_tab, \
     get_tab_data, get_workspace_entry
 from src.wirecloud.platform.workspace import docs
+from src.wirecloud.translation import gettext as _
 
 workspace_router = APIRouter()
 
@@ -125,31 +125,31 @@ async def create_workspace_collection(db: DBDep, user: UserDep, request: Request
         workspace = await create_empty_workspace(db, workspace_title, user, name=workspace_name,
                                                  allow_renaming=allow_renaming)
         if workspace is None:
-            return build_error_response(request, 409, "A workspace with the given name already exists")
+            return build_error_response(request, 409, _("A workspace with the given name already exists"))
     else:
         if mashup_id != '':
             mashup = mashup_id
         else:
             mashup = await get_workspace_by_id(db, Id(workspace_id))
             if mashup is None:
-                return build_error_response(request, 404, "Workspace not found")
+                return build_error_response(request, 404, _("Workspace not found"))
             if not await mashup.is_accsessible_by(db, user):
-                return build_error_response(request, 403, "You are not allowed to read from workspace")
+                return build_error_response(request, 403, _("You are not allowed to read from workspace"))
 
         try:
             workspace = await create_workspace(db, request, user, mashup, allow_renaming=allow_renaming,
                                                new_name=workspace_name,
                                                new_title=workspace_title, dry_run=dry_run)
         except ValueError as e:
-            return build_error_response(request, 422, str(e))
+            return build_error_response(request, 422, _(str(e)))
         except MissingDependencies as e:
             details = {
                 'missingDependencies': e.missing_dependencies,
             }
-            return build_error_response(request, 422, str(e), details=details)
+            return build_error_response(request, 422, _(str(e)), details=details)
         if workspace is None:
             return build_error_response(request, 409,
-                                        "A workspace with the given name already exists")
+                                        _("A workspace with the given name already exists"))
 
         if dry_run:
             return Response(status_code=204)
@@ -248,15 +248,15 @@ async def create_workspace_entry(db: DBDep, user: UserDep, request: Request, wor
     workspace = await get_workspace_by_id(db, workspace_id)
     change = False
     if workspace is None:
-        return build_error_response(request, 404, "Workspace not found")
+        return build_error_response(request, 404, _("Workspace not found"))
 
     if not workspace.is_editable_by(user):
-        return build_error_response(request, 403, "You are not allowed to update this workspace")
+        return build_error_response(request, 403, _("You are not allowed to update this workspace"))
 
     if workspace_entry.name != '':
         workspace.name = workspace_entry.name
         if await is_a_workspace_with_that_name(db, workspace.name):
-            return build_error_response(request, 409, "A workspace with the given name already exists")
+            return build_error_response(request, 409, _("A workspace with the given name already exists"))
         change = True
 
     if workspace_entry.title != '':
@@ -303,10 +303,10 @@ async def delete_workspace_entry(db: DBDep, user: UserDep, request: Request, wor
     description=docs.delete_workspace_entry_workspace_id_description)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
-        return build_error_response(request, 404, "Workspace not found")
+        return build_error_response(request, 404, _("Workspace not found"))
 
     if not workspace.is_editable_by(user):
-        return build_error_response(request, 403, "You are not allowed to delete this workspace")
+        return build_error_response(request, 403, _("You are not allowed to delete this workspace"))
 
     await delete_workspace(db, workspace)
     await db.commit_transaction()
@@ -354,23 +354,23 @@ async def create_tab_collection(db: DBDep, user: UserDep, request: Request, work
                                     examples=docs.create_tab_collection_tab_create_example)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
-        return build_error_response(request, 404, "Workspace not found")
+        return build_error_response(request, 404, _("Workspace not found"))
 
     tab_name = tab_create.name
     tab_title = tab_create.title
 
     if tab_name == '' and tab_title == '':
-        return build_error_response(request, 422, "Malformed tab JSON: expecting tab name or title")
+        return build_error_response(request, 422, _("Malformed tab JSON: expecting tab name or title"))
 
     if not workspace.is_editable_by(user):
-        return build_error_response(request, 403, "You are not allowed to create new tabs for this workspace")
+        return build_error_response(request, 403, _("You are not allowed to create new tabs for this workspace"))
 
     if tab_title == '':
         tab_title = tab_name
 
     for aux_tab in workspace.tabs:
         if aux_tab.name == tab_name:
-            return build_error_response(request, 409, "A tab with the given name already exists")
+            return build_error_response(request, 409, _("A tab with the given name already exists"))
 
     tab = await create_tab(db, user, tab_title, workspace, name=tab_name)
     await db.commit_transaction()
@@ -400,15 +400,15 @@ async def get_tab_entry(db: DBDep, user: UserDep, request: Request,
                         tab_position: int = Path(description=docs.get_tab_entry_tab_position_description)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
-        return build_error_response(request, 404, "Workspace not found")
+        return build_error_response(request, 404, _("Workspace not found"))
 
     if not await workspace.is_accsessible_by(db, user):
-        return build_error_response(request, 403, "You don't have permission to access this workspace")
+        return build_error_response(request, 403, _("You don't have permission to access this workspace"))
 
     try:
         tab = workspace.tabs[tab_position]
     except IndexError:
-        return build_error_response(request, 404, "Tab not found")
+        return build_error_response(request, 404, _("Tab not found"))
 
     return await get_tab_data(db, request, tab, user=user)
 
@@ -451,14 +451,14 @@ async def create_tab_entry(db: DBDep, user: UserDep, request: Request,
                                example=docs.update_tab_entry_tab_create_entry_example)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
-        return build_error_response(request, 404, "Workspace not found")
+        return build_error_response(request, 404, _("Workspace not found"))
     if not workspace.is_editable_by(user):
-        return build_error_response(request, 403, "You are not allowed to update this workspace")
+        return build_error_response(request, 403, _("You are not allowed to update this workspace"))
 
     try:
         tab = workspace.tabs[tab_position]
     except IndexError:
-        return build_error_response(request, 404, "Tab not found")
+        return build_error_response(request, 404, _("Tab not found"))
 
     if tab_entry.visible is not None:
         visible = tab_entry.visible
@@ -469,7 +469,7 @@ async def create_tab_entry(db: DBDep, user: UserDep, request: Request,
 
     for aux_tab in workspace.tabs:
         if aux_tab.name == tab_entry.name:
-            return build_error_response(request, 409, "A tab with the given name already exists")
+            return build_error_response(request, 409, _("A tab with the given name already exists"))
 
     if tab_entry.name != '':
         tab.name = tab_entry.name
@@ -509,23 +509,23 @@ async def delete_tab_entry(db: DBDep, user: UserDep, request: Request,
                            tab_position: int = Path(description=docs.delete_tab_entry_tab_position_description)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
-        return build_error_response(request, 404, "Workspace not found")
+        return build_error_response(request, 404, _("Workspace not found"))
 
     try:
         tab = workspace.tabs[tab_position]
     except IndexError:
-        return build_error_response(request, 404, "Tab not found")
+        return build_error_response(request, 404, _("Tab not found"))
 
     if not workspace.is_editable_by(user):
-        return build_error_response(request, 403, "You are not allowed to remove this tab")
+        return build_error_response(request, 403, _("You are not allowed to remove this tab"))
 
     if len(workspace.tabs) == 1:
-        return build_error_response(request, 403, "Tab cannot be deleted as workspaces need at least one tab")
+        return build_error_response(request, 403, _("Tab cannot be deleted as workspaces need at least one tab"))
 
     for widget in tab.widgets:
         if widget.read_only:
             return build_error_response(request, 403,
-                                        "Tab cannot be deleted as it contains widgets that cannot be deleted")
+                                        _("Tab cannot be deleted as it contains widgets that cannot be deleted"))
 
     for t in range(tab_position + 1, len(workspace.tabs)):
         workspace.tabs[t].id = f'{workspace_id}-{t - 1}'
@@ -575,28 +575,28 @@ async def process_mashup(db: DBDep, user: UserDep, request: Request,
                              examples=docs.process_mashup_merge_service_mashup_merge_service_example)):
     to_ws = await get_workspace_by_id(db, to_ws_id)
     if to_ws is None:
-        return build_error_response(request, 404, "Workspace not found")
+        return build_error_response(request, 404, _("Workspace not found"))
 
     if not to_ws.is_editable_by(user):
-        return build_error_response(request, 403, "You are not allowed to update this workspace")
+        return build_error_response(request, 403, _("You are not allowed to update this workspace"))
 
     mashup_id = mashup_data.mashup
     workspace_id = mashup_data.workspace
 
     if mashup_id == '' and workspace_id == '':
-        return build_error_response(request, 422, "Missing workspace or mashup parameter")
+        return build_error_response(request, 422, _("Missing workspace or mashup parameter"))
     elif mashup_id != '' and workspace_id != '':
-        return build_error_response(request, 422, "Workspace and mashup parameters cannot be used at the same time")
+        return build_error_response(request, 422, _("Workspace and mashup parameters cannot be used at the same time"))
 
     if mashup_id != '':
         values = mashup_id.split('/', 3)
         if len(values) != 3:
-            return build_error_response(request, 422, "Invalid mashup id")
+            return build_error_response(request, 422, _("Invalid mashup id"))
 
         (mashup_vendor, mashup_name, mashup_version) = values
         resource = await get_catalogue_resource(db, mashup_vendor, mashup_name, mashup_version)
         if resource is None or (not await resource.is_available_for(db, user) or resource.resource_type() != 'mashup'):
-            return build_error_response(request, 404, f"Mashup not found: {mashup_id}")
+            return build_error_response(request, 404, _(f"Mashup not found: {mashup_id}"))
 
         base_dir = wgt_deployer.get_base_dir(mashup_vendor, mashup_name, mashup_version)
         wgt_file = WgtFile(os.path.join(base_dir, resource.template_uri))
@@ -605,9 +605,9 @@ async def process_mashup(db: DBDep, user: UserDep, request: Request,
     else:
         from_ws = await get_workspace_by_id(db, Id(workspace_id))
         if from_ws is None:
-            return build_error_response(request, 404, "Workspace not found")
+            return build_error_response(request, 404, _("Workspace not found"))
         if not await from_ws.is_accsessible_by(db, user):
-            return build_error_response(request, 403, f"You are not allowed to read from workspace {workspace_id}")
+            return build_error_response(request, 403, _(f"You are not allowed to read from workspace {workspace_id}"))
 
         options = MACDMashupWithParametrization(
             type=MACType.mashup,
@@ -628,7 +628,7 @@ async def process_mashup(db: DBDep, user: UserDep, request: Request,
         details = {
             'missingDependencies': e.missing_dependencies,
         }
-        return build_error_response(request, 422, "Missing dependencies", details=details)
+        return build_error_response(request, 422, _("Missing dependencies"), details=details)
 
     await fill_workspace_using_template(db, request, user, to_ws, template)
 
@@ -687,20 +687,20 @@ async def publish_workspace(db: DBDep, user: UserDep, request: Request,
     missing_fields = check_json_fields(json_data.model_dump_json(), ('name', 'vendor', 'version'))
     if len(missing_fields) > 0:
         return build_error_response(request, 400,
-                                    f"Malformed JSON. The following field(s) are missing {missing_fields}")
+                                    _(f"Malformed JSON. The following field(s) are missing {missing_fields}"))
 
     if not is_valid_vendor(json_data.vendor):
-        return build_error_response(request, 400, "Invalid vendor")
+        return build_error_response(request, 400, _("Invalid vendor"))
 
     if not is_valid_name(json_data.name):
-        return build_error_response(request, 400, "Invalid name")
+        return build_error_response(request, 400, _("Invalid name"))
 
     if not is_valid_version(json_data.version):
-        return build_error_response(request, 400, "Invalid version number")
+        return build_error_response(request, 400, _("Invalid version number"))
 
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
-        return build_error_response(request, 404, "Workspace not found")
+        return build_error_response(request, 404, _("Workspace not found"))
 
     if image_file is not None:
         json_data.image = 'images/catalogue' + os.path.splitext(image_file.filename)[1]

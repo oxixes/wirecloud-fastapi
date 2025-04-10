@@ -20,18 +20,18 @@
 
 from typing import Optional
 
-from src.wirecloud.catalogue.crud import get_catalogues_with_regex
+from src.wirecloud.catalogue.crud import get_catalogue_resources_with_regex
 from src.wirecloud.catalogue.schemas import CatalogueResource
 from src.wirecloud.commons.auth.schemas import UserAll
 from src.wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version
 from src.wirecloud.database import DBSession
 from src.wirecloud.platform.widget.crud import get_widget_from_resource
-from src.wirecloud.platform.widget.schemas import Widget
+from src.wirecloud.platform.widget.models import Widget
 
 
 async def get_or_add_widget_from_catalogue(db: DBSession, vendor: Vendor, name: Name, version: Version,
                                            user: UserAll) -> Optional[tuple[Widget, CatalogueResource]]:
-    resource_list = await get_catalogues_with_regex(db, vendor, name, version)
+    resource_list = await get_catalogue_resources_with_regex(db, vendor, name, version)
     for resource in resource_list:
         if await resource.is_available_for(db, user):
             return await get_widget_from_resource(db, resource.id), resource

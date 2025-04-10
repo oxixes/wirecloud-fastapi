@@ -22,11 +22,11 @@ from bson import ObjectId
 
 from src.wirecloud.catalogue.crud import get_catalogue_resource_by_id
 from src.wirecloud.database import DBSession
-from src.wirecloud.platform.iwidget.schemas import WidgetInstance
-from src.wirecloud.platform.workspace.schemas import Tab, Workspace
+from src.wirecloud.platform.iwidget.models import WidgetInstance
+from src.wirecloud.platform.workspace.models import Tab
 
 
-async def insert_iwidget_into_tab(db: DBSession, tab: Tab, iwidget: WidgetInstance) -> None:
+async def insert_widget_instance_into_tab(db: DBSession, tab: Tab, iwidget: WidgetInstance) -> None:
     if not db.in_transaction:
         db.start_transaction()
 

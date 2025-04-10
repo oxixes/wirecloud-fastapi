@@ -20,7 +20,7 @@
 
 import hashlib
 from datetime import datetime, timezone
-from typing import Union, Any, Optional
+from typing import Union, Optional
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -28,13 +28,11 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
 import time
 
-from email.utils import formatdate, parsedate_to_datetime
+from email.utils import parsedate_to_datetime
 
+from src.wirecloud.commons.utils.http import http_date
 from src.wirecloud.platform.workspace.schemas import WorkspaceGlobalData
 
-
-def http_date(timestamp: int) -> str:
-    return formatdate(timestamp)
 
 def patch_cache_headers(response: Response, timestamp: float=None, cache_timeout: int=None, etag=None) -> Response:
     current_timestamp = int(time.time())

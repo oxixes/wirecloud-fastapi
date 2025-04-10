@@ -49,8 +49,7 @@ def get_platform_context_definitions() -> dict[str, BaseContextKey]:
     return _wirecloud_platform_context_definitions
 
 
-def get_platform_context_current_values(request: Request, user: Optional[UserAll], session: Optional[Session] = None) -> \
-dict[str, Any]:
+def get_platform_context_current_values(request: Request, user: Optional[UserAll], session: Optional[Session] = None) -> dict[str, Any]:
     plugins = get_plugins()
     values = {}
 
@@ -60,8 +59,7 @@ dict[str, Any]:
     return values
 
 
-def get_platform_context(request: Request, user: Optional[UserAll], session: Optional[Session] = None) -> dict[
-    str, PlatformContextKey]:
+def get_platform_context(request: Request, user: Optional[UserAll], session: Optional[Session] = None) -> dict[str, PlatformContextKey]:
     context = get_platform_context_definitions()
     values = get_platform_context_current_values(request, user, session=session)
     result = {}
@@ -110,8 +108,7 @@ async def get_constant_context_values(db: DBSession) -> dict[str, str]:
     return res
 
 
-async def get_context_values(db: DBSession, workspace, request: Request, user: UserAll, session: Session = None) -> \
-dict[str, dict[str, Any]]:
+async def get_context_values(db: DBSession, workspace, request: Request, user: UserAll, session: Session = None) -> dict[str, dict[str, Any]]:
     cache_key = f'constant_context/{str(user.id)}'
     constant_context = await cache.get(cache_key)
     if constant_context is None:

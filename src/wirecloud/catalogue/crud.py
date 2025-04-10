@@ -73,8 +73,7 @@ async def create_catalogue_resource(db: DBSession, resource: CatalogueResourceCr
     return result_schema
 
 
-async def get_catalogue_resource(db: DBSession, vendor: Vendor, short_name: Name, version: Version) -> Optional[
-    CatalogueResource]:
+async def get_catalogue_resource(db: DBSession, vendor: Vendor, short_name: Name, version: Version) -> Optional[CatalogueResource]:
     query = {"vendor": vendor, "short_name": short_name, "version": version}
     result = await db.client.catalogue_resources.find_one(query)
 
@@ -116,8 +115,7 @@ async def is_resource_available_for_user(db: DBSession, resource: CatalogueResou
     return result is not None
 
 
-async def get_all_catalogue_resource_versions(db: DBSession, vendor: Vendor, short_name: Name) -> list[
-    CatalogueResource]:
+async def get_all_catalogue_resource_versions(db: DBSession, vendor: Vendor, short_name: Name) -> list[CatalogueResource]:
     query = {"vendor": vendor, "short_name": short_name}
 
     resources = [CatalogueResourceModel.model_validate(resource) for resource in
@@ -220,8 +218,7 @@ async def install_resource_to_group(db: DBSession, resource: CatalogueResource, 
         return True
 
 
-async def get_catalogues_with_regex(db: DBSession, vendor: Vendor, name: Name, version: Version) -> list[
-    CatalogueResource]:
+async def get_catalogue_resources_with_regex(db: DBSession, vendor: Vendor, name: Name, version: Version) -> list[CatalogueResource]:
     query = {
         "$and": [
             {"vendor": vendor},

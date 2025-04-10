@@ -20,23 +20,23 @@
 from fastapi import Request
 
 from src.wirecloud.catalogue.crud import get_catalogue_resource, get_catalogue_resource_by_id
-from src.wirecloud.commons.auth.crud import get_username_by_id, get_user_by_id
+from src.wirecloud.commons.auth.crud import get_username_by_id, get_user_with_all_info
 from src.wirecloud.commons.utils.template.base import Contact
 from src.wirecloud.commons.utils.template.schemas.macdschemas import MACDMashupWithParametrization, MACDTab, \
     MACDMashupEmbedded, MACDMashupWiring, IntegerStr, MACDParametrizationOptions, MACDParametrizationOptionsStatus, \
     MACDParametrizationOptionsSource, MACDMashupResourcePreference, MACDMashupResourcePropertyBase, \
     MACDMashupResourceScreenSize, MACDMashupResourcePosition, MACDMashupResourceRendering, MACDMashupResource
 from src.wirecloud.database import DBSession
-from src.wirecloud.platform.iwidget.schemas import WidgetInstance
+from src.wirecloud.platform.iwidget.models import WidgetInstance
 from src.wirecloud.platform.wiring.schemas import WiringOperator, WiringOperatorPreference, WiringConnection, \
     WiringOutput, WiringInput
 from src.wirecloud.platform.workspace.crud import get_workspace_description
-from src.wirecloud.platform.workspace.schemas import Workspace
+from src.wirecloud.platform.workspace.models import Workspace
 from src.wirecloud.platform.workspace.utils import VariableValueCacheManager
 from src.wirecloud.commons.utils.template.writers import xml
 
 
-async def process_iwidget(db: DBSession, request: Request, iwidget: WidgetInstance, wiring: MACDMashupWiring,
+async def process_widget_instance(db: DBSession, request: Request, iwidget: WidgetInstance, wiring: MACDMashupWiring,
                           parametrization: dict[IntegerStr, dict[str, MACDParametrizationOptions]],
                           read_only_widgets: bool, cache_manager: VariableValueCacheManager) -> MACDMashupResource:
 
@@ -182,7 +182,7 @@ async def build_json_template_from_workspace(db: DBSession, request: Request, op
     if len(options.authors) == 0:
         options.authors.append(Contact(name=await get_username_by_id(db, workspace.creator)))
 
-    cache_manager = VariableValueCacheManager(workspace, await get_user_by_id(db, workspace.creator, user_all=True))
+    cache_manager = VariableValueCacheManager(workspace, await get_user_with_all_info(db, workspace.creator))
 
     # WORKSPACE PREFERENCES
     options.preferences = {}
@@ -194,7 +194,6 @@ async def build_json_template_from_workspace(db: DBSession, request: Request, op
     options.wiring.inputs = []
     options.wiring.outputs = []
 
-    # sorted_tabs = sorted(workspace.tabs, key=lambda tab: tab.position or 0)
     sorted_tabs = workspace.tabs
 
     aux_embedded = []
@@ -206,7 +205,7 @@ async def build_json_template_from_workspace(db: DBSession, request: Request, op
                 preferences[preference.name] = preference.value
         resources = []
         for iwidget in tab.widgets:
-            resource_info = await process_iwidget(db, request, WidgetInstance(**iwidget.model_dump()), options.wiring,
+            resource_info = await process_widget_instance(db, request, iwidget, options.wiring,
                                                   options.parametrization.iwidgets,
                                                   options.readOnlyWidgets, cache_manager)
             resources.append(resource_info)

@@ -30,8 +30,7 @@ from src.wirecloud.commons.auth.models import DBPlatformPreference as PlatformPr
 from src.wirecloud.platform.preferences.utils import make_workspace_preferences_cache_key, \
     make_tab_preferences_cache_key
 from src.wirecloud.platform.workspace.crud import change_workspace
-from src.wirecloud.platform.workspace.models import DBTabPreference
-from src.wirecloud.platform.workspace.schemas import Workspace, Tab
+from src.wirecloud.platform.workspace.models import DBTabPreference, Workspace, Tab
 
 
 async def update_preferences(db: DBSession, user: User, preferences: PlatformPreferenceCreate):

@@ -39,9 +39,10 @@ from src.wirecloud.database import DBSession, Id
 from src.wirecloud.commons.auth.schemas import User, Group, UserAll
 from src.wirecloud.platform.localcatalogue.utils import install_component
 from src.wirecloud.platform.preferences.schemas import WorkspacePreference
-from src.wirecloud.platform.workspace.schemas import Workspace, Tab, WorkspaceAccessPermissions
 from src.wirecloud.commons.auth.models import DBGroup as GroupModel
+from src.wirecloud.platform.workspace.models import Workspace, WorkspaceAccessPermissions, Tab
 from src.wirecloud.platform.workspace.utils import create_tab, _workspace_cache_key, _variable_values_cache_key
+from src.wirecloud.translation import gettext as _
 
 
 async def get_workspace_list(db: DBSession, user: User) -> list[Workspace]:
@@ -66,7 +67,7 @@ async def create_empty_workspace(db: DBSession, title: str, user: User, allow_re
         creator=ObjectId(user.id),
         users=[WorkspaceAccessPermissions(id=Id(user.id))]
     )
-    tab = await create_tab(db, user, 'Tab', workspace)
+    tab = await create_tab(db, user, _('Tab'), workspace)
 
     if allow_renaming:
         await save_alternative(db, 'workspace', 'name', workspace)
@@ -84,8 +85,7 @@ async def get_workspace_by_id(db: DBSession, workspace_id: Id) -> Optional[Works
     if workspace is None:
         return None
 
-    workspace_model = Workspace.model_validate(workspace)
-    return Workspace(**workspace_model.model_dump())
+    return Workspace.model_validate(workspace)
 
 
 async def get_workspace_groups(db: DBSession, workspace: Workspace) -> list[Group]:
@@ -105,12 +105,12 @@ async def create_workspace(db: DBSession, request: Request, owner: UserAll, mash
     if type(mashup) == str:
         values = mashup.split('/', 3)
         if len(values) != 3:
-            raise ValueError('Invalid mashup id')
+            raise ValueError(_('Invalid mashup id'))
 
         (mashup_vendor, mashup_name, mashup_version) = values
         resource = await get_catalogue_resource(db, mashup_vendor, mashup_name, mashup_version)
         if resource is None or not await resource.is_available_for(db, owner) or resource.resource_type() != 'mashup':
-            raise ValueError(f"Mashup not found {mashup}")
+            raise ValueError(_(f"Mashup not found {mashup}"))
 
         base_dir = catalogue.wgt_deployer.get_base_dir(mashup_vendor, mashup_name, mashup_version)
         wgt_file = WgtFile(os.path.join(base_dir, resource.template_uri))
@@ -136,7 +136,7 @@ async def create_workspace(db: DBSession, request: Request, owner: UserAll, mash
         template = TemplateParser(wgt.get_template())
 
         resource_info = template.get_resource_processed_info(process_urls=False)
-        if resource_info.type != 'mashup':
+        if resource_info.type != MACType.mashup:
             raise ValueError("WgtFile is not a mashup")
 
         for embedded_resource in resource_info.embedded:

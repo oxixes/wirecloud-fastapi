@@ -83,7 +83,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
         app.include_router(markets_router, prefix="/api/markets", tags=["Market"])
         app.include_router(preferences_router, prefix="/api/preferences", tags=["Preferences"])
         app.include_router(workspace_router, prefix="/api/workspace", tags=["Workspace"])
-        app.include_router(iwidget_router, prefix="/api/workspace", tags=["Iwidget"])
+        app.include_router(iwidget_router, prefix="/api/workspace", tags=["Widget instances"])
         app.include_router(theme_router, prefix="/api/theme", tags=["Theme"])
         app.include_router(platform_router, prefix="", tags=["Platform"])
 
