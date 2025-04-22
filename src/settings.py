@@ -1,4 +1,25 @@
+# -*- coding: utf-8 -*-
+
+# Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
+
+# This file is part of Wirecloud.
+
+# Wirecloud is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Wirecloud is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
+
+
 from os import path, pardir
+from aiocache import caches
 
 BASEDIR = path.abspath(path.join(path.dirname(path.abspath(__file__)), pardir))
 
@@ -12,7 +33,7 @@ INSTALLED_APPS = (
 
 DATABASE = {
     'DRIVER': 'mongodb',
-    'NAME': 'wirecloud-fastapi',
+    'NAME': 'wirecloud_fastapi',
     'HOST': 'localhost',
     'PORT': '',
     'USER': '',
@@ -38,10 +59,19 @@ CACHE_DIR = path.join(BASEDIR, 'cache')
 WIRECLOUD_HTTPS_VERIFY = True
 
 AVAILABLE_THEMES = [
-    "defaulttheme",
-    "fiwaretheme"
+    "defaulttheme"
 ]
 THEME_ACTIVE = "defaulttheme"
 
 # TODO Allow to define a list of known proxies to trust the X-Forwarded-For header
 PROXY_WS_MAX_MSG_SIZE = 4 * 1024 * 1024 # 4MiB
+
+caches.set_config({
+    'default': {
+        'cache': 'aiocache.SimpleMemoryCache',
+        'ttl': 3600
+    }
+})
+cache = caches.get('default')
+
+SECRET_KEY = 'NeQM1I5g)ihQ3m#u!7Q£-1Jj3LuO?O4^'

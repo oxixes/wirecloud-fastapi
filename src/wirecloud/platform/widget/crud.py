@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2016 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
 
 # This file is part of Wirecloud.
 
@@ -17,7 +17,18 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from src.wirecloud.translation import gettext_lazy as _
 
-parent = "defaulttheme"
-label = _("FIWARE Lab")
+from typing import Optional
+
+from src.wirecloud.database import DBSession, Id
+from src.wirecloud.platform.widget.models import Widget
+
+
+async def get_widget_from_resource(db: DBSession, resource_id: Id) -> Optional[Widget]:
+    query = {"resource": resource_id}
+
+    widget = await db.client.widgets.find_one(query)
+    if widget is None:
+        return None
+
+    return Widget.model_validate(widget)
