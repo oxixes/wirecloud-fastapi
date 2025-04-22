@@ -118,10 +118,10 @@ def update_position_value(model: WidgetConfig, data: LayoutConfig, field: str, d
     size = getattr(data, data_field)
 
     if type(size) not in (int, float):
-        raise TypeError(_(f'Field {data_field} must contain a number value'))
+        raise TypeError(_('Field %(data_field)s must contain a number value') % {"data_field": data_field})
 
     if size < 0:
-        raise ValueError(_(f'Invalid value for {data_field} field'))
+        raise ValueError(_('Invalid value for %(data_field)s field') % {"data_field": data_field})
 
     setattr(model, field, size)
 
@@ -130,10 +130,10 @@ def update_size_value(model: WidgetConfig, data: LayoutConfig, field: str) -> No
     size = getattr(data, field)
 
     if type(size) not in (int, float):
-        raise TypeError(_(f'Field {field} must contain a number value'))
+        raise TypeError(_('Field %(field)s must contain a number value') % {"field": field})
 
     if size <= 0:
-        raise ValueError(_(f'Invalid value for {field} field'))
+        raise ValueError(_('Invalid value for %(field)s field') % {"field": field})
 
     setattr(model, field, size)
 
@@ -142,7 +142,7 @@ def update_boolean_value(model: Union[WidgetConfig, WidgetPermissionsConfig], da
     value = getattr(data, field)
 
     if not isinstance(value, bool):
-        raise TypeError(_(f'Field {field} must contain a boolean value'))
+        raise TypeError(_(f'Field %(field)s must contain a boolean value') % {"field": field})
 
     setattr(model, field, value)
 
