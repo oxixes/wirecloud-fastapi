@@ -156,7 +156,7 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
     user = workspace.creator
 
     if template.get_resource_type() != MACType.mashup:
-        raise TypeError(_(f'Unssoported resource type {template.get_resource_type()}'))
+        raise TypeError(_('Unsupported resource type %(type)s') % {"type": template.get_resource_type()})
 
     context_values = await get_context_values(db, workspace, request,
                                               await get_user_with_all_info(db, workspace.creator))
