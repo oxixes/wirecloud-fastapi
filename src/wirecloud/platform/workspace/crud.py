@@ -110,7 +110,7 @@ async def create_workspace(db: DBSession, request: Request, owner: UserAll, mash
         (mashup_vendor, mashup_name, mashup_version) = values
         resource = await get_catalogue_resource(db, mashup_vendor, mashup_name, mashup_version)
         if resource is None or not await resource.is_available_for(db, owner) or resource.resource_type() != 'mashup':
-            raise ValueError(_(f"Mashup not found {mashup}"))
+            raise ValueError(_("Mashup not found %(mashup)s") % {'mashup': mashup})
 
         base_dir = catalogue.wgt_deployer.get_base_dir(mashup_vendor, mashup_name, mashup_version)
         wgt_file = WgtFile(os.path.join(base_dir, resource.template_uri))
