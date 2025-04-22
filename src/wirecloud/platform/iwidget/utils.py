@@ -82,7 +82,7 @@ async def update_widget_value(db: DBSession, iwidget: WidgetInstance, data: Unio
             raise NotFound(_('Widget not available'))
 
         if resource.resource_type() != 'widget':
-            raise ValueError(_('%(uri)s is not a widget') % {"uri": data.widget})
+            raise ValueError(_('%(uri)s is not a widget' % {"uri": data.widget}))
 
         iwidget.resource = resource.id
         return resource
@@ -105,10 +105,10 @@ def update_screen_size_value(model: WidgetPositionsConfig, data: LayoutConfig, f
     value = getattr(data, field)
 
     if type(value) is not int:
-        raise TypeError(_('Field %(field)s must contain a number value') % {"field": field})
+        raise TypeError(_(f'Field {field} must contain a number value'))
 
     if value < -1:
-        raise ValueError(_('Invalid value for %(field)s field') % {"field": field})
+        raise ValueError(_(f'Invalid value for {field} field'))
 
     setattr(model, field, value)
 

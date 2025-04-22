@@ -141,12 +141,12 @@ async def create_workspace_collection(db: DBDep, user: UserDep, request: Request
                                                new_name=workspace_name,
                                                new_title=workspace_title, dry_run=dry_run)
         except ValueError as e:
-            return build_error_response(request, 422, str(e))
+            return build_error_response(request, 422, _(str(e)))
         except MissingDependencies as e:
             details = {
                 'missingDependencies': e.missing_dependencies,
             }
-            return build_error_response(request, 422, str(e), details=details)
+            return build_error_response(request, 422, _(str(e)), details=details)
         if workspace is None:
             return build_error_response(request, 409,
                                         _("A workspace with the given name already exists"))
@@ -607,7 +607,7 @@ async def process_mashup(db: DBDep, user: UserDep, request: Request,
         if from_ws is None:
             return build_error_response(request, 404, _("Workspace not found"))
         if not await from_ws.is_accsessible_by(db, user):
-            return build_error_response(request, 403, _("You are not allowed to read from workspace %(workspace_id)s") % {'workspace_id': workspace_id})
+            return build_error_response(request, 403, _(f"You are not allowed to read from workspace {workspace_id}"))
 
         options = MACDMashupWithParametrization(
             type=MACType.mashup,
@@ -687,7 +687,7 @@ async def publish_workspace(db: DBDep, user: UserDep, request: Request,
     missing_fields = check_json_fields(json_data.model_dump_json(), ('name', 'vendor', 'version'))
     if len(missing_fields) > 0:
         return build_error_response(request, 400,
-                                    _("Malformed JSON. The following field(s) are missing %(missing_fields)s") % {'missing_fields': missing_fields})
+                                    _(f"Malformed JSON. The following field(s) are missing {missing_fields}"))
 
     if not is_valid_vendor(json_data.vendor):
         return build_error_response(request, 400, _("Invalid vendor"))
