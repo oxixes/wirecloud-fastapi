@@ -47,6 +47,7 @@ from src.wirecloud.commons.utils.template import ObsoleteFormatError, TemplatePa
 from src.wirecloud.commons.utils.version import Version
 from src.wirecloud.commons.utils.wgt import InvalidContents, WgtDeployer, WgtFile
 from src.wirecloud.database import DBSession
+from src.wirecloud.platform.widget.utils import create_widget_from_wgt
 from src.wirecloud.translation import gettext as _
 
 
@@ -401,3 +402,10 @@ async def check_vendor_permissions(db: DBSession, user: Optional[UserAll], vendo
     """
 
     return vendor.lower() in options
+
+
+async def create_widget_on_resource_creation(db: DBSession, resource: CatalogueResource):
+    if resource.resource_type() == 'widget':
+        base_dir = wgt_deployer.get_base_dir(resource.vendor, resource.short_name, resource.version)
+        wgt_file = WgtFile(os.path.join(base_dir, resource.template_uri))
+        await create_widget_from_wgt(db, wgt_file)

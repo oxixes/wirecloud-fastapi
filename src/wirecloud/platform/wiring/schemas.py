@@ -26,7 +26,8 @@ from enum import Enum
 from src.wirecloud.platform.wiring import docs
 
 IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
-ResourceName = Annotated[str, StringConstraints(pattern=r'^[^\/]+\/[^\/]+\/((?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0))((a|b|rc)([1-9]\d*))?(-dev(.+)?)?$')]
+ResourceName = Annotated[str, StringConstraints(
+    pattern=r'^[^\/]+\/[^\/]+\/((?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0))((a|b|rc)([1-9]\d*))?(-dev(.+)?)?$')]
 
 
 class WiringType(Enum):
@@ -49,6 +50,10 @@ class WiringConnection(BaseModel):
     readonly: bool = Field(description=docs.wiring_connection_readonly_description, default=False)
     source: WiringConnectionEndpoint = Field(description=docs.wiring_connection_source_description)
     target: WiringConnectionEndpoint = Field(description=docs.wiring_connection_target_description)
+
+
+class WiringOperatorPreferenceValue(BaseModel):
+    users: dict[str, Any] = {}
 
 
 class WiringOperatorPreference(BaseModel):
@@ -115,15 +120,18 @@ class WiringBehaviour(BaseModel):
     title: str = Field(description=docs.wiring_behaviour_title_description)
     description: str = Field(description=docs.wiring_behaviour_description_description)
     components: WiringComponents = Field(description=docs.wiring_behaviour_components_description)
-    connections: list[WiringVisualDescriptionConnection] = Field(description=docs.wiring_behaviour_connections_description)
+    connections: list[WiringVisualDescriptionConnection] = Field(
+        description=docs.wiring_behaviour_connections_description)
 
 
 class WiringVisualDescription(BaseModel):
-    behaviours: list[WiringBehaviour] = Field(description=docs.wiring_visual_description_behaviours_description, default=[])
+    behaviours: list[WiringBehaviour] = Field(description=docs.wiring_visual_description_behaviours_description,
+                                              default=[])
     components: WiringComponents = Field(description=docs.wiring_visual_description_components_description,
                                          default=WiringComponents())
-    connections: list[WiringVisualDescriptionConnection] = Field(description=docs.wiring_visual_description_connections_description,
-                                                                 default=[])
+    connections: list[WiringVisualDescriptionConnection] = Field(
+        description=docs.wiring_visual_description_connections_description,
+        default=[])
 
 
 class Wiring(BaseModel):
@@ -137,7 +145,8 @@ class Wiring(BaseModel):
     @classmethod
     def check_version(cls, data: Any):
         if isinstance(data, dict) and 'version' in data:
-            assert data['version'] == '2.0', 'Only wiring version 2.0 is supported. The old 1.0 version is no longer supported.'
+            assert data[
+                       'version'] == '2.0', 'Only wiring version 2.0 is supported. The old 1.0 version is no longer supported.'
 
         return data
 
@@ -170,3 +179,22 @@ class WiringOutput(WiringInout):
 class WiringEndpoints(BaseModel):
     inputs: list[WiringInput] = Field(description=docs.wiring_endpoints_inputs_description, default=[])
     outputs: list[WiringOutput] = Field(description=docs.wiring_endpoints_outputs_description, default=[])
+
+
+class WiringEntryPatch(BaseModel):
+    op: str
+    path: str
+    value: Optional[Any] = None
+
+
+class WiringOperatorVariablesValues(BaseModel):
+    name: str
+    secure: bool
+    readonly: bool
+    hidden: bool
+    value: Any
+
+
+class WiringOperatorVariables(BaseModel):
+    preferences: WiringOperatorVariablesValues = {}
+    properties: WiringOperatorVariablesValues = {}

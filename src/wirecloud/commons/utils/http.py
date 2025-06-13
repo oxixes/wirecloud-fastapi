@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import re
 # Copyright (c) 2012-2016 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of Wirecloud.
@@ -22,6 +21,7 @@ import re
 import socket
 from email.utils import formatdate
 from inspect import Signature
+import re
 
 import orjson as json
 import inspect
@@ -38,6 +38,7 @@ from typing import Optional, Union, Any
 from collections.abc import Callable
 from urllib.parse import urljoin, unquote, urlparse, quote
 
+from src import settings
 from src.wirecloud.commons.utils import mimeparser
 from src.wirecloud.translation import gettext as _
 
@@ -281,7 +282,6 @@ def consumes(mime_types: list[str]):
         @wraps(handler)
         async def wrapper(*args, **kwargs):
             request: Request = kwargs.get(request_param)
-
             request.state.mimetype = get_content_type(request)[0]
             if request.state.mimetype not in mime_types:
                 msg = _("Unsupported request media type")
@@ -440,5 +440,18 @@ def build_downloadfile_response(request: Request, file_path: str, base_dir: str)
     else:
         return Response(headers={'X-Sendfile': fullpath})
 
+
 def http_date(timestamp: int) -> str:
     return formatdate(timestamp)
+
+
+def get_absolute_static_url(url, request: Optional[Request] = None, versioned: bool = False):
+
+    scheme = get_current_scheme(request)
+    base = urljoin(scheme + '://' + get_current_domain(request), settings.STATIC_URL)
+
+    if versioned:
+        from src.wirecloud.platform.core.plugins import get_version_hash
+        url += f"?v={get_version_hash()}"
+
+    return urljoin(base, url)

@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from typing import Union, Optional
 
 from fastapi import Request, Response
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
 
 from pydantic import BaseModel
 import time
@@ -74,7 +74,7 @@ def check_if_modified_since(request: Request, time_last_modified: Optional[datet
     return time_last_modified > if_modified_since
 
 class CacheableData(BaseModel):
-    data: WorkspaceGlobalData
+    data: Union[WorkspaceGlobalData, str]
     timestamp: Union[datetime, float] = None
     timeout: int = 0
     content_type: str = 'application/json; charset=UTF-8'
@@ -86,7 +86,10 @@ class CacheableData(BaseModel):
             self.timestamp = time.time() * 1000
 
     def get_response(self, status_code=200, cacheable=True):
-        response = JSONResponse(content=self.data.model_dump(), status_code=status_code)
+        if isinstance(self.data, str):
+            response = HTMLResponse(content=self.data, status_code=status_code)
+        else:
+            response = JSONResponse(content=self.data.model_dump(), status_code=status_code)
 
         if cacheable:
             aux_timestamp = self.timestamp

@@ -48,7 +48,7 @@ from src.wirecloud.platform.preferences.schemas import WorkspacePreference
 from src.wirecloud.platform.preferences.utils import get_workspace_preference_values, get_tab_preference_values
 from src.wirecloud.commons.auth.schemas import User, UserAll
 from src.settings import cache, SECRET_KEY
-from src.wirecloud.platform.workspace.models import Workspace, Tab
+from src.wirecloud.platform.workspace.models import Workspace, Tab, WiringOperatorPreferenceValue
 from src.wirecloud.platform.workspace.schemas import WorkspaceForcedValues, CacheEntry, CacheVariableData, \
     WorkspaceData, TabData, WorkspaceGlobalData, UserWorkspaceData, GroupWorkspaceData
 from src.wirecloud.translation import gettext as _
@@ -62,7 +62,7 @@ def _workspace_cache_key(workspace: Workspace, user: User) -> str:
     return f'_workspace_global_data/{workspace.id}/{workspace.last_modified}/{user.id}'
 
 
-def encrypt_value(value: str) -> str:
+def encrypt_value(value: Any) -> str:
     key = SECRET_KEY[:32].encode("utf-8")
     iv = os.urandom(16)
     cipher = AES.new(key, AES.MODE_CBC, iv)
@@ -131,8 +131,11 @@ def process_forced_values(workspace: Workspace, user: Id, concept_values: dict[s
 
 
 def _process_variable(component_type: str, component_id: str, vardef: Union[MACDPreference, MACDProperty],
-                      value: Union[Any, WidgetVariables], forced_values: WorkspaceForcedValues,
+                      value: Union[WidgetVariables, dict], forced_values: WorkspaceForcedValues,
                       values_by_varname: dict[str, dict], current_user: User, workspace_creator: User) -> None:
+    if isinstance(value, dict):
+        value = WiringOperatorPreferenceValue(**value)
+
     varname = vardef.name
     entry = CacheEntry(
         type=vardef.type,
@@ -273,7 +276,7 @@ class VariableValueCacheManager:
         )
 
 
-async def get_workspace_data(db: DBSession, workspace: Workspace, user: User) -> WorkspaceData:
+async def get_workspace_data(db: DBSession, workspace: Workspace, user: Optional[User]) -> WorkspaceData:
     longdescription = workspace.longdescription
     if longdescription != '':
         longdescription = clean_html(markdown.markdown(longdescription, output_format='xhtml'))
@@ -288,7 +291,7 @@ async def get_workspace_data(db: DBSession, workspace: Workspace, user: User) ->
         shared=workspace.is_shared(),
         requireauth=workspace.requireauth,
         owner=await get_username_by_id(db, workspace.creator),
-        removable=workspace.is_editable_by(user),
+        removable=workspace.is_editable_by(user) if user is not None else False,
         lastmodified=workspace.last_modified,
         description=workspace.description,
         longdescription=longdescription,
@@ -326,8 +329,8 @@ async def create_tab(db: DBSession, user: User, title: str, workspace: Workspace
 
 
 async def get_widget_instance_data(db: DBSession, request: Request, iwidget: WidgetInstance, workspace: Workspace,
-                           cache_manager: VariableValueCacheManager = None, user: UserAll = None) -> WidgetInstanceData:
-
+                                   cache_manager: VariableValueCacheManager = None,
+                                   user: UserAll = None) -> WidgetInstanceData:
     data_ret = WidgetInstanceData(
         id=iwidget.id,
         title=iwidget.name,
@@ -535,7 +538,7 @@ async def get_workspace_entry(db: DBDep, user: UserDep, request: Request, worksp
     return workspace_data.get_response()
 
 
-def is_there_a_tab_with_that_name(tab_name:str, tabs: list[Tab]) -> bool:
+def is_there_a_tab_with_that_name(tab_name: str, tabs: list[Tab]) -> bool:
     found = False
     for tab in tabs:
         if tab.name == tab_name:
