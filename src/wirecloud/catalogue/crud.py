@@ -22,8 +22,9 @@ from typing import Optional
 from bson import ObjectId
 
 from src.wirecloud.catalogue.schemas import (CatalogueResourceCreate, CatalogueResource, CatalogueResourceBase,
-                                             CatalogueResourceType)
+                                             CatalogueResourceType, CatalogueResourceXHTML)
 from src.wirecloud.catalogue.models import DBCatalogueResource as CatalogueResourceModel
+from src.wirecloud.catalogue.models import XHTML
 from src.wirecloud.commons.auth.schemas import UserAll, User, Group
 from src.wirecloud.commons.utils.template.schemas.macdschemas import (MACD, Vendor, Name, Version)
 from src.wirecloud.database import DBSession, Id
@@ -73,14 +74,27 @@ async def create_catalogue_resource(db: DBSession, resource: CatalogueResourceCr
     return result_schema
 
 
-async def get_catalogue_resource(db: DBSession, vendor: Vendor, short_name: Name, version: Version) -> Optional[CatalogueResource]:
-    query = {"vendor": vendor, "short_name": short_name, "version": version}
+async def get_catalogue_resource(db: DBSession, vendor: Vendor, short_name: Name, version: Version, type: Optional[CatalogueResourceType] = None) -> Optional[CatalogueResource]:
+    if type is None:
+        query = {"vendor": vendor, "short_name": short_name, "version": version}
+    else:
+        query = {"vendor": vendor, "short_name": short_name, "version": version, "type": type.value}
     result = await db.client.catalogue_resources.find_one(query)
 
     if result is None:
         return None
 
     return build_schema_from_resource(CatalogueResourceModel.model_validate(result))
+
+
+async def get_catalogue_resource_with_xhtml(db: DBSession, vendor: Vendor, short_name: Name, version: Version) -> Optional[CatalogueResourceXHTML]:
+    query = {"vendor": vendor, "short_name": short_name, "version": version}
+    result = await db.client.catalogue_resources.find_one(query)
+
+    if result is None:
+        return None
+
+    return CatalogueResourceXHTML.model_validate(result)
 
 
 async def get_catalogue_resource_by_id(db: DBSession, resource_id: Id) -> Optional[CatalogueResource]:
@@ -236,3 +250,11 @@ async def get_catalogue_resources_with_regex(db: DBSession, vendor: Vendor, name
     resources = [build_schema_from_resource(CatalogueResourceModel.model_validate(resource)) for resource in results]
 
     return resources
+
+
+async def save_catalogue_resource_xhtml(db: DBSession, resource_id: Id, xhtml: XHTML) -> None:
+    if not db.in_transaction:
+        db.start_transaction()
+    query = {"_id": ObjectId(resource_id)}
+    update = {"$set": {"xhtml": xhtml.model_dump()}}
+    await db.client.catalogue_resources.update_one(query, update)

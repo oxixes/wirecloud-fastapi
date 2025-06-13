@@ -21,6 +21,7 @@
 from os import path, pardir
 from aiocache import caches
 
+DEBUG = True
 BASEDIR = path.abspath(path.join(path.dirname(path.abspath(__file__)), pardir))
 
 # TODO If platform is installed, the proxy has to be installed too
@@ -47,6 +48,8 @@ LANGUAGES = (
 )
 
 DEFAULT_LANGUAGE = 'en'
+
+STATIC_URL = '/static/'
 
 # Make this unique, and don't share it with anybody.
 JWT_KEY = '15=7f)g=)&spodi3bg8%&4fqt%f3rpg%b$-aer5*#a*(rqm79e'
@@ -75,3 +78,5 @@ caches.set_config({
 cache = caches.get('default')
 
 SECRET_KEY = 'NeQM1I5g)ihQ3m#u!7Q£-1Jj3LuO?O4^'
+
+GADGETS_DEPLOYMENT_DIR = path.join(BASEDIR, 'deployment', 'widgets')

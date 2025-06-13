@@ -23,7 +23,10 @@ from datetime import datetime
 from urllib.parse import urlparse
 from fastapi import Request
 from typing import Optional
+import random
 
+from src.settings import cache
+from src.wirecloud.catalogue.models import XHTML
 from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACType, Vendor, Name, Version
 from src.wirecloud.commons.utils.template.base import Contact
 from src.wirecloud.commons.auth.schemas import User, UserAll
@@ -112,8 +115,25 @@ class CatalogueResourceCreate(CatalogueResourceBase):
     creator: Optional[User]
 
 
-class CatalogueResource(CatalogueResourceBase):
-    id: Id
+class CatalogueResource(CatalogueResourceBase, populate_by_name=True):
+    id: Id = Field(alias="_id")
+
+    @property
+    def cache_version_key(self) -> str:
+        return f"_catalogue_resource_version/{self.id}"
+
+    @property
+    async def cache_version(self):
+        version = await cache.get(self.cache_version_key)
+        if version is None:
+            version = random.randrange(1, 100000)
+            await cache.set(self.cache_version_key, version)
+
+        return version
+
+
+class CatalogueResourceXHTML(CatalogueResource):
+    xhtml: Optional[XHTML]
 
 
 class CatalogueResourceDataSummaryPermissions(BaseModel):

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import random
 
 # Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
 
@@ -21,18 +22,27 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 
+from src.settings import cache
 from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD
 from src.wirecloud.database import Id
 
 
-class DBXhtml(BaseModel):
+class XHTML(BaseModel):
     uri: str
-    code: str
-    code_timestamp: Optional[datetime]
+    code: Optional[str] = None
+    code_timestamp: Optional[datetime] = None
     url: str
     content_type: Optional[str]
     use_platform_style: bool
     cacheable: bool
+
+    async def get_cache_key(self, resource_id: str, domain: str, mode: str, theme): #TODO: add theme type
+        version = await cache.get(f"_widget_xhtml_version/{resource_id}")
+        if version is None:
+            version = random.randrange(1, 100000)
+            await cache.set(f"_widget_xhtml_version/{resource_id}", version)
+
+        return f"_widget_xhtml/{version}/{domain}/{resource_id}?mode={mode}&theme={theme}"
 
 
 class DBCatalogueResource(BaseModel, populate_by_name=True):
@@ -48,6 +58,6 @@ class DBCatalogueResource(BaseModel, populate_by_name=True):
     description: MACD
     creator_id: Optional[Id]
 
-    xhtml: list[DBXhtml] = []
+    xhtml: Optional[XHTML] = None
     users: list[Id] = []
     groups: list[Id] = []
