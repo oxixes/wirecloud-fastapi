@@ -1,22 +1,25 @@
-# -*- coding: utf-8 -*-
-# Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
-# This file is part of Wirecloud.
-
-# Wirecloud is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# Wirecloud is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
-
-# You should have received a copy of the GNU Affero General Public License
-# along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
+#  -*- coding: utf-8 -*-
+#
+#  Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
+#
+#  This file is part of Wirecloud.
+#
+#  Wirecloud is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Affero General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  Wirecloud is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Affero General Public License for more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 
 from typing import Optional, Union, Any
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 from urllib.request import url2pathname
 import errno
 import time
@@ -54,7 +57,7 @@ from src.wirecloud.platform.widget.crud import get_widget_from_resource
 from src.wirecloud.platform.widget.models import Widget
 from src.wirecloud.translation import gettext as _
 
-wgt_deployer = WgtDeployer(settings.GADGETS_DEPLOYMENT_DIR)
+wgt_deployer = WgtDeployer(settings.WIDGET_DEPLOYMENT_DIR)
 WIDGET_ERROR_FORMATTERS = ERROR_FORMATTERS.copy()
 
 
@@ -93,21 +96,28 @@ def xpath(tree: _ElementTree, query: str, xmlns: Any) -> Union[
         return tree.xpath(query, namespaces={'xhtml': xmlns})
 
 
-_widget_platform_style = {}
+_widget_platform_style: dict[str, tuple[str]] = {}
 
+def add_query_param(url: str, key: str, value: str) -> str:
+    parsed_url = urlparse(url)
+    query_params = parse_qs(parsed_url.query)
+    query_params[key] = [value]
+    new_query = urlencode(query_params, doseq=True)
+    new_url = urlunparse(parsed_url._replace(query=new_query))
+    return new_url
 
-def get_widget_platform_style(request: Request, theme: str):  # TODO: add _widget_platform_style type
+def get_widget_platform_style(request: Request, theme: str) -> tuple[str]:
     global _widget_platform_style
 
     if theme not in _widget_platform_style or settings.DEBUG:
-        href = get_static_path(theme, 'widget', request, 'cache.css') + '&context=widget'
+        base_href = get_static_path(theme, 'widget', request, 'cache.css')
+        href = add_query_param(base_href, 'context', 'widget')
         safe_href = escape(href, quote=True)
         code = f' <link rel="stylesheet" href="{safe_href}" />'
 
-        doc = etree.parse(BytesIO(('<files>' + code + '</files>').encode('utf-8')), etree.XMLParser())
-
-        files = [link.get('href') for link in doc.getroot()]
+        files = [safe_href]
         files.reverse()
+
         _widget_platform_style[theme] = tuple(files)
 
     return _widget_platform_style[theme]
@@ -121,9 +131,7 @@ async def get_widget_api_files(request: Request, theme: str) -> list[str]:
     if widget_api_files is None or settings.DEBUG:
         code = f'<script src="{get_absolute_static_url(f"js/main-{theme}-widget.js", request=request, versioned=True)}"/>'
 
-        doc = etree.parse(BytesIO(('<files>' + code + '</files>').encode('utf-8')), etree.XMLParser())
-
-        files = [script.get('src') for script in doc.getroot()]
+        files = [get_absolute_static_url(f"js/main-{theme}-widget.js", request=request, versioned=True)]
         files.reverse()
         widget_api_files = tuple([get_absolute_static_url(file, request=request, versioned=True) for file in files])
         await cache.set(key, widget_api_files)
@@ -132,8 +140,7 @@ async def get_widget_api_files(request: Request, theme: str) -> list[str]:
 
 
 async def fix_widget_code(widget_code: Union[str, bytes], content_type: str, request: Request, encoding: str,
-                          use_platform_style: bool, requirements, mode: str, theme: str, macversion: int) -> Optional[
-    bytes]:
+                          use_platform_style: bool, requirements, mode: str, theme: str, macversion: int) -> Optional[bytes]:
     # This line is here for raising UnicodeDecodeError in case the widget_code is not encoded using the specified encoding
     widget_code.decode(encoding)
 
@@ -178,9 +185,6 @@ async def fix_widget_code(widget_code: Union[str, bytes], content_type: str, req
             if 'src' in script.attrib:
                 script.text = ''
 
-        head_element.insert(0, etree.Element('script', type="text/javascript",
-                                             src=get_absolute_static_url('js/WirecloudAPI/WirecloudAPIClosure.js',
-                                                                         request=request, versioned=True)))
         files = get_widget_api_extensions(mode, requirements)
         files.reverse()
         for file in files:
@@ -270,7 +274,7 @@ async def process_widget_code(db: DBSession, request: Request, resource: Catalog
     return response
 
 
-def check_requirements(resource: MACDWidget):
+def check_requirements(resource: MACDWidget) -> None:
     active_features = get_active_features()
 
     for requirement in resource.requirements:
@@ -282,7 +286,7 @@ def check_requirements(resource: MACDWidget):
             raise UnsupportedFeature(f"Unsupported requirement type ({requirement.type}).")
 
 
-async def create_widget_from_wgt(db: DBSession, wgt_file: WgtFile, deploy_only: bool = False):
+async def create_widget_from_wgt(db: DBSession, wgt_file: WgtFile, deploy_only: bool = False) -> None:
     template = wgt_deployer.deploy(wgt_file)
     if template.get_resource_type() != MACType.widget:
         raise Exception()

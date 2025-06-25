@@ -179,9 +179,8 @@ def check_same_wiring(object1, object2) -> bool:
 
 
 async def check_multiuser_wiring(db: DBSession, request: Request, user: User, new_wiring_status: 'WorkspaceWiring',
-                                 old_wiring_status: 'WorkspaceWiring', owner: Id, can_update_secure: bool = False) -> \
-Union[Response, bool]:
-    if not check_same_wiring(new_wiring_status, old_wiring_status):  # TODO: check this
+                                 old_wiring_status: 'WorkspaceWiring', owner: Id, can_update_secure: bool = False) -> Union[Response, bool]:
+    if not check_same_wiring(new_wiring_status, old_wiring_status):
         return build_error_response(request, 403, _('You are not allowed to update this workspace'))
 
     for operator_id, operator in new_wiring_status.operators.items():
@@ -216,7 +215,7 @@ Union[Response, bool]:
                 if old_preference != new_preference and old_preference.value.users[str(owner)] != new_preference.value:
                     return build_error_response(request, 403, _('You are not allowed to update this workspace'))
 
-            operator.preferences[preference_name] = old_preference  # TODO: check this
+            operator.preferences[preference_name] = old_preference
 
         # Check properties
         for property_name in operator.properties:

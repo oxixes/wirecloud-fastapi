@@ -289,7 +289,8 @@ const get_scripts: (view: string) => string[] = (view: string): string[] => {
         return [
             'js/WirecloudAPI/WirecloudAPIBootstrap.js',
             'js/WirecloudAPI/WirecloudOperatorAPI.js',
-            'js/WirecloudAPI/WirecloudAPICommon.js'
+            'js/WirecloudAPI/WirecloudAPICommon.js',
+            'js/WirecloudAPI/WirecloudAPIClosure.js',
         ];
     } else {
         return common;

@@ -6,3 +6,4 @@ src/wirecloud/dist/
 node_modules/
 dist/
 deployment/
+.DS_Store

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import random
 
 # Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
 
@@ -17,6 +16,7 @@ import random
 
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
+import random
 
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -36,7 +36,7 @@ class XHTML(BaseModel):
     use_platform_style: bool
     cacheable: bool
 
-    async def get_cache_key(self, resource_id: str, domain: str, mode: str, theme): #TODO: add theme type
+    async def get_cache_key(self, resource_id: str, domain: str, mode: str, theme: str):
         version = await cache.get(f"_widget_xhtml_version/{resource_id}")
         if version is None:
             version = random.randrange(1, 100000)

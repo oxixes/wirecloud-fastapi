@@ -448,7 +448,7 @@ def http_date(timestamp: int) -> str:
 def get_absolute_static_url(url, request: Optional[Request] = None, versioned: bool = False):
 
     scheme = get_current_scheme(request)
-    base = urljoin(scheme + '://' + get_current_domain(request), settings.STATIC_URL)
+    base = urljoin(scheme + '://' + get_current_domain(request), '/static')
 
     if versioned:
         from src.wirecloud.platform.core.plugins import get_version_hash

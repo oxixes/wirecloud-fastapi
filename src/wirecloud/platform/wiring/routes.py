@@ -145,9 +145,6 @@ async def patch_wiring_entry(db: DBDep, request: Request, user: UserDep,
     # Can't explicitly update missing operator preferences / properties
     # Check if it's modifying directly a preference / property
     for p in req:
-        if p.op == 'test':
-            continue
-
         result = OPERATOR_PATH_RE.match(p.path)
         if result is not None:
             try:

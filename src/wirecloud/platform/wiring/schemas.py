@@ -145,8 +145,7 @@ class Wiring(BaseModel):
     @classmethod
     def check_version(cls, data: Any):
         if isinstance(data, dict) and 'version' in data:
-            assert data[
-                       'version'] == '2.0', 'Only wiring version 2.0 is supported. The old 1.0 version is no longer supported.'
+            assert data['version'] == '2.0', 'Only wiring version 2.0 is supported. The old 1.0 version is no longer supported.'
 
         return data
 
