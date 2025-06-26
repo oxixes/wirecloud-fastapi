@@ -93,3 +93,127 @@ wiring_input_actionlabel_description = "The action label of the input"
 # WiringEndpoints
 wiring_endpoints_inputs_description = "The input descriptions of the input of a component in the wiring"
 wiring_endpoints_outputs_description = "The output descriptions of the output of a component in the wiring"
+
+# GET /{workspace_id}/wiring
+update_wiring_entry_summary = "Update the wiring of a workspace"
+update_wiring_entry_description = "Updates the wiring of a workspace."
+update_wiring_entry_response_description = "Wiring updated successfully"
+update_wiring_entry_auth_required_response_description = "Authentication required"
+update_wiring_entry_not_found_response_description = "Workspace not found"
+update_wiring_entry_permission_denied_response_description = "Permission denied"
+update_wiring_entry_validation_error_response_description = "Validation error"
+update_wiring_entry_workspace_id_description = "Workspace identifier"
+update_wiring_entry_wiring_description = "Wiring entry data"
+update_wiring_entry_wiring_example = {
+    "version": "2.0",
+    "connections": [
+        {
+            "readonly": False,
+            "source": {
+                "type": "operator",
+                "id": "1",
+                "endpoint": "out1"
+            },
+            "target": {
+                "type": "operator",
+                "id": "2",
+                "endpoint": "in1"
+            }
+        }
+    ],
+    "operators": {
+        "1": {
+            "id": "1",
+            "name": "admin/demo_operator/0.1.5",
+            "preferences": {
+                "color": {
+                    "readonly": False,
+                    "hidden": False,
+                    "value": "blue"
+                }
+            },
+            "properties": {
+                "size": {
+                    "readonly": False,
+                    "hidden": False,
+                    "value": "big"
+                }
+            }
+        }
+    },
+    "visualdescription": {
+        "behaviours": [],
+        "components": {
+            "widget": {},
+            "operator": {}
+        },
+        "connections": []
+    }
+}
+
+# PATCH /{workspace_id}/wiring
+patch_wiring_entry_summary = "Patch the wiring of a workspace"
+patch_wiring_entry_description = "Patches the wiring of a workspace."
+patch_wiring_entry_response_description = "Wiring patched successfully"
+patch_wiring_entry_auth_required_response_description = "Authentication required"
+patch_wiring_entry_not_found_response_description = "Workspace or Operator not found"
+patch_wiring_entry_permission_denied_response_description = "Permission denied"
+patch_wiring_entry_validation_error_response_description = "Validation error"
+patch_wiring_entry_workspace_id_description = "Workspace identifier"
+patch_wiring_entry_wiring_description = "Wiring entry data"
+patch_wiring_entry_wiring_example = [{
+    "op": "replace",
+    "path": "/operators/1/preferences/pref1/value",
+    "value": "helloWorld"
+}]
+
+# GET /{vendor}/{name}/{version}/html
+get_operator_summary = "Get the HTML of an operator"
+get_operator_description = "Returns the HTML of an operator."
+get_operator_response_description = "Operator HTML returned successfully"
+get_operator_response_example = """<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <base href="http://127.0.0.1:8000/showcase/media/admin/demo_operator/0.1.5/admin_demo_operator_0.1.5.wgt"/>
+        <script type="text/javascript" src="http://127.0.0.1:8000/static/js/main-defaulttheme-operator.js?v=41a8ec3a29bcdc18198d0f126a7d4d8006a90126"></script>
+        <script type="text/javascript" src="http://127.0.0.1:8000/static/js/WirecloudAPI/WirecloudAPIClosure.js?v=41a8ec3a29bcdc18198d0f126a7d4d8006a90126"></script>
+        <script type="text/javascript" src="js/main.js"></script>
+    </head>
+    <body>
+    </body>
+</html>"""
+get_operator_not_found_response_description = "Operator not found"
+get_operator_vendor_description = "Vendor of the operator"
+get_operator_name_description = "Name of the operator"
+get_operator_version_description = "Version of the operator"
+get_operator_mode_description = "Mode of the operator"
+
+# GET /{workspace_id}/operators/{operator_id}/variables
+get_operator_variables_entry_summary = "Get the variables of an operator"
+get_operator_variables_entry_description = "Returns the variables of an operator."
+get_operator_variables_entry_response_description = "Operator variables returned successfully"
+get_operator_variables_entry_response_example = {
+    "preferences": {
+        "input": {
+            "name": "input",
+            "secure": False,
+            "readonly": False,
+            "hidden": False,
+            "value": "blue"
+        }
+    },
+    "properties": {
+        "input": {
+            "name": "input",
+            "secure": False,
+            "readonly": False,
+            "hidden": False,
+            "value": "blue"
+        }
+    }
+}
+get_operator_variables_entry_auth_required_response_description = "Authentication required"
+get_operator_variables_entry_not_found_response_description = "Workspace or Operator not found"
+get_operator_variables_entry_permission_denied_response_description = "Permission denied"
+get_operator_variables_entry_workspace_id_description = "Workspace identifier"
+get_operator_variables_entry_operator_id_description = "Operator identifier"

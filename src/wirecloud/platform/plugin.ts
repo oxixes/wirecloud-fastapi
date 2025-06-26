@@ -274,18 +274,23 @@ const get_scripts: (view: string) => string[] = (view: string): string[] => {
     } else if (view === "widget") {
         // TODO Actually include correct files, maybe they should be the base files and other be imported
         // depending on the requested features
-        const scripts = [
+        return [
             'js/WirecloudAPI/WirecloudAPIBootstrap.js',
             'js/WirecloudAPI/WirecloudWidgetAPI.js',
             'js/WirecloudAPI/WirecloudAPICommon.js',
             'js/WirecloudAPI/WirecloudAPIClosure.js'
         ];
-
-        return scripts;
     } else if (view === "bootstrap") {
         return [
             'js/StyledElements/Utils.js',
             'js/wirecloud/Utils.js'
+        ];
+    } else if (view === "operator") {
+        return [
+            'js/WirecloudAPI/WirecloudAPIBootstrap.js',
+            'js/WirecloudAPI/WirecloudOperatorAPI.js',
+            'js/WirecloudAPI/WirecloudAPICommon.js',
+            'js/WirecloudAPI/WirecloudAPIClosure.js',
         ];
     } else {
         return common;

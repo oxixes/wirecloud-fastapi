@@ -28,7 +28,7 @@ const VIEWS: { [key: string]: string } = {
     'index': 'platform'
 };
 
-const JS_VIEWS: string[] = ['classic', 'smartphone', 'embedded', 'widget', 'bootstrap'];
+const JS_VIEWS: string[] = ['classic', 'smartphone', 'embedded', 'widget', 'operator', 'bootstrap'];
 
 interface Theme {
     parent: string | null;

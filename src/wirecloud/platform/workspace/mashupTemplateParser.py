@@ -37,7 +37,6 @@ from src.wirecloud.platform.iwidget.schemas import WidgetInstanceData, LayoutCon
 from src.wirecloud.platform.iwidget.utils import save_widget_instance, set_initial_values
 from src.wirecloud.platform.preferences.crud import update_workspace_preferences, update_tab_preferences
 from src.wirecloud.platform.preferences.schemas import WorkspacePreference, TabPreference
-from src.wirecloud.platform.widget.utils import get_or_add_widget_from_catalogue
 from src.wirecloud.platform.wiring.schemas import WiringConnectionEndpoint, WiringType, WiringConnection, \
     WiringComponents, WiringVisualDescription, WiringVisualDescriptionConnection, WiringBehaviour
 from src.wirecloud.platform.wiring.utils import get_endpoint_name, is_empty_wiring
@@ -153,6 +152,7 @@ def _remap_connection_endpoints(source_mapping: dict, target_mapping: dict,
 
 async def fill_workspace_using_template(db: DBSession, request: Request, user_func: User, workspace: Workspace,
                                         template: TemplateParser) -> None:
+    from src.wirecloud.platform.widget.utils import get_or_add_widget_from_catalogue
     user = workspace.creator
 
     if template.get_resource_type() != MACType.mashup:
@@ -250,7 +250,7 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
                 iwidget_data.layout_config.append(iwidget_layout_config)
 
             iwidget = await save_widget_instance(db, workspace, iwidget_data, await get_user_with_all_info(db, user),
-                                         tab, commit=False)
+                                                 tab, commit=False)
             if resource.readonly:
                 iwidget.readonly = True
 
@@ -373,7 +373,6 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
     workspace.wiring_status.visualdescription.components.widget.update(
         mashup_description.wiring.visualdescription.components.widget)
     workspace.wiring_status.visualdescription.connections += mashup_description.wiring.visualdescription.connections
-
 
     # Forced Values
     workspace.forced_values.extra_prefs += new_forced_values.extra_prefs

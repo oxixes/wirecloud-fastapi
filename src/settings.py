@@ -21,6 +21,7 @@
 from os import path, pardir
 from aiocache import caches
 
+DEBUG = True
 BASEDIR = path.abspath(path.join(path.dirname(path.abspath(__file__)), pardir))
 
 # TODO If platform is installed, the proxy has to be installed too
@@ -75,3 +76,5 @@ caches.set_config({
 cache = caches.get('default')
 
 SECRET_KEY = 'NeQM1I5g)ihQ3m#u!7Q£-1Jj3LuO?O4^'
+
+WIDGET_DEPLOYMENT_DIR = path.join(BASEDIR, 'deployment', 'widgets')
