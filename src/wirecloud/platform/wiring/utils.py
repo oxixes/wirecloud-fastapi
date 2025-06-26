@@ -120,12 +120,7 @@ async def get_operator_api_files(request: Request, theme: str) -> list[str]:
     operator_api_files = await cache.get(key)
 
     if operator_api_files is None or settings.DEBUG:
-        code = f'<script src="{get_absolute_static_url(f"js/main-{theme}-operator.js", request=request)}" />'
-
-        doc = etree.parse(BytesIO(('<files>' + code + '</files>').encode('utf-8')), etree.XMLParser())
-
-        files = [script.get('src') for script in doc.getroot()]
-        operator_api_files = tuple([get_absolute_static_url(file, request=request, versioned=True) for file in files])
+        operator_api_files = tuple([get_absolute_static_url(f"js/main-{theme}-operator.js", request=request, versioned=True)])
         await cache.set(key, operator_api_files)
 
     return list(operator_api_files)
@@ -133,12 +128,11 @@ async def get_operator_api_files(request: Request, theme: str) -> list[str]:
 
 async def generate_xhtml_operator_code(js_files: list[str], base_url: str, request: Request, requirements: list[str],
                                        mode: str) -> str:
-    api_closure_url = get_absolute_static_url('js/WirecloudAPI/WirecloudAPIClosure.js', request=request, versioned=True)
     from src.wirecloud.platform.plugins import get_operator_api_extensions
     extra_api_js_files = [get_absolute_static_url(url, request=request, versioned=True) for url in
                           get_operator_api_extensions(mode, requirements)]
     from src.wirecloud.platform.routes import get_current_theme
-    api_js = await get_operator_api_files(request, get_current_theme(request)) + extra_api_js_files + [api_closure_url]
+    api_js = await get_operator_api_files(request, get_current_theme(request)) + extra_api_js_files
 
     context = {'request': request, 'base_url': base_url, 'js_files': api_js + js_files}
 

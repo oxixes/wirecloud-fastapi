@@ -152,6 +152,7 @@ def _remap_connection_endpoints(source_mapping: dict, target_mapping: dict,
 
 async def fill_workspace_using_template(db: DBSession, request: Request, user_func: User, workspace: Workspace,
                                         template: TemplateParser) -> None:
+    from src.wirecloud.platform.widget.utils import get_or_add_widget_from_catalogue
     user = workspace.creator
 
     if template.get_resource_type() != MACType.mashup:
@@ -211,7 +212,6 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
         if len(new_values) > 0:
             await update_tab_preferences(db, user_func, workspace, tab, new_values)
 
-        from src.wirecloud.platform.widget.utils import get_or_add_widget_from_catalogue
         for resource in tab_entry.resources:
             user_all = await get_user_with_all_info(db, user)
             result = await get_or_add_widget_from_catalogue(db, resource.vendor, resource.name, resource.version,
