@@ -120,7 +120,7 @@ async def get_operator_api_files(request: Request, theme: str) -> list[str]:
     operator_api_files = await cache.get(key)
 
     if operator_api_files is None or settings.DEBUG:
-        operator_api_files = tuple([get_absolute_static_url(f"js/main-{theme}-operator.js", request=request, versioned=True)])
+        operator_api_files = tuple([get_absolute_static_url(f"static/js/main-{theme}-operator.js", request=request, versioned=True)])
         await cache.set(key, operator_api_files)
 
     return list(operator_api_files)

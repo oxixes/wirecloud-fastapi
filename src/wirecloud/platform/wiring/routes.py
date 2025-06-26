@@ -18,6 +18,7 @@
 #  along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
+from urllib.parse import urljoin
 
 import jsonpatch
 
@@ -31,7 +32,7 @@ from src.wirecloud.commons.auth.crud import get_user_with_all_info
 from src.wirecloud.commons.auth.utils import UserDep
 from src.wirecloud.commons.utils.cache import CacheableData
 from src.wirecloud.commons.utils.http import authentication_required, consumes, build_error_response, \
-    get_current_domain, get_absolute_reverse_url
+    get_current_domain, get_absolute_reverse_url, get_current_scheme
 from src.wirecloud.database import DBDep, Id
 from src.wirecloud.platform.wiring.schemas import WiringEntryPatch, WiringOperatorVariables
 from src.wirecloud.platform.wiring import docs
@@ -212,9 +213,8 @@ async def get_operator_html(db: DBDep, request: Request, user: UserDep,
         options = operator.description
         js_files = options.js_files
 
-        base_url = get_absolute_reverse_url('wirecloud.showcase_media', request=request, vendor=operator.vendor,
-                                            name=operator.short_name, version=operator.version,
-                                            path=operator.template_uri)
+        base_url = urljoin(get_current_scheme(request) + '://' + get_current_domain(request),
+                           f"/api/widget/{operator.vendor}/{operator.short_name}/{operator.version}/{operator.template_uri}")
         xhtml = await generate_xhtml_operator_code(js_files, base_url, request,
                                                    process_requirements(options.requirements), mode)
         cache_timeout = 31536000  # 1 year
