@@ -31,7 +31,9 @@ from fastapi import FastAPI, Request
 import src.wirecloud.platform as platform
 from src import settings
 from src.wirecloud.platform.iwidget.routes import iwidget_router
+from src.wirecloud.platform.widget.routes import widget_router
 from src.wirecloud.platform.workspace.routes import workspace_router
+from src.wirecloud.platform.wiring.routes import wiring_router, operator_router
 from src.wirecloud.platform.plugins import (get_active_features_info, get_plugin_urls, AjaxEndpoint, build_url_template,
                                             WirecloudPlugin)
 from src.wirecloud.platform.context.schemas import BaseContextKey, WorkspaceContextKey
@@ -84,7 +86,10 @@ class WirecloudCorePlugin(WirecloudPlugin):
         app.include_router(preferences_router, prefix="/api/preferences", tags=["Preferences"])
         app.include_router(workspace_router, prefix="/api/workspace", tags=["Workspace"])
         app.include_router(iwidget_router, prefix="/api/workspace", tags=["Widget instances"])
+        app.include_router(widget_router, prefix="/api/widget", tags=["Widget"])
         app.include_router(theme_router, prefix="/api/theme", tags=["Theme"])
+        app.include_router(wiring_router, prefix="/api/workspace", tags=["Wiring"])
+        app.include_router(operator_router, prefix="/api/operator", tags=["Operator"])
         app.include_router(platform_router, prefix="", tags=["Platform"])
 
     def get_platform_context_definitions(self) -> dict[str, BaseContextKey]:

@@ -45,8 +45,14 @@ from src.wirecloud.platform.workspace.utils import create_tab, _workspace_cache_
 from src.wirecloud.translation import gettext as _
 
 
-async def get_workspace_list(db: DBSession, user: User) -> list[Workspace]:
-    query = {'users.id': ObjectId(user.id)}
+async def get_workspace_list(db: DBSession, user: Optional[User]) -> list[Workspace]:
+    if user is not None:
+        query = { "$or": [
+            {'public': True, 'searchable': True},
+            {'users.id': ObjectId(user.id)}
+        ]}
+    else:
+        query = {"public": True, "searchable": True}
     workspaces = await db.client.workspace.find(query).to_list()
     results = []
     for workspace in workspaces:

@@ -19,16 +19,16 @@
 
 
 from datetime import datetime
-from typing import Optional, Any, Union
+from typing import Optional, Any, Union, Annotated
 
-from pydantic import BaseModel, model_validator, Field, field_serializer
+from pydantic import BaseModel, model_validator, Field, field_serializer, StringConstraints
 
-from src.wirecloud.commons.utils.template.schemas.macdschemas import IntegerStr
 from src.wirecloud.platform.iwidget.schemas import WidgetInstanceData
 from src.wirecloud.platform.preferences.schemas import TabPreference, WorkspacePreference
 from src.wirecloud.platform.workspace.models import WorkspaceExtraPreference, WorkspaceWiring, WorkspaceForcedValue
 from src.wirecloud.translation import gettext as _
 
+IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
 
 
 class TabData(BaseModel):

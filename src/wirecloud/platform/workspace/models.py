@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 # Copyright (c) 2012-2016 CoNWeT Lab., Universidad Politécnica de Madrid
 
 # This file is part of Wirecloud.
@@ -33,12 +32,12 @@ from src.wirecloud.platform.wiring.utils import get_wiring_skeleton
 IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
 
 
-class DBWiringOperatorPreferenceValue(BaseModel):
-    users: dict[IntegerStr, Any] = {}
+class WiringOperatorPreferenceValue(BaseModel):
+    users: dict[str, Any] = {}
 
 
 class DBWiringOperatorPreference(WiringOperatorPreference):
-    value: DBWiringOperatorPreferenceValue
+    value: Any
 
 
 class WorkspaceWiringOperator(WiringOperator):

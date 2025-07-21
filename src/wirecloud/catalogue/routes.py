@@ -126,6 +126,7 @@ async def create_resource(db: DBDep, request: Request, user: UserDep):
 
     res = Response(status_code=201)
     res.headers['Location'] = resource.get_template_url()
+    await catalogue_utils.create_widget_on_resource_creation(db, resource)
     return res
 
 

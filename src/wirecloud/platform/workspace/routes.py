@@ -66,11 +66,9 @@ workspace_router = APIRouter()
     }
 )
 @produces(["application/json"])
-@authentication_required
-async def get_workspace_list_route(db: DBDep, user: UserDep, request: Request) -> list[WorkspaceData]:
+async def get_workspace_list_route(db: DBDep, request: Request, user: UserDep) -> list[WorkspaceData]:
     workspaces = await get_workspace_list(db, user)
     data_list = [await get_workspace_data(db, workspace, user) for workspace in workspaces]
-
     return data_list
 
 
@@ -607,7 +605,9 @@ async def process_mashup(db: DBDep, user: UserDep, request: Request,
         if from_ws is None:
             return build_error_response(request, 404, _("Workspace not found"))
         if not await from_ws.is_accsessible_by(db, user):
-            return build_error_response(request, 403, _("You are not allowed to read from workspace %(workspace_id)s") % {'workspace_id': workspace_id})
+            return build_error_response(request, 403,
+                                        _("You are not allowed to read from workspace %(workspace_id)s") % {
+                                            'workspace_id': workspace_id})
 
         options = MACDMashupWithParametrization(
             type=MACType.mashup,
@@ -687,7 +687,8 @@ async def publish_workspace(db: DBDep, user: UserDep, request: Request,
     missing_fields = check_json_fields(json_data.model_dump_json(), ('name', 'vendor', 'version'))
     if len(missing_fields) > 0:
         return build_error_response(request, 400,
-                                    _("Malformed JSON. The following field(s) are missing %(missing_fields)s") % {'missing_fields': missing_fields})
+                                    _("Malformed JSON. The following field(s) are missing %(missing_fields)s") % {
+                                        'missing_fields': missing_fields})
 
     if not is_valid_vendor(json_data.vendor):
         return build_error_response(request, 400, _("Invalid vendor"))
