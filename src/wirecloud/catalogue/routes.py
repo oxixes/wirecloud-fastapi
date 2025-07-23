@@ -27,7 +27,7 @@ import zipfile
 import errno
 
 import src.wirecloud.catalogue.utils as catalogue_utils
-from src.wirecloud.commons.auth.utils import UserDep
+from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
 from src.wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version
 from src.wirecloud.commons.utils.http import (PermissionDenied, NotFound,
                                               produces, consumes, authentication_required, XHTMLResponse,
@@ -149,7 +149,7 @@ async def create_resource(db: DBDep, request: Request, user: UserDep):
 )
 @produces(["application/json"])
 async def get_resource_versions(db: DBDep,
-                                user: UserDep,
+                                user: UserDepNoCSRF,
                                 request: Request,
                                 vendor: Vendor = Path(description=docs.get_resource_entry_group_vendor_description,
                                                       pattern=r"^[^/]+$"),
@@ -228,7 +228,7 @@ async def delete_resource_versions(db: DBDep,
 )
 @produces(["application/json"])
 async def get_resource_version(db: DBDep,
-                               user: UserDep,
+                               user: UserDepNoCSRF,
                                request: Request,
                                vendor: Vendor = Path(description=docs.get_resource_entry_vendor_description,
                                                      pattern=r"^[^/]+$"),

@@ -100,6 +100,10 @@
             throw new Error('Missing MutationObserver support');
         }
 
+        if (!('fetch' in window)) {
+            throw new Error('Missing Fetch API support');
+        }
+
         try {
             eval("var bar = (x) => x+1");
         } catch (e) {

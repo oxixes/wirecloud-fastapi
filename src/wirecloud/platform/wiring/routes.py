@@ -29,7 +29,7 @@ from src.wirecloud import docs as root_docs
 from src.wirecloud.catalogue.crud import get_catalogue_resource
 from src.wirecloud.catalogue.schemas import CatalogueResourceType
 from src.wirecloud.commons.auth.crud import get_user_with_all_info
-from src.wirecloud.commons.auth.utils import UserDep
+from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
 from src.wirecloud.commons.utils.cache import CacheableData
 from src.wirecloud.commons.utils.http import authentication_required, consumes, build_error_response, \
     get_current_domain, get_absolute_reverse_url, get_current_scheme
@@ -198,7 +198,7 @@ async def patch_wiring_entry(db: DBDep, request: Request, user: UserDep,
         )
     }
 )
-async def get_operator_html(db: DBDep, request: Request, user: UserDep,
+async def get_operator_html(db: DBDep, request: Request,
                             vendor: str = Path(description=docs.get_operator_vendor_description),
                             name: str = Path(description=docs.get_operator_name_description),
                             version: str = Path(description=docs.get_operator_version_description),
@@ -226,6 +226,7 @@ async def get_operator_html(db: DBDep, request: Request, user: UserDep,
     return cached_response.get_response()
 
 
+# TODO Check this, why is it needed?
 from src.wirecloud.platform.workspace.schemas import CacheVariableData
 
 WiringOperatorVariables.model_rebuild()
@@ -251,8 +252,8 @@ WiringOperatorVariables.model_rebuild()
         )
     }
 )
-@authentication_required
-async def get_operator_variables_entry(db: DBDep, request: Request, user: UserDep, workspace_id: Id = Path(
+@authentication_required(csrf=False)
+async def get_operator_variables_entry(db: DBDep, request: Request, user: UserDepNoCSRF, workspace_id: Id = Path(
     description=docs.get_operator_variables_entry_workspace_id_description),
                                        operator_id: str = Path(
                                            description=docs.get_operator_variables_entry_operator_id_description)):

@@ -41,3 +41,11 @@ Wirecloud.Utils.getLayoutMatrix = function getLayoutMatrix(layout, widgets, scre
 
     return matrix;
 };
+Wirecloud.Utils.getCookie = function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+        return parts.pop().split(';').shift();
+    }
+    return null;
+}

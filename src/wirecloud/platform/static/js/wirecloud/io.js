@@ -344,7 +344,16 @@
     };
 
     io.makeRequest = function makeRequest(url, options) {
-        return new Request(Wirecloud.io.buildProxyURL(url, options), options);
+        const reqURL = Wirecloud.io.buildProxyURL(url, options);
+        const csrfToken = Wirecloud.Utils.getCookie("csrf_token");
+        if ((new URL(reqURL)).origin === window.location.origin && csrfToken) {
+            // Add the CSRF token in the request headers
+            options.requestHeaders = utils.merge({
+                "X-CSRF-Token": csrfToken
+            }, options.requestHeaders);
+        }
+
+        return new Request(reqURL, options);
     };
 
     Wirecloud.io = io;

@@ -17,17 +17,26 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from src.wirecloud.platform.plugins import URLTemplate
+from src import settings
+from src.wirecloud.platform.plugins import URLTemplate, get_idm_get_authorization_url_functions
 
 patterns: dict[str, URLTemplate] = {
     # Auth
     'login': URLTemplate(urlpattern='/login', defaults={}),
+    'oidc_login_callback': URLTemplate(urlpattern='/oidc/callback', defaults={}),
     'logout': URLTemplate(urlpattern='/logout', defaults={}),
-    'wirecloud.login': URLTemplate(urlpattern='/api/login', defaults={}),
-    
+    'wirecloud.token_refresh': URLTemplate(urlpattern='/api/auth/refresh', defaults={}),
+    'wirecloud.login': URLTemplate(urlpattern='/api/auth/login', defaults={}),
+
     # i18n
     'wirecloud.javascript_translation_catalogue': URLTemplate(urlpattern='/api/i18n/js_catalogue', defaults={}),
 
     # OAuth2
     'oauth.default_redirect_uri': URLTemplate(urlpattern='/oauth2/default_redirect_uri', defaults={}),
 }
+
+def get_urlpatterns() -> dict[str, URLTemplate]:
+    if getattr(settings, 'OID_CONNECT_ENABLED', False) and getattr(settings, 'OID_CONNECT_PLUGIN', "") in get_idm_get_authorization_url_functions():
+        patterns['login'] = get_idm_get_authorization_url_functions()[getattr(settings, 'OID_CONNECT_PLUGIN', "")]()
+
+    return patterns

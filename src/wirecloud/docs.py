@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-# TODO Move into separate files
-
 import orjson as json
 from typing import Optional
 from src.wirecloud.commons.utils.http import get_xml_error_response, get_json_error_response, HTTPError
@@ -149,41 +147,3 @@ def generate_permission_denied_response_openapi_description(model_desc: str, msg
     if msg is None:
         msg = "Permission denied"
     return generate_error_response_openapi_description(model_desc, msg, include_schema=include_schema)
-
-
-# AUTH
-permission_codename_description = "The permission's codename"
-
-group_id_description = "The group's id"
-group_name_description = "The group's name"
-
-user_username_description = "The user's username"
-user_id_description = "The user's id"
-user_email_description = "The user's email"
-user_first_name_description = "The user's first name"
-user_last_name_description = "The user's last name"
-user_is_superuser_description = "Whether the user is a superuser"
-user_is_staff_description = "Whether the user is staff"
-user_is_active_description = "Whether the user is active"
-user_date_joined_description = "The date the user joined"
-user_last_login_description = "The user's last login"
-
-user_login_password_description = "The user's password"
-
-user_token_token_description = "The user's token"
-user_token_token_type_description = "The type of token"
-
-login_response_model_description = "The user's JWT"
-login_response_model_example = {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImlzcyI6IldpcmVjbG91ZCIsImV4cCI6MTcyMTYzMTk1NywiaWF0IjoxNzIwNDIyMzU3fQ.SIGNATURE",
-    "token_type": "bearer"
-}
-login_error_invalid_user_pass_response_model_description = "Invalid username or password"
-login_error_invalid_payload_response_model_descrition = "Validation error"
-
-# CONTEXT
-context_key_description_description = "The context key's description"
-context_key_label_description = "The context key's label"
-platform_context_key_value_description = "The context key's value"
-context_platform_description = "The platform context"
-context_workspace_description = "The workspace context description"

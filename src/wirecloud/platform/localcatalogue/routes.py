@@ -20,7 +20,7 @@
 from fastapi import APIRouter, Request, Query
 
 from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD
-from src.wirecloud.commons.auth.utils import UserDep
+from src.wirecloud.commons.auth.utils import UserDepNoCSRF
 from src.wirecloud.commons.utils.http import produces
 from src.wirecloud.catalogue.crud import get_catalogue_resource_versions_for_user
 from src.wirecloud.platform.localcatalogue import docs
@@ -47,7 +47,7 @@ resources_router = APIRouter()
     }
 )
 @produces(["application/json"])
-async def get_resource_collection(db: DBDep, user: UserDep, request: Request,
+async def get_resource_collection(db: DBDep, user: UserDepNoCSRF, request: Request,
                                   process_urls: bool = Query(True, description=docs.get_resource_collection_process_urls_description)):
     resources = {}
     results = await get_catalogue_resource_versions_for_user(db, user=user)

@@ -159,13 +159,13 @@
 
     const _logout = function _logout() {
         const logout_url = new URL(Wirecloud.URLs.LOGOUT_VIEW, document.location);
-        const publicdashboard = Wirecloud.activeWorkspace.preferences.get("public");
+        /* const publicdashboard = Wirecloud.activeWorkspace.preferences.get("public");
         const requireauth = Wirecloud.activeWorkspace.preferences.get("requireauth");
 
         if (publicdashboard && !requireauth) {
             const next_url = window.location.pathname + window.location.search + window.location.hash;
             logout_url.searchParams.set("next", next_url);
-        }
+        } */
         window.location = logout_url;
     };
 
@@ -250,7 +250,8 @@
             method: 'GET',
             parameters: {
                 lang: Wirecloud.constants.CURRENT_LANGUAGE,
-                theme: Wirecloud.constants.CURRENT_THEME
+                theme: Wirecloud.constants.CURRENT_THEME,
+                mode: Wirecloud.constants.CURRENT_MODE
             },
             requestHeaders: {'Accept': 'application/json'}
         }).then((response) => {
@@ -343,6 +344,40 @@
                 Wirecloud.UserInterfaceManager.changeCurrentView('workspace', true);
 
                 Wirecloud.dispatchEvent('loaded');
+
+                // Refresh token
+                const refreshToken = () => {
+                    const tokenExpiration = Wirecloud.Utils.getCookie("token_expiration");
+                    if (tokenExpiration) {
+                        // There is a session
+                        const tokenExpirationDate = new Date(parseInt(tokenExpiration) * 1000);
+                        // Check if the token is going to expire in less than 1 minute
+                        if (tokenExpirationDate.getTime() - Date.now() < 60000) {
+                            Wirecloud.io.makeRequest(Wirecloud.URLs.REFRESH_TOKEN, {
+                                method: 'GET',
+                                requestHeaders: {'Accept': 'application/json'}
+                            }).then((response) => {
+                                if (response.status === 200) {
+                                    // Token refreshed successfully
+                                    const newTokenExpiration = Wirecloud.Utils.getCookie("token_expiration");
+                                    if (newTokenExpiration) {
+                                        setTimeout(refreshToken, Math.max(1000, (parseInt(newTokenExpiration) - Date.now() / 1000 - 60) * 1000));
+                                    }
+                                } else {
+                                    // Token expired, invalid or error refreshing
+                                    Wirecloud.login();
+                                }
+                            });
+                        } else {
+                            // Token is still valid, set a timeout to refresh it later
+                            setTimeout(refreshToken, Math.max(1000, (tokenExpirationDate.getTime() - Date.now() - 60000)));
+                        }
+                    }
+                }
+
+                // Start refreshing the token
+                refreshToken();
+
                 return Wirecloud.changeActiveWorkspace(
                     {
                         owner: state.workspace_owner,

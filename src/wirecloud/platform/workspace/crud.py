@@ -36,10 +36,10 @@ from src.wirecloud.commons.utils.template.schemas.macdschemas import MACDMashupW
 from src.wirecloud.commons.utils.urlify import URLify
 from src.wirecloud.commons.utils.wgt import WgtFile
 from src.wirecloud.database import DBSession, Id
-from src.wirecloud.commons.auth.schemas import User, Group, UserAll
+from src.wirecloud.commons.auth.schemas import User, UserAll
 from src.wirecloud.platform.localcatalogue.utils import install_component
 from src.wirecloud.platform.preferences.schemas import WorkspacePreference
-from src.wirecloud.commons.auth.models import DBGroup as GroupModel
+from src.wirecloud.commons.auth.models import Group as GroupModel, Group
 from src.wirecloud.platform.workspace.models import Workspace, WorkspaceAccessPermissions, Tab
 from src.wirecloud.platform.workspace.utils import create_tab, _workspace_cache_key, _variable_values_cache_key
 from src.wirecloud.translation import gettext as _

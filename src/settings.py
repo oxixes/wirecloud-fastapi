@@ -29,12 +29,13 @@ INSTALLED_APPS = (
     'wirecloud.commons',
     'wirecloud.platform',
     'wirecloud.catalogue',
-    'wirecloud.proxy'
+    'wirecloud.proxy',
+    'wirecloud.keycloak'
 )
 
 DATABASE = {
     'DRIVER': 'mongodb',
-    'NAME': 'wirecloud_fastapi',
+    'NAME': 'wirecloud-fastapi',
     'HOST': 'localhost',
     'PORT': '',
     'USER': '',
@@ -53,6 +54,14 @@ DEFAULT_LANGUAGE = 'en'
 JWT_KEY = '15=7f)g=)&spodi3bg8%&4fqt%f3rpg%b$-aer5*#a*(rqm79e'
 
 SESSION_AGE = 60 * 60 * 24 * 14  # 2 weeks
+
+OID_CONNECT_ENABLED = False
+OID_CONNECT_DISCOVERY_URL = 'http://localhost:8080/realms/wirecloud/.well-known/openid-configuration'
+OID_CONNECT_CLIENT_ID = 'wirecloud'
+OID_CONNECT_CLIENT_SECRET = 'kfrwmAW8zuL6VLB6AJx0finGHTpxhsOw'
+OID_CONNECT_FULLY_SYNC_GROUPS = True
+OID_CONNECT_BACKCHANNEL_LOGOUT = True
+OID_CONNECT_PLUGIN = 'keycloak'
 
 CATALOGUE_MEDIA_ROOT = path.join(BASEDIR, 'catalogue', 'media')
 CACHE_DIR = path.join(BASEDIR, 'cache')

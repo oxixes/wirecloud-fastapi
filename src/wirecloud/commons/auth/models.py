@@ -34,7 +34,7 @@ class DBPlatformPreference(BaseModel):
     value: str = ""
 
 
-class DBGroup(BaseModel, populate_by_name=True):
+class Group(BaseModel, populate_by_name=True):
     id: Id = Field(alias="_id")
     name: str
     codename: str
@@ -57,5 +57,5 @@ class DBUser(BaseModel, populate_by_name=True):
     date_joined: datetime
 
     user_permissions: list[DBPermission] = []
-    groups: list[DBGroup] = []
+    groups: list[Id] = []
     preferences: list[DBPlatformPreference] = []

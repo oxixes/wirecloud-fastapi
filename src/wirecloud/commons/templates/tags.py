@@ -75,7 +75,7 @@ def get_wirecloud_bootstrap(context: dict, available_themes: list[dict[str, str]
         return constants
 
     def get_wirecloud_bootstrap_script() -> str:
-        endpoints = get_wirecloud_ajax_endpoints(view, str(context["request"].scope.get('root_path')))
+        endpoints = get_wirecloud_ajax_endpoints(view, context["request"])
         script = 'Wirecloud.URLs = {\n'
         for endpoint in endpoints:
             script += '    "' + endpoint.id + '": '

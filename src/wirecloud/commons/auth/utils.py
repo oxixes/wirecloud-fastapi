@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+from urllib.parse import urlencode
 
+import aiohttp
 # Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
 
 # This file is part of Wirecloud.
@@ -18,7 +20,8 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 import jwt
-from typing import Union
+from bson import ObjectId
+from typing import Union, Optional
 from secrets import compare_digest
 from hashlib import pbkdf2_hmac
 from base64 import b64decode
@@ -28,7 +31,8 @@ from typing import Annotated
 from src import settings
 from src.wirecloud.database import DBDep, Id
 from src.wirecloud.commons.auth.schemas import Session, UserAll
-from src.wirecloud.commons.auth.crud import get_user_by_id, get_user_groups, get_all_user_permissions
+from src.wirecloud.commons.auth.crud import get_user_by_id, get_user_groups, get_all_user_permissions, is_token_valid
+from src.wirecloud.translation import gettext as _
 
 SUPPORTED_HASHES = ['pbkdf2_sha256']
 
@@ -36,11 +40,13 @@ SUPPORTED_HASHES = ['pbkdf2_sha256']
 login_scheme = OAuth2PasswordBearer(scheme_name="User authentication", tokenUrl="api/auth/login/", auto_error=False)
 
 
-async def get_token_contents(token: Annotated[str, Depends(login_scheme)], request: Request) -> Union[dict[str, Union[str, int, None]], None]:
+async def get_token_contents(token: Annotated[str, Depends(login_scheme)], request: Request, db: DBDep, csrf: bool) -> Union[dict[str, Union[str, int, bool, None]], None]:
     if token is None:
-        token = request.query_params.get('api_key')
-        if token is None:
-            return None
+        token = request.query_params.get('token')
+    if token is None:
+        token = request.cookies.get('token')
+    if token is None:
+        return None
 
     try:
         token_contents = jwt.decode(token, settings.JWT_KEY, algorithms=["HS256"],
@@ -48,10 +54,40 @@ async def get_token_contents(token: Annotated[str, Depends(login_scheme)], reque
     except Exception:
         return None
 
+    if 'jti' not in token_contents:
+        return None
+
+    token_valid = await is_token_valid(db, ObjectId(token_contents['jti']))
+    if not token_valid:
+        return None
+
+    if token_contents["csrf_required"] and csrf:
+        csrf_token = request.headers["X-CSRF-Token"] if "X-CSRF-Token" in request.headers else None
+        if csrf_token is None:
+            csrf_token = request.query_params.get('csrf_token')
+        if csrf_token is None:
+            return None
+
+        try:
+            csrf_token_contents = jwt.decode(csrf_token, settings.JWT_KEY, algorithms=["HS256"],
+                                             require=["exp", "sub", "iat", "iss"], issuer="Wirecloud")
+            if csrf_token_contents.get('jti') != token_contents.get('jti'):
+                return None
+        except Exception:
+            return None
+
     return token_contents
 
 
-async def get_user(db: DBDep, token: Annotated[Union[dict[str, Union[str, int, None]], None], Depends(get_token_contents)]) -> Union[UserAll, None]:
+async def get_token_contents_csrf(token: Annotated[str, Depends(login_scheme)], request: Request, db: DBDep) -> Union[dict[str, Union[str, int, bool, None]], None]:
+    return await get_token_contents(token, request, db, csrf=True)
+
+
+async def get_token_contents_no_csrf(token: Annotated[str, Depends(login_scheme)], request: Request, db: DBDep) -> Union[dict[str, Union[str, int, bool, None]], None]:
+    return await get_token_contents(token, request, db, csrf=False)
+
+
+async def get_user(db: DBDep, token: Union[dict[str, Union[str, int, bool, None]], None]) -> Union[UserAll, None]:
     if token is None:
         return None
 
@@ -68,19 +104,42 @@ async def get_user(db: DBDep, token: Annotated[Union[dict[str, Union[str, int, N
         permissions=permissions
     )
 
-UserDep = Annotated[UserAll, Depends(get_user)]
+
+async def get_user_csrf(db: DBDep, token: Annotated[Union[dict[str, Union[str, int, bool, None]], None], Depends(get_token_contents_csrf)]) -> Union[UserAll, None]:
+    return await get_user(db, token)
 
 
-async def get_session(db: DBDep, request: Request, token: Annotated[Union[dict[str, Union[str, int, None]], None], Depends(get_token_contents)]) -> Union[Session, None]:
+async def get_user_no_csrf(db: DBDep, token: Annotated[Union[dict[str, Union[str, int, bool, None]], None], Depends(get_token_contents_no_csrf)]) -> Union[UserAll, None]:
+    return await get_user(db, token)
+
+
+UserDep = Annotated[UserAll, Depends(get_user_csrf)]
+UserDepNoCSRF = Annotated[UserAll, Depends(get_user_no_csrf)]
+
+
+async def get_session(db: DBDep, request: Request, token: Union[dict[str, Union[str, int, bool, None]], None]) -> Union[Session, None]:
     if token is None:
         return None
 
     return Session(
+        id=Id(token.get("jti")),
         real_user=token.get('real_user', None),
-        real_fullname=token.get('real_fullname', None)
+        real_fullname=token.get('real_fullname', None),
+        oidc_token=token.get('oidc_token', None),
+        requires_csrf=token.get('csrf_required', True)
     )
 
-SessionDep = Annotated[Session, Depends(get_session)]
+
+async def get_session_csrf(db: DBDep, request: Request, token: Annotated[Union[dict[str, Union[str, int, bool, None]], None], Depends(get_token_contents_csrf)]) -> Union[Session, None]:
+    return await get_session(db, request, token)
+
+
+async def get_session_no_csrf(db: DBDep, request: Request, token: Annotated[Union[dict[str, Union[str, int, bool, None]], None], Depends(get_token_contents_no_csrf)]) -> Union[Session, None]:
+    return await get_session(db, request, token)
+
+
+SessionDep = Annotated[Session, Depends(get_session_csrf)]
+SessionDepNoCSRF = Annotated[Session, Depends(get_session_no_csrf)]
 
 
 def check_password(password: str, password_hash: str) -> bool:
@@ -97,3 +156,50 @@ def check_password(password: str, password_hash: str) -> bool:
         _, iterations, salt, expected_password_hash = password_hash.split('$')
         hashed_password = pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('ascii'), int(iterations))
         return compare_digest(hashed_password, b64decode(expected_password_hash))
+
+    return False
+
+
+async def make_oidc_provider_request(endpoint: str, data: Optional[dict] = None, auth: Optional[str] = None) -> dict:
+    headers = {
+        'Accept': 'application/json'
+    }
+
+    if data:
+        headers['Content-Type'] = 'application/x-www-form-urlencoded'
+
+    if auth:
+        headers['Authorization'] = 'Bearer ' + auth
+
+    encoded_data = urlencode(data) if data else None
+
+    session = aiohttp.ClientSession()
+    try:
+        res = await session.request(
+            method='POST' if data else 'GET',
+            url=endpoint,
+            timeout=5,
+            headers=headers,
+            allow_redirects=True,
+            data=encoded_data,
+            ssl=getattr(settings, "WIRECLOUD_HTTPS_VERIFY", True),
+        )
+    except:
+        await session.close()
+        raise Exception(_("OIDC provider is not reachable"))
+
+    if res.status != 200 and res.status != 204:
+        await session.close()
+        raise Exception(_("OIDC provider has not returned a valid response"))
+
+    response_data = None
+
+    if res.status != 204:  # 204 No Content
+        try:
+            response_data = await res.json()
+        except:
+            await session.close()
+            raise Exception(_("OIDC provider has not returned a valid response"))
+
+    await session.close()
+    return response_data

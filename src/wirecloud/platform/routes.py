@@ -35,7 +35,6 @@ from src.wirecloud import docs as root_docs
 router = APIRouter()
 
 # TODO Error pages
-# TODO Theme data
 
 def get_current_theme(request: Request) -> str:
     if "themeactive" in request.query_params and request.query_params["themeactive"] in settings.AVAILABLE_THEMES:
@@ -92,7 +91,7 @@ def serve_static(path: str, themeactive: str = settings.THEME_ACTIVE, view: str 
     return FileResponse(get_theme_static_path(themeactive, path))
 
 
-def render_wirecloud(request: Request, view: Optional[str] = None, title: str = "", description: str = ""):
+def render_wirecloud(request: Request, view: Optional[str] = None, page: Optional[str] = None, title: str = "", description: str = "", extra_context: dict = None):
     from src.wirecloud.platform.core.plugins import get_version_hash
 
     templates = get_jinja2_templates(get_current_theme(request))
@@ -120,11 +119,18 @@ def render_wirecloud(request: Request, view: Optional[str] = None, title: str = 
                                                                                             get_available_themes(request.state.lang),
                                                                                             view_name, plain)
 
+    if extra_context:
+        context.update(extra_context)
+
     try:
+        path = f"wirecloud/views/{view}.html" if page is None else f"{page}.html"
         return templates.TemplateResponse(
-            request=request, name=f"wirecloud/views/{view}.html", context=context,
+            request=request, name=path, context=context,
         )
     except jinja2.exceptions.TemplateNotFound:
+        if page is not None:
+            raise NotFound(f"Template {page} not found")
+
         view = get_current_view(request, True)
         context["VIEW_MODE"] = view
 

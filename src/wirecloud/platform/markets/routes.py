@@ -22,14 +22,14 @@ import os
 from bson import ObjectId
 from fastapi import APIRouter, Request, Body, Path, Response
 
-from src.wirecloud.platform.markets.schemas import MarketData, MarketCreate, Market, PublishData
+from src.wirecloud.platform.markets.schemas import MarketData, MarketCreate, Market, PublishData, MarketPermissions
 from src.wirecloud.platform.markets import docs
 from src.wirecloud.platform.markets.crud import (get_markets_for_user, get_market_user, create_market,
                                                  delete_market_by_name)
 from src.wirecloud.platform.markets.utils import get_market_managers
 from src.wirecloud.commons.auth.crud import get_user_by_username
 from src.wirecloud.commons.utils.http import produces, consumes, authentication_required, build_error_response
-from src.wirecloud.commons.auth.utils import UserDep
+from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
 from src.wirecloud.commons.utils.wgt import WgtFile
 from src.wirecloud.catalogue.crud import get_catalogue_resource
 from src.wirecloud.catalogue import utils as catalogue
@@ -56,14 +56,14 @@ markets_router = APIRouter()
     }
 )
 @produces(["application/json"])
-@authentication_required
-async def get_market_collection(db: DBDep, user: UserDep, _request: Request):
+@authentication_required(csrf=False)
+async def get_market_collection(db: DBDep, user: UserDepNoCSRF, _request: Request):
     result = []
 
     for market in await get_markets_for_user(db, user):
-        market_data = MarketData(**market.options.model_dump(), permissions={
-            'delete': user.is_superuser or market.user_id == user.id
-        })
+        market_data = MarketData(**market.options.model_dump(), permissions=MarketPermissions(
+            delete=user.is_superuser or market.user_id == user.id
+        ))
         market_data.name = market.name
         market_data.user = (await get_market_user(db, market)).username
         market_data.public = market.public

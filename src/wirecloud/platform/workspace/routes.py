@@ -36,7 +36,7 @@ from src.wirecloud.platform.preferences.crud import update_workspace_preferences
 from src.wirecloud.platform.workspace.crud import get_workspace_list, create_empty_workspace, get_workspace_by_id, \
     create_workspace, get_workspace_by_username_and_name, is_a_workspace_with_that_name, change_workspace, \
     delete_workspace, change_tab, set_visible_tab
-from src.wirecloud.commons.auth.utils import UserDep
+from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
 from src.wirecloud.platform.workspace.mashupTemplateGenerator import build_json_template_from_workspace, \
     build_xml_template_from_workspace
 from src.wirecloud.platform.workspace.mashupTemplateParser import check_mashup_dependencies, MissingDependencies, \
@@ -50,10 +50,11 @@ from src.wirecloud.platform.workspace import docs
 from src.wirecloud.translation import gettext as _
 
 workspace_router = APIRouter()
+workspaces_router = APIRouter()
 
 
-@workspace_router.get(
-    "/workspaces/",
+@workspaces_router.get(
+    "/",
     summary=docs.get_workspace_collection_summary,
     description=docs.get_workspace_collection_description,
     response_model=list[WorkspaceData],
@@ -66,14 +67,14 @@ workspace_router = APIRouter()
     }
 )
 @produces(["application/json"])
-async def get_workspace_list_route(db: DBDep, request: Request, user: UserDep) -> list[WorkspaceData]:
+async def get_workspace_list_route(db: DBDep, user: UserDepNoCSRF) -> list[WorkspaceData]:
     workspaces = await get_workspace_list(db, user)
     data_list = [await get_workspace_data(db, workspace, user) for workspace in workspaces]
     return data_list
 
 
-@workspace_router.post(
-    "/workspaces/",
+@workspaces_router.post(
+    "/",
     summary=docs.create_workspace_collection_summary,
     description=docs.create_workspace_collection_description,
     response_model=WorkspaceGlobalData,
@@ -178,7 +179,7 @@ async def create_workspace_collection(db: DBDep, user: UserDep, request: Request
     }
 )
 @produces(["application/json"])
-async def get_workspace_entry_with_id(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(
+async def get_workspace_entry_with_id(db: DBDep, user: UserDepNoCSRF, request: Request, workspace_id: Id = Path(
     description=docs.get_workspace_entry_id_workspace_id_description)):
     workspace = await get_workspace_by_id(db, workspace_id)
 
@@ -201,7 +202,7 @@ async def get_workspace_entry_with_id(db: DBDep, user: UserDep, request: Request
             docs.get_workspace_entry_owner_name_not_found_response_description)
     }
 )
-async def get_workspace_entry_with_owner_and_name(db: DBDep, user: UserDep, request: Request, owner: str = Path(
+async def get_workspace_entry_with_owner_and_name(db: DBDep, user: UserDepNoCSRF, request: Request, owner: str = Path(
     description=docs.get_workspace_entry_owner_name_owner_description), name: str = Path(
     description=docs.get_workspace_entry_owner_name_name_description)):
     workspace = await get_workspace_by_username_and_name(db, owner, name)
@@ -393,7 +394,7 @@ async def create_tab_collection(db: DBDep, user: UserDep, request: Request, work
     }
 )
 @produces(["application/json"])
-async def get_tab_entry(db: DBDep, user: UserDep, request: Request,
+async def get_tab_entry(db: DBDep, user: UserDepNoCSRF, request: Request,
                         workspace_id: Id = Path(description=docs.get_tab_entry_workspace_id_description),
                         tab_position: int = Path(description=docs.get_tab_entry_tab_position_description)):
     workspace = await get_workspace_by_id(db, workspace_id)

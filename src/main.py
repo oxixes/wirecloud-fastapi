@@ -27,16 +27,18 @@ from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from fastapi.openapi.utils import get_openapi
 
+from src.settings_validator import validate_settings
 from src.wirecloud.database import close
 from src.wirecloud.platform.plugins import get_plugins, get_extra_openapi_schemas
 from src.wirecloud.commons.middleware import install_all_middlewares
 from src.wirecloud import docs
 
 
-# TODO Validate settings
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    get_plugins(app)
+    await validate_settings()
+    get_plugins(app)
     yield
     close()
 
@@ -45,7 +47,6 @@ app = FastAPI(lifespan=lifespan,
               default_response_class=ORJSONResponse)
 
 install_all_middlewares(app)
-get_plugins(app)
 
 
 def custom_openapi():

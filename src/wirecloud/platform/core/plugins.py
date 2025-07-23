@@ -21,26 +21,27 @@
 # TODO Add translations, finish the class implementation
 
 import os
-
+from urllib.parse import quote_plus
 import orjson as json
 from hashlib import sha1, md5
 from typing import Any, Optional
-
 from fastapi import FastAPI, Request
 
 import src.wirecloud.platform as platform
 from src import settings
+from src.wirecloud.commons.utils.http import get_absolute_reverse_url
 from src.wirecloud.platform.iwidget.routes import iwidget_router
 from src.wirecloud.platform.widget.routes import widget_router
 from src.wirecloud.platform.workspace.routes import workspace_router
 from src.wirecloud.platform.wiring.routes import wiring_router, operator_router
+from src.wirecloud.platform.workspace.routes import workspace_router, workspaces_router
 from src.wirecloud.platform.plugins import (get_active_features_info, get_plugin_urls, AjaxEndpoint, build_url_template,
-                                            WirecloudPlugin)
+                                            WirecloudPlugin, URLTemplate)
 from src.wirecloud.platform.context.schemas import BaseContextKey, WorkspaceContextKey
 from src.wirecloud.platform.preferences.routes import preferences_router
 from src.wirecloud.platform.preferences.schemas import PreferenceKey, SelectEntry, TabPreferenceKey
 from src.wirecloud.platform.urls import patterns
-from src.wirecloud.platform.routes import get_current_theme
+from src.wirecloud.platform.routes import get_current_theme, get_current_view
 from src.wirecloud.commons.auth.schemas import UserAll, Session
 
 from src.wirecloud.platform.context.routes import router as context_router
@@ -83,8 +84,9 @@ class WirecloudCorePlugin(WirecloudPlugin):
         app.include_router(localcatalogue_router, prefix="/api/resource", tags=["Local Catalogue"])
         app.include_router(market_router, prefix="/api/market", tags=["Market"])
         app.include_router(markets_router, prefix="/api/markets", tags=["Market"])
-        app.include_router(preferences_router, prefix="/api/preferences", tags=["Preferences"])
+        app.include_router(preferences_router, prefix="/api", tags=["Preferences"])
         app.include_router(workspace_router, prefix="/api/workspace", tags=["Workspace"])
+        app.include_router(workspaces_router, prefix="/api/workspaces", tags=["Workspace"])
         app.include_router(iwidget_router, prefix="/api/workspace", tags=["Widget instances"])
         app.include_router(widget_router, prefix="/api/widget", tags=["Widget"])
         app.include_router(theme_router, prefix="/api/theme", tags=["Theme"])
@@ -181,7 +183,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
             'issuperuser': user.is_superuser if user else False,
             'groups': groups,
             # 'organizations': tuple(user.groups.filter(organization__isnull=False).values_list('name', flat=True)),
-            'mode': 'unknown',
+            'mode': get_current_view(request),
             'realuser': session.real_user if session else None,
             'theme': get_current_theme(request),
             'version': platform.__version__,
@@ -343,11 +345,23 @@ class WirecloudCorePlugin(WirecloudPlugin):
         else:
             return []
 
-    def get_ajax_endpoints(self, view: str, prefix: str) -> tuple[AjaxEndpoint, ...]:
+    # TODO Move each template to its own plugin
+    def get_ajax_endpoints(self, view: str, request: Request) -> tuple[AjaxEndpoint, ...]:
         url_patterns = get_plugin_urls()
+        prefix = request.scope.get('root_path')
 
         if not 'wirecloud|proxy' in url_patterns:
             raise ValueError('Missing proxy url pattern. Is the proxy plugin enabled?')
+
+        login_url_pattern = URLTemplate(urlpattern=url_patterns['login'].urlpattern, defaults={})
+        if getattr(settings, 'OID_CONNECT_ENABLED', False):
+            if '?' in login_url_pattern.urlpattern:
+                login_url_pattern.urlpattern += '&'
+            else:
+                login_url_pattern.urlpattern += '?'
+            login_url_pattern.urlpattern += f"redirect_uri={quote_plus(get_absolute_reverse_url('oidc_login_callback', request))}"
+            # Add the current URL as the state, in order to redirect to the same page after login
+            login_url_pattern.urlpattern += f"&state={quote_plus(request.url.path + (('?' + request.url.query) if request.url.query else ''))}"
 
         endpoints = (
             AjaxEndpoint(id='IWIDGET_COLLECTION', url=build_url_template(url_patterns['wirecloud.iwidget_collection'],
@@ -371,8 +385,9 @@ class WirecloudCorePlugin(WirecloudPlugin):
                          url=build_url_template(url_patterns['wirecloud.unversioned_resource_entry'],
                                                 ['vendor', 'name'], prefix)),
             AjaxEndpoint(id='LOGIN_API', url=build_url_template(url_patterns['wirecloud.login'], [], prefix)),
-            AjaxEndpoint(id='LOGIN_VIEW', url=build_url_template(url_patterns['login'], [], prefix)),
+            AjaxEndpoint(id='LOGIN_VIEW', url=build_url_template(login_url_pattern, [], prefix)),
             AjaxEndpoint(id='LOGOUT_VIEW', url=build_url_template(url_patterns['logout'], [], prefix)),
+            AjaxEndpoint(id="REFRESH_TOKEN", url=build_url_template(url_patterns['wirecloud.token_refresh'], [], prefix)),
             AjaxEndpoint(id='MAC_BASE_URL', url=build_url_template(url_patterns['wirecloud.showcase_media'],
                                                                    ['vendor', 'name', 'version', 'file_path'], prefix)),
             AjaxEndpoint(id='MARKET_COLLECTION',

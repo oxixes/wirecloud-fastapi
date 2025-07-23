@@ -39,6 +39,7 @@ from collections.abc import Callable
 from urllib.parse import urljoin, unquote, urlparse, quote
 
 from src import settings
+from src.wirecloud.commons.auth.utils import UserDepNoCSRF
 from src.wirecloud.commons.utils import mimeparser
 from src.wirecloud.translation import gettext as _
 
@@ -162,6 +163,21 @@ def build_error_response(request: Request, status_code: int, error_msg: str, ext
     return build_response(request, status_code, context, formatters, headers)
 
 
+def get_redirect_response(request: Request) -> Response:
+    # Get query state
+    query_state = request.query_params.get("state", None)
+    if query_state is not None:
+        # Redirect to the state URL, converting it to an absolute URL if necessary
+        if query_state.startswith('/'):
+            query_state = get_absolute_reverse_url('wirecloud.root', request) + query_state[1:]
+        response = Response(status_code=302, headers={"Location": query_state})
+    else:
+        # Redirect to the main page
+        response = Response(status_code=302, headers={"Location": get_absolute_reverse_url('wirecloud.root', request)})
+
+    return response
+
+
 def get_content_type(request: Request) -> tuple[str, dict[str, str]]:
     content_type_header = request.headers.get('Content-Type', None)
     if content_type_header is not None:
@@ -190,7 +206,7 @@ def build_permission_denied_response(request: Request, error_msg: str) -> Respon
 
 
 def generate_new_param_signature(sig: Signature, new_param_name: str, new_param_type: type,
-                                 default_value: Any = inspect.Parameter.empty) -> tuple[Signature, str]:
+                                 default_value: Any = inspect.Parameter.empty) -> tuple[Signature, str, bool]:
     params = list(sig.parameters.values())
     new_sig = sig
 
@@ -214,44 +230,50 @@ def generate_new_param_signature(sig: Signature, new_param_name: str, new_param_
         # Find the parameter with the new_param_type
         new_param_name = [param.name for param in params if param.annotation == new_param_type][0]
 
-    return new_sig, new_param_name
+    return new_sig, new_param_name, new_param_exists
 
 
-def authentication_required(handler):
+def authentication_required(csrf: bool = True):
     from src.wirecloud.commons.auth.schemas import UserAll
     from src.wirecloud.commons.auth.utils import UserDep
 
-    # Check that the handler has a user and request parameter
-    new_sig, request_param = generate_new_param_signature(inspect.signature(handler), 'request', Request)
-    new_sig, user_param = generate_new_param_signature(new_sig, 'user', UserDep)
-
-    @wraps(handler)
-    async def wrapper(*args, **kwargs):
-        user: Optional[UserAll] = kwargs.get(user_param)
-        request: Request = kwargs.get(request_param)
-
-        if user is None:
-            return build_error_response(request, 401, 'Authentication Required')
+    def wrap(handler):
+        # Check that the handler has a user and request parameter
+        new_sig, request_param, request_param_existed = generate_new_param_signature(inspect.signature(handler), 'request', Request)
+        if csrf:
+            new_sig, user_param, user_param_existed = generate_new_param_signature(new_sig, 'user', UserDep)
         else:
-            is_async = inspect.iscoroutinefunction(handler)
+            new_sig, user_param, user_param_existed = generate_new_param_signature(new_sig, 'user', UserDepNoCSRF)
 
-            if is_async:
-                return await handler(*args, **kwargs)
+        @wraps(handler)
+        async def wrapper(*args, **kwargs):
+            user: Optional[UserAll] = kwargs.get(user_param) if user_param_existed else kwargs.pop(user_param)
+            request: Request = kwargs.get(request_param) if request_param_existed else kwargs.pop(request_param)
+
+            if user is None:
+                return build_error_response(request, 401, 'Authentication Required')
             else:
-                return handler(*args, **kwargs)
+                is_async = inspect.iscoroutinefunction(handler)
 
-    wrapper.__signature__ = new_sig
+                if is_async:
+                    return await handler(*args, **kwargs)
+                else:
+                    return handler(*args, **kwargs)
 
-    return wrapper
+        wrapper.__signature__ = new_sig
+
+        return wrapper
+
+    return wrap
 
 
 def produces(mime_types: list[str]):
     def wrap(handler):
-        new_sig, request_param = generate_new_param_signature(inspect.signature(handler), 'request', Request)
+        new_sig, request_param, request_param_existed = generate_new_param_signature(inspect.signature(handler), 'request', Request)
 
         @wraps(handler)
         async def wrapper(*args, **kwargs):
-            request: Request = kwargs.get(request_param)
+            request: Request = kwargs.get(request_param) if request_param_existed else kwargs.pop(request_param)
 
             accept_header = request.headers.get('Accept', '*/*')
             request.state.best_response_mimetype = mimeparser.best_match(mime_types, accept_header)
@@ -277,11 +299,11 @@ def produces(mime_types: list[str]):
 
 def consumes(mime_types: list[str]):
     def wrap(handler):
-        new_sig, request_param = generate_new_param_signature(inspect.signature(handler), 'request', Request)
+        new_sig, request_param, request_param_existed = generate_new_param_signature(inspect.signature(handler), 'request', Request)
 
         @wraps(handler)
         async def wrapper(*args, **kwargs):
-            request: Request = kwargs.get(request_param)
+            request: Request = kwargs.get(request_param) if request_param_existed else kwargs.pop(request_param)
             request.state.mimetype = get_content_type(request)[0]
             if request.state.mimetype not in mime_types:
                 msg = _("Unsupported request media type")

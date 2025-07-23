@@ -17,10 +17,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 from typing import Any
 
-import src.wirecloud.docs as docs
+from src.wirecloud.platform.context import docs
 from src.wirecloud.platform.context.models import DBConstant
 
 Constant = DBConstant

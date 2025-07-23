@@ -20,18 +20,15 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from enum import Enum
-from src.wirecloud import docs
+from src.wirecloud.commons.auth import docs
 from datetime import datetime
 
 from src.wirecloud.database import Id
-from src.wirecloud.commons.auth.models import DBGroup
+from src.wirecloud.commons.auth.models import Group
 
 
 class Permission(BaseModel):
     codename: str = Field(description=docs.permission_codename_description, min_length=1, max_length=255)
-
-
-Group = DBGroup
 
 
 class UserBase(BaseModel):
@@ -42,19 +39,26 @@ class UserLogin(UserBase):
     password: str = Field(description=docs.user_login_password_description, min_length=1)
 
 
-class User(UserBase):
-    id: Id = Field(description=docs.user_id_description)
+class UserDetails(UserBase):
     email: str = Field(description=docs.user_email_description)
     first_name: str = Field(description=docs.user_first_name_description, max_length=30)
     last_name: str = Field(description=docs.user_last_name_description, max_length=150)
     is_superuser: bool = Field(description=docs.user_is_superuser_description)
     is_staff: bool = Field(description=docs.user_is_staff_description)
     is_active: bool = Field(description=docs.user_is_active_description)
-    date_joined: datetime = Field(description=docs.user_date_joined_description)
-    last_login: Optional[datetime] = Field(description=docs.user_last_login_description, default=None)
 
     def get_full_name(self):
         return f"{self.first_name} {self.last_name}".strip()
+
+
+class User(UserDetails):
+    id: Id = Field(description=docs.user_id_description)
+    date_joined: datetime = Field(description=docs.user_date_joined_description)
+    last_login: Optional[datetime] = Field(description=docs.user_last_login_description, default=None)
+
+
+class UserCreate(UserDetails, UserLogin):
+    pass
 
 
 class UserWithPassword(User, UserLogin):
@@ -66,9 +70,17 @@ class UserAll(User):
     permissions: list[Permission] = Field(default=[])
 
 
+class OIDCToken(BaseModel):
+    refresh: str
+    refresh_expiration: int
+
+
 class Session(BaseModel):
+    id: Id
     real_user: Optional[str] = Field(default=None)
     real_fullname: Optional[str] = Field(default=None)
+    oidc_token: Optional[OIDCToken] = Field(default=None)
+    requires_csrf: bool = Field(default=True)
 
 
 class UserTokenType(str, Enum):

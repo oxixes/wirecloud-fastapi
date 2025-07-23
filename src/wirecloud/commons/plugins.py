@@ -18,8 +18,9 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from src.wirecloud.commons.auth.routes import router as auth_router
-from src.wirecloud.commons.urls import patterns
-from src.wirecloud.platform.plugins import WirecloudPlugin
+from src.wirecloud.commons.auth.routes import base_router as auth_base_router
+from src.wirecloud.commons.urls import get_urlpatterns
+from src.wirecloud.platform.plugins import WirecloudPlugin, URLTemplate
 from src.wirecloud.commons.auth.schemas import UserLogin
 from src.wirecloud.commons.routes import router as commons_router
 
@@ -28,13 +29,15 @@ from typing import Any
 
 
 class WirecloudCommonsPlugin(WirecloudPlugin):
-    urls = patterns
-
     def __init__(self, app: FastAPI):
         super().__init__(app)
 
         app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
+        app.include_router(auth_base_router, prefix="", tags=["Auth"])
         app.include_router(commons_router, prefix="", tags=["Other"])
+
+    def get_urls(self) -> dict[str, URLTemplate]:
+        return get_urlpatterns()
 
     def get_openapi_extra_schemas(self) -> dict[str, dict[str, Any]]:
         return {

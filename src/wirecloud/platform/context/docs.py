@@ -17,25 +17,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from fastapi import APIRouter, Request
-from typing import Optional
-
-from src.wirecloud.platform.context.schemas import Context
-from src.wirecloud.platform.context.utils import get_platform_context, get_workspace_context_definitions
-from src.wirecloud.commons.auth.utils import SessionDepNoCSRF, UserDepNoCSRF
-
-router = APIRouter()
-
-
-@router.get("/", response_model=Context)
-async def get_context(request: Request, user: UserDepNoCSRF, session: SessionDepNoCSRF, theme: Optional[str] = None):
-    # TODO Provide user and session
-    context = Context(
-        platform=get_platform_context(request, user=user, session=session),
-        workspace=get_workspace_context_definitions()
-    )
-
-    if theme:
-        context.platform['theme'].value = theme
-
-    return context
+context_key_description_description = "The context key's description"
+context_key_label_description = "The context key's label"
+platform_context_key_value_description = "The context key's value"
+context_platform_description = "The platform context"
+context_workspace_description = "The workspace context description"

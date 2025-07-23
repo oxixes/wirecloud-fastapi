@@ -17,17 +17,88 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Optional, Union
-from datetime import datetime, timezone
+from typing import Optional
+from datetime import datetime, timezone, tzinfo
 
 from bson import ObjectId
 
-from src.wirecloud.commons.auth.schemas import User, UserWithPassword, Group, Permission, UserAll
+from src.wirecloud.commons.auth.schemas import User, UserWithPassword, Permission, UserAll, UserCreate
 from src.wirecloud.commons.auth.models import DBUser as UserModel
-from src.wirecloud.commons.auth.models import DBGroup as GroupModel
+from src.wirecloud.commons.auth.models import Group as GroupModel, Group
 from src.wirecloud.commons.auth.models import DBPlatformPreference as PlatformPreferenceModel
 from src.wirecloud.database import DBSession, Id
 
+async def create_token(db: DBSession, expiration: datetime) -> ObjectId:
+    if not db.in_transaction:
+        db.start_transaction()
+
+    token = {
+        "_id": ObjectId(),
+        "valid": True,
+        "expiration": expiration
+    }
+
+    await db.client.tokens.insert_one(token)
+    return token["_id"]
+
+async def is_token_valid(db: DBSession, token_id: ObjectId) -> bool:
+    if not db.in_transaction:
+        db.start_transaction()
+
+    token = await db.client.tokens.find_one({"_id": token_id})
+
+    if token is None:
+        return False
+
+    exp_datetime = token.get("expiration")
+    exp_datetime = exp_datetime.replace(tzinfo=timezone.utc)  # Ensure the expiration datetime is timezone-aware
+    if exp_datetime < datetime.now(timezone.utc):
+        return False
+
+    return token["valid"]
+
+
+async def set_token_expiration(db: DBSession, token_id: ObjectId, expiration: datetime) -> None:
+    if not db.in_transaction:
+        db.start_transaction()
+
+    query = {"_id": token_id}, {"$set": {"expiration": expiration}}
+    await db.client.tokens.update_one(*query)
+
+
+async def invalidate_token(db: DBSession, token_id: ObjectId) -> None:
+    if not db.in_transaction:
+        db.start_transaction()
+
+    query = {"_id": token_id}, {"$set": {"valid": False}}
+    await db.client.tokens.update_one(*query)
+
+async def create_user(db: DBSession, user_info: UserCreate) -> None:
+    user_created = UserModel(
+        _id=ObjectId(),
+        username=user_info.username,
+        password=user_info.password,
+        first_name=user_info.first_name,
+        last_name=user_info.last_name,
+        email=user_info.email,
+        is_superuser=user_info.is_superuser,
+        is_staff=user_info.is_staff,
+        is_active=user_info.is_active,
+        date_joined=datetime.now(timezone.utc),
+        last_login=None
+    )
+
+    if not db.in_transaction:
+        db.start_transaction()
+
+    await db.client.users.insert_one(user_created.model_dump(by_alias=True))
+
+async def update_user(db: DBSession, user_info: User) -> None:
+    if not db.in_transaction:
+        db.start_transaction()
+
+    query = {"_id": ObjectId(user_info.id)}, {"$set": user_info.model_dump(by_alias=True, exclude={"id"})}
+    await db.client.users.update_one(*query)
 
 async def get_user_by_id(db: DBSession, user_id: Id) -> Optional[User]:
     query = {"_id": ObjectId(user_id)}
@@ -148,6 +219,61 @@ async def get_user_with_password(db: DBSession, username: str) -> Optional[UserW
         password=user.password
     )
 
+
+async def add_user_to_groups_by_codename(db: DBSession, user_id: Id, group_names: list[str]) -> None:
+    if not db.in_transaction:
+        db.start_transaction()
+
+    query = {"codename": {"$in": group_names}}
+    groups = await db.client.groups.find(query).to_list()
+
+    user_query = {"_id": ObjectId(user_id)}
+    user = await db.client.users.find_one(user_query, {"groups": 1})
+    current_group_ids = set(user.get("groups", []))
+
+    new_group_ids = [group["_id"] for group in groups if group["_id"] not in current_group_ids]
+
+    if new_group_ids:
+        await db.client.groups.update_many(
+            {"_id": {"$in": new_group_ids}},
+            {"$addToSet": {"users": ObjectId(user_id)}}
+        )
+
+        updated_group_ids = list(current_group_ids.union(new_group_ids))
+        await db.client.users.update_one(user_query, {"$set": {"groups": updated_group_ids}})
+
+
+async def create_group_if_not_exists(db: DBSession, group_info: Group) -> None:
+    query = {"name": group_info.name}
+    group = await db.client.groups.find_one(query)
+
+    if group is None:
+        if not db.in_transaction:
+            db.start_transaction()
+
+        await db.client.groups.insert_one(group_info.model_dump(by_alias=True))
+
+
+async def remove_user_from_all_groups(db: DBSession, user_id: Id) -> None:
+    if not db.in_transaction:
+        db.start_transaction()
+
+    query = {"_id": ObjectId(user_id)}
+    user = await db.client.users.find_one(query, {"groups": 1})
+
+    if user is None:
+        return
+
+    group_ids = user.get("groups", [])
+    if not group_ids:
+        return
+
+    await db.client.groups.update_many(
+        {"_id": {"$in": group_ids}},
+        {"$pull": {"users": ObjectId(user_id)}}
+    )
+
+    await db.client.users.update_one(query, {"$set": {"groups": []}})
 
 async def set_login_date_for_user(db: DBSession, user_id: Id) -> None:
     if not db.in_transaction:

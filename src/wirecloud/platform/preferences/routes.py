@@ -25,7 +25,7 @@ from fastapi import APIRouter, Request, Response, Body, Path
 
 from src.wirecloud.commons.auth.crud import get_user_preferences, get_group_by_name, get_user_by_username
 from src.wirecloud.commons.auth.models import DBPlatformPreference as PlatformPreferenceModel
-from src.wirecloud.commons.auth.utils import UserDep
+from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
 from src.wirecloud.commons.utils.http import build_error_response, consumes, authentication_required
 from src.wirecloud.database import DBDep, Id
 from src.wirecloud.platform.preferences.crud import update_preferences, \
@@ -59,7 +59,7 @@ def parse_values(preferences: list[PlatformPreferenceModel]) -> dict[str, dict[s
         )
     }
 )
-async def get_platform_preferences(db: DBDep, request: Request, user: UserDep):
+async def get_platform_preferences(db: DBDep, request: Request, user: UserDepNoCSRF):
     if user is not None:
         preferences = await get_user_preferences(db, user.id)
         if preferences is None:
@@ -121,8 +121,8 @@ async def create_platform_preferences(db: DBDep, request: Request, user: UserDep
         )
     }
 )
-@authentication_required
-async def get_workspace_preferences(db: DBDep, request: Request, user: UserDep, workspace_id: Id = Path(
+@authentication_required(csrf=False)
+async def get_workspace_preferences(db: DBDep, request: Request, user: UserDepNoCSRF, workspace_id: Id = Path(
     description=docs.get_workspace_preference_collection_workspace_id_description)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
@@ -246,8 +246,8 @@ async def create_workspace_preferences(db: DBDep, request: Request, user: UserDe
         )
     }
 )
-@authentication_required
-async def get_tab_preferences(db: DBDep, request: Request, user: UserDep, workspace_id: Id = Path(
+@authentication_required(csrf=False)
+async def get_tab_preferences(db: DBDep, request: Request, user: UserDepNoCSRF, workspace_id: Id = Path(
     description=docs.get_tab_preference_collection_workspace_id_description), tab_position: int = Path(
     description=docs.get_tab_preference_collection_tab_position_description)):
     workspace = await get_workspace_by_id(db, workspace_id)

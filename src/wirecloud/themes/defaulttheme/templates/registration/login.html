@@ -29,22 +29,22 @@
         </div>
 
         <form style="text-align: left; width: 400px" id="wc-login-form" method="post">
-        <div class="panel panel-default">
+            <div class="panel panel-default">
 
-            <div class="panel-heading">
+                <div class="panel-heading">
 
-                {% if form.errors %}
-                <div class="alert alert-danger">{{ trans("<h4>Your username and password didn't match.</h4><p>Please try again.</p>") }}</div>
-                {% endif %}
+                    {% if form.errors %}
+                    <div class="alert alert-danger">{{ trans("<h4>Your username and password didn't match.</h4><p>Please try again.</p>") }}</div>
+                    {% endif %}
 
-                <input type="hidden" name="next" value="{{ next }}" />
-                <input type="text" class="se-text-field" style="margin: 3px 0; width: 100%;" name="username" autocapitalize="off" autofocus="autofocus" placeholder="{{ trans("Username") }}"/>
-                <div style="display: table-row;">
-                    <div style="display: table-cell; width: 100%; padding: 3px 3px 3px 0px;"><input type="password" class="se-password-field" style="width: 100%; margin: 0;" name="password" placeholder="{{ trans("Password") }}"/></div>
-                    <div style="display: table-cell; padding: 3px 0px 3px 3px;"><input class="se-btn btn-primary" style="margin: 0;" type="submit" value="{{ trans('Sign in') }}" /></div>
+                    <input type="hidden" name="next" value="{{ next }}" />
+                    <input type="text" class="se-text-field" style="margin: 3px 0; width: 100%;" name="username" autocapitalize="off" autofocus="autofocus" placeholder="{{ trans("Username") }}"/>
+                    <div style="display: table-row;">
+                        <div style="display: table-cell; width: 100%; padding: 3px 3px 3px 0px;"><input type="password" class="se-password-field" style="width: 100%; margin: 0;" name="password" placeholder="{{ trans("Password") }}"/></div>
+                        <div style="display: table-cell; padding: 3px 0px 3px 3px;"><input class="se-btn btn-primary" style="margin: 0;" type="submit" value="{{ trans('Sign in') }}" /></div>
+                    </div>
                 </div>
             </div>
-        </div>
         </form>
 
         </div>

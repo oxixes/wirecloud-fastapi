@@ -21,7 +21,7 @@ from typing import Any
 from fastapi import APIRouter, Request, Body, Path, Response
 
 from src.wirecloud.catalogue.crud import get_catalogue_resource_by_id
-from src.wirecloud.commons.auth.utils import UserDep
+from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
 from src.wirecloud.commons.utils.http import authentication_required, build_error_response, consumes, NotFound
 from src.wirecloud.database import DBDep, Id
 from src.wirecloud import docs as root_docs
@@ -57,8 +57,8 @@ iwidget_router = APIRouter()
         ),
     }
 )
-@authentication_required
-async def get_widget_instance_collection(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(
+@authentication_required(csrf=False)
+async def get_widget_instance_collection(db: DBDep, user: UserDepNoCSRF, request: Request, workspace_id: Id = Path(
     description=docs.get_widget_instance_collection_workspace_id_description),
                                  tab_position: int = docs.get_widget_instance_collection_tab_position_description):
     workspace = await get_workspace_by_id(db, workspace_id)
@@ -222,8 +222,8 @@ async def update_widget_instance_collection(db: DBDep, user: UserDep, request: R
         ),
     }
 )
-@authentication_required
-async def get_widget_instance_entry(db: DBDep, user: UserDep, request: Request,
+@authentication_required(csrf=False)
+async def get_widget_instance_entry(db: DBDep, user: UserDepNoCSRF, request: Request,
                             workspace_id: Id = Path(description=docs.get_widget_instance_entry_workspace_id_description),
                             tab_position: int = Path(description=docs.get_widget_instance_entry_tab_position_description),
                             iwidget_position: int = Path(
@@ -466,8 +466,8 @@ async def update_widget_instance_preferences(db: DBDep, user: UserDep, request: 
         ),
     }
 )
-@authentication_required
-async def get_widget_instance_preferences(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(
+@authentication_required(csrf=False)
+async def get_widget_instance_preferences(db: DBDep, user: UserDepNoCSRF, request: Request, workspace_id: Id = Path(
     description=docs.get_widget_instance_preferences_workspace_id_description), tab_position: int = Path(
     description=docs.get_widget_instance_preferences_tab_position_description), iwidget_position: int = Path(
     description=docs.get_widget_instance_preferences_widget_instance_position_description)):
@@ -593,8 +593,8 @@ async def update_widget_instance_properties(db: DBDep, user: UserDep, request: R
         ),
     }
 )
-@authentication_required
-async def get_widget_instance_properties(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(),
+@authentication_required(csrf=False)
+async def get_widget_instance_properties(db: DBDep, user: UserDepNoCSRF, request: Request, workspace_id: Id = Path(),
                                  tab_position: int = Path(), iwidget_position: int = Path()):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:

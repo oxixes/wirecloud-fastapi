@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 # Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
 
 # This file is part of Wirecloud.
@@ -17,25 +16,21 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from fastapi import APIRouter, Request
-from typing import Optional
+import asyncio
 
-from src.wirecloud.platform.context.schemas import Context
-from src.wirecloud.platform.context.utils import get_platform_context, get_workspace_context_definitions
-from src.wirecloud.commons.auth.utils import SessionDepNoCSRF, UserDepNoCSRF
-
-router = APIRouter()
+from src import settings
+from src.wirecloud.platform.plugins import get_config_validators
 
 
-@router.get("/", response_model=Context)
-async def get_context(request: Request, user: UserDepNoCSRF, session: SessionDepNoCSRF, theme: Optional[str] = None):
-    # TODO Provide user and session
-    context = Context(
-        platform=get_platform_context(request, user=user, session=session),
-        workspace=get_workspace_context_definitions()
-    )
+async def validate_settings():
+    if getattr(settings, "OID_CONNECT_ENABLED", False):
+        if not getattr(settings, "OID_CONNECT_CLIENT_ID", None):
+            raise ValueError("OID_CONNECT_CLIENT_ID is required when OID_CONNECT_ENABLED is True")
 
-    if theme:
-        context.platform['theme'].value = theme
-
-    return context
+    validators = get_config_validators()
+    for validator in validators:
+        # Check if its synchronous
+        if hasattr(validator, "__call__") and not asyncio.iscoroutinefunction(validator):
+            validator(settings)
+        elif asyncio.iscoroutinefunction(validator):
+            await validator(settings)

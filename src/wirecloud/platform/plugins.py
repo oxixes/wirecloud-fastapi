@@ -88,7 +88,7 @@ class WirecloudPlugin:
     def get_constants(self) -> dict[str, Any]:
         return {}
 
-    def get_ajax_endpoints(self, view: str, prefix: str) -> tuple[AjaxEndpoint, ...]:
+    def get_ajax_endpoints(self, view: str, request: Request) -> tuple[AjaxEndpoint, ...]:
         return ()
 
     def get_widget_api_extensions(self, view: str, features: list[str]) -> list[str]:
@@ -100,6 +100,7 @@ class WirecloudPlugin:
     def get_proxy_processors(self) -> tuple[str, ...]:
         return ()
 
+    # TODO Actually implement use of this method
     def get_django_template_context_processors(self):
         return {}
 
@@ -107,6 +108,21 @@ class WirecloudPlugin:
         return {}
 
     def get_openapi_extra_schemas(self) -> dict[str, dict[str, Any]]:
+        return {}
+
+    def get_config_validators(self) -> tuple[Callable, ...]:
+        return ()
+
+    def get_idm_get_authorization_url_functions(self) -> dict[str, Callable]:
+        return {}
+
+    def get_idm_get_token_functions(self) -> dict[str, Callable]:
+        return {}
+
+    def get_idm_get_user_functions(self) -> dict[str, Callable]:
+        return {}
+
+    def get_idm_backchannel_logout_functions(self) -> dict[str, Callable]:
         return {}
 
     def populate(self, wirecloud_user, log):
@@ -127,6 +143,11 @@ _wirecloud_api_auth_backends: Optional[dict[str, Callable]] = None
 _wirecloud_tab_preferences: Optional[list[TabPreferenceKey]] = None
 _wirecloud_workspace_preferences: Optional[list[PreferenceKey]] = None
 _wirecloud_templates: Optional[dict[str, list[str]]] = {}
+_wirecloud_config_validators: Optional[tuple[Callable, ...]] = None
+_wirecloud_idm_get_authorization_url_functions: Optional[dict[str, Callable]] = None
+_wirecloud_idm_get_token_functions: Optional[dict[str, Callable]] = None
+_wirecloud_idm_get_user_functions: Optional[dict[str, Callable]] = None
+_wirecloud_idm_backchannel_logout_functions: Optional[dict[str, Callable]] = None
 
 
 def find_wirecloud_plugins() -> list[WirecloudPlugin]:
@@ -141,15 +162,19 @@ def find_wirecloud_plugins() -> list[WirecloudPlugin]:
         plugins_module = 'src.%s.plugins' % app
         try:
             mod = import_module(plugins_module)
-        except (NameError, ImportError, SyntaxError) as exc:
-            error_message = str(exc)
-            if error_message not in (
-                    "No module named plugins", "No module named " + plugins_module,
-                    "No module named '" + plugins_module + "'"):
-                logger.error(
-                    "Error importing %(module)s (%(error_message)s). Any WireCloud plugin available through the %(app)s app will be ignored" % {
-                        "module": plugins_module, "error_message": error_message, "app": app})
-            continue
+        except (NameError, ImportError, SyntaxError):
+            try:
+                # Try to import the module without the 'src.' prefix
+                mod = import_module(plugins_module[4:])
+            except (NameError, ImportError, SyntaxError) as exc:
+                error_message = str(exc)
+                if error_message not in (
+                        "No module named plugins", "No module named " + plugins_module,
+                        "No module named '" + plugins_module + "'"):
+                    logger.error(
+                        "Error importing %(module)s (%(error_message)s). Any WireCloud plugin available through the %(app)s app will be ignored" % {
+                            "module": plugins_module, "error_message": error_message, "app": app})
+                continue
 
         mod_plugins = [cls for name, cls in mod.__dict__.items() if
                        inspect.isclass(cls) and cls != WirecloudPlugin and issubclass(cls, WirecloudPlugin)]
@@ -275,12 +300,12 @@ def get_plugin_urls() -> dict[str, URLTemplate]:
     return urls
 
 
-def get_wirecloud_ajax_endpoints(view: str, prefix: str) -> list[AjaxEndpoint]:
+def get_wirecloud_ajax_endpoints(view: str, request: Request) -> list[AjaxEndpoint]:
     plugins = get_plugins()
     endpoints = []
 
     for plugin in plugins:
-        endpoints += plugin.get_ajax_endpoints(view, prefix)
+        endpoints += plugin.get_ajax_endpoints(view, request)
 
     return endpoints
 
@@ -424,6 +449,81 @@ def get_response_proxy_processors() -> tuple[Any, ...]:
         get_proxy_processors()
 
     return _wirecloud_response_proxy_processors
+
+
+def get_config_validators() -> tuple[Callable, ...]:
+    global _wirecloud_config_validators
+
+    if _wirecloud_config_validators is None:
+        plugins = get_plugins()
+        validators = []
+
+        for plugin in plugins:
+            validators += plugin.get_config_validators()
+
+        _wirecloud_config_validators = tuple(validators)
+
+    return _wirecloud_config_validators
+
+
+def get_idm_get_authorization_url_functions() -> dict[str, Callable]:
+    global _wirecloud_idm_get_authorization_url_functions
+
+    if _wirecloud_idm_get_authorization_url_functions is None:
+        plugins = get_plugins()
+        functions = {}
+
+        for plugin in plugins:
+            functions.update(plugin.get_idm_get_authorization_url_functions())
+
+        _wirecloud_idm_get_authorization_url_functions = functions
+
+    return _wirecloud_idm_get_authorization_url_functions
+
+
+def get_idm_get_token_functions() -> dict[str, Callable]:
+    global _wirecloud_idm_get_token_functions
+
+    if _wirecloud_idm_get_token_functions is None:
+        plugins = get_plugins()
+        functions = {}
+
+        for plugin in plugins:
+            functions.update(plugin.get_idm_get_token_functions())
+
+        _wirecloud_idm_get_token_functions = functions
+
+    return _wirecloud_idm_get_token_functions
+
+
+def get_idm_get_user_functions() -> dict[str, Callable]:
+    global _wirecloud_idm_get_user_functions
+
+    if _wirecloud_idm_get_user_functions is None:
+        plugins = get_plugins()
+        functions = {}
+
+        for plugin in plugins:
+            functions.update(plugin.get_idm_get_user_functions())
+
+        _wirecloud_idm_get_user_functions = functions
+
+    return _wirecloud_idm_get_user_functions
+
+
+def get_idm_backchannel_logout_functions() -> dict[str, Callable]:
+    global _wirecloud_idm_backchannel_logout_functions
+
+    if _wirecloud_idm_backchannel_logout_functions is None:
+        plugins = get_plugins()
+        functions = {}
+
+        for plugin in plugins:
+            functions.update(plugin.get_idm_backchannel_logout_functions())
+
+        _wirecloud_idm_backchannel_logout_functions = functions
+
+    return _wirecloud_idm_backchannel_logout_functions
 
 
 def build_url_template(urltemplate: URLTemplate, kwargs: Optional[list[str]] = None, prefix: Optional[str] = None) -> str:
