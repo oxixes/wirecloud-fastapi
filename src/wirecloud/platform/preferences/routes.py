@@ -91,7 +91,7 @@ async def get_platform_preferences(db: DBDep, request: Request, user: UserDepNoC
         )
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(["application/json"])
 async def create_platform_preferences(db: DBDep, request: Request, user: UserDep,
                                       preferences: PlatformPreferenceCreate = Body(
@@ -157,7 +157,7 @@ async def get_workspace_preferences(db: DBDep, request: Request, user: UserDepNo
         )
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(["application/json"])
 async def create_workspace_preferences(db: DBDep, request: Request, user: UserDep, workspace_id: Id = Path(
     description=docs.create_workspace_preference_collection_workspace_id_description),

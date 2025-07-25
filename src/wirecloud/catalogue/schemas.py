@@ -72,10 +72,10 @@ class CatalogueResourceBase(BaseModel):
             return vendor is False or await check_vendor_permissions(db, user, self.vendor)
 
     # TODO Take into account user permissions too
-    async def is_available_for(self, db: DBSession, user: UserAll) -> bool:
+    async def is_available_for(self, db: DBSession, user: Optional[UserAll]) -> bool:
         from src.wirecloud.catalogue.crud import is_resource_available_for_user
 
-        return self.public or await is_resource_available_for_user(db, self, user)
+        return self.public or (user is not None and await is_resource_available_for_user(db, self, user))
 
     def get_template_url(self, request: Optional[Request] = None, for_base: bool = False,
                          url_pattern_name: str = 'wirecloud_catalogue.media') -> str:

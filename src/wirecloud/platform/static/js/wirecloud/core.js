@@ -159,13 +159,13 @@
 
     const _logout = function _logout() {
         const logout_url = new URL(Wirecloud.URLs.LOGOUT_VIEW, document.location);
-        /* const publicdashboard = Wirecloud.activeWorkspace.preferences.get("public");
+        const publicdashboard = Wirecloud.activeWorkspace.preferences.get("public");
         const requireauth = Wirecloud.activeWorkspace.preferences.get("requireauth");
 
         if (publicdashboard && !requireauth) {
             const next_url = window.location.pathname + window.location.search + window.location.hash;
             logout_url.searchParams.set("next", next_url);
-        } */
+        }
         window.location = logout_url;
     };
 

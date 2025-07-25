@@ -18,7 +18,7 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from typing import Optional
-from datetime import datetime, timezone, tzinfo
+from datetime import datetime, timezone
 
 from bson import ObjectId
 
@@ -191,7 +191,7 @@ async def get_all_user_permissions(db: DBSession, user_id: Id) -> list[Permissio
 
 
 async def get_user_groups(db: DBSession, user_id: Id) -> list[Group]:
-    query = {"users": ObjectId(user_id)}
+    query = {"users": user_id}
     results = [GroupModel.model_validate(result) for result in await db.client.groups.find(query).to_list()]
     return results
 

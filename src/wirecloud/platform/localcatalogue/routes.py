@@ -19,16 +19,23 @@
 
 from fastapi import APIRouter, Request, Query
 
+from src.wirecloud.commons.auth.crud import get_user_with_all_info
+from src.wirecloud.commons.auth.schemas import UserAll
 from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD
 from src.wirecloud.commons.auth.utils import UserDepNoCSRF
-from src.wirecloud.commons.utils.http import produces
-from src.wirecloud.catalogue.crud import get_catalogue_resource_versions_for_user
+from src.wirecloud.commons.utils.http import produces, NotFound, build_error_response
+from src.wirecloud.catalogue.crud import get_catalogue_resource_versions_for_user, get_catalogue_resource_by_id, \
+    is_resource_available_for_user, get_catalogue_resource
 from src.wirecloud.platform.localcatalogue import docs
-from src.wirecloud.database import DBDep
+from src.wirecloud.database import DBDep, Id
+from src.wirecloud.platform.workspace.crud import get_workspace_by_id
+from src.wirecloud.platform.workspace.models import Workspace
+from src.wirecloud.translation import gettext as _
 from src.wirecloud import docs as root_docs
 
 router = APIRouter()
 resources_router = APIRouter()
+workspace_router = APIRouter()
 
 
 @resources_router.get(
@@ -57,3 +64,41 @@ async def get_resource_collection(db: DBDep, user: UserDepNoCSRF, request: Reque
         resources[resource.local_uri_part] = options
 
     return resources
+
+@workspace_router.get(
+    "/{workspace_id}/resources",
+    response_model=dict[str, MACD]
+)
+@produces(["application/json"])
+async def get_workspace_resource_collection(db: DBDep, user: UserDepNoCSRF, request: Request, workspace_id: str, process_urls: bool = Query(True)):
+    workspace: Workspace = await get_workspace_by_id(db, Id(workspace_id))
+    if not workspace:
+        raise NotFound("Workspace not found")
+
+    if not await workspace.is_accsessible_by(db, user):
+        return build_error_response(request, 403, _("You don't have access to this workspace"))
+
+    creator: UserAll = await get_user_with_all_info(db, workspace.creator)
+
+    widgets = set()
+    result = {}
+    for tab in workspace.tabs:
+        for widget in tab.widgets:
+            if not widget.id in widgets:
+                resource = await get_catalogue_resource_by_id(db, widget.resource)
+                if resource and await is_resource_available_for_user(db, resource, creator):
+                    options = resource.get_processed_info(request, process_urls=process_urls,
+                                                          url_pattern_name="wirecloud.showcase_media")
+                    result[resource.local_uri_part] = options
+
+                widgets.add(widget.id)
+
+    for operator_id, operator in workspace.wiring_status.operators.items():
+        vendor, name, version = operator.name.split('/')
+        resource = await get_catalogue_resource(db, vendor, name, version)
+        if resource and await is_resource_available_for_user(db, resource, creator):
+            options = resource.get_processed_info(request, process_urls=process_urls,
+                                                  url_pattern_name="wirecloud.showcase_media")
+            result[resource.local_uri_part] = options
+
+    return result

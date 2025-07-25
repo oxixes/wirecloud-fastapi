@@ -29,10 +29,11 @@ from fastapi import FastAPI, Request
 
 import src.wirecloud.platform as platform
 from src import settings
+from src.wirecloud.commons.auth.crud import get_user_groups
 from src.wirecloud.commons.utils.http import get_absolute_reverse_url
+from src.wirecloud.database import DBSession
 from src.wirecloud.platform.iwidget.routes import iwidget_router
 from src.wirecloud.platform.widget.routes import widget_router
-from src.wirecloud.platform.workspace.routes import workspace_router
 from src.wirecloud.platform.wiring.routes import wiring_router, operator_router
 from src.wirecloud.platform.workspace.routes import workspace_router, workspaces_router
 from src.wirecloud.platform.plugins import (get_active_features_info, get_plugin_urls, AjaxEndpoint, build_url_template,
@@ -46,7 +47,8 @@ from src.wirecloud.commons.auth.schemas import UserAll, Session
 
 from src.wirecloud.platform.context.routes import router as context_router
 from src.wirecloud.platform.localcatalogue.routes import (router as localcatalogue_router,
-                                                          resources_router as localcatalogue_resources_router)
+                                                          resources_router as localcatalogue_resources_router,
+                                                          workspace_router as localcatalogue_workspace_router)
 from src.wirecloud.platform.markets.routes import router as market_router, markets_router
 from src.wirecloud.platform.routes import router as platform_router
 from src.wirecloud.platform.theme.routes import router as theme_router
@@ -82,6 +84,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
         app.include_router(context_router, prefix="/api/context", tags=["Context"])
         app.include_router(localcatalogue_resources_router, prefix="/api/resources", tags=["Local Catalogue"])
         app.include_router(localcatalogue_router, prefix="/api/resource", tags=["Local Catalogue"])
+        app.include_router(localcatalogue_workspace_router, prefix="/api/workspace", tags=["Local Catalogue"])
         app.include_router(market_router, prefix="/api/market", tags=["Market"])
         app.include_router(markets_router, prefix="/api/markets", tags=["Market"])
         app.include_router(preferences_router, prefix="/api", tags=["Preferences"])
@@ -158,14 +161,14 @@ class WirecloudCorePlugin(WirecloudPlugin):
             ),
         }
 
-    def get_platform_context_current_values(self, request: Request, user: Optional[UserAll],
+    async def get_platform_context_current_values(self, db: DBSession, request: Request, user: Optional[UserAll],
                                             session: Optional[Session]):
         if user:
             username = user.username
             fullname = user.get_full_name()
             avatar = 'https://www.gravatar.com/avatar/' + md5(
                 user.email.strip().lower().encode('utf8')).hexdigest() + '?s=25'
-            groups = tuple([group.name for group in user.groups])
+            groups = tuple([group.name for group in await get_user_groups(db, user.id)])
         else:
             username = 'anonymous'
             fullname = 'Anonymous'

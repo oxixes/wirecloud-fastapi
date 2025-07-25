@@ -32,14 +32,13 @@ from Crypto.Util.Padding import pad
 from src.wirecloud.catalogue.crud import get_catalogue_resource_by_id, get_catalogue_resource
 from src.wirecloud.catalogue.schemas import CatalogueResource
 from src.wirecloud.commons.auth.crud import get_username_by_id, get_user_by_id, get_group_by_id, get_user_with_all_info
-from src.wirecloud.commons.auth.utils import UserDep
 from src.wirecloud.commons.utils.cache import CacheableData, check_if_modified_since, patch_cache_headers
 from src.wirecloud.commons.utils.html import clean_html
 from src.wirecloud.commons.utils.http import build_error_response
 from src.wirecloud.commons.utils.template.parsers import TemplateValueProcessor
 from src.wirecloud.commons.utils.template.schemas.macdschemas import MACDPreference, MACDProperty
 from src.wirecloud.commons.utils.urlify import URLify
-from src.wirecloud.database import DBSession, Id, DBDep
+from src.wirecloud.database import DBSession, Id
 from src.wirecloud.platform.context.utils import get_context_values
 from src.wirecloud.platform.iwidget.models import WidgetVariables, WidgetInstance, WidgetConfig
 from src.wirecloud.platform.iwidget.schemas import WidgetInstanceData
@@ -54,12 +53,12 @@ from src.wirecloud.platform.workspace.schemas import WorkspaceForcedValues, Cach
 from src.wirecloud.translation import gettext as _
 
 
-def _variable_values_cache_key(workspace: Workspace, user: User) -> str:
-    return f'_variables_values_cache/{workspace.id}/{workspace.last_modified}/{user.id}'
+def _variable_values_cache_key(workspace: Workspace, user: Optional[User]) -> str:
+    return f'_variables_values_cache/{workspace.id}/{workspace.last_modified}/{user.id if user is not None else "anonymous"}'
 
 
-def _workspace_cache_key(workspace: Workspace, user: User) -> str:
-    return f'_workspace_global_data/{workspace.id}/{workspace.last_modified}/{user.id}'
+def _workspace_cache_key(workspace: Workspace, user: Optional[User]) -> str:
+    return f'_workspace_global_data/{workspace.id}/{workspace.last_modified}/{user.id if user is not None else "anonymous"}'
 
 
 def encrypt_value(value: Any) -> str:
@@ -81,7 +80,7 @@ def decrypt_value(value: str) -> str:
         return ''
 
 
-def process_forced_values(workspace: Workspace, user: Id, concept_values: dict[str, dict[str, Any]],
+def process_forced_values(workspace: Workspace, user: Optional[User], concept_values: dict[str, dict[str, Any]],
                           preferences: dict[str, WorkspacePreference]) -> WorkspaceForcedValues:
     forced_values = deepcopy(workspace.forced_values)
 
@@ -104,11 +103,7 @@ def process_forced_values(workspace: Workspace, user: Id, concept_values: dict[s
             param_values[param.name] = ''
     forced_values.empty_params = empty_params
 
-    processor = TemplateValueProcessor(
-        user=user,
-        context=concept_values,
-        params=param_values
-    )
+    processor = TemplateValueProcessor(context={'user': user, 'context': concept_values, 'params': param_values})
 
     collection = forced_values.widget
     for key in collection:
@@ -132,7 +127,7 @@ def process_forced_values(workspace: Workspace, user: Id, concept_values: dict[s
 
 def _process_variable(component_type: str, component_id: str, vardef: Union[MACDPreference, MACDProperty],
                       value: Union[WidgetVariables, dict], forced_values: WorkspaceForcedValues,
-                      values_by_varname: dict[str, dict], current_user: User, workspace_creator: User) -> None:
+                      values_by_varname: dict[str, dict], current_user: Optional[User], workspace_creator: User) -> None:
     if isinstance(value, dict):
         value = WiringOperatorPreferenceValue(**value)
 
@@ -158,10 +153,10 @@ def _process_variable(component_type: str, component_id: str, vardef: Union[MACD
     else:
         # Handle multiuser variables
         variable_user = current_user if vardef.multiuser else workspace_creator
-        if value is None or value.users.get(str(variable_user.id), None) is None:
+        if value is None or value.users.get(str(variable_user.id if variable_user else "anonymous"), None) is None:
             value = parse_value_from_text(entry.model_dump(), vardef.default)
         else:
-            value = value.users.get(str(variable_user.id), None)
+            value = value.users.get(str(variable_user.id if variable_user else "anonymous"), None)
 
         entry.value = value
         entry.readonly = False
@@ -170,7 +165,7 @@ def _process_variable(component_type: str, component_id: str, vardef: Union[MACD
     values_by_varname[component_type][component_id][varname] = entry
 
 
-async def _populate_variables_values_cache(db: DBSession, workspace: Workspace, request: Request, user: UserAll,
+async def _populate_variables_values_cache(db: DBSession, workspace: Workspace, request: Request, user: Optional[UserAll],
                                            key: Any, forced_values=None):
     values_by_varname = {
         "ioperator": {},
@@ -179,7 +174,7 @@ async def _populate_variables_values_cache(db: DBSession, workspace: Workspace, 
     if forced_values is None:
         context_values = await get_context_values(db, workspace, request, user)
         preferences = await get_workspace_preference_values(workspace)
-        forced_values = process_forced_values(workspace, user.id, context_values, preferences)
+        forced_values = process_forced_values(workspace, user, context_values, preferences)
 
     for iwidget in get_widget_instances_from_workspace(workspace):
         svariwidget = str(iwidget.id)
@@ -225,12 +220,12 @@ async def _populate_variables_values_cache(db: DBSession, workspace: Workspace, 
 
 
 class VariableValueCacheManager:
-    workspace: Workspace = None
-    user: UserAll = None
+    workspace: Optional[Workspace] = None
+    user: Optional[UserAll] = None
     values = None
     forced_values = None
 
-    def __init__(self, workspace, user, forced_values=None):
+    def __init__(self, workspace: Workspace, user: Optional[UserAll], forced_values=None):
         self.workspace = workspace
         self.user = user
         self.forced_values = forced_values
@@ -298,7 +293,7 @@ async def get_workspace_data(db: DBSession, workspace: Workspace, user: Optional
     )
 
 
-async def create_tab(db: DBSession, user: User, title: str, workspace: Workspace, name: str = None,
+async def create_tab(db: DBSession, user: Optional[User], title: str, workspace: Workspace, name: str = None,
                      allow_renaming: bool = False) -> Tab:
     if name is None or name.strip() == '':
         name = URLify(title)
@@ -330,7 +325,7 @@ async def create_tab(db: DBSession, user: User, title: str, workspace: Workspace
 
 async def get_widget_instance_data(db: DBSession, request: Request, iwidget: WidgetInstance, workspace: Workspace,
                                    cache_manager: VariableValueCacheManager = None,
-                                   user: UserAll = None) -> WidgetInstanceData:
+                                   user: Optional[UserAll] = None) -> WidgetInstanceData:
     data_ret = WidgetInstanceData(
         id=iwidget.id,
         title=iwidget.name,
@@ -387,7 +382,7 @@ async def get_widget_instance_data(db: DBSession, request: Request, iwidget: Wid
 
 
 async def get_tab_data(db: DBSession, request: Request, tab: Tab, workspace: Workspace = None,
-                       cache_manager: VariableValueCacheManager = None, user: User = None) -> TabData:
+                       cache_manager: VariableValueCacheManager = None, user: Optional[User] = None) -> TabData:
     if workspace is None:
         from src.wirecloud.platform.workspace.crud import get_workspace_by_id
         workspace = await get_workspace_by_id(db, Id(tab.id.split('-')[0]))
@@ -407,27 +402,27 @@ async def get_tab_data(db: DBSession, request: Request, tab: Tab, workspace: Wor
     )
 
 
-async def _get_global_workspace_data(db: DBSession, request: Request, workspaceDAO: Workspace,
-                                     user: UserAll) -> WorkspaceGlobalData:
-    workspace_data = await get_workspace_data(db, workspaceDAO, user)
+async def _get_global_workspace_data(db: DBSession, request: Request, workspace: Workspace,
+                                     user: Optional[UserAll]) -> WorkspaceGlobalData:
+    workspace_data = await get_workspace_data(db, workspace, user)
     data_ret = WorkspaceGlobalData(**workspace_data.model_dump())
 
     # Workspace preferences
-    preferences = await get_workspace_preference_values(workspaceDAO)
+    preferences = await get_workspace_preference_values(workspace)
     data_ret.preferences = preferences
 
-    if workspaceDAO.creator == user.id:
-        for u in workspaceDAO.users:
+    if user and workspace.creator == user.id:
+        for u in workspace.users:
             u_all = await get_user_with_all_info(db, u.id)
             # TODO: organization
             data_ret.users.append(UserWorkspaceData(
                 fullname=u_all.get_full_name(),
                 username=u_all.username,
                 organization=False,  # TODO: check this
-                accesslevel="owner" if u.id == workspaceDAO.creator else "read"
+                accesslevel="owner" if u.id == workspace.creator else "read"
             ))
 
-        for g in workspaceDAO.groups:
+        for g in workspace.groups:
             # TODO: organization
             group = await get_group_by_id(db, g.id)
             data_ret.groups.append(GroupWorkspaceData(
@@ -435,24 +430,24 @@ async def _get_global_workspace_data(db: DBSession, request: Request, workspaceD
                 accesslevel="read"
             ))
 
-    concept_values = await get_context_values(db, workspaceDAO, request, user)
-    forced_values = process_forced_values(workspaceDAO, user.id, concept_values, preferences)
+    concept_values = await get_context_values(db, workspace, request, user)
+    forced_values = process_forced_values(workspace, user, concept_values, preferences)
     data_ret.empty_params = forced_values.empty_params
     data_ret.extra_prefs = forced_values.extra_prefs
     if len(forced_values.empty_params) > 0:
         return data_ret
 
-    cache_manager = VariableValueCacheManager(workspaceDAO, user, forced_values)
+    cache_manager = VariableValueCacheManager(workspace, user, forced_values)
 
     # Tabs processing
-    tabs = workspaceDAO.tabs
+    tabs = workspace.tabs
     if tabs.count == 0:
-        tabs = [await create_tab(db, user, _('Tab'), workspaceDAO)]
+        tabs = [await create_tab(db, user, _('Tab'), workspace)]
 
     data_ret.tabs = [
-        await get_tab_data(db, request, tab, workspace=workspaceDAO, cache_manager=cache_manager, user=user) for tab in
+        await get_tab_data(db, request, tab, workspace=workspace, cache_manager=cache_manager, user=user) for tab in
         tabs]
-    data_ret.wiring = deepcopy(workspaceDAO.wiring_status)
+    data_ret.wiring = deepcopy(workspace.wiring_status)
     for operator_id, operator in data_ret.wiring.operators.items():
         try:
             (vendor, name, version) = operator.name.split('/')
@@ -462,7 +457,7 @@ async def _get_global_workspace_data(db: DBSession, request: Request, workspaceD
         try:
             resource = await get_catalogue_resource(db, vendor, name, version)
             operator_info = resource.get_processed_info(process_variables=True)
-            if not resource.is_available_for(db, await get_user_with_all_info(db, workspaceDAO.creator)):
+            if not resource.is_available_for(db, await get_user_with_all_info(db, workspace.creator)):
                 raise CatalogueResource.DoesNotExist
         except CatalogueResource.DoesNotExist:
             operator.preferences = {}
@@ -474,14 +469,14 @@ async def _get_global_workspace_data(db: DBSession, request: Request, workspaceD
             vardef = operator_info.variables.preferences.get(preference_name)
             value = preference.value
 
-            variable_user = user if vardef is not None and vardef.multiuser else workspaceDAO.creator
+            variable_user = user if vardef is not None and vardef.multiuser else workspace.creator
 
             if preference_name in operator_forced_values:
                 preference.value = operator_forced_values[preference_name].value
-            elif value is None or value.users.get(str(variable_user), None) is None:
+            elif value is None or value.users.get(str(variable_user.id if variable_user else "anonymous"), None) is None:
                 preference.value = parse_value_from_text(vardef.model_dump(), vardef.default)
             else:
-                preference.value = value.users.get(str(variable_user))
+                preference.value = value.users.get(str(variable_user.id if variable_user else "anonymous"))
 
             if vardef is not None and vardef.secure:
                 preference.value = '' if preference.value is None or decrypt_value(
@@ -491,14 +486,14 @@ async def _get_global_workspace_data(db: DBSession, request: Request, workspaceD
             vardef = operator_info.variables.properties.get(property_name)
             value = property.value
 
-            variable_user = user if vardef is not None and vardef.multiuser else workspaceDAO.creator
+            variable_user = user if vardef is not None and vardef.multiuser else workspace.creator
 
             if property_name in operator_forced_values:
                 property.value = operator_forced_values[property_name].value
-            elif value is None or value.users.get(str(variable_user), None) is None:
+            elif value is None or value.users.get(str(variable_user.id if variable_user else "anonymous"), None) is None:
                 property.value = parse_value_from_text(vardef.model_dump(), vardef.default)
             else:
-                property.value = value.users.get(str(variable_user))
+                property.value = value.users.get(str(variable_user.id if variable_user else "anonymous"))
 
             if vardef is not None and vardef.secure:
                 property.value = '' if property.value is None or decrypt_value(property.value) == '' else '********'
@@ -507,7 +502,7 @@ async def _get_global_workspace_data(db: DBSession, request: Request, workspaceD
 
 
 async def get_global_workspace_data(db: DBSession, request: Request, workspace: Workspace,
-                                    user: UserAll) -> CacheableData:
+                                    user: Optional[UserAll]) -> CacheableData:
     key = _workspace_cache_key(workspace, user)
     data = await cache.get(key)
     if data is None:
@@ -519,7 +514,7 @@ async def get_global_workspace_data(db: DBSession, request: Request, workspace: 
     return data
 
 
-async def get_workspace_entry(db: DBDep, user: UserDep, request: Request, workspace: Optional[Workspace]) -> Response:
+async def get_workspace_entry(db: DBSession, user: Optional[UserAll], request: Request, workspace: Optional[Workspace]) -> Response:
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 

@@ -96,7 +96,7 @@ async def get_market_collection(db: DBDep, user: UserDepNoCSRF, _request: Reques
             docs.create_market_collection_validation_error_response_description)
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(["application/json"])
 @produces(["application/json"])
 async def create_market_collection(db: DBDep, user: UserDep, request: Request,
@@ -151,7 +151,7 @@ async def create_market_collection(db: DBDep, user: UserDep, request: Request,
             docs.delete_market_entry_validation_error_response_description)
     }
 )
-@authentication_required
+@authentication_required()
 async def delete_market_entry(db: DBDep, user: UserDep, request: Request,
                               username: str = Path(alias="user", description=docs.delete_market_entry_user_description),
                               market: str = Path(description=docs.delete_market_entry_market_description)):
@@ -199,7 +199,7 @@ async def delete_market_entry(db: DBDep, user: UserDep, request: Request,
             {"market1": "Error message 1", "market2": "Error message 2"})
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(["application/json"])
 async def publish_service_process(db: DBDep, user: UserDep, request: Request,
                                   data: PublishData = Body(description=docs.publish_service_process_data_description,

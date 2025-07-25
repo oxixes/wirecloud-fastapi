@@ -160,10 +160,7 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
 
     context_values = await get_context_values(db, workspace, request,
                                               await get_user_with_all_info(db, workspace.creator))
-    processor = TemplateValueProcessor(
-        user=user,
-        context=context_values
-    )
+    processor = TemplateValueProcessor(context={'user': user, 'context': context_values})
 
     mashup_description = template.get_resource_info()  # MACDMashup
 

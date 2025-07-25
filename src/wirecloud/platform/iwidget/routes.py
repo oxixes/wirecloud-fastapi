@@ -108,7 +108,7 @@ async def get_widget_instance_collection(db: DBDep, user: UserDepNoCSRF, request
         )
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(["application/json"])
 async def create_widget_instance_collection(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(
     description=docs.create_widget_instance_collection_workspace_id_description), tab_position: int = Path(
@@ -168,7 +168,7 @@ async def create_widget_instance_collection(db: DBDep, user: UserDep, request: R
         )
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(["application/json"])
 async def update_widget_instance_collection(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(
     description=docs.update_widget_instance_collection_workspace_id_description),
@@ -272,7 +272,7 @@ async def get_widget_instance_entry(db: DBDep, user: UserDepNoCSRF, request: Req
         )
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(["application/json"])
 async def update_widget_instance_entry(db: DBDep, user: UserDep, request: Request,
                                workspace_id: Id = Path(description=docs.update_widget_instance_entry_workspace_id_description),
@@ -330,7 +330,7 @@ async def update_widget_instance_entry(db: DBDep, user: UserDep, request: Reques
         ),
     }
 )
-@authentication_required
+@authentication_required()
 async def delete_widget_instance_entry(db: DBDep, user: UserDep, request: Request,
                                workspace_id: Id = Path(description=docs.delete_widget_instance_entry_workspace_id_description),
                                tab_position: int = Path(description=docs.delete_widget_instance_entry_tab_position_description),
@@ -391,7 +391,7 @@ async def delete_widget_instance_entry(db: DBDep, user: UserDep, request: Reques
         )
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(["application/json"])
 async def update_widget_instance_preferences(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(
     description=docs.update_widget_instance_preferences_workspace_id_description), tab_position: int = Path(
@@ -531,7 +531,7 @@ async def get_widget_instance_preferences(db: DBDep, user: UserDepNoCSRF, reques
         )
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(["application/json"])
 async def update_widget_instance_properties(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(),
                                     tab_position: int = Path(), iwidget_position: int = Path(),

@@ -238,7 +238,7 @@ async def insert_workspace(db: DBSession, workspace: Workspace) -> None:
     await db.client.workspace.insert_one(workspace.model_dump(by_alias=True))
 
 
-async def change_workspace(db: DBSession, workspace: Workspace, user: User) -> None:
+async def change_workspace(db: DBSession, workspace: Workspace, user: Optional[User]) -> None:
     if not db.in_transaction:
         db.start_transaction()
 

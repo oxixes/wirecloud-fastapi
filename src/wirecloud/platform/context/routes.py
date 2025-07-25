@@ -20,6 +20,7 @@
 from fastapi import APIRouter, Request
 from typing import Optional
 
+from src.wirecloud.database import DBDep
 from src.wirecloud.platform.context.schemas import Context
 from src.wirecloud.platform.context.utils import get_platform_context, get_workspace_context_definitions
 from src.wirecloud.commons.auth.utils import SessionDepNoCSRF, UserDepNoCSRF
@@ -28,10 +29,9 @@ router = APIRouter()
 
 
 @router.get("/", response_model=Context)
-async def get_context(request: Request, user: UserDepNoCSRF, session: SessionDepNoCSRF, theme: Optional[str] = None):
-    # TODO Provide user and session
+async def get_context(db: DBDep, request: Request, user: UserDepNoCSRF, session: SessionDepNoCSRF, theme: Optional[str] = None):
     context = Context(
-        platform=get_platform_context(request, user=user, session=session),
+        platform=await get_platform_context(db, request, user=user, session=session),
         workspace=get_workspace_context_definitions()
     )
 

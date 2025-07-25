@@ -87,7 +87,7 @@ router = APIRouter()
     }
 )
 @consumes(["multipart/form-data", "application/octet-stream"])
-@authentication_required
+@authentication_required()
 async def create_resource(db: DBDep, request: Request, user: UserDep):
     if request.state.mimetype == 'multipart/form-data':
         # Get the file contents from the file 'file'
@@ -185,7 +185,7 @@ async def get_resource_versions(db: DBDep,
     }
 )
 @produces(["application/json"])
-@authentication_required
+@authentication_required()
 async def delete_resource_versions(db: DBDep,
                                    user: UserDep,
                                    request: Request,
@@ -267,7 +267,7 @@ async def get_resource_version(db: DBDep,
     }
 )
 @produces(["application/json"])
-@authentication_required
+@authentication_required()
 async def delete_resource_version(db: DBDep,
                                   user: UserDep,
                                   request: Request,

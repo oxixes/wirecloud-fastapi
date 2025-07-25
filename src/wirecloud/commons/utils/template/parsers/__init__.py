@@ -200,9 +200,7 @@ class TemplateParser(object):
 
 
 class TemplateValueProcessor(BaseModel):
-    user: Id
-    context: dict[str, dict[str, Any]]
-    params: Any = {} # TODO create a schema for this
+    context: dict[str, Union[str, dict[str, Any]]]
 
     _RE = re.compile(r'(%+)\(([a-zA-Z][\w-]*(?:\.[a-zA-Z][\w-]*)*)\)')
 
@@ -214,13 +212,21 @@ class TemplateValueProcessor(BaseModel):
         var_path = matching.group(2).split('.')
         current_context = self.context
 
-        for key in var_path:
-            if isinstance(current_context, dict) and key in current_context:
-                current_context = current_context[key]
-            else:
-                return matching.group(0)
+        while len(var_path) > 0:
+            current_path = var_path.pop(0)
 
-        return str(current_context)
+            if hasattr(current_context, current_path):
+                current_context = getattr(current_context, current_path)
+            elif current_path in current_context:
+                current_context = current_context[current_path]
+            else:
+                current_context = self._context
+                break
+
+        if current_context != self._context:
+            return current_context
+        else:
+            return matching.group(0)
 
     def process(self, value: str) -> str:
         return self._RE.sub(self.__repl, value)

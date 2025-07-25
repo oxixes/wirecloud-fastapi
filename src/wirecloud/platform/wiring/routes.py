@@ -72,7 +72,7 @@ OPERATOR_PATH_RE = re.compile(r'^/?operators/(?P<operator_id>[0-9]+)/(preference
         )
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(["application/json"])
 async def update_wiring_entry(db: DBDep, request: Request, user: UserDep,
                               workspace_id: Id = Path(description=docs.update_wiring_entry_workspace_id_description),
@@ -129,7 +129,7 @@ async def update_wiring_entry(db: DBDep, request: Request, user: UserDep,
         )
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(['application/json-patch+json'])
 async def patch_wiring_entry(db: DBDep, request: Request, user: UserDep,
                              workspace_id: Id = Path(description=docs.patch_wiring_entry_workspace_id_description),

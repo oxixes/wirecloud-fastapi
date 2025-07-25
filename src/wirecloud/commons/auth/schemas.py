@@ -20,12 +20,10 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from enum import Enum
-from src.wirecloud.commons.auth import docs
 from datetime import datetime
 
+from src.wirecloud.commons.auth import docs
 from src.wirecloud.database import Id
-from src.wirecloud.commons.auth.models import Group
-
 
 class Permission(BaseModel):
     codename: str = Field(description=docs.permission_codename_description, min_length=1, max_length=255)
@@ -66,7 +64,7 @@ class UserWithPassword(User, UserLogin):
 
 
 class UserAll(User):
-    groups: list[Group] = Field(default=[])
+    groups: list[Id] = Field(default=[])
     permissions: list[Permission] = Field(default=[])
 
 

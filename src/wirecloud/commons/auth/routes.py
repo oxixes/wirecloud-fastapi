@@ -24,9 +24,9 @@ from pydantic import ValidationError
 import jwt
 import asyncio
 
+from src.wirecloud.commons.auth.models import Group
 from src.wirecloud.database import Id
-from src.wirecloud.commons.auth.schemas import UserLogin, UserToken, UserWithPassword, UserTokenType, User, UserCreate, \
-    Group
+from src.wirecloud.commons.auth.schemas import UserLogin, UserToken, UserWithPassword, UserTokenType, User, UserCreate
 from src.wirecloud.commons.auth.crud import get_user_with_password, set_login_date_for_user, get_user_by_username, \
     create_user, update_user, create_token, invalidate_token, add_user_to_groups_by_codename, \
     create_group_if_not_exists, remove_user_from_all_groups, set_token_expiration

@@ -25,7 +25,8 @@ from src.wirecloud.catalogue.schemas import (CatalogueResourceCreate, CatalogueR
                                              CatalogueResourceType, CatalogueResourceXHTML)
 from src.wirecloud.catalogue.models import DBCatalogueResource as CatalogueResourceModel
 from src.wirecloud.catalogue.models import XHTML
-from src.wirecloud.commons.auth.schemas import UserAll, User, Group
+from src.wirecloud.commons.auth.models import Group
+from src.wirecloud.commons.auth.schemas import UserAll, User
 from src.wirecloud.commons.utils.template.schemas.macdschemas import (MACD, Vendor, Name, Version)
 from src.wirecloud.database import DBSession, Id
 
@@ -122,7 +123,7 @@ async def is_resource_available_for_user(db: DBSession, resource: CatalogueResou
 
     # Check if the resource is available for the user or any of the groups the user belongs to
     user_query = {"_id": ObjectId(resource.id), "users": ObjectId(user.id)}
-    group_query = {"_id": ObjectId(resource.id), "groups": {"$in": [ObjectId(group.id) for group in user.groups]}}
+    group_query = {"_id": ObjectId(resource.id), "groups": {"$in": user.groups}}
 
     result = await db.client.catalogue_resources.find_one({"$or": [user_query, group_query]})
 
@@ -156,7 +157,7 @@ async def get_catalogue_resource_versions_for_user(db: DBSession, vendor: Option
                                    "users": ObjectId(user.id)}
         group_resources_query = {"vendor": vendor if vendor is not None else True,
                                  "short_name": short_name if short_name is not None else True,
-                                 "groups": {"$in": [ObjectId(group.id) for group in user.groups]}}
+                                 "groups": {"$in": user.groups}}
 
         query = {"$or": [public_resources_query, user_resources_query, creator_resources_query, group_resources_query]}
 

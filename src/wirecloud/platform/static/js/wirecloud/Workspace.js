@@ -56,7 +56,7 @@
 
         this.dispatchEvent('createtab', tab);
 
-        data.iwidgets.forEach(function (data) {
+        data.widgets.forEach(function (data) {
             const resource = this.resources.findResource('widget', data.widget, true);
             tab.createWidget(resource, utils.merge(data, {
                 commit: false

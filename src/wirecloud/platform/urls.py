@@ -43,13 +43,13 @@ patterns = {
 
     # IWidgets
     'wirecloud.iwidget_collection': URLTemplate(
-        urlpattern='/api/workspace/{workspace_id}/tab/{tab_id}/iwidgets', defaults={}),
+        urlpattern='/api/workspace/{workspace_id}/tab/{tab_id}/widget_instances', defaults={}),
     'wirecloud.iwidget_entry': URLTemplate(
-        urlpattern='/api/workspace/{workspace_id}/tab/{tab_id}/iwidget/{iwidget_id}', defaults={}),
+        urlpattern='/api/workspace/{workspace_id}/tab/{tab_id}/widget_instances/{iwidget_id}', defaults={}),
     'wirecloud.iwidget_preferences': URLTemplate(
-        urlpattern='/api/workspace/{workspace_id}/tab/{tab_id}/iwidget/{iwidget_id}/preferences', defaults={}),
+        urlpattern='/api/workspace/{workspace_id}/tab/{tab_id}/widget_instances/{iwidget_id}/preferences', defaults={}),
     'wirecloud.iwidget_properties': URLTemplate(
-        urlpattern='/api/workspace/{workspace_id}/tab/{tab_id}/iwidget/{iwidget_id}/properties', defaults={}),
+        urlpattern='/api/workspace/{workspace_id}/tab/{tab_id}/widget_instances/{iwidget_id}/properties', defaults={}),
 
     # Preferences
     'wirecloud.platform_preferences': URLTemplate(urlpattern='/api/preferences/platform', defaults={}),

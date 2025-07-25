@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-from urllib.parse import urlencode
 
-import aiohttp
 # Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
 
 # This file is part of Wirecloud.
@@ -19,7 +17,9 @@ import aiohttp
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
+import aiohttp
 import jwt
+from urllib.parse import urlencode
 from bson import ObjectId
 from typing import Union, Optional
 from secrets import compare_digest
@@ -31,7 +31,7 @@ from typing import Annotated
 from src import settings
 from src.wirecloud.database import DBDep, Id
 from src.wirecloud.commons.auth.schemas import Session, UserAll
-from src.wirecloud.commons.auth.crud import get_user_by_id, get_user_groups, get_all_user_permissions, is_token_valid
+from src.wirecloud.commons.auth.crud import is_token_valid, get_user_with_all_info
 from src.wirecloud.translation import gettext as _
 
 SUPPORTED_HASHES = ['pbkdf2_sha256']
@@ -91,18 +91,11 @@ async def get_user(db: DBDep, token: Union[dict[str, Union[str, int, bool, None]
     if token is None:
         return None
 
-    user = await get_user_by_id(db, Id(token['sub']))
+    user = await get_user_with_all_info(db, Id(token['sub']))
     if user is None or not user.is_active:
         return None
 
-    groups = await get_user_groups(db, user.id)
-    permissions = await get_all_user_permissions(db, user.id)
-
-    return UserAll(
-        **user.model_dump(),
-        groups=groups,
-        permissions=permissions
-    )
+    return user
 
 
 async def get_user_csrf(db: DBDep, token: Annotated[Union[dict[str, Union[str, int, bool, None]], None], Depends(get_token_contents_csrf)]) -> Union[UserAll, None]:

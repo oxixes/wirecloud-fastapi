@@ -100,7 +100,7 @@ async def get_workspace_list_route(db: DBDep, user: UserDepNoCSRF) -> list[Works
         )
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(["application/json"])
 @produces(["application/json"])
 async def create_workspace_collection(db: DBDep, user: UserDep, request: Request, workspace: WorkspaceCreate = Body(
@@ -237,7 +237,7 @@ async def get_workspace_entry_with_owner_and_name(db: DBDep, user: UserDepNoCSRF
         )
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(["application/json"])
 async def create_workspace_entry(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(
     description=docs.update_workspace_entry_workspace_id_description),
@@ -297,7 +297,7 @@ async def create_workspace_entry(db: DBDep, user: UserDep, request: Request, wor
         )
     }
 )
-@authentication_required
+@authentication_required()
 async def delete_workspace_entry(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(
     description=docs.delete_workspace_entry_workspace_id_description)):
     workspace = await get_workspace_by_id(db, workspace_id)
@@ -343,7 +343,7 @@ async def delete_workspace_entry(db: DBDep, user: UserDep, request: Request, wor
         )
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(["application/json"])
 @produces(["application/json"])
 async def create_tab_collection(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(
@@ -440,7 +440,7 @@ async def get_tab_entry(db: DBDep, user: UserDepNoCSRF, request: Request,
         )
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(["application/json"])
 async def create_tab_entry(db: DBDep, user: UserDep, request: Request,
                            workspace_id: Id = Path(description=docs.update_tab_entry_workspace_id_description),
@@ -502,7 +502,7 @@ async def create_tab_entry(db: DBDep, user: UserDep, request: Request,
         )
     }
 )
-@authentication_required
+@authentication_required()
 async def delete_tab_entry(db: DBDep, user: UserDep, request: Request,
                            workspace_id: Id = Path(description=docs.delete_tab_entry_workspace_id_description),
                            tab_position: int = Path(description=docs.delete_tab_entry_tab_position_description)):
@@ -565,7 +565,7 @@ async def delete_tab_entry(db: DBDep, user: UserDep, request: Request,
         )
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(["application/json"])
 async def process_mashup(db: DBDep, user: UserDep, request: Request,
                          to_ws_id: Id = Path(description=docs.process_mashup_merge_service_to_ws_id_description),
@@ -671,7 +671,7 @@ def check_json_fields(json_data, fields):
         )
     }
 )
-@authentication_required
+@authentication_required()
 @consumes(["application/json", "multipart/form-data"])
 async def publish_workspace(db: DBDep, user: UserDep, request: Request,
                             workspace_id: Id = Path(description=docs.process_publish_service_workspace_id_description),

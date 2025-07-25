@@ -29,6 +29,7 @@ import logging
 import json
 
 from src.wirecloud.commons.utils.encoding import LazyEncoderXHTML
+from src.wirecloud.database import DBSession
 from src.wirecloud.platform.context.schemas import BaseContextKey, WorkspaceContextKey
 from src.wirecloud.platform.preferences.schemas import PreferenceKey, TabPreferenceKey
 from src.wirecloud.commons.auth.schemas import UserAll, Session
@@ -64,7 +65,7 @@ class WirecloudPlugin:
     def get_platform_context_definitions(self) -> dict[str, BaseContextKey]:
         return {}
 
-    def get_platform_context_current_values(self, request: Request, user: Optional[UserAll], session: Optional[Session]):
+    async def get_platform_context_current_values(self, db: DBSession, request: Request, user: Optional[UserAll], session: Optional[Session]):
         return {}
 
     def get_tab_preferences(self) -> list[TabPreferenceKey]:
@@ -73,7 +74,7 @@ class WirecloudPlugin:
     def get_workspace_context_definitions(self) -> dict[str, WorkspaceContextKey]:
         return {}
 
-    def get_workspace_context_current_values(self, workspace, user):
+    def get_workspace_context_current_values(self, workspace, user): # TODO
         return {}
 
     def get_workspace_preferences(self) -> list[PreferenceKey]:
@@ -174,6 +175,7 @@ def find_wirecloud_plugins() -> list[WirecloudPlugin]:
                     logger.error(
                         "Error importing %(module)s (%(error_message)s). Any WireCloud plugin available through the %(app)s app will be ignored" % {
                             "module": plugins_module, "error_message": error_message, "app": app})
+                    logger.error("Backtrace: ", exc_info=True)
                 continue
 
         mod_plugins = [cls for name, cls in mod.__dict__.items() if

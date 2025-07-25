@@ -49,19 +49,19 @@ def get_platform_context_definitions() -> dict[str, BaseContextKey]:
     return _wirecloud_platform_context_definitions
 
 
-def get_platform_context_current_values(request: Request, user: Optional[UserAll], session: Optional[Session] = None) -> dict[str, Any]:
+async def get_platform_context_current_values(db: DBSession, request: Request, user: Optional[UserAll], session: Optional[Session] = None) -> dict[str, Any]:
     plugins = get_plugins()
     values = {}
 
     for plugin in plugins:
-        values.update(plugin.get_platform_context_current_values(request, user, session=session))
+        values.update(await plugin.get_platform_context_current_values(db, request, user, session=session))
 
     return values
 
 
-def get_platform_context(request: Request, user: Optional[UserAll], session: Optional[Session] = None) -> dict[str, PlatformContextKey]:
+async def get_platform_context(db: DBSession, request: Request, user: Optional[UserAll], session: Optional[Session] = None) -> dict[str, PlatformContextKey]:
     context = get_platform_context_definitions()
-    values = get_platform_context_current_values(request, user, session=session)
+    values = await get_platform_context_current_values(db, request, user, session=session)
     result = {}
     for key in context:
         result[key] = PlatformContextKey(
@@ -108,15 +108,15 @@ async def get_constant_context_values(db: DBSession) -> dict[str, str]:
     return res
 
 
-async def get_context_values(db: DBSession, workspace, request: Request, user: UserAll, session: Session = None) -> dict[str, dict[str, Any]]:
-    cache_key = f'constant_context/{str(user.id)}'
+async def get_context_values(db: DBSession, workspace, request: Request, user: Optional[UserAll], session: Session = None) -> dict[str, dict[str, Any]]:
+    cache_key = f'constant_context/{str(user.id) if user else "anonymous"}'
     constant_context = await cache.get(cache_key)
     if constant_context is None:
         constant_context = await get_constant_context_values(db)
         await cache.set(cache_key, constant_context)
 
     platform_context = constant_context
-    platform_context.update(get_platform_context_current_values(request, user, session=session))
+    platform_context.update(await get_platform_context_current_values(db, request, user, session=session))
 
     return {
         'platform': platform_context,
