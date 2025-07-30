@@ -227,7 +227,7 @@ async def create_workspace_preferences(db: DBDep, request: Request, user: UserDe
 
 
 @preferences_router.get(
-    "/workspace/{workspace_id}/tab/{tab_position}/preferences/",
+    "/workspace/{workspace_id}/tab/{tab_id}/preferences/",
     summary=docs.get_tab_preference_collection_summary,
     description=docs.get_tab_preference_collection_description,
     response_model=dict[str, WorkspacePreference],
@@ -248,15 +248,15 @@ async def create_workspace_preferences(db: DBDep, request: Request, user: UserDe
 )
 @authentication_required(csrf=False)
 async def get_tab_preferences(db: DBDep, request: Request, user: UserDepNoCSRF, workspace_id: Id = Path(
-    description=docs.get_tab_preference_collection_workspace_id_description), tab_position: int = Path(
-    description=docs.get_tab_preference_collection_tab_position_description)):
+    description=docs.get_tab_preference_collection_workspace_id_description), tab_id: str = Path(
+    description=docs.get_tab_preference_collection_tab_id_description)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
     try:
-        tab = workspace.tabs[tab_position]
-    except IndexError:
+        tab = workspace.tabs[tab_id]
+    except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
     if not await workspace.is_accsessible_by(db, user):
@@ -268,7 +268,7 @@ async def get_tab_preferences(db: DBDep, request: Request, user: UserDepNoCSRF, 
 
 
 @preferences_router.post(
-    "/workspace/{workspace_id}/tab/{tab_position}/preferences/",
+    "/workspace/{workspace_id}/tab/{tab_id}/preferences/",
     summary=docs.create_tab_preference_collection_summary,
     description=docs.create_tab_preference_collection_description,
     status_code=204,
@@ -289,8 +289,8 @@ async def get_tab_preferences(db: DBDep, request: Request, user: UserDepNoCSRF, 
     }
 )
 async def create_tab_preferences(db: DBDep, request: Request, user: UserDep, workspace_id: Id = Path(
-    description=docs.create_tab_preference_collection_workspace_id_description), tab_position: int = Path(
-    description=docs.create_tab_preference_collection_tab_position_description),
+    description=docs.create_tab_preference_collection_workspace_id_description), tab_id: str = Path(
+    description=docs.create_tab_preference_collection_tab_id_description),
                                  preferences: dict[str, Union[str, TabPreference]] = Body(
                                      description=docs.create_tab_preference_collection_platform_preference_create_description,
                                      example=docs.create_tab_preference_collection_platform_preference_create_example)):
@@ -299,8 +299,8 @@ async def create_tab_preferences(db: DBDep, request: Request, user: UserDep, wor
         return build_error_response(request, 404, _("Workspace not found"))
 
     try:
-        tab = workspace.tabs[tab_position]
-    except IndexError:
+        tab = workspace.tabs[tab_id]
+    except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
     if not await workspace.is_accsessible_by(db, user):

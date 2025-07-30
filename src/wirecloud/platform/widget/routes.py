@@ -18,7 +18,6 @@
 #  along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 import os
 from typing import Optional
-from urllib.parse import urljoin
 
 from fastapi import APIRouter, Request, Path, Response, Query
 from starlette.responses import HTMLResponse
@@ -28,8 +27,7 @@ from src.wirecloud.catalogue.crud import get_catalogue_resource_with_xhtml
 import src.wirecloud.platform.widget.utils as showcase_utils
 from src.wirecloud.commons.templates.tags import get_translation, get_url_from_view, get_static_path
 from src.wirecloud.commons.utils.cache import check_if_modified_since, patch_cache_headers
-from src.wirecloud.commons.utils.http import NotFound, build_downloadfile_response, get_absolute_reverse_url, \
-    get_current_scheme, get_current_domain
+from src.wirecloud.commons.utils.http import NotFound, build_downloadfile_response, get_absolute_reverse_url
 from src.wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version
 from src.wirecloud.commons.utils.theme import get_jinja2_templates
 from src.wirecloud.database import DBDep
@@ -88,11 +86,15 @@ async def get_widget_file(db: DBDep, request: Request, vendor: Vendor = Path(pat
     if resource.resource_type() == 'widget' and entrypoint:
         return await process_widget_code(db, request, resource, mode, theme)
 
-    base_dir = showcase_utils.wgt_deployer.get_base_dir(vendor, name, version)
+    if file_path.endswith(".wgt"):
+        from src.wirecloud.catalogue.utils import wgt_deployer as wgt_deployer_catalogue
+        base_dir = wgt_deployer_catalogue.get_base_dir(vendor,name, version)
+    else:
+        base_dir = showcase_utils.wgt_deployer.get_base_dir(vendor, name, version)
+
     response = build_downloadfile_response(request, file_path, base_dir)
     if response.status_code == 302:
-        response.headers['Location'] = urljoin(get_current_scheme(request) + '://' + get_current_domain(request),
-                                               f"/api/widget/{vendor}/{name}/{version}/{response.headers['Location']}")
+        response.headers['Location'] = get_absolute_reverse_url('wirecloud.showcase_media', request=request, vendor=vendor, name=name, version=version, path=response.headers['Location'])
 
     # TODO cache
     return response

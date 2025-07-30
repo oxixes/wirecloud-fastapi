@@ -293,20 +293,27 @@ async def get_workspace_data(db: DBSession, workspace: Workspace, user: Optional
     )
 
 
+def first_id_tab(tabs: dict[str, Tab]) -> int:
+    used = {int(key.strip("-")[-1]) for key in tabs.keys()}
+    i = 0
+    while i in used:
+        i += 1
+    return i
+
 async def create_tab(db: DBSession, user: Optional[User], title: str, workspace: Workspace, name: str = None,
                      allow_renaming: bool = False) -> Tab:
     if name is None or name.strip() == '':
         name = URLify(title)
 
     visible = False
-    from src.wirecloud.platform.workspace.crud import get_tabs_from_workspace
-    tabs = await get_tabs_from_workspace(db, workspace)
+    tabs = workspace.tabs.copy()
     if len(tabs) == 0:
         visible = True
 
     # Creating tab
+    id_tab = str(workspace.id) + '-' + str(first_id_tab(tabs))
     tab = Tab(
-        id=str(workspace.id) + '-' + str(len(tabs)),
+        id=id_tab,
         name=name,
         title=title,
         visible=visible
@@ -316,7 +323,7 @@ async def create_tab(db: DBSession, user: Optional[User], title: str, workspace:
         from src.wirecloud.commons.utils.db import save_alternative_tab
         tab = await save_alternative_tab(db, tab)
 
-    workspace.tabs.append(tab)
+    workspace.tabs[id_tab] = tab
     from src.wirecloud.platform.workspace.crud import change_workspace
     await change_workspace(db, workspace, user)
 
@@ -398,7 +405,7 @@ async def get_tab_data(db: DBSession, request: Request, tab: Tab, workspace: Wor
         preferences=await get_tab_preference_values(tab),
         widgets=[
             await get_widget_instance_data(db, request, widget, workspace, cache_manager, user)
-            for widget in tab.widgets]
+            for widget in tab.widgets.values()]
     )
 
 
@@ -441,12 +448,13 @@ async def _get_global_workspace_data(db: DBSession, request: Request, workspace:
 
     # Tabs processing
     tabs = workspace.tabs
-    if tabs.count == 0:
-        tabs = [await create_tab(db, user, _('Tab'), workspace)]
+    if len(tabs) == 0:
+        tab = await create_tab(db, user, _('Tab'), workspace)
+        tabs[tab.id] = tab
 
     data_ret.tabs = [
         await get_tab_data(db, request, tab, workspace=workspace, cache_manager=cache_manager, user=user) for tab in
-        tabs]
+        tabs.values()]
     data_ret.wiring = deepcopy(workspace.wiring_status)
     for operator_id, operator in data_ret.wiring.operators.items():
         try:
@@ -533,9 +541,9 @@ async def get_workspace_entry(db: DBSession, user: Optional[UserAll], request: R
     return workspace_data.get_response()
 
 
-def is_there_a_tab_with_that_name(tab_name: str, tabs: list[Tab]) -> bool:
+def is_there_a_tab_with_that_name(tab_name: str, tabs: dict[str, Tab]) -> bool:
     found = False
-    for tab in tabs:
+    for tab in tabs.values():
         if tab.name == tab_name:
             found = True
             break

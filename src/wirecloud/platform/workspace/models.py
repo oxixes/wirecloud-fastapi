@@ -66,7 +66,7 @@ class Tab(BaseModel, populate_by_name=True):
     title: str
     visible: bool = False
     last_modified: Optional[datetime] = datetime.now(timezone.utc)
-    widgets: list[WidgetInstance] = []
+    widgets: dict[str, WidgetInstance] = {}
     preferences: list[DBTabPreference] = []
 
 
@@ -109,7 +109,7 @@ class Workspace(BaseModel, populate_by_name=True):
     # Relationships
     users: list[WorkspaceAccessPermissions] = []
     groups: list[WorkspaceAccessPermissions] = []
-    tabs: list[Tab] = []
+    tabs: dict[str, Tab] = {}
     preferences: list[DBWorkspacePreference] = []
 
     def is_editable_by(self, user: User) -> bool:

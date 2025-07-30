@@ -158,12 +158,11 @@ async def update_tab_preferences(db: DBSession, user: User, workspace: Workspace
                 changes = pref_changes = True
 
         if pref_changes:
-            tab_position = int(tab.id.split('-')[1])
             if name in current_preferences:
                 current_preferences[name].value = preference.value
                 current_preferences[name].inherit = preference.inherit
             else:
-                workspace.tabs[tab_position].preferences.append(preference)
+                workspace.tabs[tab.id].preferences.append(preference)
 
     if changes:
         cache_key = make_tab_preferences_cache_key(tab)

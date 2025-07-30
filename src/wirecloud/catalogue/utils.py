@@ -409,3 +409,11 @@ async def create_widget_on_resource_creation(db: DBSession, resource: CatalogueR
         base_dir = wgt_deployer.get_base_dir(resource.vendor, resource.short_name, resource.version)
         wgt_file = WgtFile(os.path.join(base_dir, resource.template_uri))
         await create_widget_from_wgt(db, wgt_file)
+
+
+def deploy_operators_on_resource_creation(resource: CatalogueResource):
+    from src.wirecloud.platform.widget.utils import wgt_deployer as wgt_deployer_widget
+    if resource.resource_type() == 'operator':
+        base_dir = wgt_deployer.get_base_dir(resource.vendor, resource.short_name, resource.version)
+        wgt_file = WgtFile(os.path.join(base_dir, resource.template_uri))
+        wgt_deployer_widget.deploy(wgt_file)

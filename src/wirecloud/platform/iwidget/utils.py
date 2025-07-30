@@ -19,11 +19,12 @@
 
 
 from typing import Union, Any, Optional
+from fastapi import Request, Response
 
 from src.wirecloud.catalogue.crud import get_catalogue_resource, get_catalogue_resource_by_id
 from src.wirecloud.catalogue.schemas import CatalogueResource
 from src.wirecloud.commons.auth.schemas import User, UserAll
-from src.wirecloud.commons.utils.http import NotFound
+from src.wirecloud.commons.utils.http import NotFound, build_error_response
 from src.wirecloud.commons.utils.template.schemas.macdschemas import MACDWidget, MACDProperty, MACDPreference
 from src.wirecloud.database import DBSession
 from src.wirecloud.platform.iwidget.models import WidgetVariables, WidgetInstance, WidgetPositionsConfig, WidgetConfig, \
@@ -31,15 +32,6 @@ from src.wirecloud.platform.iwidget.models import WidgetVariables, WidgetInstanc
 from src.wirecloud.platform.iwidget.schemas import WidgetInstanceDataUpdate, WidgetInstanceDataCreate, LayoutConfig
 from src.wirecloud.platform.workspace.models import Workspace, Tab
 from src.wirecloud.translation import gettext as _
-
-
-def update_widget_instance_ids(workspace: Workspace, tab: Tab) -> None:
-    for i in range(len(tab.widgets)):
-        iwidget = tab.widgets[i]
-        iwidget.id = str(workspace.id) + '-' + str(tab.id).split('-')[1] + '-' + str(i)
-        tab.widgets[i] = iwidget
-
-    workspace.tabs[int(tab.id.split('-')[1])] = tab
 
 def parse_value_from_text(info: dict, value) -> Any:
     if info['type'] == 'boolean':
@@ -239,13 +231,19 @@ def update_position(iwidget: WidgetInstance, key: str, data: Union[WidgetInstanc
     check_intervals(new_positions)
     iwidget.positions.configurations = new_positions
 
+def first_id_widget_instance(widgets: dict[str, WidgetInstance]) -> int:
+    used = {int(widget.id.split("-")[2]) for widget in widgets.values()}
+    i = 0
+    while i in used:
+        i += 1
+    return i
 
 async def save_widget_instance(db: DBSession, workspace: Workspace, iwidget: WidgetInstanceDataCreate, user: UserAll, tab: Tab,
                        initial_variable_values: dict[str, WidgetVariables] = None,
                        commit: bool = True) -> WidgetInstance:
 
     new_iwidget = WidgetInstance(
-        id=tab.id + '-' + str(len(tab.widgets)),
+        id=tab.id + '-' + str(first_id_widget_instance(tab.widgets)),
         permissions=iwidget.permissions,
         widget_uri=iwidget.widget
     )
@@ -283,23 +281,25 @@ async def save_widget_instance(db: DBSession, workspace: Workspace, iwidget: Wid
         )]
 
     if commit:
-        tab.widgets.append(new_iwidget)
-        from src.wirecloud.platform.workspace.crud import change_workspace
-        await change_workspace(db, workspace, user)
-
+        tab.widgets[new_iwidget.id] = new_iwidget
+        from src.wirecloud.platform.workspace.crud import change_tab
+        await change_tab(db, user, workspace, tab)
 
     return new_iwidget
 
 
 def get_widget_instances_from_workspace(workspace: Workspace) -> list[WidgetInstance]:
-    return [widget for tab in workspace.tabs for widget in tab.widgets]
+    return [widget for tab in workspace.tabs.values() for widget in tab.widgets.values()]
 
 
-async def update_widget_instance(db: DBSession, data: WidgetInstanceDataUpdate, user: UserAll, workspace: Workspace, tab: Tab, update_cache: bool = True) -> None:
+async def update_widget_instance(db: DBSession, request: Request,  data: WidgetInstanceDataUpdate, user: UserAll, workspace: Workspace, tab: Tab, update_cache: bool = True) -> Optional[Response]:
     if data.id is None:
         raise ValueError('Missing id field')
 
-    iwidget = tab.widgets[data.id]
+    try:
+        iwidget = tab.widgets[data.id]
+    except KeyError:
+        return build_error_response(request, 404, _("Widget Instance not found"))
 
     await update_widget_value(db, iwidget, data, user)
     await update_title_value(db, iwidget, data)
@@ -315,19 +315,18 @@ async def update_widget_instance(db: DBSession, data: WidgetInstanceDataUpdate, 
     if data.layout_config is not None:
         update_position(iwidget, 'widget', data)
 
-    tab_position = int(tab.id.split('-')[1])
-    iwidget_position = int(iwidget.id.split('-')[2])
     if data.tab is not None:
-        if data.tab != tab_position:
-            workspace.tabs[tab_position].widgets.pop(iwidget_position)
-            update_widget_instance_ids(workspace, tab)
-            iwidget.id = str(workspace.id) + '-' + str(data.tab) + '-' + str(len(workspace.tabs[data.tab].widgets))
-            workspace.tabs[data.tab].widgets.append(iwidget)
+        if not data.tab in workspace.tabs:
+            return build_error_response(request, 404, _("Tab not found"))
+        if data.tab != tab.id:
+            del workspace.tabs[tab.id].widgets[iwidget.id]
+            iwidget.id = str(data.tab) + '-' + str(first_id_widget_instance(workspace.tabs[data.tab].widgets))
+            workspace.tabs[data.tab].widgets[iwidget.id] = iwidget
 
         else:
-            workspace.tabs[tab_position].widgets[iwidget_position] = iwidget
+            workspace.tabs[tab.id].widgets[iwidget.id] = iwidget
     else:
-        workspace.tabs[tab_position].widgets[iwidget_position] = iwidget
+        workspace.tabs[tab.id].widgets[iwidget.id] = iwidget
 
     if update_cache:
         from src.wirecloud.platform.workspace.crud import change_workspace
