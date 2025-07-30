@@ -294,7 +294,7 @@ async def get_workspace_data(db: DBSession, workspace: Workspace, user: Optional
 
 
 def first_id_tab(tabs: dict[str, Tab]) -> int:
-    used = {int(key.strip("-")[-1]) for key in tabs.keys()}
+    used = {int(key.split("-")[-1]) for key in tabs.keys()}
     i = 0
     while i in used:
         i += 1

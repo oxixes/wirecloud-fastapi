@@ -316,7 +316,7 @@ async def update_widget_instance(db: DBSession, request: Request,  data: WidgetI
         update_position(iwidget, 'widget', data)
 
     if data.tab is not None:
-        if not data.tab in workspace.tabs:
+        if data.tab not in workspace.tabs:
             return build_error_response(request, 404, _("Tab not found"))
         if data.tab != tab.id:
             del workspace.tabs[tab.id].widgets[iwidget.id]
