@@ -397,29 +397,17 @@ create_tab_collection_tab_create_example = [
 ]
 create_tab_collection_response_example = tab_data
 
-# POST /workspace/{workspace_id}/tabs/order/
-process_tab_order_summary = "Update tab order"
-process_tab_order_description = "Order the Tabs given a list of tab positions."
-process_tab_order_response_description = "Tab order updated"
-process_tab_order_tab_order_service_description = "Tab order data"
-process_tab_order_auth_required_response_description = "Authentication required"
-process_tab_order_permission_denied_response_description = "Permission denied"
-process_tab_order_not_acceptable_response_description = "Invalid request content type"
-process_tab_order_not_found_response_description = "Workspace not found"
-process_tab_order_workspace_id_description = "Workspace identifier"
-process_tab_order_tab_order_service_example = {"tabs": [2, 3, 4]}
-
-# GET /workspace/{workspace_id}/tab/{tab_position}/
+# GET /workspace/{workspace_id}/tab/{tab_id}/
 get_tab_entry_summary = "Get tab information"
 get_tab_entry_description = "Get information about a tab."
 get_tab_entry_response_description = "Tab information"
 get_tab_entry_not_found_response_description = "Workspace or Tab not found"
 get_tab_entry_permission_denied_response_description = "Permission denied"
 get_tab_entry_workspace_id_description = "Workspace identifier"
-get_tab_entry_tab_position_description = "Tab position"
+get_tab_entry_tab_id_description = "Tab identifier"
 get_tab_entry_response_example = tab_data
 
-# POST /workspace/{workspace_id}/tab/{tab_position}/
+# POST /workspace/{workspace_id}/tab/{tab_id}/
 update_tab_entry_summary = "Update tab information"
 update_tab_entry_description = "Update information about a tab."
 update_tab_entry_response_description = "Tab information updated"
@@ -430,14 +418,14 @@ update_tab_entry_not_found_response_description = "Workspace or Tab not found"
 update_tab_entry_conflict_response_description = "A tab with the given name already exists"
 update_tab_entry_not_acceptable_response_description = "Invalid request content type"
 update_tab_entry_workspace_id_description = "Workspace identifier"
-update_tab_entry_tab_position_description = "Tab position"
+update_tab_entry_tab_id_description = "Tab identifier"
 update_tab_entry_tab_create_entry_example = {
     "name": "tab-2",
     "title": "Tab 2",
     "visible": True,
 }
 
-# DELETE /workspace/{workspace_id}/tab/{tab_position}/
+# DELETE /workspace/{workspace_id}/tab/{tab_id}/
 delete_tab_entry_summary = "Delete a tab"
 delete_tab_entry_description = "Deletes a tab."
 delete_tab_entry_response_description = "Tab deleted"
@@ -445,7 +433,7 @@ delete_tab_entry_auth_required_response_description = "Authentication required"
 delete_tab_entry_permission_denied_response_description = "Permission denied"
 delete_tab_entry_not_found_response_description = "Workspace or Tab not found"
 delete_tab_entry_workspace_id_description = "Workspace identifier"
-delete_tab_entry_tab_position_description = "Tab position"
+delete_tab_entry_tab_id_description = "Tab identifier"
 
 # POST /workspace/{to_ws_id}/merge
 process_mashup_merge_service_summary = "Merge workspaces"

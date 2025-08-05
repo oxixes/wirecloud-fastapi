@@ -367,7 +367,7 @@ async def create_tab_collection(db: DBDep, user: UserDep, request: Request, work
     if tab_title == '':
         tab_title = tab_name
 
-    for aux_tab in workspace.tabs:
+    for aux_tab in workspace.tabs.values():
         if aux_tab.name == tab_name:
             return build_error_response(request, 409, _("A tab with the given name already exists"))
 
@@ -377,7 +377,7 @@ async def create_tab_collection(db: DBDep, user: UserDep, request: Request, work
 
 
 @workspace_router.get(
-    "/{workspace_id}/tab/{tab_position}/",
+    "/{workspace_id}/tab/{tab_id}/",
     summary=docs.get_tab_entry_summary,
     description=docs.get_tab_entry_description,
     response_model=TabData,
@@ -396,7 +396,7 @@ async def create_tab_collection(db: DBDep, user: UserDep, request: Request, work
 @produces(["application/json"])
 async def get_tab_entry(db: DBDep, user: UserDepNoCSRF, request: Request,
                         workspace_id: Id = Path(description=docs.get_tab_entry_workspace_id_description),
-                        tab_position: int = Path(description=docs.get_tab_entry_tab_position_description)):
+                        tab_id: str = Path(description=docs.get_tab_entry_tab_id_description)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
@@ -405,15 +405,15 @@ async def get_tab_entry(db: DBDep, user: UserDepNoCSRF, request: Request,
         return build_error_response(request, 403, _("You don't have permission to access this workspace"))
 
     try:
-        tab = workspace.tabs[tab_position]
-    except IndexError:
+        tab = workspace.tabs[tab_id]
+    except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
     return await get_tab_data(db, request, tab, user=user)
 
 
 @workspace_router.post(
-    "/{workspace_id}/tab/{tab_position}/",
+    "/{workspace_id}/tab/{tab_id}/",
     summary=docs.update_tab_entry_summary,
     description=docs.update_tab_entry_description,
     status_code=204,
@@ -444,7 +444,7 @@ async def get_tab_entry(db: DBDep, user: UserDepNoCSRF, request: Request,
 @consumes(["application/json"])
 async def create_tab_entry(db: DBDep, user: UserDep, request: Request,
                            workspace_id: Id = Path(description=docs.update_tab_entry_workspace_id_description),
-                           tab_position: int = Path(description=docs.update_tab_entry_tab_position_description),
+                           tab_id: str = Path(description=docs.update_tab_entry_tab_id_description),
                            tab_entry: TabCreateEntry = Body(
                                description=docs.update_tab_entry_tab_create_entry_description,
                                example=docs.update_tab_entry_tab_create_entry_example)):
@@ -455,8 +455,8 @@ async def create_tab_entry(db: DBDep, user: UserDep, request: Request,
         return build_error_response(request, 403, _("You are not allowed to update this workspace"))
 
     try:
-        tab = workspace.tabs[tab_position]
-    except IndexError:
+        tab = workspace.tabs[tab_id]
+    except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
     if tab_entry.visible is not None:
@@ -466,7 +466,7 @@ async def create_tab_entry(db: DBDep, user: UserDep, request: Request,
         else:
             tab.visible = False
 
-    for aux_tab in workspace.tabs:
+    for aux_tab in workspace.tabs.values():
         if aux_tab.name == tab_entry.name:
             return build_error_response(request, 409, _("A tab with the given name already exists"))
 
@@ -483,7 +483,7 @@ async def create_tab_entry(db: DBDep, user: UserDep, request: Request,
 
 
 @workspace_router.delete(
-    "/{workspace_id}/tab/{tab_position}/",
+    "/{workspace_id}/tab/{tab_id}/",
     summary=docs.delete_tab_entry_summary,
     description=docs.delete_tab_entry_description,
     status_code=204,
@@ -505,14 +505,14 @@ async def create_tab_entry(db: DBDep, user: UserDep, request: Request,
 @authentication_required()
 async def delete_tab_entry(db: DBDep, user: UserDep, request: Request,
                            workspace_id: Id = Path(description=docs.delete_tab_entry_workspace_id_description),
-                           tab_position: int = Path(description=docs.delete_tab_entry_tab_position_description)):
+                           tab_id: str = Path(description=docs.delete_tab_entry_tab_id_description)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
     try:
-        tab = workspace.tabs[tab_position]
-    except IndexError:
+        tab = workspace.tabs[tab_id]
+    except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
     if not workspace.is_editable_by(user):
@@ -521,17 +521,14 @@ async def delete_tab_entry(db: DBDep, user: UserDep, request: Request,
     if len(workspace.tabs) == 1:
         return build_error_response(request, 403, _("Tab cannot be deleted as workspaces need at least one tab"))
 
-    for widget in tab.widgets:
+    for widget in tab.widgets.values():
         if widget.read_only:
             return build_error_response(request, 403,
                                         _("Tab cannot be deleted as it contains widgets that cannot be deleted"))
 
-    for t in range(tab_position + 1, len(workspace.tabs)):
-        workspace.tabs[t].id = f'{workspace_id}-{t - 1}'
-
-    workspace.tabs.remove(tab)
+    del workspace.tabs[tab_id]
     if tab.visible:
-        await set_visible_tab(db, user, workspace, workspace.tabs[0])
+        await set_visible_tab(db, user, workspace, workspace.tabs[next(iter(workspace.tabs))])
 
     await change_workspace(db, workspace, user)
     await db.commit_transaction()

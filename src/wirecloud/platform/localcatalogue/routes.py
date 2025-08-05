@@ -82,8 +82,8 @@ async def get_workspace_resource_collection(db: DBDep, user: UserDepNoCSRF, requ
 
     widgets = set()
     result = {}
-    for tab in workspace.tabs:
-        for widget in tab.widgets:
+    for tab in workspace.tabs.values():
+        for widget in tab.widgets.values():
             if not widget.id in widgets:
                 resource = await get_catalogue_resource_by_id(db, widget.resource)
                 if resource and await is_resource_available_for_user(db, resource, creator):

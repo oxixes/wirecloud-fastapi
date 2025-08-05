@@ -198,13 +198,13 @@ async def build_json_template_from_workspace(db: DBSession, request: Request, op
 
     aux_embedded = []
 
-    for tab in sorted_tabs:
+    for tab in sorted_tabs.values():
         preferences = {}
         for preference in tab.preferences:
             if not preference.inherit:
                 preferences[preference.name] = preference.value
         resources = []
-        for iwidget in tab.widgets:
+        for iwidget in tab.widgets.values():
             resource_info = await process_widget_instance(db, request, iwidget, options.wiring,
                                                   options.parametrization.iwidgets,
                                                   options.readOnlyWidgets, cache_manager)

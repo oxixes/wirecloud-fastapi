@@ -182,8 +182,8 @@ async def get_workspace_description(db: DBSession, workspace: Workspace) -> str:
 
     resources = []
     for workspace in workspaces:
-        for tab in workspace.tabs:
-            for widget in tab.widgets:
+        for tab in workspace.tabs.values():
+            for widget in tab.widgets.values():
                 resources.append(await get_catalogue_resource_by_id(db, widget.widget_id))
 
     description = 'Wirecloud Mashup composed of: '
@@ -219,16 +219,6 @@ async def add_user_to_workspace(db: DBSession, workspace: Workspace, user: User)
         db.start_transaction()
     query = {"_id": ObjectId(workspace.id)}
     await db.client.workspace.update_one(query, {"$push": {"users": ObjectId(user.id)}})
-
-
-async def get_tabs_from_workspace(db: DBSession, workspace: Workspace) -> list[Tab]:
-    query = {"_id": ObjectId(workspace.id)}
-    workspace = await db.client.workspace.find_one(query)
-    if workspace is None:
-        return []
-
-    workspace = Workspace.model_validate(workspace)
-    return workspace.tabs
 
 
 async def insert_workspace(db: DBSession, workspace: Workspace) -> None:
@@ -275,22 +265,23 @@ async def delete_workspace(db: DBSession, workspace: Workspace) -> None:
     await db.client.workspace.delete_one(query)
 
 
-async def change_tab(db: DBSession, user: User, workspace: Workspace, tab: Tab) -> None:
+async def change_tab(db: DBSession, user: User, workspace: Workspace, tab: Tab, save_workspace: bool = True) -> None:
     if not db.in_transaction:
         db.start_transaction()
 
-    tab_position = int(tab.id.split('-')[1])
-    workspace.tabs[tab_position] = tab
-    await change_workspace(db, workspace, user)
+    workspace.tabs[tab.id] = tab
+
+    if save_workspace:
+        await change_workspace(db, workspace, user)
 
 
 async def set_visible_tab(db: DBSession, user: User, workspace: Workspace, tab: Tab) -> None:
     if not db.in_transaction:
         db.start_transaction()
 
-    for visible_tab in workspace.tabs:
+    for visible_tab in workspace.tabs.values():
         visible_tab.visible = False
-        await change_tab(db, user, workspace, visible_tab)
+        await change_tab(db, user, workspace, visible_tab, save_workspace=False)
 
     tab.visible = True
     await change_tab(db, user, workspace, tab)

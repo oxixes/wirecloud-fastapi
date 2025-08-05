@@ -28,8 +28,7 @@ from src.wirecloud import docs as root_docs
 from src.wirecloud.platform.iwidget import docs
 from src.wirecloud.platform.iwidget.schemas import WidgetInstanceData, WidgetInstanceDataCreate, \
     WidgetInstanceDataUpdate
-from src.wirecloud.platform.iwidget.utils import save_widget_instance, update_widget_instance, \
-    update_widget_instance_ids
+from src.wirecloud.platform.iwidget.utils import save_widget_instance, update_widget_instance
 from src.wirecloud.platform.workspace.crud import get_workspace_by_id, change_workspace
 from src.wirecloud.platform.workspace.utils import VariableValueCacheManager, get_widget_instance_data
 from src.wirecloud.translation import gettext as _
@@ -38,7 +37,7 @@ iwidget_router = APIRouter()
 
 
 @iwidget_router.get(
-    "/{workspace_id}/tab/{tab_position}/widget_instances/",
+    "/{workspace_id}/tab/{tab_id}/widget_instances/",
     summary=docs.get_widget_instance_collection_summary,
     description=docs.get_widget_instance_collection_description,
     response_model=list[WidgetInstanceData],
@@ -60,21 +59,21 @@ iwidget_router = APIRouter()
 @authentication_required(csrf=False)
 async def get_widget_instance_collection(db: DBDep, user: UserDepNoCSRF, request: Request, workspace_id: Id = Path(
     description=docs.get_widget_instance_collection_workspace_id_description),
-                                 tab_position: int = docs.get_widget_instance_collection_tab_position_description):
+                                 tab_id: str = Path(description=docs.get_widget_instance_collection_tab_id_description)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
     try:
-        tab = workspace.tabs[tab_position]
-    except IndexError:
+        tab = workspace.tabs[tab_id]
+    except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
     if not await workspace.is_accsessible_by(db, user):
         return build_error_response(request, 403, _("You don't have permission to access this workspace"))
 
     cache_manager = VariableValueCacheManager(workspace, user)
-    iwidgets = tab.widgets
+    iwidgets = tab.widgets.values()
     data = [await get_widget_instance_data(db, request, iwidget, workspace, cache_manager) for
             iwidget in
             iwidgets]
@@ -82,7 +81,7 @@ async def get_widget_instance_collection(db: DBDep, user: UserDepNoCSRF, request
 
 
 @iwidget_router.post(
-    "/{workspace_id}/tab/{tab_position}/widget_instances/",
+    "/{workspace_id}/tab/{tab_id}/widget_instances/",
     summary=docs.create_widget_instance_collection_summary,
     description=docs.create_widget_instance_collection_description,
     response_model=WidgetInstanceData,
@@ -111,8 +110,8 @@ async def get_widget_instance_collection(db: DBDep, user: UserDepNoCSRF, request
 @authentication_required()
 @consumes(["application/json"])
 async def create_widget_instance_collection(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(
-    description=docs.create_widget_instance_collection_workspace_id_description), tab_position: int = Path(
-    description=docs.create_widget_instance_collection_tab_position_description),
+    description=docs.create_widget_instance_collection_workspace_id_description), tab_id: str = Path(
+    description=docs.create_widget_instance_collection_tab_id_description),
                                     iwidget: WidgetInstanceDataCreate = Body(
                                         example=docs.create_widget_instance_collection_widget_instance_example,
                                         description=docs.create_widget_instance_collection_widget_instance_description)):
@@ -121,8 +120,8 @@ async def create_widget_instance_collection(db: DBDep, user: UserDep, request: R
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
     try:
-        tab = workspace.tabs[tab_position]
-    except IndexError:
+        tab = workspace.tabs[tab_id]
+    except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
     if not workspace.is_editable_by(user):
@@ -142,7 +141,7 @@ async def create_widget_instance_collection(db: DBDep, user: UserDep, request: R
 
 
 @iwidget_router.put(
-    "/{workspace_id}/tab/{tab_position}/widget_instances/",
+    "/{workspace_id}/tab/{tab_id}/widget_instances/",
     summary=docs.update_widget_instance_collection_summary,
     description=docs.update_widget_instance_collection_description,
     status_code=204,
@@ -172,8 +171,8 @@ async def create_widget_instance_collection(db: DBDep, user: UserDep, request: R
 @consumes(["application/json"])
 async def update_widget_instance_collection(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(
     description=docs.update_widget_instance_collection_workspace_id_description),
-                                    tab_position: int = Path(
-                                        description=docs.update_widget_instance_collection_tab_position_description),
+                                    tab_id: str = Path(
+                                        description=docs.update_widget_instance_collection_tab_id_description),
                                     iwidgets: list[WidgetInstanceDataUpdate] = Body(
                                         description=docs.update_widget_instance_collection_widget_instance_description,
                                         example=docs.update_widget_instance_collection_widget_instance_example)):
@@ -182,8 +181,8 @@ async def update_widget_instance_collection(db: DBDep, user: UserDep, request: R
         return build_error_response(request, 404, _("Workspace not found"))
 
     try:
-        tab = workspace.tabs[tab_position]
-    except IndexError:
+        tab = workspace.tabs[tab_id]
+    except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
     if not workspace.is_editable_by(user):
@@ -192,7 +191,9 @@ async def update_widget_instance_collection(db: DBDep, user: UserDep, request: R
 
     for iwidget in iwidgets:
         try:
-            await update_widget_instance(db, iwidget, user, workspace, tab, update_cache=False)
+            response = await update_widget_instance(db, request, iwidget, user, workspace, tab, update_cache=False)
+            if response is not None:
+                return response
         except TypeError as e:
             return build_error_response(request, 400, str(e))
         except ValueError as e:
@@ -207,7 +208,7 @@ async def update_widget_instance_collection(db: DBDep, user: UserDep, request: R
 
 
 @iwidget_router.get(
-    "/{workspace_id}/tab/{tab_position}/widget_instances/{iwidget_position}",
+    "/{workspace_id}/tab/{tab_id}/widget_instances/{iwidget_id}",
     summary=docs.get_widget_instance_entry_summary,
     description=docs.get_widget_instance_entry_description,
     response_model=WidgetInstanceData,
@@ -225,28 +226,28 @@ async def update_widget_instance_collection(db: DBDep, user: UserDep, request: R
 @authentication_required(csrf=False)
 async def get_widget_instance_entry(db: DBDep, user: UserDepNoCSRF, request: Request,
                             workspace_id: Id = Path(description=docs.get_widget_instance_entry_workspace_id_description),
-                            tab_position: int = Path(description=docs.get_widget_instance_entry_tab_position_description),
-                            iwidget_position: int = Path(
-                                description=docs.get_widget_instance_entry_widget_instance_position_description)):
+                            tab_id: str = Path(description=docs.get_widget_instance_entry_tab_id_description),
+                            iwidget_id: str = Path(
+                                description=docs.get_widget_instance_entry_widget_instance_id_description)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
     try:
-        tab = workspace.tabs[tab_position]
-    except IndexError:
+        tab = workspace.tabs[tab_id]
+    except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
     try:
-        iwidget = tab.widgets[iwidget_position]
-    except IndexError:
+        iwidget = tab.widgets[iwidget_id]
+    except KeyError:
         return build_error_response(request, 404, _("IWidget not found"))
 
     return await get_widget_instance_data(db, request, iwidget, workspace, user=user)
 
 
 @iwidget_router.post(
-    "/{workspace_id}/tab/{tab_position}/widget_instances/{iwidget_position}",
+    "/{workspace_id}/tab/{tab_id}/widget_instances/{iwidget_id}",
     summary=docs.update_widget_instance_entry_summary,
     description=docs.update_widget_instance_entry_description,
     status_code=204,
@@ -276,9 +277,9 @@ async def get_widget_instance_entry(db: DBDep, user: UserDepNoCSRF, request: Req
 @consumes(["application/json"])
 async def update_widget_instance_entry(db: DBDep, user: UserDep, request: Request,
                                workspace_id: Id = Path(description=docs.update_widget_instance_entry_workspace_id_description),
-                               tab_position: int = Path(description=docs.update_widget_instance_entry_tab_position_description),
-                               iwidget_position: int = Path(
-                                   description=docs.update_widget_instance_entry_widget_instance_position_description),
+                               tab_id: str = Path(description=docs.update_widget_instance_entry_tab_id_description),
+                               iwidget_id: str = Path(
+                                   description=docs.update_widget_instance_entry_widget_instance_id_description),
                                iwidget_data: WidgetInstanceDataUpdate = Body(
                                    description=docs.update_widget_instance_entry_widget_instance_description,
                                    example=docs.update_widget_instance_entry_widget_instance_example)):
@@ -287,21 +288,18 @@ async def update_widget_instance_entry(db: DBDep, user: UserDep, request: Reques
         return build_error_response(request, 404, _("Workspace not found"))
 
     try:
-        tab = workspace.tabs[tab_position]
-    except IndexError:
+        tab = workspace.tabs[tab_id]
+    except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
-
-    try:
-        iwidget = tab.widgets[iwidget_position]
-    except IndexError:
-        return build_error_response(request, 404, _("IWidget not found"))
 
     if not workspace.is_editable_by(user):
         return build_error_response(request, 403, _("You have not enough permission for updating the iwidget"))
 
-    iwidget_data.id = iwidget_position
+    iwidget_data.id = iwidget_id
     try:
-        await update_widget_instance(db, iwidget_data, user, workspace, tab)
+        response = await update_widget_instance(db, request, iwidget_data, user, workspace, tab)
+        if response is not None:
+            return response
     except TypeError as e:
         return build_error_response(request, 400, str(e))
     except ValueError as e:
@@ -311,7 +309,7 @@ async def update_widget_instance_entry(db: DBDep, user: UserDep, request: Reques
 
 
 @iwidget_router.delete(
-    "/{workspace_id}/tab/{tab_position}/widget_instances/{iwidget_position}",
+    "/{workspace_id}/tab/{tab_id}/widget_instances/{iwidget_id}",
     summary=docs.delete_widget_instance_entry_summary,
     description=docs.delete_widget_instance_entry_description,
     status_code=204,
@@ -333,21 +331,21 @@ async def update_widget_instance_entry(db: DBDep, user: UserDep, request: Reques
 @authentication_required()
 async def delete_widget_instance_entry(db: DBDep, user: UserDep, request: Request,
                                workspace_id: Id = Path(description=docs.delete_widget_instance_entry_workspace_id_description),
-                               tab_position: int = Path(description=docs.delete_widget_instance_entry_tab_position_description),
-                               iwidget_position: int = Path(
-                                   description=docs.delete_widget_instance_entry_widget_instance_position_description)):
+                               tab_id: str = Path(description=docs.delete_widget_instance_entry_tab_id_description),
+                               iwidget_id: str = Path(
+                                   description=docs.delete_widget_instance_entry_widget_instance_id_description)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
     try:
-        tab = workspace.tabs[tab_position]
-    except IndexError:
+        tab = workspace.tabs[tab_id]
+    except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
     try:
-        iwidget = tab.widgets[iwidget_position]
-    except IndexError:
+        iwidget = tab.widgets[iwidget_id]
+    except KeyError:
         return build_error_response(request, 404, _("IWidget not found"))
 
     if not workspace.is_editable_by(user):
@@ -356,8 +354,7 @@ async def delete_widget_instance_entry(db: DBDep, user: UserDep, request: Reques
     if iwidget.read_only:
         return build_error_response(request, 403, _("Iwidget cannot be deleted"))
 
-    tab.widgets.pop(iwidget_position)
-    update_widget_instance_ids(workspace, tab)
+    del workspace.tabs[tab_id].widgets[iwidget_id]
     await change_workspace(db, workspace, user)
     await db.commit_transaction()
 
@@ -365,7 +362,7 @@ async def delete_widget_instance_entry(db: DBDep, user: UserDep, request: Reques
 
 
 @iwidget_router.post(
-    "/{workspace_id}/tab/{tab_position}/widget_instances/{iwidget_position}/preferences",
+    "/{workspace_id}/tab/{tab_id}/widget_instances/{iwidget_id}/preferences",
     summary=docs.update_widget_instance_preferences_summary,
     description=docs.update_widget_instance_preferences_description,
     status_code=204,
@@ -394,9 +391,9 @@ async def delete_widget_instance_entry(db: DBDep, user: UserDep, request: Reques
 @authentication_required()
 @consumes(["application/json"])
 async def update_widget_instance_preferences(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(
-    description=docs.update_widget_instance_preferences_workspace_id_description), tab_position: int = Path(
-    description=docs.update_widget_instance_preferences_tab_position_description), iwidget_position: int = Path(
-    description=docs.update_widget_instance_preferences_widget_instance_position_description), new_values: dict[str, Any] = Body(
+    description=docs.update_widget_instance_preferences_workspace_id_description), tab_id: str = Path(
+    description=docs.update_widget_instance_preferences_tab_id_description), iwidget_id: str = Path(
+    description=docs.update_widget_instance_preferences_widget_instance_id_description), new_values: dict[str, str] = Body(
     description=docs.update_widget_instance_preferences_new_values_description,
     example=docs.update_widget_instance_preferences_new_values_example)):
     workspace = await get_workspace_by_id(db, workspace_id)
@@ -404,13 +401,13 @@ async def update_widget_instance_preferences(db: DBDep, user: UserDep, request: 
         return build_error_response(request, 404, _("Workspace not found"))
 
     try:
-        tab = workspace.tabs[tab_position]
-    except IndexError:
+        tab = workspace.tabs[tab_id]
+    except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
     try:
-        iwidget = tab.widgets[iwidget_position]
-    except IndexError:
+        iwidget = tab.widgets[iwidget_id]
+    except KeyError:
         return build_error_response(request, 404, _("IWidget not found"))
 
     resource = await get_catalogue_resource_by_id(db, iwidget.resource)
@@ -439,7 +436,7 @@ async def update_widget_instance_preferences(db: DBDep, user: UserDep, request: 
 
         await iwidget.set_variable_value(db, var_name, new_values[var_name], user)
 
-    workspace.tabs[tab_position].widgets[iwidget_position] = iwidget
+    workspace.tabs[tab_id].widgets[iwidget_id] = iwidget
     await change_workspace(db, workspace, user)
     await db.commit_transaction()
 
@@ -447,7 +444,7 @@ async def update_widget_instance_preferences(db: DBDep, user: UserDep, request: 
 
 
 @iwidget_router.get(
-    "/{workspace_id}/tab/{tab_position}/widget_instances/{iwidget_position}/preferences",
+    "/{workspace_id}/tab/{tab_id}/widget_instances/{iwidget_id}/preferences",
     summary=docs.get_widget_instance_preferences_summary,
     description=docs.get_widget_instance_preferences_description,
     response_model=dict[str, Any],
@@ -468,21 +465,21 @@ async def update_widget_instance_preferences(db: DBDep, user: UserDep, request: 
 )
 @authentication_required(csrf=False)
 async def get_widget_instance_preferences(db: DBDep, user: UserDepNoCSRF, request: Request, workspace_id: Id = Path(
-    description=docs.get_widget_instance_preferences_workspace_id_description), tab_position: int = Path(
-    description=docs.get_widget_instance_preferences_tab_position_description), iwidget_position: int = Path(
-    description=docs.get_widget_instance_preferences_widget_instance_position_description)):
+    description=docs.get_widget_instance_preferences_workspace_id_description), tab_id: str = Path(
+    description=docs.get_widget_instance_preferences_tab_id_description), iwidget_id: str = Path(
+    description=docs.get_widget_instance_preferences_widget_instance_id_description)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
     try:
-        tab = workspace.tabs[tab_position]
-    except IndexError:
+        tab = workspace.tabs[tab_id]
+    except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
     try:
-        iwidget = tab.widgets[iwidget_position]
-    except IndexError:
+        iwidget = tab.widgets[iwidget_id]
+    except KeyError:
         return build_error_response(request, 404, _("IWidget not found"))
 
     if not await workspace.is_accsessible_by(db, user):
@@ -505,7 +502,7 @@ async def get_widget_instance_preferences(db: DBDep, user: UserDepNoCSRF, reques
 
 
 @iwidget_router.post(
-    "/{workspace_id}/tab/{tab_position}/widget_instances/{iwidget_position}/properties",
+    "/{workspace_id}/tab/{tab_id}/widget_instances/{iwidget_id}/properties",
     summary=docs.update_widget_instance_properties_summary,
     description=docs.update_widget_instance_properties_description,
     status_code=204,
@@ -533,21 +530,21 @@ async def get_widget_instance_preferences(db: DBDep, user: UserDepNoCSRF, reques
 )
 @authentication_required()
 @consumes(["application/json"])
-async def update_widget_instance_properties(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(),
-                                    tab_position: int = Path(), iwidget_position: int = Path(),
-                                    new_values: dict[str, Any] = Body()):
+async def update_widget_instance_properties(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(description=docs.update_widget_instance_properties_workspace_id_description),
+                                    tab_id: str = Path(description=docs.update_widget_instance_properties_tab_id_description), iwidget_id: str = Path(description=docs.update_widget_instance_properties_widget_instance_id_description),
+                                    new_values: dict[str, Any] = Body(description=docs.update_widget_instance_properties_new_values_description, example=docs.update_widget_instance_properties_new_values_example)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
     try:
-        tab = workspace.tabs[tab_position]
-    except IndexError:
+        tab = workspace.tabs[tab_id]
+    except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
     try:
-        iwidget = tab.widgets[iwidget_position]
-    except IndexError:
+        iwidget = tab.widgets[iwidget_id]
+    except KeyError:
         return build_error_response(request, 404, _("IWidget not found"))
 
     resource = await get_catalogue_resource_by_id(db, iwidget.resource)
@@ -571,14 +568,14 @@ async def update_widget_instance_properties(db: DBDep, user: UserDep, request: R
 
         await iwidget.set_variable_value(db, var_name, new_values[var_name], user)
 
-    workspace.tabs[tab_position].widgets[iwidget_position] = iwidget
+    workspace.tabs[tab_id].widgets[iwidget_id] = iwidget
     await change_workspace(db, workspace, user)
     await db.commit_transaction()
     return Response(status_code=204)
 
 
 @iwidget_router.get(
-    "/{workspace_id}/tab/{tab_position}/widget_instances/{iwidget_position}/properties",
+    "/{workspace_id}/tab/{tab_id}/widget_instances/{iwidget_id}/properties",
     summary=docs.get_widget_instance_properties_summary,
     description=docs.get_widget_instance_properties_description,
     response_model=dict[str, Any],
@@ -594,8 +591,8 @@ async def update_widget_instance_properties(db: DBDep, user: UserDep, request: R
     }
 )
 @authentication_required(csrf=False)
-async def get_widget_instance_properties(db: DBDep, user: UserDepNoCSRF, request: Request, workspace_id: Id = Path(),
-                                 tab_position: int = Path(), iwidget_position: int = Path()):
+async def get_widget_instance_properties(db: DBDep, user: UserDepNoCSRF, request: Request, workspace_id: Id = Path(description=docs.get_widget_instance_properties_workspace_id_description),
+                                 tab_id: str = Path(description=docs.get_widget_instance_properties_tab_id_description), iwidget_id: str = Path(description=docs.get_widget_instance_properties_widget_instance_id_description)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
@@ -604,13 +601,13 @@ async def get_widget_instance_properties(db: DBDep, user: UserDepNoCSRF, request
         return build_error_response(request, 403, _("You don't have permission to access this workspace"))
 
     try:
-        tab = workspace.tabs[tab_position]
-    except IndexError:
+        tab = workspace.tabs[tab_id]
+    except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
     try:
-        iwidget = tab.widgets[iwidget_position]
-    except IndexError:
+        iwidget = tab.widgets[iwidget_id]
+    except KeyError:
         return build_error_response(request, 404, _("IWidget not found"))
 
     if iwidget.resource is None:
@@ -624,6 +621,6 @@ async def get_widget_instance_properties(db: DBDep, user: UserDepNoCSRF, request
     cache_manager = VariableValueCacheManager(workspace, user)
     props = iwidget_info.variables.properties
 
-    data = {var: await cache_manager.get_variable_data(db, request, "iwidget", iwidget_position, var) for var in props}
+    data = {var: await cache_manager.get_variable_data(db, request, "iwidget", iwidget_id, var) for var in props}
 
     return data

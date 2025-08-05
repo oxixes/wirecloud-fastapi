@@ -28,7 +28,7 @@ patterns = {
     # Context
     'wirecloud.platform_context_collection': URLTemplate(urlpattern='/api/context', defaults={}),
 
-    'wirecloud.showcase_media': URLTemplate(urlpattern='/showcase/media/{vendor}/{name}/{version}/{path}', defaults={}),
+    'wirecloud.showcase_media': URLTemplate(urlpattern='/api/widget/{vendor}/{name}/{version}/{path}', defaults={}),
 
     # Search service
     'wirecloud.search_service': URLTemplate(urlpattern='/api/search', defaults={}),

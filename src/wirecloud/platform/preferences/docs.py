@@ -110,7 +110,7 @@ create_workspace_preference_collection_platform_preference_create_example = {
     }
 }
 
-# GET /workspace/{workspace_id}/tab/{tab_position}/preferences/
+# GET /workspace/{workspace_id}/tab/{tab_id}/preferences/
 get_tab_preference_collection_summary = "Get Tab Preferences"
 get_tab_preference_collection_description = "Retrieve a list of preferences of the workspace tabs for the authenticated user"
 get_tab_preference_collection_response_description = "List of tab preferences"
@@ -118,7 +118,7 @@ get_tab_preference_collection_auth_required_response_description = "Authenticati
 get_tab_preference_collection_permission_denied_response_description = "Permission denied"
 get_tab_preference_collection_not_found_response_description = "Workspace or Tab not found"
 get_tab_preference_collection_workspace_id_description = "Workspace identifier"
-get_tab_preference_collection_tab_position_description = "Tab position"
+get_tab_preference_collection_tab_id_description = "Tab identifier"
 get_tab_preference_collection_response_example = {
     "preference-1": {
         "inherit": False,
@@ -150,7 +150,7 @@ get_tab_preference_collection_response_example = {
     }
 }
 
-# POST /workspace/{workspace_id}/tab/{tab_position}/preferences/
+# POST /workspace/{workspace_id}/tab/{tab_id}/preferences/
 create_tab_preference_collection_summary = "Update Tab Preferences"
 create_tab_preference_collection_description = "Update the tab preferences for the authenticated user"
 create_tab_preference_collection_response_description = "Tab preferences updated"
@@ -159,7 +159,7 @@ create_tab_preference_collection_validation_error_response_description = "Valida
 create_tab_preference_collection_not_acceptable_response_description = "Invalid request content type"
 create_tab_preference_collection_permission_denied_response_description = "Permission denied"
 create_tab_preference_collection_workspace_id_description = "Workspace identifier"
-create_tab_preference_collection_tab_position_description = "Tab position"
+create_tab_preference_collection_tab_id_description = "Tab identifier"
 create_tab_preference_collection_platform_preference_create_example = {
     "name": "example",
     "preference-1": {"value": "value-preference-1"}

@@ -32,7 +32,6 @@ from src.wirecloud.commons.utils.template.schemas.macdschemas import MACType
 from src.wirecloud.commons.utils.urlify import URLify
 from src.wirecloud.database import DBSession
 from src.wirecloud.platform.context.utils import get_context_values
-from src.wirecloud.platform.iwidget.crud import insert_widget_instance_into_tab
 from src.wirecloud.platform.iwidget.schemas import WidgetInstanceData, LayoutConfig
 from src.wirecloud.platform.iwidget.utils import save_widget_instance, set_initial_values
 from src.wirecloud.platform.preferences.crud import update_workspace_preferences, update_tab_preferences
@@ -160,7 +159,7 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
 
     context_values = await get_context_values(db, workspace, request,
                                               await get_user_with_all_info(db, workspace.creator))
-    processor = TemplateValueProcessor(context={'user': user, 'context': context_values})
+    processor = TemplateValueProcessor(context={'user': str(user), 'context': context_values})
 
     mashup_description = template.get_resource_info()  # MACDMashup
 
@@ -281,7 +280,8 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
 
             await set_initial_values(db, iwidget, initial_variable_values, iwidget_info,
                                      await get_user_by_id(db, workspace.creator))
-            await insert_widget_instance_into_tab(db, tab, iwidget)
+            # await insert_widget_instance_into_tab(db, tab, iwidget)
+            workspace.tabs[tab.id].widgets[iwidget.id] = iwidget
 
             if len(iwidget_forced_values) > 0:
                 new_forced_values.iwidget[str(iwidget.id)] = iwidget_forced_values

@@ -58,8 +58,8 @@ class WidgetInstanceData(WidgetInstanceDataCreate):
 
 
 class WidgetInstanceDataUpdate(BaseModel):
-    id: Optional[int] = None
-    tab: Optional[int] = None
+    id: Optional[str] = None
+    tab: Optional[str] = None
     layout: Optional[int] = None
     layout_config: Optional[list[LayoutConfig]] = None
     title: Optional[str] = None
