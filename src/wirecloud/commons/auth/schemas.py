@@ -44,6 +44,7 @@ class UserDetails(UserBase):
     is_superuser: bool = Field(description=docs.user_is_superuser_description)
     is_staff: bool = Field(description=docs.user_is_staff_description)
     is_active: bool = Field(description=docs.user_is_active_description)
+    idm_token: Optional[str] = None # FIXME Docs?? Why this has docs if it's not returned by the API? Was I dumb and wrote useless docs? Yeah, working at 3 am is not a good idea
 
     def get_full_name(self):
         return f"{self.first_name} {self.last_name}".strip()
@@ -77,7 +78,6 @@ class Session(BaseModel):
     id: Id
     real_user: Optional[str] = Field(default=None)
     real_fullname: Optional[str] = Field(default=None)
-    oidc_token: Optional[OIDCToken] = Field(default=None)
     requires_csrf: bool = Field(default=True)
 
 

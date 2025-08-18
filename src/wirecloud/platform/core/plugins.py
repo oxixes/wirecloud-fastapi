@@ -33,6 +33,7 @@ from src.wirecloud.commons.auth.crud import get_user_groups
 from src.wirecloud.commons.utils.http import get_absolute_reverse_url
 from src.wirecloud.database import DBSession
 from src.wirecloud.platform.iwidget.routes import iwidget_router
+from src.wirecloud.platform.localcatalogue.schemas import ResourceCreateData, ResourceCreateFormData
 from src.wirecloud.platform.widget.routes import widget_router
 from src.wirecloud.platform.wiring.routes import wiring_router, operator_router
 from src.wirecloud.platform.workspace.routes import workspace_router, workspaces_router
@@ -477,3 +478,9 @@ class WirecloudCorePlugin(WirecloudPlugin):
 
     def get_proxy_processors(self) -> tuple[str, ...]:
         return ('src.wirecloud.proxy.processors.SecureDataProcessor',)
+
+    def get_openapi_extra_schemas(self) -> dict[str, dict[str, Any]]:
+        return {
+            "ResourceCreateData": ResourceCreateData.model_json_schema(),
+            "ResourceCreateFormData": ResourceCreateFormData.model_json_schema(),
+        }

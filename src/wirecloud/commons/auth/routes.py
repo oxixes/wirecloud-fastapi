@@ -29,9 +29,9 @@ from src.wirecloud.database import Id
 from src.wirecloud.commons.auth.schemas import UserLogin, UserToken, UserWithPassword, UserTokenType, User, UserCreate
 from src.wirecloud.commons.auth.crud import get_user_with_password, set_login_date_for_user, get_user_by_username, \
     create_user, update_user, create_token, invalidate_token, add_user_to_groups_by_codename, \
-    create_group_if_not_exists, remove_user_from_all_groups, set_token_expiration
+    create_group_if_not_exists, remove_user_from_all_groups, set_token_expiration, remove_user_idm_token
 from src.wirecloud.commons.auth.utils import check_password, SessionDepNoCSRF, SessionDep, \
-    UserDep
+    UserDep, UserDepNoCSRF
 from src.wirecloud.database import DBDep, commit
 from src.wirecloud.commons.utils.http import build_error_response, build_validation_error_response, produces, consumes, \
     get_redirect_response
@@ -104,7 +104,8 @@ async def oidc_login(request: Request, db: DBDep, code: str = Query(description=
             email=user_data.get("email", ""),
             is_superuser=False,
             is_staff=False,
-            is_active=True
+            is_active=True,
+            idm_token=token_data["refresh_token"] if "refresh_token" in token_data else None
         ))
 
         await commit(db)
@@ -114,6 +115,7 @@ async def oidc_login(request: Request, db: DBDep, code: str = Query(description=
         user.email = user_data.get("email", user.email)
         user.first_name = user_data.get("given_name", user.first_name)
         user.last_name = user_data.get("family_name", user.last_name)
+        user.idm_token = token_data["refresh_token"] if "refresh_token" in token_data else None
 
         await update_user(db, user)
 
@@ -129,7 +131,8 @@ async def oidc_login(request: Request, db: DBDep, code: str = Query(description=
 
     await set_login_date_for_user(db, user.id)
 
-    expiration = datetime.fromtimestamp(datetime.now(timezone.utc).timestamp() + token_data["refresh_expires_in"], tz=timezone.utc)
+    duration = (hasattr(settings, 'SESSION_AGE') and settings.SESSION_AGE) or 14 * 24 * 60 * 60  # 2 weeks
+    expiration = datetime.fromtimestamp(int(datetime.now(timezone.utc).timestamp() + duration), tz=timezone.utc)
 
     token_id = str(await create_token(db, expiration))
     await commit(db)
@@ -140,10 +143,6 @@ async def oidc_login(request: Request, db: DBDep, code: str = Query(description=
         "jti": token_id,
         "exp": int(expiration.timestamp()),
         "iat": int(datetime.now(timezone.utc).timestamp()),
-        "oidc_token": {
-            "refresh": token_data["refresh_token"],
-            "refresh_expiration": int(datetime.now(timezone.utc).timestamp() + token_data["refresh_expires_in"]),
-        },
         "csrf_required": True
     }
     token = jwt.encode(token_contents, settings.JWT_KEY, algorithm="HS256")
@@ -290,6 +289,7 @@ async def login(request: Request, db: DBDep):
         return render_wirecloud(request, page="registration/login", title="Login", extra_context={"form": {"errors": True}})
 
     await set_login_date_for_user(db, user.id)
+    await remove_user_idm_token(db, user.id)
 
     duration = (hasattr(settings, 'SESSION_AGE') and settings.SESSION_AGE) or 14 * 24 * 60 * 60  # 2 weeks
     expiration = datetime.fromtimestamp(int(datetime.now(timezone.utc).timestamp() + duration), tz=timezone.utc)
@@ -334,22 +334,24 @@ async def login(request: Request, db: DBDep):
     response_class=HTMLResponse,
     response_description=docs.logout_response_description
 )
-async def logout(request: Request, db: DBDep, session: SessionDepNoCSRF):
+async def logout(request: Request, db: DBDep, session: SessionDepNoCSRF, user: UserDepNoCSRF):
     if not session:
         return build_error_response(request, 401, _("You are not logged in"))
 
     await invalidate_token(db, session.id)
     await commit(db)
 
-    if session.oidc_token and getattr(settings, "OID_CONNECT_ENABLED", False) and getattr(settings, "OID_CONNECT_PLUGIN", "") in get_idm_backchannel_logout_functions():
+    if getattr(settings, "OID_CONNECT_ENABLED", False) and \
+            getattr(settings, "OID_CONNECT_PLUGIN", "") in get_idm_backchannel_logout_functions() and \
+            user.idm_token is not None:
         backchannel_logout_func = get_idm_backchannel_logout_functions()[getattr(settings, "OID_CONNECT_PLUGIN", "")]
         try:
             if asyncio.iscoroutinefunction(backchannel_logout_func):
                 # If the function is a coroutine, we need to await it
-                await backchannel_logout_func(refresh_token=session.oidc_token.refresh)
+                await backchannel_logout_func(refresh_token=user.idm_token)
             else:
                 # If the function is a regular function, we can call it directly
-                backchannel_logout_func(refresh_token=session.oidc_token.refresh)
+                backchannel_logout_func(refresh_token=user.idm_token)
         except Exception as e:
             pass
 
@@ -380,26 +382,28 @@ async def token_refresh(request: Request, db: DBDep, session: SessionDep, user: 
     if not session or not session.oidc_token:
         return build_error_response(request, 401, _("You are not logged in"))
 
-    token_data = None
     if getattr(settings, "OID_CONNECT_ENABLED", False):
         if not getattr(settings, "OID_CONNECT_PLUGIN", "") in get_idm_get_token_functions():
             return build_error_response(request, 500, _("OIDC provider is not configured correctly! Contact your administrator."))
 
-        try:
-            token_data_get_func = get_idm_get_token_functions()[getattr(settings, "OID_CONNECT_PLUGIN", "")]
-            if asyncio.iscoroutinefunction(token_data_get_func):
-                # If the function is a coroutine, we need to await it
-                token_data = await token_data_get_func(code=None, refresh_token=session.oidc_token.refresh, request=request)
-            else:
-                # If the function is a regular function, we can call it directly
-                token_data = token_data_get_func(code=None, refresh_token=session.oidc_token.refresh, request=request)
-        except Exception as e:
-            return build_error_response(request, 502, str(e))
+        token_data = None
+        if user.idm_token is not None:
+            try:
+                token_data_get_func = get_idm_get_token_functions()[getattr(settings, "OID_CONNECT_PLUGIN", "")]
+                if asyncio.iscoroutinefunction(token_data_get_func):
+                    # If the function is a coroutine, we need to await it
+                    token_data = await token_data_get_func(code=None, refresh_token=user.idm_token, request=request)
+                else:
+                    # If the function is a regular function, we can call it directly
+                    token_data = token_data_get_func(code=None, refresh_token=user.idm_token, request=request)
+            except Exception as e:
+                return build_error_response(request, 502, str(e))
+
+        user.idm_token = token_data["refresh_token"] if "refresh_token" in token_data else None
+        await update_user(db, user)
 
     duration = (hasattr(settings, 'SESSION_AGE') and settings.SESSION_AGE) or 14 * 24 * 60 * 60  # 2 weeks
-    expiration = (datetime.fromtimestamp(datetime.now(timezone.utc).timestamp() + token_data["refresh_expires_in"], tz=timezone.utc)
-                  if "refresh_expires_in" in token_data else datetime.fromtimestamp(session.oidc_token.refresh_expiration, tz=timezone.utc)) \
-        if getattr(settings, "OID_CONNECT_ENABLED", False) else datetime.fromtimestamp(int(datetime.now(timezone.utc).timestamp() + duration), tz=timezone.utc)
+    expiration = datetime.fromtimestamp(int(datetime.now(timezone.utc).timestamp() + duration), tz=timezone.utc)
 
     await set_token_expiration(db, session.id, expiration)
     await commit(db)
@@ -412,14 +416,6 @@ async def token_refresh(request: Request, db: DBDep, session: SessionDep, user: 
         "iat": int(datetime.now(timezone.utc).timestamp()),
         "csrf_required": session.requires_csrf
     }
-
-    if getattr(settings, "OID_CONNECT_ENABLED", False):
-        # If OIDC is enabled, we need to include the OIDC token in the response
-        token_contents["oidc_token"] = {
-            "refresh": token_data["refresh_token"] if "refresh_token" in token_data else session.oidc_token.refresh,
-            "refresh_expiration": int(datetime.now(timezone.utc).timestamp() + token_data["refresh_expires_in"]) \
-                if "refresh_expires_in" in token_data else session.oidc_token.refresh_expiration,
-        }
 
     token = jwt.encode(token_contents, settings.JWT_KEY, algorithm="HS256")
 

@@ -99,7 +99,7 @@ async def create_resource(db: DBDep, request: Request, user: UserDep):
 
         downloaded_file = await form['file'].read()
     else:  # if request.mimetype == 'application/octet-stream'
-        public = request.query.get('public', 'true').strip().lower() == 'true'
+        public = request.query_params.get('public', 'true').strip().lower() == 'true'
         downloaded_file = await request.body()
 
     try:
@@ -126,8 +126,6 @@ async def create_resource(db: DBDep, request: Request, user: UserDep):
 
     res = Response(status_code=201)
     res.headers['Location'] = resource.get_template_url()
-    await catalogue_utils.create_widget_on_resource_creation(db, resource)
-    catalogue_utils.deploy_operators_on_resource_creation(resource)
     return res
 
 

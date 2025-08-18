@@ -55,6 +55,7 @@ class DBUser(BaseModel, populate_by_name=True):
     is_staff: bool
     is_active: bool
     date_joined: datetime
+    idm_token: Optional[str] = None
 
     user_permissions: list[DBPermission] = []
     groups: list[Id] = []

@@ -87,6 +87,8 @@ class MACDBase(BaseModel):
     translations: dict[str, dict[str, str]] = {}
     translation_index_usage: dict[str, list[MACDTranslationIndexUsage]] = {}
 
+    wgt_files: Optional[list[str]] = None
+
     # Parse contacts if present
     @model_validator(mode='before')
     @classmethod

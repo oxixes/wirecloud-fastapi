@@ -105,7 +105,7 @@ class CatalogueResourceBase(BaseModel):
 
     @property
     def mimetype(self) -> str:
-        return self.RESOURCE_MIMETYPES[self.type.value]
+        return RESOURCE_MIMETYPES[self.type.value]
 
     def __str__(self) -> str:
         return self.local_uri_part

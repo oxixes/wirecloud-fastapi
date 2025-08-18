@@ -118,7 +118,6 @@ async def get_session(db: DBDep, request: Request, token: Union[dict[str, Union[
         id=Id(token.get("jti")),
         real_user=token.get('real_user', None),
         real_fullname=token.get('real_fullname', None),
-        oidc_token=token.get('oidc_token', None),
         requires_csrf=token.get('csrf_required', True)
     )
 

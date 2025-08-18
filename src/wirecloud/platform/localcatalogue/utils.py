@@ -20,6 +20,7 @@
 import re
 from typing import Optional
 
+import src.wirecloud.catalogue.utils as catalogue_utils
 from src.wirecloud.commons.auth.models import Group
 from src.wirecloud.database import DBSession
 from src.wirecloud.commons.utils.wgt import WgtFile
@@ -92,6 +93,9 @@ async def install_component(db: DBSession, file_contents: WgtFile, executor_user
         if change and not public:
             # resource_installed.send(sender=resource, group=group)
             pass
+
+    await catalogue_utils.create_widget_on_resource_creation(db, resource)
+    catalogue_utils.deploy_operators_on_resource_creation(resource)
 
     if executor_user is not None:
         finally_available = await resource.is_available_for(db, executor_user)

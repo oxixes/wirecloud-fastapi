@@ -162,7 +162,7 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
 
         return {"keycloak": backchannel_logout}
 
-
+    # TODO Better logging
     def get_config_validators(self) -> tuple[Callable, ...]:
         async def validate_oidc_settings(settings) -> None:
             if getattr(settings, "OID_CONNECT_PLUGIN", "") != "keycloak":
@@ -234,6 +234,9 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
                     if "profile" not in data["scopes_supported"]:
                         raise ValueError("OID_CONNECT_DISCOVERY_URL scopes_supported does not contain profile")
 
+                    if "offline_access" not in data["scopes_supported"]:
+                        raise ValueError("OID_CONNECT_DISCOVERY_URL scopes_supported does not contain offline_access")
+
                     if "code" not in data["response_types_supported"]:
                         raise ValueError("OID_CONNECT_DISCOVERY_URL response_types_supported does not contain code")
 
@@ -247,7 +250,7 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
                         "token_endpoint": data["token_endpoint"],
                         "end_session_endpoint": data["end_session_endpoint"],
                         "userinfo_endpoint": data["userinfo_endpoint"],
-                        "scopes": ["openid", "profile"]
+                        "scopes": ["openid", "profile", "offline_access"]
                     }
 
                     if "email" in data["scopes_supported"]:
@@ -256,8 +259,7 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
                     if "wirecloud" in data["scopes_supported"]:
                         OID_DATA["scopes"].append("wirecloud")
                     else:
-                        print(
-                            "WARNING: wirecloud scope not supported by OIDC provider. Users will be created with default permissions.")
+                        print("WARNING: wirecloud scope not supported by OIDC provider. Users will be created with default permissions.")
 
                     setattr(settings, "OID_CONNECT_DATA", OID_DATA)
                 else:

@@ -40,6 +40,7 @@ from urllib.parse import urljoin, unquote, urlparse, quote
 
 from src import settings
 from src.wirecloud.commons.auth.utils import UserDepNoCSRF
+from src.wirecloud.commons.exceptions import ErrorResponse
 from src.wirecloud.commons.utils import mimeparser
 from src.wirecloud.translation import gettext as _
 
@@ -223,7 +224,7 @@ def generate_new_param_signature(sig: Signature, new_param_name: str, new_param_
         # Add a new parameter to the handler
         request_param = inspect.Parameter(new_param_name, inspect.Parameter.POSITIONAL_OR_KEYWORD,
                                           annotation=new_param_type, default=default_value)
-        params.append(request_param)
+        params.insert(0, request_param)
 
         new_sig = sig.replace(parameters=params)
     else:
@@ -468,7 +469,6 @@ def http_date(timestamp: int) -> str:
 
 
 def get_absolute_static_url(url, request: Optional[Request] = None, versioned: bool = False):
-
     scheme = get_current_scheme(request)
     base = urljoin(scheme + '://' + get_current_domain(request), '/static')
 

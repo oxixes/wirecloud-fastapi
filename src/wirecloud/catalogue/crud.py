@@ -88,6 +88,24 @@ async def get_catalogue_resource(db: DBSession, vendor: Vendor, short_name: Name
     return build_schema_from_resource(CatalogueResourceModel.model_validate(result))
 
 
+async def get_user_catalogue_resource(db: DBSession, user: User, vendor: Vendor, short_name: Name, version: Version) -> Optional[CatalogueResource]:
+    query = {"vendor": vendor, "short_name": short_name, "version": version, "users": {"$in": [ObjectId(user.id)]}}
+    result = await db.client.catalogue_resources.find_one(query)
+
+    if result is None:
+        return None
+
+    return build_schema_from_resource(CatalogueResourceModel.model_validate(result))
+
+
+async def get_user_catalogue_resources(db: DBSession, user: User, vendor: Vendor, short_name: Name) -> list[CatalogueResource]:
+    query = {"vendor": vendor, "short_name": short_name, "users": {"$in": [ObjectId(user.id)]}}
+    results = await db.client.catalogue_resources.find(query).to_list()
+
+    resources = [CatalogueResourceModel.model_validate(resource) for resource in results]
+    return [build_schema_from_resource(resource) for resource in resources]
+
+
 async def get_catalogue_resource_with_xhtml(db: DBSession, vendor: Vendor, short_name: Name, version: Version) -> Optional[CatalogueResourceXHTML]:
     query = {"vendor": vendor, "short_name": short_name, "version": version}
     result = await db.client.catalogue_resources.find_one(query)
@@ -143,23 +161,27 @@ async def get_catalogue_resource_versions_for_user(db: DBSession, vendor: Option
                                                    short_name: Optional[Name] = None,
                                                    user: Optional[UserAll] = None) -> list[CatalogueResource]:
     # Gets all public resources and the resources owned by the user or the groups the user belongs to
-    public_resources_query = {"vendor": vendor if vendor is not None else True,
-                              "short_name": short_name if short_name is not None else True, "public": True}
+    public_resources_query = {"public": True}
+    if vendor is not None:
+        public_resources_query["vendor"] = vendor
+    if short_name is not None:
+        public_resources_query["short_name"] = short_name
 
     if user is None:
         query = public_resources_query
     else:
-        user_resources_query = {"vendor": vendor if vendor is not None else True,
-                                "short_name": short_name if short_name is not None else True,
-                                "creator_id": ObjectId(user.id)}
-        creator_resources_query = {"vendor": vendor if vendor is not None else True,
-                                   "short_name": short_name if short_name is not None else True,
-                                   "users": ObjectId(user.id)}
-        group_resources_query = {"vendor": vendor if vendor is not None else True,
-                                 "short_name": short_name if short_name is not None else True,
-                                 "groups": {"$in": user.groups}}
+        user_resources_query = {"users": {"$in": [ObjectId(user.id)]}}
+        group_resources_query = {"groups": {"$in": user.groups}}
 
-        query = {"$or": [public_resources_query, user_resources_query, creator_resources_query, group_resources_query]}
+        if vendor is not None:
+            user_resources_query["vendor"] = vendor
+            group_resources_query["vendor"] = vendor
+
+        if short_name is not None:
+            user_resources_query["short_name"] = short_name
+            group_resources_query["short_name"] = short_name
+
+        query = {"$or": [public_resources_query, user_resources_query, group_resources_query]}
 
     result = await db.client.catalogue_resources.find(query).to_list()
     resources = [CatalogueResourceModel.model_validate(resource) for resource in result]
@@ -231,6 +253,37 @@ async def install_resource_to_group(db: DBSession, resource: CatalogueResource, 
                                                        {"$push": {"groups": ObjectId(group.id)}})
         await db.commit_transaction()
         return True
+
+
+async def uninstall_resource_to_user(db: DBSession, resource: CatalogueResource, user: User) -> bool:
+    if not db.in_transaction:
+        db.start_transaction()
+    # Check integrity
+    query = {"_id": ObjectId(resource.id), "users": ObjectId(user.id)}
+    result = await db.client.catalogue_resources.find_one(query)
+    if result is None:
+        return False
+    else:
+        await db.client.catalogue_resources.update_one({"_id": ObjectId(resource.id)},
+                                                       {"$pull": {"users": ObjectId(user.id)}})
+        await db.commit_transaction()
+        return True
+
+
+async def delete_resource_if_not_used(db: DBSession, resource: CatalogueResource) -> bool:
+    if not db.in_transaction:
+        db.start_transaction()
+
+    # Check if the resource is not used by any user or group
+    query = {"_id": ObjectId(resource.id), "users": {"$size": 0}, "groups": {"$size": 0}, "public": False}
+    result = await db.client.catalogue_resources.find_one(query)
+
+    if result is not None:
+        await db.client.catalogue_resources.delete_one({"_id": ObjectId(resource.id)})
+        await db.commit_transaction()
+        return True
+    else:
+        return False
 
 
 async def get_catalogue_resources_with_regex(db: DBSession, vendor: Vendor, name: Name, version: Version) -> list[CatalogueResource]:
