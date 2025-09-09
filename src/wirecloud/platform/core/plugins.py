@@ -34,7 +34,7 @@ from src.wirecloud.commons.utils.http import get_absolute_reverse_url
 from src.wirecloud.database import DBSession
 from src.wirecloud.platform.iwidget.routes import iwidget_router
 from src.wirecloud.platform.localcatalogue.schemas import ResourceCreateData, ResourceCreateFormData
-from src.wirecloud.platform.widget.routes import widget_router
+from src.wirecloud.platform.widget.routes import widget_router, showcase_router
 from src.wirecloud.platform.wiring.routes import wiring_router, operator_router
 from src.wirecloud.platform.workspace.routes import workspace_router, workspaces_router
 from src.wirecloud.platform.plugins import (get_active_features_info, get_plugin_urls, AjaxEndpoint, build_url_template,
@@ -93,6 +93,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
         app.include_router(workspaces_router, prefix="/api/workspaces", tags=["Workspace"])
         app.include_router(iwidget_router, prefix="/api/workspace", tags=["Widget instances"])
         app.include_router(widget_router, prefix="/api/widget", tags=["Widget"])
+        app.include_router(showcase_router, prefix="/showcase/media", tags=["Widget"])
         app.include_router(theme_router, prefix="/api/theme", tags=["Theme"])
         app.include_router(wiring_router, prefix="/api/workspace", tags=["Wiring"])
         app.include_router(operator_router, prefix="/api/operator", tags=["Operator"])
@@ -455,7 +456,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
         return endpoints
 
     def get_widget_api_extensions(self, view: str, features: list[str]) -> list[str]:
-        extensions = ['js/WirecloudAPI/StyledElements.js']
+        extensions = ['/js/WirecloudAPI/StyledElements.js']
 
         if 'DashboardManagement' in features:
             extensions.append('js/WirecloudAPI/DashboardManagementAPI.js')
