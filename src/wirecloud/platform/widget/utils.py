@@ -188,7 +188,7 @@ async def fix_widget_code(widget_code: Union[str, bytes], content_type: str, req
         files.reverse()
         for file in files:
             head_element.insert(0, etree.Element('script', type="text/javascript",
-                                                 src=get_absolute_static_url("/static" + file, request=request, versioned=True)))
+                                                 src=get_absolute_static_url("/static/" + file, request=request, versioned=True)))
 
         for file in await get_widget_api_files(request, theme):
             head_element.insert(0, etree.Element('script', type="text/javascript", src=file))

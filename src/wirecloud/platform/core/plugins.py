@@ -456,7 +456,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
         return endpoints
 
     def get_widget_api_extensions(self, view: str, features: list[str]) -> list[str]:
-        extensions = ['/js/WirecloudAPI/StyledElements.js']
+        extensions = ['js/WirecloudAPI/StyledElements.js']
 
         if 'DashboardManagement' in features:
             extensions.append('js/WirecloudAPI/DashboardManagementAPI.js')
