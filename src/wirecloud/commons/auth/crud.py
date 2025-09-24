@@ -85,7 +85,7 @@ async def create_user(db: DBSession, user_info: UserCreate) -> None:
         is_superuser=user_info.is_superuser,
         is_staff=user_info.is_staff,
         is_active=user_info.is_active,
-        idm_token=user_info.idm_token,
+        idm_data=user_info.idm_data,
         date_joined=datetime.now(timezone.utc),
         last_login=None
     )
@@ -98,6 +98,9 @@ async def create_user(db: DBSession, user_info: UserCreate) -> None:
 async def update_user(db: DBSession, user_info: User) -> None:
     if not db.in_transaction:
         db.start_transaction()
+
+    # Make sure the user_info is a User and not UserAll or similar
+    user_info = User(**user_info.model_dump(include=User.model_fields.keys()))
 
     query = {"_id": ObjectId(user_info.id)}, {"$set": user_info.model_dump(by_alias=True, exclude={"id"})}
     await db.client.users.update_one(*query)
@@ -122,54 +125,7 @@ async def get_user_by_id(db: DBSession, user_id: Id) -> Optional[User]:
         is_active=user.is_active,
         date_joined=user.date_joined,
         last_login=user.last_login,
-        idm_token=user.idm_token
-    )
-
-async def get_user_with_all_info(db: DBSession, user_id: Id) -> Optional[UserAll]:
-    query = {"_id": ObjectId(user_id)}
-    user_data = await db.client.users.find_one(query)
-
-    if user_data is None:
-        return None
-
-    user = UserModel.model_validate(user_data)
-    return UserAll(
-        id=user.id,
-        username=user.username,
-        email=user.email,
-        first_name=user.first_name,
-        last_name=user.last_name,
-        is_superuser=user.is_superuser,
-        is_staff=user.is_staff,
-        is_active=user.is_active,
-        date_joined=user.date_joined,
-        last_login=user.last_login,
-        idm_token=user.idm_token,
-        groups=user.groups,
-        permissions=[Permission(**perm.model_dump()) for perm in user.user_permissions]
-    )
-
-async def get_user_by_username(db: DBSession, username: str) -> Optional[User]:
-    query = {"username": username}
-    user = await db.client.users.find_one(query)
-
-    if user is None:
-        return None
-
-    user = UserModel.model_validate(user)
-
-    return User(
-        id=user.id,
-        username=user.username,
-        email=user.email,
-        first_name=user.first_name,
-        last_name=user.last_name,
-        is_superuser=user.is_superuser,
-        is_staff=user.is_staff,
-        is_active=user.is_active,
-        date_joined=user.date_joined,
-        last_login=user.last_login,
-        idm_token=user.idm_token
+        idm_data=user.idm_data
     )
 
 
@@ -193,6 +149,80 @@ async def get_all_user_permissions(db: DBSession, user_id: Id) -> list[Permissio
             permissions.add(Permission(codename=permission.get("codename")))
 
     return list(permissions)
+
+
+async def get_user_with_all_info(db: DBSession, user_id: Id) -> Optional[UserAll]:
+    query = {"_id": ObjectId(user_id)}
+    user_data = await db.client.users.find_one(query)
+
+    if user_data is None:
+        return None
+
+    user = UserModel.model_validate(user_data)
+    return UserAll(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        is_superuser=user.is_superuser,
+        is_staff=user.is_staff,
+        is_active=user.is_active,
+        date_joined=user.date_joined,
+        last_login=user.last_login,
+        idm_data=user.idm_data,
+        groups=user.groups,
+        permissions=await get_all_user_permissions(db, user.id)
+    )
+
+
+async def get_user_with_all_info_by_username(db: DBSession, username: str) -> Optional[UserAll]:
+    query = {"username": username}
+    user_data = await db.client.users.find_one(query)
+
+    if user_data is None:
+        return None
+
+    user = UserModel.model_validate(user_data)
+    return UserAll(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        is_superuser=user.is_superuser,
+        is_staff=user.is_staff,
+        is_active=user.is_active,
+        date_joined=user.date_joined,
+        last_login=user.last_login,
+        idm_data=user.idm_data,
+        groups=user.groups,
+        permissions=await get_all_user_permissions(db, user.id)
+    )
+
+
+async def get_user_by_username(db: DBSession, username: str) -> Optional[User]:
+    query = {"username": username}
+    user = await db.client.users.find_one(query)
+
+    if user is None:
+        return None
+
+    user = UserModel.model_validate(user)
+
+    return User(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        is_superuser=user.is_superuser,
+        is_staff=user.is_staff,
+        is_active=user.is_active,
+        date_joined=user.date_joined,
+        last_login=user.last_login,
+        idm_data=user.idm_data
+    )
 
 
 async def get_user_groups(db: DBSession, user_id: Id) -> list[Group]:
@@ -221,7 +251,7 @@ async def get_user_with_password(db: DBSession, username: str) -> Optional[UserW
         is_active=user.is_active,
         date_joined=user.date_joined,
         last_login=user.last_login,
-        idm_token=user.idm_token,
+        idm_data=user.idm_data,
         password=user.password
     )
 
@@ -288,11 +318,11 @@ async def set_login_date_for_user(db: DBSession, user_id: Id) -> None:
     await db.client.users.update_one(*query)
 
 
-async def remove_user_idm_token(db: DBSession, user_id: Id) -> None:
+async def remove_user_idm_data(db: DBSession, user_id: Id, provider: str) -> None:
     if not db.in_transaction:
         db.start_transaction()
 
-    query = {"_id": ObjectId(user_id)}, {"$unset": {"idm_token": ""}}
+    query = {"_id": ObjectId(user_id)}, {"$unset": {f"idm_data.{provider}": ""}}
     await db.client.users.update_one(*query)
 
 
@@ -346,5 +376,4 @@ async def get_group_by_id(db: DBSession, group_id: Id) -> Optional[Group]:
         return None
 
     return GroupModel.model_validate(group)
-
 

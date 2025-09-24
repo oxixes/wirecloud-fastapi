@@ -31,6 +31,7 @@ from src.wirecloud.commons.utils.http import NotFound
 from src.wirecloud.commons.utils.theme import get_theme_static_path, get_available_themes, get_jinja2_templates
 from src.wirecloud.platform import docs
 from src.wirecloud import docs as root_docs
+from src.wirecloud.platform.plugins import get_template_context
 
 router = APIRouter()
 
@@ -98,7 +99,9 @@ def render_wirecloud(request: Request, view: Optional[str] = None, page: Optiona
     if view is None:
         view = get_current_view(request)
 
-    context = {
+    context = get_template_context(request)
+
+    context.update({
         "title": title,
         "description": description,
         "uri": request.url.scheme + "://" + request.url.netloc + request.url.path + "?" + request.url.query,
@@ -113,7 +116,7 @@ def render_wirecloud(request: Request, view: Optional[str] = None, page: Optiona
         "trans": lambda text, **kwargs: get_translation(get_current_theme(request), request.state.lang, text, **kwargs),
         "static": lambda path: get_static_path(get_current_theme(request), view, request, path),
         "url": lambda viewname, **kwargs: get_url_from_view(request, viewname, **kwargs)
-    }
+    })
 
     context["wirecloud_bootstrap"] = lambda view_name, plain=False: get_wirecloud_bootstrap(context,
                                                                                             get_available_themes(request.state.lang),

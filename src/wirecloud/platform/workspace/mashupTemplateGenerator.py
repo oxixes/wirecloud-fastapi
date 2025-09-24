@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from typing import Optional
 
 # Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
 
@@ -36,7 +37,7 @@ from src.wirecloud.platform.workspace.utils import VariableValueCacheManager
 from src.wirecloud.commons.utils.template.writers import xml
 
 
-async def process_widget_instance(db: DBSession, request: Request, iwidget: WidgetInstance, wiring: MACDMashupWiring,
+async def process_widget_instance(db: DBSession, request: Optional[Request], iwidget: WidgetInstance, wiring: MACDMashupWiring,
                           parametrization: dict[IntegerStr, dict[str, MACDParametrizationOptions]],
                           read_only_widgets: bool, cache_manager: VariableValueCacheManager) -> MACDMashupResource:
 
@@ -173,7 +174,7 @@ async def process_widget_instance(db: DBSession, request: Request, iwidget: Widg
     return iwidget_data
 
 
-async def build_json_template_from_workspace(db: DBSession, request: Request, options: MACDMashupWithParametrization,
+async def build_json_template_from_workspace(db: DBSession, request: Optional[Request], options: MACDMashupWithParametrization,
                                              workspace: Workspace) -> MACDMashupWithParametrization:
     description = options.description.strip()
     if description == '':

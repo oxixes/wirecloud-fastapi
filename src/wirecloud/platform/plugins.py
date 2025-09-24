@@ -33,6 +33,7 @@ from src.wirecloud.database import DBSession
 from src.wirecloud.platform.context.schemas import BaseContextKey, WorkspaceContextKey
 from src.wirecloud.platform.preferences.schemas import PreferenceKey, TabPreferenceKey
 from src.wirecloud.commons.auth.schemas import UserAll, Session
+from src.wirecloud.platform.workspace.models import Workspace
 
 
 class URLTemplate(BaseModel):
@@ -65,7 +66,7 @@ class WirecloudPlugin:
     def get_platform_context_definitions(self) -> dict[str, BaseContextKey]:
         return {}
 
-    async def get_platform_context_current_values(self, db: DBSession, request: Request, user: Optional[UserAll], session: Optional[Session]):
+    async def get_platform_context_current_values(self, db: DBSession, request: Optional[Request], user: Optional[UserAll], session: Optional[Session]):
         return {}
 
     def get_tab_preferences(self) -> list[TabPreferenceKey]:
@@ -74,7 +75,7 @@ class WirecloudPlugin:
     def get_workspace_context_definitions(self) -> dict[str, WorkspaceContextKey]:
         return {}
 
-    def get_workspace_context_current_values(self, workspace, user): # TODO
+    def get_workspace_context_current_values(self, workspace: Workspace, user: Optional[UserAll]) -> dict[str, Any]:
         return {}
 
     def get_workspace_preferences(self) -> list[PreferenceKey]:
@@ -101,11 +102,7 @@ class WirecloudPlugin:
     def get_proxy_processors(self) -> tuple[str, ...]:
         return ()
 
-    # TODO Actually implement use of this method
-    def get_django_template_context_processors(self):
-        return {}
-
-    def get_api_auth_backends(self) -> dict[str, Callable]:
+    def get_template_context_processors(self, request: Request) -> dict[str, Any]:
         return {}
 
     def get_openapi_extra_schemas(self) -> dict[str, dict[str, Any]]:
@@ -126,7 +123,7 @@ class WirecloudPlugin:
     def get_idm_backchannel_logout_functions(self) -> dict[str, Callable]:
         return {}
 
-    def populate(self, wirecloud_user, log):
+    async def populate(self, db: DBSession, wirecloud_user: UserAll) -> bool:
         return False
 
 
@@ -395,6 +392,16 @@ def get_api_auth_backends() -> dict[str, Callable]:
             _wirecloud_api_auth_backends.update(plugin.get_api_auth_backends())
 
     return _wirecloud_api_auth_backends
+
+
+def get_template_context(request: Request) -> dict[str, Any]:
+    plugins = get_plugins()
+    context = {}
+
+    for plugin in plugins:
+        context.update(plugin.get_template_context_processors(request))
+
+    return context
 
 
 def get_proxy_processors() -> tuple[Any, ...]:

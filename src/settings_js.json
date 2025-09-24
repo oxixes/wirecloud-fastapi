@@ -1,0 +1,10 @@
+{
+    "installedApps": [
+        "catalogue",
+        "commons",
+        "fiware",
+        "platform",
+        "proxy",
+        "keycloak"
+    ]
+}

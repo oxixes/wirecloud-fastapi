@@ -26,6 +26,7 @@ from src.wirecloud.platform.plugins import get_plugins
 from src.wirecloud.platform.context.schemas import BaseContextKey, PlatformContextKey
 from src.wirecloud.commons.auth.schemas import UserAll, Session
 from src.wirecloud.database import DBSession
+from src.wirecloud.platform.workspace.models import Workspace
 
 _wirecloud_platform_context_definitions: Optional[dict[str, BaseContextKey]] = None
 _wirecloud_workspace_context_definitions: Optional[dict[str, BaseContextKey]] = None
@@ -49,7 +50,8 @@ def get_platform_context_definitions() -> dict[str, BaseContextKey]:
     return _wirecloud_platform_context_definitions
 
 
-async def get_platform_context_current_values(db: DBSession, request: Request, user: Optional[UserAll], session: Optional[Session] = None) -> dict[str, Any]:
+async def get_platform_context_current_values(db: DBSession, request: Optional[Request],
+                                              user: Optional[UserAll], session: Optional[Session] = None) -> dict[str, Any]:
     plugins = get_plugins()
     values = {}
 
@@ -88,7 +90,7 @@ def get_workspace_context_definitions() -> dict[str, BaseContextKey]:
     return _wirecloud_workspace_context_definitions
 
 
-def get_workspace_context_current_values(workspace, user):
+def get_workspace_context_current_values(workspace: Workspace, user: Optional[UserAll]) -> dict[str, Any]:
     plugins = get_plugins()
     values = {}
 
@@ -108,7 +110,8 @@ async def get_constant_context_values(db: DBSession) -> dict[str, str]:
     return res
 
 
-async def get_context_values(db: DBSession, workspace, request: Request, user: Optional[UserAll], session: Session = None) -> dict[str, dict[str, Any]]:
+async def get_context_values(db: DBSession, workspace: Workspace, request: Optional[Request], user: Optional[UserAll],
+                             session: Session = None) -> dict[str, dict[str, Any]]:
     cache_key = f'constant_context/{str(user.id) if user else "anonymous"}'
     constant_context = await cache.get(cache_key)
     if constant_context is None:

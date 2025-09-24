@@ -128,6 +128,6 @@ class Workspace(BaseModel, populate_by_name=True):
                 or self.public and user is None
                 or not user is None and (
                         self.creator == user.id
-                        or get_user_by_id(db, user.id) is not None
+                        or await get_user_by_id(db, user.id) is not None
                         or len(set(await get_workspace_groups(db, self)) & set(await get_user_groups(db, user.id))) > 0)
                 )  # TODO check more permissions

@@ -27,7 +27,7 @@ from src.wirecloud.platform.markets import docs
 from src.wirecloud.platform.markets.crud import (get_markets_for_user, get_market_user, create_market,
                                                  delete_market_by_name)
 from src.wirecloud.platform.markets.utils import get_market_managers
-from src.wirecloud.commons.auth.crud import get_user_by_username
+from src.wirecloud.commons.auth.crud import get_user_by_username, get_user_with_all_info_by_username
 from src.wirecloud.commons.utils.http import produces, consumes, authentication_required, build_error_response
 from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
 from src.wirecloud.commons.utils.wgt import WgtFile
@@ -108,7 +108,7 @@ async def create_market_collection(db: DBDep, user: UserDep, request: Request,
     if market.user is None or market.user == user.username:
         target_user = user
     else:
-        target_user = await get_user_by_username(db, market.user)
+        target_user = await get_user_with_all_info_by_username(db, market.user)
         if target_user is None:
             return build_error_response(request, 422, _("invalid user option"))
 
@@ -129,7 +129,9 @@ async def create_market_collection(db: DBDep, user: UserDep, request: Request,
         return build_error_response(request, 409, _("Market name already in use"))
 
     market_managers = await get_market_managers(db, target_user)
-    market_managers[target_user.username + '/' + market.name].create(target_user)
+    await market_managers[target_user.username + '/' + market.name].create(db, request, target_user)
+
+    return Response(status_code=201)
 
 @router.delete(
     "/{user}/{market}",
@@ -172,7 +174,9 @@ async def delete_market_entry(db: DBDep, user: UserDep, request: Request,
     if not await delete_market_by_name(db, target_user, market):
         return build_error_response(request, 404, _("Market not found"))
 
-    market_managers[target_user.username + '/' + market].delete()
+    await market_managers[target_user.username + '/' + market].delete(db, request)
+
+    return Response(status_code=204)
 
 @markets_router.post(
     "/publish",

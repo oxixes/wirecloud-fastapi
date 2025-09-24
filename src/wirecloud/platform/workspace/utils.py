@@ -165,7 +165,7 @@ def _process_variable(component_type: str, component_id: str, vardef: Union[MACD
     values_by_varname[component_type][component_id][varname] = entry
 
 
-async def _populate_variables_values_cache(db: DBSession, workspace: Workspace, request: Request, user: Optional[UserAll],
+async def _populate_variables_values_cache(db: DBSession, workspace: Workspace, request: Optional[Request], user: Optional[UserAll],
                                            key: Any, forced_values=None):
     values_by_varname = {
         "ioperator": {},
@@ -237,7 +237,7 @@ class VariableValueCacheManager:
         else:
             return entry.value
 
-    async def get_variable_values(self, db: DBSession, request: Request):
+    async def get_variable_values(self, db: DBSession, request: Optional[Request]):
         if self.values is None:
             key = _variable_values_cache_key(self.workspace, self.user)
             self.values = await cache.get(key)
@@ -247,13 +247,13 @@ class VariableValueCacheManager:
 
         return self.values
 
-    async def get_variable_value_from_varname(self, db: DBSession, request: Request, component_type: str,
+    async def get_variable_value_from_varname(self, db: DBSession, request: Optional[Request], component_type: str,
                                               component_id: str, var_name: str) -> str:
         values = await self.get_variable_values(db, request)
         entry = values[component_type][str(component_id)][var_name]
         return self._process_entry(entry)
 
-    async def get_variable_data(self, db: DBSession, request: Request, component_type, component_id,
+    async def get_variable_data(self, db: DBSession, request: Optional[Request], component_type, component_id,
                                 var_name) -> CacheVariableData:
         values = await self.get_variable_values(db, request)
         entry = values[component_type][str(component_id)][var_name]

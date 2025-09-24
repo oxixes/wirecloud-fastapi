@@ -17,25 +17,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from http.cookies import BaseCookie, SimpleCookie
-from typing import AsyncGenerator, Optional, Union
+__version_info__ = (8, 0, 0)
+__version__ = '.'.join(map(str, __version_info__))
 
-from pydantic import BaseModel
-from fastapi import Request, WebSocket
-
-from src.wirecloud.commons.auth.schemas import UserAll
-from src.wirecloud.platform.workspace.models import Workspace
-
-
-class ProxyRequestData(BaseModel, arbitrary_types_allowed=True):
-    workspace: Optional[Workspace]
-    component_type: Optional[str]
-    component_id: Optional[str]
-    headers: dict[str, str] = {}
-    data: Union[AsyncGenerator[bytes, None], bytes, None] = None
-    method: str = "GET"
-    url: Optional[str] = None
-    original_request: Union[Request, WebSocket, None] = None
-    cookies: BaseCookie = SimpleCookie()
-    user: Optional[UserAll] = None
-    is_ws: bool = False
+DEFAULT_FIWARE_HOME = 'https://lab.fiware.org'
+FIWARE_LAB_CLOUD_SERVER = 'https://cloud.lab.fiware.org'

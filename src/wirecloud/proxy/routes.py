@@ -18,7 +18,7 @@
 
 from urllib.parse import urlparse
 from http.cookies import SimpleCookie
-from fastapi import APIRouter, Path, Response, Request, WebSocket, WebSocketException, status, WebSocketDisconnect
+from fastapi import APIRouter, Path, Response, Request, WebSocket, WebSocketException, status
 from fastapi.responses import StreamingResponse
 from typing import Optional, Union
 import asyncio
@@ -26,13 +26,17 @@ import aiohttp
 import base64
 import hashlib
 import logging
+import inspect
 
+from src.wirecloud.commons.auth.utils import UserDepNoCSRF
+from src.wirecloud.database import DBDep, DBSession, Id
+from src.wirecloud.platform.workspace.crud import get_workspace_by_username_and_name, get_workspace_by_id
 from src.wirecloud.proxy import docs
 from src.wirecloud.proxy.schemas import ProxyRequestData
 from src.wirecloud.proxy.utils import is_valid_response_header
 from src.wirecloud.commons.utils.http import (build_error_response, resolve_url_name, iri_to_uri, get_current_domain,
                                               get_relative_reverse_url)
-from src.wirecloud.commons.auth.schemas import User
+from src.wirecloud.commons.auth.schemas import UserAll
 from src.wirecloud.platform.plugins import get_request_proxy_processors, get_response_proxy_processors
 from src import settings
 from src.wirecloud import docs as root_docs
@@ -70,7 +74,8 @@ async def parse_request_headers(request: Union[Request, WebSocket], request_data
         del request_data.headers['Content-Type']
 
 
-def parse_context_from_referer(request: Union[Request, WebSocket], request_method: str = "GET") -> ProxyRequestData:
+async def parse_context_from_referer(db: DBSession, user: Optional[UserAll], request: Union[Request, WebSocket],
+                                     request_method: str = "GET") -> ProxyRequestData:
     referrer = request.headers.get('Referer')
     if referrer is None:
         raise Exception()
@@ -79,12 +84,12 @@ def parse_context_from_referer(request: Union[Request, WebSocket], request_metho
     if request.url.netloc != parsed_referrer[1]:
         raise Exception()
 
-    referer_view_name = resolve_url_name(parsed_referrer.path)
-    if referer_view_name is not None and referer_view_name == 'wirecloud.workspace_view':
-        # TODO Check if workspace is accessible by the user
-        print("TODO: Check if workspace is accessible by the user")
-        raise Exception()
-    elif referer_view_name is not None and referer_view_name == 'wirecloud.showcase_media' or referer_view_name == 'wirecloud|proxy':
+    referer_view = resolve_url_name(parsed_referrer.path)
+    if referer_view is not None and referer_view[0] == 'wirecloud.workspace_view':
+        workspace = await get_workspace_by_username_and_name(db, referer_view[1]['owner'], referer_view[1]['name'])
+        if workspace is None or not await workspace.is_accsessible_by(db, user):
+            raise Exception()
+    elif referer_view is not None and referer_view[0] == 'wirecloud.showcase_media' or referer_view[0] == 'wirecloud|proxy':
         if request_method not in ('GET', 'POST', 'WS'):
             raise Exception()
 
@@ -92,8 +97,44 @@ def parse_context_from_referer(request: Union[Request, WebSocket], request_metho
     else:
         raise Exception()
 
-    component_type = request.headers.get("Wirecloud-Component-Type")
-    component_id = request.headers.get("Wirecloud-Component-Id")
+    component_type = request.headers.get("Wirecloud-Component-Type", None)
+    component_id = request.headers.get("Wirecloud-Component-Id", None)
+
+    return ProxyRequestData(
+        workspace=workspace,
+        component_type=component_type,
+        component_id=component_id
+    )
+
+
+async def parse_context_from_query(db: DBSession, user: Optional[UserAll], request: Union[Request, WebSocket],
+                                   request_method: str = "GET") -> ProxyRequestData:
+    query_params = request.query_params
+    workspace_id = query_params.get('__wirecloud_workspace_id', None)
+    if workspace_id is not None:
+        workspace = await get_workspace_by_id(db, Id(workspace_id))
+        if workspace is None or not await workspace.is_accsessible_by(db, user):
+            raise Exception()
+    else:
+        if request_method not in ('GET', 'POST', 'WS'):
+            raise Exception()
+
+        workspace = None
+
+    component_type = query_params.get('__wirecloud_component_type', None)
+    component_id = query_params.get('__wirecloud_component_id', None)
+
+    # Remove the WireCloud specific query parameters to avoid leaking them
+    url = str(request.url)
+    url_parts = list(urlparse(url))
+    query = url_parts[4]
+    query_items = query.split('&')
+    filtered_query_items = [item for item in query_items if not item.startswith('__wirecloud_workspace_id') and
+                            not item.startswith('__wirecloud_component_type') and
+                            not item.startswith('__wirecloud_component_id')]
+    url_parts[4] = '&'.join(filtered_query_items)
+    new_url = urlparse(url)._replace(query=url_parts[4]).geturl()
+    request.url = new_url
 
     return ProxyRequestData(
         workspace=workspace,
@@ -146,7 +187,7 @@ class Proxy:
 
 
     async def do_request(self, request: Union[Request, WebSocket], url: str, method: str, request_data: ProxyRequestData,
-                         protocol: str, domain: str, path: str, user: Optional[User] = None) -> Optional[Response]:
+                         db: DBSession, user: Optional[UserAll] = None) -> Optional[Response]:
         url = iri_to_uri(url)
 
         request_data.method = method
@@ -171,8 +212,11 @@ class Proxy:
         # Pass proxy processors to the new request
         try:
             for processor in get_request_proxy_processors():
-                processor.process_request(request_data)
-        except ValueError as e:
+                if inspect.iscoroutine(processor.process_request):
+                    await processor.process_request(db, request_data)
+                else:
+                    processor.process_request(db, request_data)
+        except Exception as e:
             if not request_data.is_ws:
                 return build_error_response(request, 422, str(e))
             else:
@@ -233,7 +277,10 @@ class Proxy:
                             headers_dict['sec-websocket-accept'] = generate_ws_accept_header_from_key(request.headers['sec-websocket-key'])
 
                     for processor in get_response_proxy_processors():
-                        headers_dict = processor.process_response(request_data, headers_dict)
+                        if inspect.iscoroutine(processor.sponse):
+                            headers_dict = await processor.process_response(db, request_data, headers_dict)
+                        else:
+                            headers_dict = processor.process_response(db, request_data, headers_dict)
 
                     headers = [(key.encode(), value.encode()) for key, value in headers_dict.items()]
 
@@ -324,6 +371,12 @@ class Proxy:
             await s.close()
 
         response = StreamingResponse(stream_response(session, res), status_code=res.status)
+        # Split URL into protocol, domain and path
+        parsed_url = urlparse(url)
+        protocol = parsed_url.scheme
+        domain = parsed_url.netloc
+        path = parsed_url.path
+
         for header in res.headers:
             header_lower = header.lower()
             if header_lower == 'set-cookie':
@@ -343,7 +396,10 @@ class Proxy:
 
         # Pass proxy processors to the response
         for processor in get_response_proxy_processors():
-            response = processor.process_response(request_data, response)
+            if inspect.iscoroutine(processor.process_response):
+                response = await processor.process_response(db, request_data, response)
+            else:
+                response = processor.process_response(db, request_data, response)
 
         response.headers['Via'] = via_header
 
@@ -354,6 +410,8 @@ WIRECLOUD_PROXY = Proxy()
 
 
 async def proxy_request(request: Request,
+                        db: DBDep,
+                        user: UserDepNoCSRF,
                         protocol: str = Path(description=docs.proxy_request_protocol_description, regex='http|https'),
                         domain: str = Path(description=docs.proxy_request_domain_description, regex='[A-Za-z0-9-.]+'),
                         path: str = Path(description=docs.proxy_request_path_description)) -> Response:
@@ -363,7 +421,7 @@ async def proxy_request(request: Request,
         return build_error_response(request, 422, _("Invalid protocol: %s") % protocol)
 
     try:
-        context = parse_context_from_referer(request, request_method)
+        context = await parse_context_from_referer(db, user, request, request_method)
     except Exception:
         return build_error_response(request, 403, _("Invalid request"))
 
@@ -379,7 +437,7 @@ async def proxy_request(request: Request,
         # Extract headers from META
         await parse_request_headers(request, context)
 
-        response = await WIRECLOUD_PROXY.do_request(request, url, request_method, context, protocol, domain, path)
+        response = await WIRECLOUD_PROXY.do_request(request, url, request_method, context, db, user)
     except ValueError as e:
         return build_error_response(request, 422, str(e))
     except Exception as e:
@@ -390,15 +448,21 @@ async def proxy_request(request: Request,
 
 
 async def proxy_ws_request(ws: WebSocket,
+                           db: DBDep,
+                           user: UserDepNoCSRF,
                            protocol: str = Path(description=docs.proxy_request_protocol_description, regex='ws|wss'),
                            domain: str = Path(description=docs.proxy_request_domain_description, regex='[A-Za-z0-9-.]+'),
                            path: str = Path(description=docs.proxy_request_path_description)):
     # TODO improve proxy security
+    request_method = "WS"
     if protocol not in ('ws', 'wss'):
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=_("Invalid protocol: %s") % protocol)
 
     # Browsers do not allow custom headers in websocket requests, so we have to accept the connection
-    context = ProxyRequestData(workspace="", component_type="", component_id="", is_ws=True)
+    try:
+        context = await parse_context_from_query(db, user, ws, request_method)
+    except Exception:
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=_("Invalid request"))
 
     url = protocol + '://' + domain + "/" + (path[1:] if path.startswith('/') else path)
     # Add query and fragment to the url
@@ -412,7 +476,7 @@ async def proxy_ws_request(ws: WebSocket,
         # Extract headers from META
         await parse_request_headers(ws, context)
 
-        await WIRECLOUD_PROXY.do_request(ws, url, "WS", context, protocol, domain, path)
+        await WIRECLOUD_PROXY.do_request(ws, url, request_method, context, db, user)
     except ValueError as e:
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=str(e))
     except Exception as e:

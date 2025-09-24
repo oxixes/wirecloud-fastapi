@@ -29,13 +29,18 @@ from fastapi import FastAPI, Request
 
 import src.wirecloud.platform as platform
 from src import settings
+from src.wirecloud.catalogue.crud import get_catalogue_resource
 from src.wirecloud.commons.auth.crud import get_user_groups
 from src.wirecloud.commons.utils.http import get_absolute_reverse_url
+from src.wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version
+from src.wirecloud.commons.utils.wgt import WgtFile
 from src.wirecloud.database import DBSession
 from src.wirecloud.platform.iwidget.routes import iwidget_router
 from src.wirecloud.platform.localcatalogue.schemas import ResourceCreateData, ResourceCreateFormData
+from src.wirecloud.platform.localcatalogue.utils import install_component
 from src.wirecloud.platform.widget.routes import widget_router, showcase_router
 from src.wirecloud.platform.wiring.routes import wiring_router, operator_router
+from src.wirecloud.platform.workspace.crud import get_workspace_by_username_and_name, create_workspace
 from src.wirecloud.platform.workspace.routes import workspace_router, workspaces_router
 from src.wirecloud.platform.plugins import (get_active_features_info, get_plugin_urls, AjaxEndpoint, build_url_template,
                                             WirecloudPlugin, URLTemplate)
@@ -65,6 +70,18 @@ LANDING_DASHBOARD_FILE = os.path.join(BASE_PATH, 'initial', 'WireCloud_landing-d
 
 def get_version_hash():
     return sha1(json.dumps(get_active_features_info())).hexdigest()
+
+
+# TODO Better logging
+async def populate_component(db: DBSession, wirecloud_user: UserAll, vendor: Vendor, name: Name,
+                             version: Version, wgt_path: str) -> bool:
+    if await get_catalogue_resource(db, vendor, name, version):
+        return False
+
+    print(f"Installing the {name} widget... ", end='')
+    await install_component(db, WgtFile(wgt_path), executor_user=wirecloud_user, users=[wirecloud_user])
+    print("DONE")
+    return True
 
 
 class WirecloudCorePlugin(WirecloudPlugin):
@@ -163,7 +180,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
             ),
         }
 
-    async def get_platform_context_current_values(self, db: DBSession, request: Request, user: Optional[UserAll],
+    async def get_platform_context_current_values(self, db: DBSession, request: Optional[Request], user: Optional[UserAll],
                                             session: Optional[Session]):
         if user:
             username = user.username
@@ -178,7 +195,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
             groups = ()
 
         return {
-            'language': request.state.lang,
+            'language': request.state.lang if request else None,
             'orientation': 'landscape',
             'username': username,
             'fullname': fullname,
@@ -188,9 +205,9 @@ class WirecloudCorePlugin(WirecloudPlugin):
             'issuperuser': user.is_superuser if user else False,
             'groups': groups,
             # 'organizations': tuple(user.groups.filter(organization__isnull=False).values_list('name', flat=True)),
-            'mode': get_current_view(request),
+            'mode': get_current_view(request) if request else None,
             'realuser': session.real_user if session else None,
-            'theme': get_current_theme(request),
+            'theme': get_current_theme(request) if request else None,
             'version': platform.__version__,
             'version_hash': get_version_hash(),
         }
@@ -485,3 +502,32 @@ class WirecloudCorePlugin(WirecloudPlugin):
             "ResourceCreateData": ResourceCreateData.model_json_schema(),
             "ResourceCreateFormData": ResourceCreateFormData.model_json_schema(),
         }
+
+    async def populate(self, db: DBSession, wirecloud_user: UserAll) -> bool:
+        updated = False
+
+        updated |= await populate_component(db, wirecloud_user, "WireCloud", "workspace-browser", "0.1.4a1",
+                                           WORKSPACE_BROWSER_FILE)
+
+        if await get_workspace_by_username_and_name(db, "wirecloud", "home") is None:
+            updated = True
+
+            print("Creating a initial version of the wirecloud/home workspace...  ", end='')
+            await create_workspace(db, None, wirecloud_user, WgtFile(INITIAL_HOME_DASHBOARD_FILE),
+                                   searchable=False, public=True)
+            print("DONE")
+
+        updated |= await populate_component(db, wirecloud_user, "CoNWeT", "markdown-viewer", "0.1.1",
+                                           MARKDOWN_VIEWER_FILE)
+        updated |= await populate_component(db, wirecloud_user, "CoNWeT", "markdown-editor", "0.1.0",
+                                           MARKDOWN_EDITOR_FILE)
+
+        if await get_workspace_by_username_and_name(db, "wirecloud", "landing") is None:
+            updated = True
+
+            print("Creating a initial version of the wirecloud/landing workspace...  ", end='')
+            await create_workspace(db, None, wirecloud_user, WgtFile(LANDING_DASHBOARD_FILE),
+                                   searchable=False, public=True)
+            print("DONE")
+
+        return updated

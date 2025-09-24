@@ -71,6 +71,9 @@ async def get_token_contents(token: Annotated[str, Depends(login_scheme)], reque
         try:
             csrf_token_contents = jwt.decode(csrf_token, settings.JWT_KEY, algorithms=["HS256"],
                                              require=["exp", "sub", "iat", "iss"], issuer="Wirecloud")
+            if csrf_token_contents.get("sub") != "csrf":
+                return None
+
             if csrf_token_contents.get('jti') != token_contents.get('jti'):
                 return None
         except Exception:
@@ -152,7 +155,8 @@ def check_password(password: str, password_hash: str) -> bool:
     return False
 
 
-async def make_oidc_provider_request(endpoint: str, data: Optional[dict] = None, auth: Optional[str] = None) -> dict:
+async def make_oidc_provider_request(endpoint: str, data: Optional[dict] = None, auth: Optional[str] = None,
+                                     auth_type: str = "Bearer", query: Optional[dict] = None) -> dict:
     headers = {
         'Accept': 'application/json'
     }
@@ -161,7 +165,7 @@ async def make_oidc_provider_request(endpoint: str, data: Optional[dict] = None,
         headers['Content-Type'] = 'application/x-www-form-urlencoded'
 
     if auth:
-        headers['Authorization'] = 'Bearer ' + auth
+        headers['Authorization'] = f'{auth_type} {auth}'
 
     encoded_data = urlencode(data) if data else None
 
@@ -174,6 +178,7 @@ async def make_oidc_provider_request(endpoint: str, data: Optional[dict] = None,
             headers=headers,
             allow_redirects=True,
             data=encoded_data,
+            params=query,
             ssl=getattr(settings, "WIRECLOUD_HTTPS_VERIFY", True),
         )
     except:

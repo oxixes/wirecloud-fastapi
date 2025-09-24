@@ -18,7 +18,7 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Any
 from enum import Enum
 from datetime import datetime
 
@@ -44,7 +44,7 @@ class UserDetails(UserBase):
     is_superuser: bool = Field(description=docs.user_is_superuser_description)
     is_staff: bool = Field(description=docs.user_is_staff_description)
     is_active: bool = Field(description=docs.user_is_active_description)
-    idm_token: Optional[str] = None # FIXME Docs?? Why this has docs if it's not returned by the API? Was I dumb and wrote useless docs? Yeah, working at 3 am is not a good idea
+    idm_data: dict[str, dict[str, Optional[Any]]] = {} # FIXME Docs?? Why this has docs if it's not returned by the API? Was I dumb and wrote useless docs? Yeah, working at 3 am is not a good idea
 
     def get_full_name(self):
         return f"{self.first_name} {self.last_name}".strip()

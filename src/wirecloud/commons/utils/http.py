@@ -402,18 +402,22 @@ def get_relative_reverse_url(viewname: str, request: Optional[Request] = None, *
     return mount_path + url
 
 
-def resolve_url_name(path: str) -> Optional[str]:
+def resolve_url_name(path: str) -> Optional[tuple[str, dict[str, str]]]:
     from src.wirecloud.platform.plugins import get_plugin_urls
 
     for name, url in get_plugin_urls().items():
         # Check if the pattern matches the path, to do so, convert the pattern to a regex
         pattern = re.escape(url.urlpattern).replace('\\{', '{').replace('\\}', '}')
+        param_names = re.findall(r'\{([^/]+)}', pattern)
         pattern = re.sub(r'\{[^/]+:path}', r'(.+)', pattern)
         pattern = re.sub(r'\{[^/]+}', r'([^/]+)', pattern)
         pattern = '^' + pattern + '$'
 
-        if re.match(pattern, path):
-            return name
+        match = re.match(pattern, path)
+        if match:
+            param_values = match.groups()
+            params = dict(zip(param_names, param_values))
+            return name, params
 
     return None
 

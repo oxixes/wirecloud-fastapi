@@ -24,7 +24,7 @@ from src.wirecloud.platform.plugins import get_plugins
 from src.wirecloud.platform.markets.schemas import MarketOptions
 from src.wirecloud.platform.markets.crud import get_markets_for_user, get_market_user
 from src.wirecloud.platform.markets.schemas import MarketEndpoint
-from src.wirecloud.commons.auth.schemas import User
+from src.wirecloud.commons.auth.schemas import User, UserAll
 from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD
 from src.wirecloud.commons.utils.wgt import WgtFile
 from src.wirecloud.database import DBSession
@@ -34,13 +34,13 @@ class MarketManager:
     def __init__(self, user: Optional[str], name: str, options: MarketOptions):
         pass
 
-    def create(self, user: User):
+    async def create(self, db: DBSession, request: Request, user: UserAll):
         pass
 
-    def delete(self):
+    async def delete(self, db: DBSession, request: Request):
         pass
 
-    def publish(self, db: DBSession, endpoint: Optional[MarketEndpoint], wgt_file: WgtFile, user: User,
+    async def publish(self, db: DBSession, endpoint: Optional[MarketEndpoint], wgt_file: WgtFile, user: User,
                       request: Request = None, template: Optional[MACD] = None):
         pass
 

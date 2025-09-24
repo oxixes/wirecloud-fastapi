@@ -21,16 +21,51 @@ from typing import Callable, Optional, Union
 from urllib.parse import urlparse, quote
 
 from src import settings
+from src.wirecloud.commons.auth.schemas import UserAll, Session
 from src.wirecloud.commons.auth.utils import make_oidc_provider_request
-from src.wirecloud.commons.utils.http import get_absolute_reverse_url
+from src.wirecloud.database import DBSession
+from src.wirecloud.platform.context.schemas import BaseContextKey
 from src.wirecloud.platform.plugins import WirecloudPlugin, URLTemplate
 from src.wirecloud.translation import gettext as _
+
+IDM_SUPPORT_ENABLED = False
 
 # TODO Implement proxy processors
 class WirecloudKeycloakPlugin(WirecloudPlugin):
     def __init__(self, app: FastAPI):
         super().__init__(app)
 
+    def get_platform_context_definitions(self):
+        if getattr(settings, "OID_CONNECT_PLUGIN", "") != "keycloak" or not IDM_SUPPORT_ENABLED:
+            return {}
+
+        return {
+            'fiware_token_available': BaseContextKey(
+                label=_('FIWARE token available'),
+                description=_(
+                    'Indicates if the current user has associated a FIWARE auth token that can be used for accessing other FIWARE resources')
+            ),
+            'keycloak_client_id': BaseContextKey(
+                label=_('Keycloak Client Id'),
+                description=_('Client Id associated with this instance of WireCloud')
+            ),
+            'keycloak_session': BaseContextKey(
+                label=_('Keycloak session'),
+                description=_('Session id')
+            )
+        }
+
+    async def get_platform_context_current_values(self, db: DBSession, request: Optional[Request], user: Optional[UserAll],
+                                                  session: Optional[Session]):
+        if getattr(settings, "OID_CONNECT_PLUGIN", "") != "keycloak" or not IDM_SUPPORT_ENABLED:
+            return {}
+
+        fiware_token_available = IDM_SUPPORT_ENABLED and user is not None and getattr(settings, "OID_CONNECT_PLUGIN", "") in user.idm_data
+        return {
+            'fiware_token_available': fiware_token_available,
+            'keycloak_client_id': getattr(settings, "OID_CONNECT_CLIENT_ID", None),
+            'keycloak_session': user.idm_data[getattr(settings, "OID_CONNECT_PLUGIN")].get('session', None) if fiware_token_available else None
+        }
 
     def get_idm_get_authorization_url_functions(self) -> dict[str, Callable]:
         def get_oidc_authorization_url() -> URLTemplate:
@@ -58,13 +93,12 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
 
 
     def get_idm_get_token_functions(self) -> dict[str, Callable]:
-        async def get_oidc_token(code: Optional[str], refresh_token: Optional[str], request: Request) -> dict[str, Union[str, int]]:
+        async def get_oidc_token(code: Optional[str], refresh_token: Optional[str],
+                                 redirect_uri: Optional[str]) -> dict[str, Union[str, int]]:
             if not code and not refresh_token:
                 raise ValueError("Either code or refresh_token must be provided")
 
             if code:
-                redirect_uri = get_absolute_reverse_url('oidc_login_callback', request)
-
                 token_data_to_send = {
                     "code": code,
                     "redirect_uri": redirect_uri,
@@ -87,8 +121,8 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
                     if scope not in given_scopes:
                         raise ValueError(_("OIDC provider has not returned a valid response: invalid scope"))
 
-                if "access_token" not in token_data or "refresh_token" not in token_data or "refresh_expires_in" not in token_data:
-                    raise ValueError(_("OIDC provider has not returned a valid response: missing access_token, refresh_token or refresh_expires_in"))
+                if "access_token" not in token_data or "refresh_token" not in token_data:
+                    raise ValueError(_("OIDC provider has not returned a valid response: missing access_token or refresh_token"))
 
                 return token_data
             else:
@@ -107,8 +141,8 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
                 except Exception as e:
                     raise ValueError(f"Exception while requesting OIDC access token: {str(e)}")
 
-                if "access_token" not in token_data or "refresh_token" not in token_data or "refresh_expires_in" not in token_data:
-                    raise ValueError(_("OIDC provider has not returned a valid response: missing access_token, refresh_token or refresh_expires_in"))
+                if "access_token" not in token_data or "refresh_token" not in token_data:
+                    raise ValueError(_("OIDC provider has not returned a valid response: missing access_token or refresh_token"))
 
                 return token_data
 
@@ -165,10 +199,14 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
     # TODO Better logging
     def get_config_validators(self) -> tuple[Callable, ...]:
         async def validate_oidc_settings(settings) -> None:
+            global IDM_SUPPORT_ENABLED
+
             if getattr(settings, "OID_CONNECT_PLUGIN", "") != "keycloak":
                 return
 
             if getattr(settings, "OID_CONNECT_ENABLED", False):
+                IDM_SUPPORT_ENABLED = True
+
                 if getattr(settings, "OID_CONNECT_DISCOVERY_URL", None):
                     session = aiohttp.ClientSession()
                     try:

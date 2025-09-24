@@ -20,7 +20,7 @@
 
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 
 from src.wirecloud.database import Id
 
@@ -55,7 +55,7 @@ class DBUser(BaseModel, populate_by_name=True):
     is_staff: bool
     is_active: bool
     date_joined: datetime
-    idm_token: Optional[str] = None
+    idm_data: dict[str, dict[str, Optional[Any]]] = {}
 
     user_permissions: list[DBPermission] = []
     groups: list[Id] = []

@@ -26,5 +26,15 @@ BLACKLISTED_HEADERS = {
     'upgrade': 1,
 }
 
+
+# TODO Add FastAPI handlers for this exception
+class ValidationError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def get_response(self, request):
+        return build_error_response(request, 422, self.msg)
+
+
 def is_valid_response_header(header: str) -> bool:
     return header not in BLACKLISTED_HEADERS

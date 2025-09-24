@@ -100,7 +100,7 @@ async def get_workspace_groups(db: DBSession, workspace: Workspace) -> list[Grou
     return results
 
 
-async def create_workspace(db: DBSession, request: Request, owner: UserAll, mashup: Union[str, WgtFile, Workspace],
+async def create_workspace(db: DBSession, request: Optional[Request], owner: UserAll, mashup: Union[str, WgtFile, Workspace],
                            new_name: str = None,
                            new_title: str = None, preferences: dict[str, Union[str, WorkspacePreference]] = {},
                            searchable: bool = True, public: bool = False,
@@ -240,8 +240,8 @@ async def change_workspace(db: DBSession, workspace: Workspace, user: Optional[U
     await db.client.workspace.replace_one(query, workspace.model_dump(by_alias=True))
 
 
-async def get_workspace_by_username_and_name(db: DBSession, creator__username: str, name: str) -> Optional[Workspace]:
-    creator = await get_user_by_username(db, creator__username)
+async def get_workspace_by_username_and_name(db: DBSession, creator_username: str, name: str) -> Optional[Workspace]:
+    creator = await get_user_by_username(db, creator_username)
     if creator is None:
         return None
     query = {"creator": ObjectId(creator.id), "name": name}

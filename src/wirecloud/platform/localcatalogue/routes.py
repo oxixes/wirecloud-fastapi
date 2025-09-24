@@ -178,7 +178,7 @@ async def create_resource(db: DBDep, user: UserDep, request: Request,
 
         try:
             context.headers = headers
-            response = await WIRECLOUD_PROXY.do_request(request, template_url, "GET", context)
+            response = await WIRECLOUD_PROXY.do_request(request, template_url, "GET", context, db)
             if response.status_code >= 300 or response.status_code < 200:
                 raise Exception()
 

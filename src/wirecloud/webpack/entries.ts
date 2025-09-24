@@ -20,6 +20,8 @@
 import * as path from 'path';
 import * as fs from 'fs';
 
+import settings from '../../settings_js.json';
+
 const VIEWS: { [key: string]: string } = {
     'classic': 'platform',
     'smartphone': 'platform',
@@ -59,7 +61,7 @@ fs.readdirSync(themePath).forEach((theme) => {
 });
 
 // Search for plugin directories in the wirecloud directory. A plugin is valid if it contains a plugin.js file.
-fs.readdirSync(pluginPath).forEach((plugin) => {
+settings.installedApps.forEach((plugin) => {
     const pluginDir = path.resolve(pluginPath, plugin);
     const pluginFile = path.resolve(pluginDir, 'plugin.ts');
 
