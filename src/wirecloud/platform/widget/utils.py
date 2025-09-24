@@ -29,6 +29,7 @@ from lxml import etree
 from io import BytesIO
 
 from fastapi import Request, Response
+from fastapi.responses import HTMLResponse
 import os
 
 from lxml.etree import _ElementTree, _Element
@@ -113,7 +114,6 @@ def get_widget_platform_style(request: Request, theme: str) -> tuple[str]:
         base_href = get_static_path(theme, 'widget', request, 'cache.css')
         href = add_query_param(base_href, 'context', 'widget')
         safe_href = escape(href, quote=True)
-        code = f' <link rel="stylesheet" href="{safe_href}" />'
 
         files = [safe_href]
         files.reverse()
@@ -129,9 +129,8 @@ async def get_widget_api_files(request: Request, theme: str) -> list[str]:
     widget_api_files = await cache.get(key)
 
     if widget_api_files is None or settings.DEBUG:
-        code = f'<script src="{get_absolute_static_url(f"js/main-{theme}-widget.js", request=request, versioned=True)}"/>'
 
-        files = [get_absolute_static_url(f"js/main-{theme}-widget.js", request=request, versioned=True)]
+        files = [get_absolute_static_url(f"static/js/main-{theme}-widget.js", request=request, versioned=True)]
         files.reverse()
         widget_api_files = tuple([get_absolute_static_url(file, request=request, versioned=True) for file in files])
         await cache.set(key, widget_api_files)
@@ -189,7 +188,7 @@ async def fix_widget_code(widget_code: Union[str, bytes], content_type: str, req
         files.reverse()
         for file in files:
             head_element.insert(0, etree.Element('script', type="text/javascript",
-                                                 src=get_absolute_static_url(file, request=request, versioned=True)))
+                                                 src=get_absolute_static_url("/static/" + file, request=request, versioned=True)))
 
         for file in await get_widget_api_files(request, theme):
             head_element.insert(0, etree.Element('script', type="text/javascript", src=file))
@@ -203,7 +202,7 @@ async def fix_widget_code(widget_code: Union[str, bytes], content_type: str, req
 
 
 async def process_widget_code(db: DBSession, request: Request, resource: CatalogueResourceXHTML, mode: str,
-                              theme: Optional[str]) -> Response:
+                              theme: Optional[str]) -> Union[HTMLResponse, Response]:
     if theme is None:
         theme = get_current_theme(request)
 
@@ -269,7 +268,7 @@ async def process_widget_code(db: DBSession, request: Request, resource: Catalog
     else:
         cache_timeout = 0
 
-    response = Response(content=code, media_type=f"{content_type}; charset={charset}")
+    response = HTMLResponse(content=code, media_type=f"{content_type}; charset={charset}")
     patch_cache_headers(response, xhtml.code_timestamp, cache_timeout)
     return response
 

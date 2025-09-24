@@ -20,25 +20,68 @@ import os
 from typing import Optional
 
 from fastapi import APIRouter, Request, Path, Response, Query
-from starlette.responses import HTMLResponse
+from fastapi.responses import HTMLResponse
 
 from src.wirecloud import docs as root_docs
 from src.wirecloud.catalogue.crud import get_catalogue_resource_with_xhtml
 import src.wirecloud.platform.widget.utils as showcase_utils
 from src.wirecloud.commons.templates.tags import get_translation, get_url_from_view, get_static_path
 from src.wirecloud.commons.utils.cache import check_if_modified_since, patch_cache_headers
-from src.wirecloud.commons.utils.http import NotFound, build_downloadfile_response, get_absolute_reverse_url
+from src.wirecloud.commons.utils.http import NotFound, build_downloadfile_response, get_absolute_reverse_url, \
+    build_error_response
 from src.wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version
 from src.wirecloud.commons.utils.theme import get_jinja2_templates
 from src.wirecloud.database import DBDep
 from src.wirecloud.platform.routes import get_current_theme, get_current_view
 from src.wirecloud.platform.widget.utils import get_widget_platform_style, process_widget_code
 from src.wirecloud.platform.widget import docs
+from src.wirecloud.translation import gettext as _
 
 widget_router = APIRouter()
+showcase_router = APIRouter()
 
 
 @widget_router.get(
+    "/{vendor}/{name}/{version}/html",
+    summary=docs.get_widget_html_summary,
+    description=docs.get_widget_html_description,
+    status_code=200,
+    response_class=HTMLResponse,
+    response_description=docs.get_widget_html_response_description,
+    responses={
+        304: {"description": docs.get_widget_html_not_modified_response_description},
+        404: root_docs.generate_not_found_response_openapi_description(
+            docs.get_widget_html_not_found_response_description
+        ),
+        502: root_docs.generate_error_response_openapi_description(
+            docs.get_widget_html_bad_gateway_response_description,
+            "Widget code was not encoded using the specified charset"
+        )
+    },
+)
+async def get_widget_html(db: DBDep, request: Request, vendor: Vendor = Path(pattern=r"^[^/]+$",
+                                                                             description=docs.get_widget_html_vendor_description),
+                          name: Name = Path(pattern=r"^[^/]+$", description=docs.get_widget_html_name_description),
+                          version: Version = Path(
+                              pattern=r"^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)(?:(?:a|b|rc)[1-9]\d*)?(-dev.*)?$",
+                              description=docs.get_widget_html_version_description),
+                          mode: str = Query(default='classic', description=docs.get_widget_html_mode_description),
+                          theme: Optional[str] = Query(default=None,
+                                                       description=docs.get_widget_html_theme_description)):
+    resource = await get_catalogue_resource_with_xhtml(db, vendor, name, version)
+    if resource.resource_type() != 'widget':
+        raise NotFound()
+
+    creation_date = resource.creation_date.timestamp()
+    if not check_if_modified_since(request, creation_date * 1000):
+        response = Response(status_code=304)
+        patch_cache_headers(response, creation_date)
+        return response
+
+    return await process_widget_code(db, request, resource, mode, theme)
+
+
+@showcase_router.get(
     "/{vendor}/{name}/{version}/{file_path:path}",
     summary=docs.get_widget_file_summary,
     description=docs.get_widget_file_description,
@@ -50,13 +93,8 @@ widget_router = APIRouter()
         304: {"description": docs.get_widget_file_not_modified_response_description},
         404: root_docs.generate_not_found_response_openapi_description(
             docs.get_widget_file_not_found_response_description
-        ),
-        502: root_docs.generate_error_response_openapi_description(
-            docs.get_widget_file_bad_gateway_response_description,
-            "Widget code was not encoded using the specified charset"
         )
     }
-
 )
 async def get_widget_file(db: DBDep, request: Request, vendor: Vendor = Path(pattern=r"^[^/]+$",
                                                                              description=docs.get_widget_file_vendor_description),
@@ -64,12 +102,10 @@ async def get_widget_file(db: DBDep, request: Request, vendor: Vendor = Path(pat
                           version: Version = Path(
                               pattern=r"^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)(?:(?:a|b|rc)[1-9]\d*)?(-dev.*)?$",
                               description=docs.get_widget_file_version_description),
-                          file_path: str = Path(description=docs.get_widget_file_path_description),
-                          entrypoint: bool = Query(default=False,
-                                                   description=docs.get_widget_file_entrypoint_description),
-                          mode: str = Query(default='classic', description=docs.get_widget_file_mode_description),
-                          theme: Optional[str] = Query(default=None,
-                                                       description=docs.get_widget_file_theme_description)):
+                          file_path: str = Path(description=docs.get_widget_file_path_description)):
+
+    if ".." in file_path:
+        return build_error_response(request, 404, _("Page not found"))
     resource = await get_catalogue_resource_with_xhtml(db, vendor, name, version)
     if resource.resource_type() not in ['widget', 'operator']:
         raise NotFound()
@@ -83,18 +119,18 @@ async def get_widget_file(db: DBDep, request: Request, vendor: Vendor = Path(pat
         response = Response(status_code=304)
         patch_cache_headers(response, creation_date)
         return response
-    if resource.resource_type() == 'widget' and entrypoint:
-        return await process_widget_code(db, request, resource, mode, theme)
 
     if file_path.endswith(".wgt"):
         from src.wirecloud.catalogue.utils import wgt_deployer as wgt_deployer_catalogue
-        base_dir = wgt_deployer_catalogue.get_base_dir(vendor,name, version)
+        base_dir = wgt_deployer_catalogue.get_base_dir(vendor, name, version)
     else:
         base_dir = showcase_utils.wgt_deployer.get_base_dir(vendor, name, version)
 
     response = build_downloadfile_response(request, file_path, base_dir)
     if response.status_code == 302:
-        response.headers['Location'] = get_absolute_reverse_url('wirecloud.showcase_media', request=request, vendor=vendor, name=name, version=version, path=response.headers['Location'])
+        response.headers['Location'] = get_absolute_reverse_url('wirecloud.showcase_media', request=request,
+                                                                vendor=vendor, name=name, version=version,
+                                                                path=response.headers['Location'])
 
     # TODO cache
     return response
