@@ -24,9 +24,11 @@ from src import settings
 from src.wirecloud.commons.auth.schemas import UserAll, Session
 from src.wirecloud.commons.auth.utils import make_oidc_provider_request
 from src.wirecloud.database import DBSession
+from src.wirecloud.keycloak.utils import format_jwks_key
 from src.wirecloud.platform.context.schemas import BaseContextKey
 from src.wirecloud.platform.plugins import WirecloudPlugin, URLTemplate
 from src.wirecloud.translation import gettext as _
+from src.wirecloud.keycloak.routes import keycloak_router
 
 IDM_SUPPORT_ENABLED = False
 
@@ -34,6 +36,8 @@ IDM_SUPPORT_ENABLED = False
 class WirecloudKeycloakPlugin(WirecloudPlugin):
     def __init__(self, app: FastAPI):
         super().__init__(app)
+
+        app.include_router(keycloak_router, prefix="", tags=["Keycloak"])
 
     def get_platform_context_definitions(self):
         if getattr(settings, "OID_CONNECT_PLUGIN", "") != "keycloak" or not IDM_SUPPORT_ENABLED:
@@ -64,7 +68,7 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
         return {
             'fiware_token_available': fiware_token_available,
             'keycloak_client_id': getattr(settings, "OID_CONNECT_CLIENT_ID", None),
-            'keycloak_session': user.idm_data[getattr(settings, "OID_CONNECT_PLUGIN")].get('session', None) if fiware_token_available else None
+            'keycloak_session': user.idm_data[getattr(settings, "OID_CONNECT_PLUGIN")].get('idm_session', None) if fiware_token_available else None
         }
 
     def get_idm_get_authorization_url_functions(self) -> dict[str, Callable]:
@@ -282,13 +286,38 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
                         raise ValueError(
                             "OID_CONNECT_DISCOVERY_URL grant_types_supported does not contain authorization_code")
 
+                    if "jwks_uri" not in data:
+                        keys = {}
+                        print("WARNING: OIDC provider does not contain jwks_uri. Token signature validation will not succeed.")
+                    else:
+                        keys = {}
+
+                        try:
+                            keys_data = await make_oidc_provider_request(data["jwks_uri"])
+                        except Exception as e:
+                            raise ValueError(f"Exception while requesting OIDC jwks_uri: {str(e)}")
+
+                        if "keys" not in keys_data or type(keys_data["keys"]) != list:
+                            raise ValueError("OIDC provider jwks_uri does not contain keys")
+
+                        for key_data in keys_data["keys"]:
+                            if 'kid' not in key_data:
+                                print("WARNING: OIDC provider jwks_uri contains a key without kid. Skipping")
+                                continue
+
+                            try:
+                                keys[key_data['kid']] = format_jwks_key(key_data)
+                            except Exception as e:
+                                print(f"WARNING: OIDC provider jwks_uri contains an invalid key: {str(e)}")
+
                     OID_DATA = {
                         "issuer": data["issuer"],
                         "authorization_endpoint": data["authorization_endpoint"],
                         "token_endpoint": data["token_endpoint"],
                         "end_session_endpoint": data["end_session_endpoint"],
                         "userinfo_endpoint": data["userinfo_endpoint"],
-                        "scopes": ["openid", "profile", "offline_access"]
+                        "scopes": ["openid", "profile", "offline_access"],
+                        "keys": keys
                     }
 
                     if "email" in data["scopes_supported"]:
@@ -326,5 +355,9 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
 
                     if "openid" not in data["scopes"]:
                         raise ValueError("OID_CONNECT_DATA scopes must contain openid")
+
+                    if "keys" not in data or not isinstance(data["keys"], dict):
+                        print("WARNING: OIDC provider does not contain keys. Token signature validation will not succeed.")
+                        data["keys"] = {}
 
         return (validate_oidc_settings,)

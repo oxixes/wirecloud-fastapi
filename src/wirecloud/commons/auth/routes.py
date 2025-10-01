@@ -102,7 +102,11 @@ async def oidc_login(request: Request, db: DBDep, code: str = Query(description=
     if 'session_state' in token_data:
         if getattr(settings, 'OID_CONNECT_PLUGIN') not in idm_data:
             idm_data = {f"{getattr(settings, 'OID_CONNECT_PLUGIN')}": {}}
-        idm_data[getattr(settings, 'OID_CONNECT_PLUGIN')]['session'] = token_data['session_state']
+        idm_data[getattr(settings, 'OID_CONNECT_PLUGIN')]['idm_session'] = token_data['session_state']
+    if 'sub' in user_data:
+        if getattr(settings, 'OID_CONNECT_PLUGIN') not in idm_data:
+            idm_data = {f"{getattr(settings, 'OID_CONNECT_PLUGIN')}": {}}
+        idm_data[getattr(settings, 'OID_CONNECT_PLUGIN')]['idm_user'] = user_data['sub']
 
     if user is None:
         # Register user
@@ -144,7 +148,7 @@ async def oidc_login(request: Request, db: DBDep, code: str = Query(description=
     duration = (hasattr(settings, 'SESSION_AGE') and settings.SESSION_AGE) or 14 * 24 * 60 * 60  # 2 weeks
     expiration = datetime.fromtimestamp(int(datetime.now(timezone.utc).timestamp() + duration), tz=timezone.utc)
 
-    token_id = str(await create_token(db, expiration))
+    token_id = str(await create_token(db, expiration, user.id, token_data.get('session_state', None)))
     await commit(db)
 
     token_contents = {
@@ -227,7 +231,7 @@ async def api_login(request: Request, db: DBDep):
     duration = (hasattr(settings, 'SESSION_AGE') and settings.SESSION_AGE) or 14 * 24 * 60 * 60  # 2 weeks
     expiration = datetime.fromtimestamp(int(datetime.now(timezone.utc).timestamp() + duration), tz=timezone.utc)
 
-    token_id = str(await create_token(db, expiration))
+    token_id = str(await create_token(db, expiration, user.id))
     await commit(db)
 
     token_contents = {
@@ -305,7 +309,7 @@ async def login(request: Request, db: DBDep):
     duration = (hasattr(settings, 'SESSION_AGE') and settings.SESSION_AGE) or 14 * 24 * 60 * 60  # 2 weeks
     expiration = datetime.fromtimestamp(int(datetime.now(timezone.utc).timestamp() + duration), tz=timezone.utc)
 
-    token_id = str(await create_token(db, expiration))
+    token_id = str(await create_token(db, expiration, user.id))
     await commit(db)
 
     token_contents = {

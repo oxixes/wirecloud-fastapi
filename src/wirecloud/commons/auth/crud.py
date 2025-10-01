@@ -28,18 +28,24 @@ from src.wirecloud.commons.auth.models import Group as GroupModel, Group
 from src.wirecloud.commons.auth.models import DBPlatformPreference as PlatformPreferenceModel
 from src.wirecloud.database import DBSession, Id
 
-async def create_token(db: DBSession, expiration: datetime) -> ObjectId:
+
+async def create_token(db: DBSession, expiration: datetime, user_id: Id, idm_session: Optional[str] = None) -> ObjectId:
     if not db.in_transaction:
         db.start_transaction()
 
     token = {
         "_id": ObjectId(),
         "valid": True,
-        "expiration": expiration
+        "expiration": expiration,
+        "user_id": user_id
     }
+
+    if idm_session is not None:
+        token["idm_session"] = idm_session
 
     await db.client.tokens.insert_one(token)
     return token["_id"]
+
 
 async def is_token_valid(db: DBSession, token_id: ObjectId) -> bool:
     if not db.in_transaction:
@@ -74,6 +80,22 @@ async def invalidate_token(db: DBSession, token_id: ObjectId) -> None:
     await db.client.tokens.update_one(*query)
 
 
+async def invalidate_tokens_by_idm_session(db: DBSession, idm_session: str) -> None:
+    if not db.in_transaction:
+        db.start_transaction()
+
+    query = {"idm_session": idm_session}, {"$set": {"valid": False}}
+    await db.client.tokens.update_many(*query)
+
+
+async def invalidate_all_user_tokens(db: DBSession, user_id: Id) -> None:
+    if not db.in_transaction:
+        db.start_transaction()
+
+    query = {"user_id": user_id}, {"$set": {"valid": False}}
+    await db.client.tokens.update_many(*query)
+
+
 async def create_user(db: DBSession, user_info: UserCreate) -> None:
     user_created = UserModel(
         _id=ObjectId(),
@@ -95,6 +117,7 @@ async def create_user(db: DBSession, user_info: UserCreate) -> None:
 
     await db.client.users.insert_one(user_created.model_dump(by_alias=True))
 
+
 async def update_user(db: DBSession, user_info: User) -> None:
     if not db.in_transaction:
         db.start_transaction()
@@ -104,6 +127,7 @@ async def update_user(db: DBSession, user_info: User) -> None:
 
     query = {"_id": ObjectId(user_info.id)}, {"$set": user_info.model_dump(by_alias=True, exclude={"id"})}
     await db.client.users.update_one(*query)
+
 
 async def get_user_by_id(db: DBSession, user_id: Id) -> Optional[User]:
     query = {"_id": ObjectId(user_id)}

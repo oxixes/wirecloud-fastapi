@@ -368,7 +368,7 @@ def get_current_domain(request: Optional[Request] = None) -> str:
         except Exception:
             port = 80 if scheme == 'http' else 443
 
-    if (scheme == 'http' and port != 80) or (scheme == 'https' and port != 443):
+    if port is not None and ((scheme == 'http' and port != 80) or (scheme == 'https' and port != 443)):
         return servername + (':%s' % port)
     else:
         return servername

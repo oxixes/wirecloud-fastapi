@@ -272,6 +272,7 @@ class FiWareWirecloudPlugin(WirecloudPlugin):
             last_name = " ".join(user_data.get("displayName", "").split(" ")[1:]) if "displayName" in user_data else ""
 
             data = {
+                "sub": user_data["id"],
                 "preferred_username": user_data["username"],
                 "email": user_data.get("email", ""),
                 "given_name": first_name,
