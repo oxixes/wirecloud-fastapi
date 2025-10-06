@@ -2,8 +2,8 @@
     "installedApps": [
         "catalogue",
         "commons",
-        "fiware",
         "platform",
+        "fiware",
         "proxy",
         "keycloak"
     ]

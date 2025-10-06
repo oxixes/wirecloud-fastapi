@@ -115,11 +115,14 @@ class IDMTokenProcessor:
         if getattr(settings, "OID_CONNECT_ENABLED", False):
             self.openstack_manager = OpenStackTokenManager(getattr(settings, 'FIWARE_CLOUD_SERVER', FIWARE_LAB_CLOUD_SERVER))
 
-    async def process_request(self, db: DBSession, request: ProxyRequestData) -> None:
+    async def process_request(self, db: DBSession, request: ProxyRequestData, enable_openstack: bool = True) -> None:
         if request.workspace is None or request.component_id is None or request.component_type is None:
             return
 
-        headers = ['fiware-oauth-token', 'fiware-openstack-token']
+        headers = ['fiware-oauth-token']
+        if enable_openstack:
+            headers.append('fiware-openstack-token')
+
         filtered = []
 
         for header in headers:
@@ -131,8 +134,6 @@ class IDMTokenProcessor:
 
         if not getattr(settings, "OID_CONNECT_ENABLED", False):
             raise ValidationError(_('IdM support not enabled'))
-
-        tenant_id = request.headers.get('fiware-openstack-tenant-id', None)
 
         source = get_header_or_query(request, 'fiware-oauth-source', delete=True)
         if source is None:
@@ -167,6 +168,8 @@ class IDMTokenProcessor:
         user.idm_data[getattr(settings, "OID_CONNECT_PLUGIN")]["idm_token"] = token_data["refresh_token"]
 
         if 'fiware-openstack-token' in filtered:
+            tenant_id = request.headers.get('fiware-openstack-tenant-id', None)
+
             openstack_token = await self.openstack_manager.get_token(db, user, tenant_id)
 
         await update_user(db, user)

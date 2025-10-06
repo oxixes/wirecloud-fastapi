@@ -26,18 +26,32 @@ from src.wirecloud.commons.auth.utils import make_oidc_provider_request
 from src.wirecloud.database import DBSession
 from src.wirecloud.keycloak.utils import format_jwks_key
 from src.wirecloud.platform.context.schemas import BaseContextKey
-from src.wirecloud.platform.plugins import WirecloudPlugin, URLTemplate
+from src.wirecloud.platform.plugins import WirecloudPlugin, URLTemplate, AjaxEndpoint, get_plugin_urls
 from src.wirecloud.translation import gettext as _
 from src.wirecloud.keycloak.routes import keycloak_router
 
 IDM_SUPPORT_ENABLED = False
 
-# TODO Implement proxy processors
 class WirecloudKeycloakPlugin(WirecloudPlugin):
     def __init__(self, app: FastAPI):
         super().__init__(app)
 
         app.include_router(keycloak_router, prefix="", tags=["Keycloak"])
+
+    def get_ajax_endpoints(self, view: str, request: Request) -> tuple[AjaxEndpoint, ...]:
+        if getattr(settings, "OID_CONNECT_PLUGIN", "") != "keycloak" or not IDM_SUPPORT_ENABLED:
+            return ()
+
+        return (
+            AjaxEndpoint(id='KEYCLOAK_LOGIN_STATUS_IFRAME',
+                         url=getattr(settings, 'OID_CONNECT_DATA')["check_session_iframe"]),
+        )
+
+    def get_proxy_processors(self) -> tuple[str, ...]:
+        if not IDM_SUPPORT_ENABLED:
+            return ()
+
+        return ('src.wirecloud.keycloak.proxy.KeycloakTokenProcessor',)
 
     def get_platform_context_definitions(self):
         if getattr(settings, "OID_CONNECT_PLUGIN", "") != "keycloak" or not IDM_SUPPORT_ENABLED:
@@ -328,6 +342,9 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
                     else:
                         print("WARNING: wirecloud scope not supported by OIDC provider. Users will be created with default permissions.")
 
+                    if "check_session_iframe" in data:
+                        OID_DATA["check_session_iframe"] = data["check_session_iframe"]
+
                     setattr(settings, "OID_CONNECT_DATA", OID_DATA)
                 else:
                     data = getattr(settings, "OID_CONNECT_DATA", None)
@@ -359,5 +376,8 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
                     if "keys" not in data or not isinstance(data["keys"], dict):
                         print("WARNING: OIDC provider does not contain keys. Token signature validation will not succeed.")
                         data["keys"] = {}
+
+                    if "check_session_iframe" in data and not isinstance(data["check_session_iframe"], str):
+                        raise ValueError("OID_CONNECT_DATA check_session_iframe must be a string")
 
         return (validate_oidc_settings,)

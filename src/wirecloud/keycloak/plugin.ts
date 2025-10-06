@@ -17,30 +17,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
-import { merge } from 'webpack-merge';
-import baseConfig from './webpack.base';
-import { getOrderedScriptsEntries, getScriptAliases } from './entries';
-import { IgnorePlugin } from "webpack";
+const get_scripts: (view: string) => string[] = (_view: string): string[] => {
+    return ["js/keycloak/sso.js"];
+};
 
-const config = merge(baseConfig, {
-    entry: getOrderedScriptsEntries(),
-
-    resolve: {
-        alias: getScriptAliases(),
-        fallback: {
-            "whatwg-url": false
-        }
-    },
-
-    plugins: [
-        new MonacoWebpackPlugin({
-            filename: 'js/[name].worker.js',
-        }),
-        new IgnorePlugin({
-            resourceRegExp: /^whatwg-url$/
-        })
-    ]
-});
-
-export default config;
+export default {
+    get_scripts: get_scripts,
+    scripts_location: 'js'
+}
