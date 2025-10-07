@@ -26,6 +26,7 @@ import os
 
 from src.wirecloud.catalogue import utils as catalogue_utils
 from src.wirecloud.catalogue.schemas import CatalogueResourceDeleteResults
+from src.wirecloud.catalogue.search import add_resource_to_index, delete_resource_from_index
 from src.wirecloud.commons.auth.crud import get_user_with_all_info, get_user_by_username, get_group_by_name
 from src.wirecloud.commons.auth.schemas import UserAll
 from src.wirecloud.commons.utils.template import TemplateParseException, UnsupportedFeature
@@ -258,6 +259,7 @@ async def create_resource(db: DBDep, user: UserDep, request: Request,
         response = Response(orjson.dumps(resource.get_processed_info(request, url_pattern_name="wirecloud.showcase_media").model_dump()),
                             media_type="application/json; charset=UTF-8", status_code=status_code)
 
+    await add_resource_to_index(db, resource)
     response.headers["Location"] = resource.get_template_url()
     return response
 
@@ -330,6 +332,8 @@ async def delete_resources(db: DBSession, user: UserAll, request: Request, vendo
 
         if affected:
             result.affectedVersions.append(resource.version)
+
+        await delete_resource_from_index(resource)
 
     if affected:
         return Response(orjson.dumps(result.model_dump()), media_type="application/json; charset=UTF-8", status_code=200)

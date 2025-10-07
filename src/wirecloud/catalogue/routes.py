@@ -27,7 +27,9 @@ import zipfile
 import errno
 
 import src.wirecloud.catalogue.utils as catalogue_utils
+from src.wirecloud.catalogue.search import add_resource_to_index, delete_resource_from_index
 from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
+from src.wirecloud.commons.search import get_search_engine, SearchResponse
 from src.wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version
 from src.wirecloud.commons.utils.http import (PermissionDenied, NotFound,
                                               produces, consumes, authentication_required, XHTMLResponse,
@@ -46,7 +48,7 @@ from src.wirecloud.catalogue.crud import (get_catalogue_resource_versions_for_us
                                           get_all_catalogue_resource_versions, mark_resources_as_not_available)
 from src.wirecloud.catalogue.utils import get_resource_group_data, get_resource_data
 from src.wirecloud.platform.localcatalogue.utils import install_component
-from src.wirecloud.database import DBDep
+from src.wirecloud.database import DBDep, commit
 from src.wirecloud.translation import gettext as _
 
 router = APIRouter()
@@ -124,9 +126,47 @@ async def create_resource(db: DBDep, request: Request, user: UserDep):
         details = e.details if hasattr(e, 'details') else None
         return build_error_response(request, 400, e.message, details=str(details))
 
+    await add_resource_to_index(db, resource)
     res = Response(status_code=201)
     res.headers['Location'] = resource.get_template_url()
     return res
+
+
+@router.get(
+    "/resources",
+    summary=docs.get_resources_entries_summary,
+    description=docs.get_resources_entries_description,
+    response_model=SearchResponse,
+    response_description=docs.get_resources_entries_response_description,
+    responses={
+        200: {"content": {"application/json": {"example": docs.get_resources_entries_response_example}}},
+        400: root_docs.generate_error_response_openapi_description(
+            docs.get_resources_entries_bad_request_response_description,
+            "Scope value not supported"),
+        422: root_docs.generate_validation_error_response_openapi_description(
+            docs.get_resources_entries_validation_error_response_description)
+    }
+)
+@produces(["application/json"])
+async def get_resources(user: UserDepNoCSRF, request: Request,
+                        q: str = Query(default='', description=docs.get_resources_entries_q_description),
+                        orderby: str = Query(default='-creation_date', description=docs.get_resources_entries_orderby_description),
+                        scope: Optional[str] = Query(default=None, description=docs.get_resources_entries_scope_description),
+                        pagenum: int = Query(default=1, description=docs.get_resources_entries_pagenum_description),
+                        maxresults: int = Query(default=30, description=docs.get_resources_entries_maxresults_description)):
+    if scope:
+        scopes = scope.split(',')
+        for s in scopes:
+            if s not in ['mashup', 'widget', 'operator']:
+                return build_error_response(request, 400, _(f'Scope value not supported {s}'))
+
+    orderby = tuple(f.strip() for f in orderby.split(",") if f.strip()) or None
+    func = get_search_engine("resource")
+    resp = await func(request, user, q, pagenum, maxresults, scope, orderby)
+    if resp is None:
+        return build_error_response(request, 422, _('Invalid orderby value'))
+
+    return resp
 
 
 @router.get(
@@ -196,14 +236,16 @@ async def delete_resource_versions(db: DBDep,
 
     if len(resources) == 0:
         raise NotFound()
-    elif not resources[0].is_removable_by(db, user, vendor=True):
+    elif not await resources[0].is_removable_by(db, user, vendor=True):
         msg = _("user %(username)s is not the owner of the resource %(resource_id)s") % {
             'username': user.username, 'resource_id': '{}/{}'.format(vendor, name)}
         raise PermissionDenied(msg)
 
     # TODO Actually delete the resources
     await mark_resources_as_not_available(db, resources)
-    await db.commit_transaction()
+    for resource in resources:
+        await delete_resource_from_index(resource)
+    await commit(db)
 
     return CatalogueResourceDeleteResults(affectedVersions=[resource.version for resource in resources])
 
@@ -287,7 +329,8 @@ async def delete_resource_version(db: DBDep,
 
     # TODO Actually delete the resources
     await mark_resources_as_not_available(db, [resource])
-    await db.commit_transaction()
+    await delete_resource_from_index(resource)
+    await commit(db)
 
     return CatalogueResourceDeleteResults(affectedVersions=[resource.version])
 
@@ -437,7 +480,7 @@ async def get_resource_user_guide(db: DBDep,
 
 
 @router.get(
-    "/resource/{vendor}/{name}/{version}/{file_path:path}",
+    "/media/{vendor}/{name}/{version}/{file_path:path}",
     summary=docs.get_resource_file_summary,
     description=docs.get_resource_file_description,
     response_description=docs.get_resource_file_response_description,

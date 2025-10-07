@@ -21,8 +21,9 @@ import re
 from typing import Optional
 
 import src.wirecloud.catalogue.utils as catalogue_utils
+from src.wirecloud.catalogue.search import add_resource_to_index
 from src.wirecloud.commons.auth.models import Group
-from src.wirecloud.database import DBSession
+from src.wirecloud.database import DBSession, commit
 from src.wirecloud.commons.utils.wgt import WgtFile
 from src.wirecloud.catalogue.utils import add_packaged_resource, check_vendor_permissions
 from src.wirecloud.catalogue.crud import (get_catalogue_resource, delete_catalogue_resources, install_resource_to_user,
@@ -58,7 +59,7 @@ async def install_resource(db: DBSession, wgt_file: WgtFile, executor_user: Opti
     elif '-dev' in resource_version:
         # dev version are automatically overwritten
         await delete_catalogue_resources(db, [resource.id])
-        await db.commit_transaction()
+        await commit(db)
         resource = await add_packaged_resource(db, file_contents, executor_user, wgt_file=wgt_file)
 
     return resource
