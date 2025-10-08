@@ -40,6 +40,7 @@ from src.wirecloud.commons.auth.schemas import User, UserAll
 from src.wirecloud.platform.localcatalogue.utils import install_component
 from src.wirecloud.platform.preferences.schemas import WorkspacePreference
 from src.wirecloud.commons.auth.models import Group as GroupModel, Group
+from src.wirecloud.platform.search import delete_workspace_from_index, update_workspace_in_index
 from src.wirecloud.platform.workspace.models import Workspace, WorkspaceAccessPermissions, Tab
 from src.wirecloud.platform.workspace.utils import create_tab, _workspace_cache_key, _variable_values_cache_key
 from src.wirecloud.translation import gettext as _
@@ -238,6 +239,7 @@ async def change_workspace(db: DBSession, workspace: Workspace, user: Optional[U
     workspace.last_modified = datetime.now(timezone.utc)
     query = {"_id": ObjectId(workspace.id)}
     await db.client.workspace.replace_one(query, workspace.model_dump(by_alias=True))
+    await update_workspace_in_index(db, workspace)
 
 
 async def get_workspace_by_username_and_name(db: DBSession, creator_username: str, name: str) -> Optional[Workspace]:
@@ -263,6 +265,7 @@ async def delete_workspace(db: DBSession, workspace: Workspace) -> None:
         db.start_transaction()
     query = {"_id": ObjectId(workspace.id)}
     await db.client.workspace.delete_one(query)
+    await delete_workspace_from_index(workspace)
 
 
 async def change_tab(db: DBSession, user: User, workspace: Workspace, tab: Tab, save_workspace: bool = True) -> None:
@@ -285,3 +288,12 @@ async def set_visible_tab(db: DBSession, user: User, workspace: Workspace, tab: 
 
     tab.visible = True
     await change_tab(db, user, workspace, tab)
+
+
+async def get_all_workspaces(db: DBSession) -> list[Workspace]:
+    workspaces = await db.client.workspace.find().to_list()
+    results = []
+    for workspace in workspaces:
+        results.append(Workspace.model_validate(workspace))
+
+    return results

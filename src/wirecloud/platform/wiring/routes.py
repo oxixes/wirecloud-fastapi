@@ -32,7 +32,7 @@ from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
 from src.wirecloud.commons.utils.cache import CacheableData
 from src.wirecloud.commons.utils.http import authentication_required, consumes, build_error_response, \
     get_current_domain, get_absolute_reverse_url
-from src.wirecloud.database import DBDep, Id
+from src.wirecloud.database import DBDep, Id, commit
 from src.wirecloud.platform.wiring.schemas import WiringEntryPatch, WiringOperatorVariables
 from src.wirecloud.platform.wiring import docs
 from src.wirecloud.platform.wiring.utils import check_wiring, check_multiuser_wiring, get_operator_cache_key, \
@@ -100,7 +100,7 @@ async def update_wiring_entry(db: DBDep, request: Request, user: UserDep,
 
     workspace.wiring_status = new_wiring_status
     await change_workspace(db, workspace, user)
-    await db.commit_transaction()
+    await commit(db)
 
     return Response(status_code=204)
 
@@ -180,7 +180,7 @@ async def patch_wiring_entry(db: DBDep, request: Request, user: UserDep,
 
     workspace.wiring_status = new_wiring_status
     await change_workspace(db, workspace, user)
-    await db.commit_transaction()
+    await commit(db)
 
     return Response(status_code=204)
 

@@ -22,13 +22,14 @@ from typing import Optional
 from bson import ObjectId
 
 from src.wirecloud.catalogue.schemas import (CatalogueResourceCreate, CatalogueResource, CatalogueResourceBase,
-                                             CatalogueResourceType, CatalogueResourceXHTML)
+                                             CatalogueResourceType, CatalogueResourceXHTML,
+                                             CatalogueResourceWithUsersGroups)
 from src.wirecloud.catalogue.models import DBCatalogueResource as CatalogueResourceModel
 from src.wirecloud.catalogue.models import XHTML
 from src.wirecloud.commons.auth.models import Group
 from src.wirecloud.commons.auth.schemas import UserAll, User
 from src.wirecloud.commons.utils.template.schemas.macdschemas import (MACD, Vendor, Name, Version)
-from src.wirecloud.database import DBSession, Id
+from src.wirecloud.database import DBSession, Id, commit
 
 
 def build_schema_from_resource(resource: CatalogueResourceModel) -> CatalogueResource:
@@ -64,7 +65,7 @@ async def create_catalogue_resource(db: DBSession, resource: CatalogueResourceCr
         creator_id=ObjectId(resource.creator.id) if resource.creator is not None else None
     )
     result = await db.client.catalogue_resources.insert_one(catalogue.model_dump(by_alias=True))
-    await db.commit_transaction()
+    await commit(db)
 
     if result.inserted_id is None:
         raise ValueError('Resource not created')
@@ -236,7 +237,7 @@ async def install_resource_to_user(db: DBSession, resource: CatalogueResource, u
     else:
         await db.client.catalogue_resources.update_one({"_id": ObjectId(resource.id)},
                                                        {"$push": {"users": ObjectId(user.id)}})
-        await db.commit_transaction()
+        await commit(db)
         return True
 
 
@@ -251,7 +252,7 @@ async def install_resource_to_group(db: DBSession, resource: CatalogueResource, 
     else:
         await db.client.catalogue_resources.update_one({"_id": ObjectId(resource.id)},
                                                        {"$push": {"groups": ObjectId(group.id)}})
-        await db.commit_transaction()
+        await commit(db)
         return True
 
 
@@ -266,7 +267,7 @@ async def uninstall_resource_to_user(db: DBSession, resource: CatalogueResource,
     else:
         await db.client.catalogue_resources.update_one({"_id": ObjectId(resource.id)},
                                                        {"$pull": {"users": ObjectId(user.id)}})
-        await db.commit_transaction()
+        await commit(db)
         return True
 
 
@@ -280,7 +281,7 @@ async def delete_resource_if_not_used(db: DBSession, resource: CatalogueResource
 
     if result is not None:
         await db.client.catalogue_resources.delete_one({"_id": ObjectId(resource.id)})
-        await db.commit_transaction()
+        await commit(db)
         return True
     else:
         return False
@@ -312,3 +313,18 @@ async def save_catalogue_resource_xhtml(db: DBSession, resource_id: Id, xhtml: X
     query = {"_id": ObjectId(resource_id)}
     update = {"$set": {"xhtml": xhtml.model_dump()}}
     await db.client.catalogue_resources.update_one(query, update)
+
+
+async def get_all_catalogue_resources_with_usersgroups(db: DBSession) -> list[CatalogueResourceWithUsersGroups]:
+    results = await db.client.catalogue_resources.find().to_list()
+    return [CatalogueResourceWithUsersGroups.model_validate(resource) for resource in results]
+
+
+async def get_catalogue_resource_with_usersgroups_by_id(db: DBSession, resource_id: Id) -> Optional[CatalogueResourceWithUsersGroups]:
+    query = {"_id": ObjectId(resource_id)}
+    result = await db.client.catalogue_resources.find_one(query)
+
+    if result is None:
+        return None
+
+    return CatalogueResourceWithUsersGroups.model_validate(result)

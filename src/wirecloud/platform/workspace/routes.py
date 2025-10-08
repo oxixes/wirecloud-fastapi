@@ -33,6 +33,7 @@ from src.wirecloud.commons.utils.template.schemas.macdschemas import MACDMashupW
 from src.wirecloud.commons.utils.wgt import WgtFile
 from src.wirecloud.platform.markets.utils import get_local_catalogue
 from src.wirecloud.platform.preferences.crud import update_workspace_preferences
+from src.wirecloud.platform.search import add_workspace_to_index, update_workspace_in_index
 from src.wirecloud.platform.workspace.crud import get_workspace_list, create_empty_workspace, get_workspace_by_id, \
     create_workspace, get_workspace_by_username_and_name, is_a_workspace_with_that_name, change_workspace, \
     delete_workspace, change_tab, set_visible_tab
@@ -43,7 +44,7 @@ from src.wirecloud.platform.workspace.mashupTemplateParser import check_mashup_d
     fill_workspace_using_template
 from src.wirecloud.platform.workspace.schemas import WorkspaceData, WorkspaceCreate, WorkspaceGlobalData, \
     WorkspaceEntry, TabCreate, TabData, TabCreateEntry, MashupMergeService
-from src.wirecloud.database import DBDep, Id
+from src.wirecloud.database import DBDep, Id, commit
 from src.wirecloud.platform.workspace.utils import get_workspace_data, get_global_workspace_data, create_tab, \
     get_tab_data, get_workspace_entry
 from src.wirecloud.platform.workspace import docs
@@ -158,7 +159,8 @@ async def create_workspace_collection(db: DBDep, user: UserDep, request: Request
 
     workspace_data = await get_global_workspace_data(db, request, workspace, user)
 
-    await db.commit_transaction()
+    await add_workspace_to_index(user, workspace)
+    await commit(db)
     return workspace_data.get_response(status_code=201, cacheable=False)
 
 
@@ -273,7 +275,7 @@ async def create_workspace_entry(db: DBDep, user: UserDep, request: Request, wor
     if change:
         await change_workspace(db, workspace, user)
 
-    await db.commit_transaction()
+    await commit(db)
     return Response(status_code=204)
 
 
@@ -308,7 +310,7 @@ async def delete_workspace_entry(db: DBDep, user: UserDep, request: Request, wor
         return build_error_response(request, 403, _("You are not allowed to delete this workspace"))
 
     await delete_workspace(db, workspace)
-    await db.commit_transaction()
+    await commit(db)
     return Response(status_code=204)
 
 
@@ -372,7 +374,7 @@ async def create_tab_collection(db: DBDep, user: UserDep, request: Request, work
             return build_error_response(request, 409, _("A tab with the given name already exists"))
 
     tab = await create_tab(db, user, tab_title, workspace, name=tab_name)
-    await db.commit_transaction()
+    await commit(db)
     return await get_tab_data(db, request, tab, user=user)
 
 
@@ -478,7 +480,7 @@ async def create_tab_entry(db: DBDep, user: UserDep, request: Request,
 
     await change_tab(db, user, workspace, tab)
 
-    await db.commit_transaction()
+    await commit(db)
     return Response(status_code=204)
 
 
@@ -531,7 +533,7 @@ async def delete_tab_entry(db: DBDep, user: UserDep, request: Request,
         await set_visible_tab(db, user, workspace, workspace.tabs[next(iter(workspace.tabs))])
 
     await change_workspace(db, workspace, user)
-    await db.commit_transaction()
+    await commit(db)
     return Response(status_code=204)
 
 
@@ -630,7 +632,7 @@ async def process_mashup(db: DBDep, user: UserDep, request: Request,
 
     await fill_workspace_using_template(db, request, user, to_ws, template)
 
-    await db.commit_transaction()
+    await commit(db)
     return Response(status_code=204)
 
 
@@ -729,5 +731,5 @@ async def publish_workspace(db: DBDep, user: UserDep, request: Request,
 
     resource = await get_local_catalogue().publish(db, None, wgt_file, user, request, json_data)
 
-    await db.commit_transaction()
+    await commit(db)
     return resource.get_processed_info(request)

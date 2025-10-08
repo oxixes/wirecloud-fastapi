@@ -46,7 +46,7 @@ from src.wirecloud.commons.utils.http import get_absolute_reverse_url, force_tra
 from src.wirecloud.commons.utils.template import ObsoleteFormatError, TemplateParser, TemplateFormatError, TemplateParseException
 from src.wirecloud.commons.utils.version import Version
 from src.wirecloud.commons.utils.wgt import InvalidContents, WgtDeployer, WgtFile
-from src.wirecloud.database import DBSession
+from src.wirecloud.database import DBSession, commit
 from src.wirecloud.platform.widget.utils import create_widget_from_wgt
 from src.wirecloud.translation import gettext as _
 
@@ -379,7 +379,7 @@ async def update_resource_catalogue_cache(db: DBSession) -> None:
         print('    Removing %s' % (resource.vendor + '/' + resource.short_name + '/' + resource.version))
 
     await delete_catalogue_resources(db, [resource.id for resource in resources_to_remove])
-    await db.commit_transaction()
+    await commit(db)
 
 
 # TODO Use user permissions apart from these checks
