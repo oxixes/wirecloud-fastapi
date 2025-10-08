@@ -307,7 +307,7 @@ async def add_resource_to_index(db: DBSession, resource: CatalogueResource):
     from src.wirecloud.commons.search import es_client
     res = await get_catalogue_resource_with_usersgroups_by_id(db, resource.id)
 
-    await es_client.index(index=RESOURCES_INDEX, id=str(res.id), body=prepare_resource_for_indexing(res).model_dump())
+    await es_client.index(index=RESOURCES_INDEX, id=str(res.id), document=prepare_resource_for_indexing(res).model_dump())
 
 
 async def delete_resource_from_index(resource: CatalogueResource):
