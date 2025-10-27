@@ -17,7 +17,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-const get_scripts: (view: string) => string[] = (_view: string): string[] => {
+const get_scripts: (view: string) => string[] = (view: string): string[] => {
+    if (view !== 'classic' && view !== 'smartphone' && view !== 'embedded') return [];
     return ["js/keycloak/sso.js"];
 };
 

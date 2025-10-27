@@ -3,8 +3,8 @@
         "catalogue",
         "commons",
         "platform",
-        "fiware",
         "proxy",
+        "fiware",
         "keycloak"
     ]
 }

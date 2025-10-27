@@ -31,8 +31,10 @@ const get_scripts: (view: string) => string[] = (view: string): string[] => {
             'js/wirecloud/FiWare.js',
             'js/wirecloud/FiWare/BusinessAPIEcosystemView.js'
         ]
-    } else {
+    } else if (view === 'smartphone' || view === 'embedded') {
         return common;
+    } else {
+        return [];
     }
 };
 

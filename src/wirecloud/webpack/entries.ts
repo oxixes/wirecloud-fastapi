@@ -36,11 +36,13 @@ interface Theme {
     parent: string | null;
     get_css: (view: string) => string[];
     get_scripts: (view: string) => string[];
+    path: string;
 }
 
 interface Plugin {
     get_scripts: (view: string) => string[];
     scripts_location: string | null;
+    path: string;
 }
 
 const themePath = path.resolve(__dirname, '../themes');
@@ -57,17 +59,21 @@ fs.readdirSync(themePath).forEach((theme) => {
     if (fs.existsSync(themeFile)) {
         // Import the theme file
         themes[theme] = require(themeFile).default;
+        themes[theme].path = themeDir;
     }
 });
 
 // Search for plugin directories in the wirecloud directory. A plugin is valid if it contains a plugin.js file.
-settings.installedApps.forEach((plugin) => {
+settings.installedApps.forEach((plugin, i) => {
     const pluginDir = path.resolve(pluginPath, plugin);
     const pluginFile = path.resolve(pluginDir, 'plugin.ts');
 
+    const pluginKey = `${String(i).padStart(5, '0')}_${plugin}`;
+
     if (fs.existsSync(pluginFile)) {
         // Import the plugin file
-        plugins[plugin] = require(pluginFile).default;
+        plugins[pluginKey] = require(pluginFile).default;
+        plugins[pluginKey].path = pluginDir;
     }
 });
 
@@ -76,7 +82,7 @@ const resolveCSSIncludePaths = (theme: string): string[] => {
     let currentTheme: string | null = theme;
 
     while (currentTheme) {
-        const resultingPath = path.resolve(__dirname, `../themes/${currentTheme}/static/css`);
+        const resultingPath = path.resolve(__dirname, `${themes[currentTheme].path}/static/css`);
         if (fs.existsSync(resultingPath)) {
             includePaths.push(resultingPath);
         }
@@ -110,7 +116,7 @@ const createCSSEntries = (): { [key: string]: any } => {
 
                 let absolutePath = "";
                 while (!fs.existsSync(absolutePath) && currentTheme) {
-                    absolutePath = path.resolve(__dirname, `../themes/${currentTheme!.replace(".", "/")}/static/${file}`);
+                    absolutePath = path.resolve(__dirname, `${themes[currentTheme].path}/static/${file}`);
                     currentTheme = themes[currentTheme].parent;
                 }
 
@@ -142,7 +148,8 @@ const getOrderedScriptsEntries = (): { [key: string]: any } => {
 
             // Add files from the plugins
             let order = 0;
-            Object.keys(plugins).forEach((plugin) => {
+            const pluginKeys = Object.keys(plugins).sort();
+            pluginKeys.forEach((plugin) => {
                 plugins[plugin].get_scripts(view).forEach((file) => {
                     js_files.set(file, order);
                     order += 1;
@@ -166,14 +173,14 @@ const getOrderedScriptsEntries = (): { [key: string]: any } => {
 
                 let absolutePath = "";
                 while (!fs.existsSync(absolutePath) && currentTheme) {
-                    absolutePath = path.resolve(__dirname, `../themes/${currentTheme!.replace(".", "/")}/static/${file}`);
+                    absolutePath = path.resolve(__dirname, `${themes[currentTheme].path}/static/${file}`);
                     currentTheme = themes[currentTheme].parent;
                 }
 
                 // If the file does not exist in the themes, search in the plugins
                 if (!fs.existsSync(absolutePath)) {
-                    for (const plugin of Object.keys(plugins)) {
-                        absolutePath = path.resolve(__dirname, `../${plugin}/static/${file}`);
+                    for (const plugin of Object.values(plugins)) {
+                        absolutePath = path.resolve(__dirname, `${plugin.path}/static/${file}`);
                         if (fs.existsSync(absolutePath)) {
                             break;
                         }
@@ -209,7 +216,7 @@ const getScriptAliases = (): { [key: string]: string } => {
     Object.keys(plugins).forEach((plugin) => {
         const scriptsLocation = plugins[plugin].scripts_location;
         if (scriptsLocation) {
-            aliases[plugin] = path.resolve(__dirname, `../${plugin}/static/${scriptsLocation}`);
+            aliases[plugin] = path.resolve(__dirname, `${plugins[plugin].path}/static/${scriptsLocation}`);
         }
     });
 
