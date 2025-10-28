@@ -92,7 +92,7 @@ const config: Configuration = {
         layers: true
     },
     resolve: {
-        extensions: ['.js', '.ts', '.scss', '.css', '.ttf'] // Resolve these file extensions
+        extensions: ['.js', '.ts', '.scss', '.css', '.ttf', '.woff', '.woff2', '.eot', '.otf'] // Resolve these file extensions
     },
     module: {
         rules: [
@@ -113,7 +113,7 @@ const config: Configuration = {
                 }
             },
             {
-                test: /\.ttf$/,
+                test: /\.(ttf|woff|woff2|eot|otf)$/,
                 type: 'asset/resource',
                 generator: {
                     filename: 'fonts/[name][ext]'
