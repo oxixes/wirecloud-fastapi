@@ -88,9 +88,9 @@ async def update_title_value(db: DBSession, iwidget: WidgetInstance, data: Union
         if data.title.strip() == '':
             resource = await get_catalogue_resource_by_id(db, iwidget.resource)
             iwidget_info = resource.get_processed_info()
-            iwidget.name = iwidget_info.title
+            iwidget.title = iwidget_info.title
         else:
-            iwidget.name = data.title
+            iwidget.title = data.title
 
 
 def update_screen_size_value(model: WidgetPositionsConfig, data: LayoutConfig, field: str) -> None:
@@ -249,7 +249,7 @@ async def save_widget_instance(db: DBSession, workspace: Workspace, iwidget: Wid
     )
     resource = await update_widget_value(db, new_iwidget, iwidget, user, required=True)
     iwidget_info = resource.get_processed_info()
-    new_iwidget.name = iwidget_info.title
+    new_iwidget.title = iwidget_info.title
     new_iwidget.layout = iwidget.layout
 
     new_iwidget.positions = WidgetPositions(

@@ -111,7 +111,7 @@ def get_widget_platform_style(request: Request, theme: str) -> tuple[str]:
     global _widget_platform_style
 
     if theme not in _widget_platform_style or settings.DEBUG:
-        base_href = get_static_path(theme, 'widget', request, 'cache.css')
+        base_href = get_static_path(theme, 'widget', request, 'css/cache.css')
         href = add_query_param(base_href, 'context', 'widget')
         safe_href = escape(href, quote=True)
 
@@ -242,7 +242,7 @@ async def process_widget_code(db: DBSession, request: Request, resource: Catalog
                 f"Widget code was not encoded using the specified charset ({charset} as stated in the widget description file).")
             return build_response(request, 502, {'error_msg': msg}, WIDGET_ERROR_FORMATTERS)
 
-        xhtml.code_timestamp = time.time() * 1000
+        xhtml.code_timestamp = int(time.time() * 1000)
         await save_catalogue_resource_xhtml(db, resource.id, xhtml)
 
     try:

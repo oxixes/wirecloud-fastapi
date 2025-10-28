@@ -16,6 +16,7 @@
 #
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
+
 from typing import Optional, Any
 from urllib.parse import urljoin
 
@@ -157,6 +158,7 @@ def build_version_sortable(version: str):
         code += (200 + prerelease[1]) / 1000
 
     return code
+
 
 def clean_resource_out(hit: dict, request: Request) -> ResourceOutResponse:
     source = hit["_source"]

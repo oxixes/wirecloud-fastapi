@@ -161,8 +161,8 @@ async def get_resources(user: UserDepNoCSRF, request: Request,
                 return build_error_response(request, 400, _(f'Scope value not supported {s}'))
 
     orderby = tuple(f.strip() for f in orderby.split(",") if f.strip()) or None
-    func = get_search_engine("resource")
-    resp = await func(request, user, q, pagenum, maxresults, scope, orderby)
+    function = get_search_engine("resource")
+    resp = await function(request, user, q, pagenum, maxresults, scope, orderby)
     if resp is None:
         return build_error_response(request, 422, _('Invalid orderby value'))
 

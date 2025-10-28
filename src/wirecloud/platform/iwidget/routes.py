@@ -84,10 +84,11 @@ async def get_widget_instance_collection(db: DBDep, user: UserDepNoCSRF, request
     "/{workspace_id}/tab/{tab_id}/widget_instances/",
     summary=docs.create_widget_instance_collection_summary,
     description=docs.create_widget_instance_collection_description,
+    status_code=201,
     response_model=WidgetInstanceData,
     response_description=docs.create_widget_instance_collection_response_description,
     responses={
-        200: {"content": {"application/json": {"example": docs.create_widget_instance_collection_response_example}}},
+        201: {"content": {"application/json": {"example": docs.create_widget_instance_collection_response_example}}},
         401: root_docs.generate_auth_required_response_openapi_description(
             docs.create_widget_instance_collection_auth_required_response_description
         ),
@@ -131,7 +132,8 @@ async def create_widget_instance_collection(db: DBDep, user: UserDep, request: R
 
         iwidget_data = await get_widget_instance_data(db, request, iwidget, workspace, user=user)
 
-        return iwidget_data
+        return Response(content=iwidget_data.model_dump_json(), media_type="application/json", status_code=201)
+
     except NotFound:
         return build_error_response(request, 422, _(f"Referred widget {iwidget.resource} does not exist."))
     except TypeError as e:

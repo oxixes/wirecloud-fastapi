@@ -334,17 +334,17 @@
 
             this.resetLayouts();
             this.widgets.forEach((widget) => {
-                const currentConfigs = widget.model.layoutConfigurations;
+                const currentConfigs = widget.model.layout_config;
 
                 const widgetReqData = {
                     id: widget.model.id,
-                    layoutConfigurations: []
+                    layout_config: []
                 };
 
                 let indexesToDelete = [];
                 currentConfigs.forEach((config, i) => {
                     if (updatedScreenSizes.findIndex((screenSize) => screenSize.id === config.id) === -1) {
-                        widgetReqData.layoutConfigurations.push({
+                        widgetReqData.layout_config.push({
                             id: config.id,
                             action: 'delete'
                         });
@@ -389,7 +389,7 @@
                         const reqNewConfig = utils.clone(newConfig);
                         reqNewConfig.action = 'update';
 
-                        widgetReqData.layoutConfigurations.push(reqNewConfig);
+                        widgetReqData.layout_config.push(reqNewConfig);
                     } else {
                         let requiresUpdate = false;
                         const updatedConfig = {
@@ -408,7 +408,7 @@
 
                         if (requiresUpdate) {
                             updatedConfig.action = 'update';
-                            widgetReqData.layoutConfigurations.push(updatedConfig);
+                            widgetReqData.layout_config.push(updatedConfig);
                         }
                     }
                 });
@@ -417,7 +417,7 @@
                     currentConfigs.splice(index, 1);
                 });
 
-                // After modifying all the layoutConfigurations, we need to sort them by moreOrEqual and call the updateWindowSize method
+                // After modifying all the layout_config, we need to sort them by moreOrEqual and call the updateWindowSize method
                 // to refresh the current layout
                 currentConfigs.sort((a, b) => a.moreOrEqual - b.moreOrEqual);
                 widget.updateWindowSize(window.innerWidth);

@@ -357,7 +357,7 @@
                 }
             });
 
-            options.layoutConfigurations = layoutConfigs;
+            options.layout_config = layoutConfigs;
 
             if (!options.commit) {
                 return this.findWidget(this.model.createWidget(resource, options).id);

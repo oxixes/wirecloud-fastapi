@@ -29,8 +29,8 @@ from src.wirecloud.database import Id
 
 class XHTML(BaseModel):
     uri: str
-    code: Optional[str] = None
-    code_timestamp: Optional[datetime] = None
+    code: Optional[str] = ''
+    code_timestamp: Optional[int] = None
     url: str
     content_type: Optional[str]
     use_platform_style: bool

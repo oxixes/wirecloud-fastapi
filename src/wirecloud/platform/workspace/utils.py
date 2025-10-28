@@ -335,7 +335,7 @@ async def get_widget_instance_data(db: DBSession, request: Request, iwidget: Wid
                                    user: Optional[UserAll] = None) -> WidgetInstanceData:
     data_ret = WidgetInstanceData(
         id=iwidget.id,
-        title=iwidget.name,
+        title=iwidget.title,
         layout=iwidget.layout,
         widget=iwidget.widget_uri,
         layout_config=[],

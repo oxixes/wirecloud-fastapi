@@ -88,7 +88,7 @@ WORKSPACE_MAPPINGS = {
 }
 
 
-class WorkspaceOutResponse(BaseModel):
+class SearchWorkspaceOutputResponse(BaseModel):
     name: str
     title: str
     description: str
@@ -100,15 +100,15 @@ class WorkspaceOutResponse(BaseModel):
     shared: bool
 
 
-class WorkspaceOut(WorkspaceOutResponse):
+class SearchWorkspaceOutput(SearchWorkspaceOutputResponse):
     searchable: Optional[bool]
     users: list[str]
     groups: list[str]
 
 
-def clean_workspace_out(hit: dict) -> WorkspaceOutResponse:
+def clean_workspace_out(hit: dict) -> SearchWorkspaceOutputResponse:
     source = hit["_source"]
-    return WorkspaceOutResponse(
+    return SearchWorkspaceOutputResponse(
         name=source["name"],
         title=source["title"],
         description=source["description"],
@@ -154,8 +154,8 @@ async def search_workspaces(user: UserAll, querytext: str, pagenum: int, max_res
     return await build_search_response(index=WORKSPACES_INDEX, body=body, pagenum=pagenum, max_results=max_results, clean=clean_workspace_out)
 
 
-def prepare_workspace_for_indexing(workspace: Workspace, owner_username: str) -> WorkspaceOut:
-    return WorkspaceOut(
+def prepare_workspace_for_indexing(workspace: Workspace, owner_username: str) -> SearchWorkspaceOutput:
+    return SearchWorkspaceOutput(
         name=workspace.name,
         title=workspace.title,
         description=workspace.description,

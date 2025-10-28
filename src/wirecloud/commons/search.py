@@ -30,7 +30,7 @@ from src.wirecloud.commons.auth.crud import get_all_users, get_all_groups
 from src.wirecloud.commons.auth.models import Group
 from src.wirecloud.commons.auth.schemas import User
 from src.wirecloud.database import DBSession
-from src.wirecloud.platform.search import WorkspaceOutResponse, WorkspaceOut
+from src.wirecloud.platform.search import SearchWorkspaceOutputResponse, SearchWorkspaceOutput
 
 es_client = AsyncElasticsearch(hosts=f"{'https' if settings.ELASTICSEARCH['SECURE'] else 'http'}://{settings.ELASTICSEARCH['HOST']}:{settings.ELASTICSEARCH['PORT']}",
                                http_auth=(settings.ELASTICSEARCH['USER'], settings.ELASTICSEARCH['PASSWORD']))
@@ -128,13 +128,13 @@ _available_search_engines = None
 _available_rebuild_engines = None
 
 
-class UserOut(BaseModel):
+class SearchUserOutput(BaseModel):
     fullname: str
     username: str
     # TODO: Organizations
 
 
-class GroupOut(BaseModel):
+class SearchGroupOutput(BaseModel):
     name: str
     # TODO: Organizations
 
@@ -144,11 +144,11 @@ class SearchResponse(BaseModel):
     pagecount: int
     pagelen: int
     pagenum: int
-    results: list[Union[UserOut, GroupOut, WorkspaceOutResponse, ResourceOutResponse]]
+    results: list[Union[SearchUserOutput, SearchGroupOutput, SearchWorkspaceOutputResponse, ResourceOutResponse]]
     total: int
 
 
-def get_available_search_engines() -> dict[str, Callable[[str, int, int, str | None], SearchResponse]]:
+def get_available_search_engines() -> dict[str, Callable[[str, int, int, Optional[str]], SearchResponse]]:
     global _available_search_engines
 
     if _available_search_engines is None:
@@ -186,7 +186,7 @@ def is_available_rebuild_engine(indexname: str) -> bool:
     return indexname in get_available_rebuild_engines()
 
 
-def get_search_engine(indexname: str) -> Optional[Callable[[str, int, int, str | None], SearchResponse]]:
+def get_search_engine(indexname: str) -> Optional[Callable[[str, int, int, Optional[str]], SearchResponse]]:
     return get_available_search_engines().get(indexname)
 
 
@@ -213,7 +213,7 @@ async def calculate_pagination(index: str, body: dict, pagenum: int, max_results
 
 async def build_search_response(index: Union[str, list[str]], body: dict, pagenum: int,
                                 max_results: int,
-                                clean: Union[Callable[[dict], Union[UserOut, GroupOut, WorkspaceOutResponse, ResourceOutResponse]], Callable[[dict, Request], Union[UserOut, GroupOut, WorkspaceOutResponse, ResourceOutResponse]]],
+                                clean: Union[Callable[[dict], Union[SearchUserOutput, SearchGroupOutput, SearchWorkspaceOutputResponse, ResourceOutResponse]], Callable[[dict, Request], Union[SearchUserOutput, SearchGroupOutput, SearchWorkspaceOutputResponse, ResourceOutResponse]]],
                                 request: Optional[Request] = None) -> SearchResponse:
     offset, pagecount, pagenum, total = await calculate_pagination(index=index, body=body, pagenum=pagenum, max_results=max_results)
 
@@ -236,9 +236,9 @@ async def build_search_response(index: Union[str, list[str]], body: dict, pagenu
     )
 
 
-def clean_user_out(hit: dict) -> UserOut:
+def clean_user_out(hit: dict) -> SearchUserOutput:
     source = hit["_source"]
-    return UserOut(
+    return SearchUserOutput(
         fullname=source["fullname"],
         username=source["username"]
     )
@@ -253,7 +253,7 @@ async def search_users(querytext: str, pagenum: int, max_results: int, order_by:
         sort_list = []
         for f in order_by:
             field_name = f.lstrip("-")
-            if field_name not in UserOut.model_fields:
+            if field_name not in SearchUserOutput.model_fields:
                 return None
 
             order = "desc" if f.startswith("-") else "asc"
@@ -265,21 +265,21 @@ async def search_users(querytext: str, pagenum: int, max_results: int, order_by:
 
 
 async def add_user_to_index(user: User):
-    await es_client.index(index=USERS_INDEX, id=str(user.id), document=UserOut(
+    await es_client.index(index=USERS_INDEX, id=str(user.id), document=SearchUserOutput(
         fullname=f"{user.first_name} {user.last_name}".strip(),
         username=user.username
     ).model_dump())
 
 
 async def add_group_to_index(group: Group):
-    await es_client.index(index=GROUPS_INDEX, id=str(group.id), document=GroupOut(
+    await es_client.index(index=GROUPS_INDEX, id=str(group.id), document=SearchGroupOutput(
         name=group.name
     ).model_dump())
 
 
-def clean_group_out(hit: dict) -> GroupOut:
+def clean_group_out(hit: dict) -> SearchGroupOutput:
     source = hit["_source"]
-    return GroupOut(
+    return SearchGroupOutput(
         name=source["name"]
     )
 
@@ -293,7 +293,7 @@ async def search_groups(querytext: str, pagenum: int, max_results: int, order_by
         sort_list = []
         for f in order_by:
             field_name = f.lstrip("-")
-            if field_name not in GroupOut.model_fields:
+            if field_name not in SearchGroupOutput.model_fields:
                 return None
 
             order = "desc" if f.startswith("-") else "asc"
@@ -313,7 +313,7 @@ async def search_user_groups(querytext: str, pagenum: int, max_results: int, ord
         sort_list = []
         for f in order_by:
             field_name = f.lstrip("-")
-            if field_name not in UserOut.model_fields and field_name not in GroupOut.model_fields:
+            if field_name not in SearchUserOutput.model_fields and field_name not in SearchGroupOutput.model_fields:
                 return None
 
             order = "desc" if f.startswith("-") else "asc"
@@ -334,7 +334,7 @@ async def rebuild_user_index(db: DBSession) -> None:
         "settings": {"index": {"max_ngram_diff": 18}, "analysis": USER_MAPPINGS["settings"]["analysis"]},
         "mappings": USER_MAPPINGS["mappings"]})
     data = await get_all_users(db)
-    actions = [{'_index': USERS_INDEX, '_id': str(user.id), '_source': UserOut(
+    actions = [{'_index': USERS_INDEX, '_id': str(user.id), '_source': SearchUserOutput(
         fullname=f"{user.first_name} {user.last_name}".strip(),
         username=user.username
     ).model_dump()} for user in data]
@@ -349,7 +349,7 @@ async def rebuild_group_index(db: DBSession):
         "settings": {"index": {"max_ngram_diff": 18}, "analysis": GROUP_MAPPINGS["settings"]["analysis"]},
         "mappings": GROUP_MAPPINGS["mappings"]})
     data = await get_all_groups(db)
-    actions = [{'_index': GROUPS_INDEX, '_id': str(group.id), '_source': GroupOut(
+    actions = [{'_index': GROUPS_INDEX, '_id': str(group.id), '_source': SearchGroupOutput(
         name=group.name
     ).model_dump()} for group in data]
     await async_bulk(es_client, actions)

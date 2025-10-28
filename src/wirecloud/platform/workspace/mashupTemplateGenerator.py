@@ -163,7 +163,7 @@ async def process_widget_instance(db: DBSession, request: Optional[Request], iwi
         vendor=widget.vendor,
         name=widget.short_name,
         version=widget.version,
-        title=iwidget.name,
+        title=iwidget.title,
         layout=iwidget.layout,
         readonly=read_only_widgets,
         properties=properties,

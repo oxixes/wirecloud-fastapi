@@ -33,7 +33,7 @@ from src.wirecloud.commons.utils.template.schemas.macdschemas import MACDMashupW
 from src.wirecloud.commons.utils.wgt import WgtFile
 from src.wirecloud.platform.markets.utils import get_local_catalogue
 from src.wirecloud.platform.preferences.crud import update_workspace_preferences
-from src.wirecloud.platform.search import add_workspace_to_index, update_workspace_in_index
+from src.wirecloud.platform.search import add_workspace_to_index
 from src.wirecloud.platform.workspace.crud import get_workspace_list, create_empty_workspace, get_workspace_by_id, \
     create_workspace, get_workspace_by_username_and_name, is_a_workspace_with_that_name, change_workspace, \
     delete_workspace, change_tab, set_visible_tab

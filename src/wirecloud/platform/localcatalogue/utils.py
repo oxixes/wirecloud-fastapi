@@ -21,7 +21,6 @@ import re
 from typing import Optional
 
 import src.wirecloud.catalogue.utils as catalogue_utils
-from src.wirecloud.catalogue.search import add_resource_to_index
 from src.wirecloud.commons.auth.models import Group
 from src.wirecloud.database import DBSession, commit
 from src.wirecloud.commons.utils.wgt import WgtFile

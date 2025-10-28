@@ -21,7 +21,7 @@ from typing import Optional
 from fastapi import APIRouter, Request, Query, Path
 from fastapi.responses import Response
 
-from src.wirecloud.commons.auth.utils import UserDep
+from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
 from src.wirecloud.commons.search import get_search_engine, is_available_search_engine, get_rebuild_engine, \
     is_available_rebuild_engine, SearchResponse
 from src.wirecloud.commons.templates.tags import get_javascript_catalogue
@@ -66,9 +66,8 @@ def get_js_catalogue(themeactive: str, language: str):
             docs.get_search_resources_validation_error_response_description)
     }
 )
-@authentication_required()
 @produces(["application/json"])
-async def search_resources(user: UserDep, request: Request,
+async def search_resources(user: UserDepNoCSRF, request: Request,
                            namespace: str = Query(description=docs.get_search_resources_namespace_description),
                            q: Optional[str] = Query(default='', description=docs.get_search_resources_q_description),
                            pagenum: int = Query(default=1, description=docs.get_search_resources_pagenum_description),
@@ -87,7 +86,10 @@ async def search_resources(user: UserDep, request: Request,
     elif namespace == 'resource':
         res = await func(request, user, q, pagenum, maxresults, order_by=orderby)
     else:
-        res = await func(q, pagenum, maxresults, orderby)
+        if user:
+            res = await func(q, pagenum, maxresults, orderby)
+        else:
+            return build_error_response(request, 401, _('Authentication required'))
 
     if res is None:
         return build_error_response(request, 422, _('Invalid orderby value'))
