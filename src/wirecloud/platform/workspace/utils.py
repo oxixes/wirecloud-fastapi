@@ -338,7 +338,7 @@ async def get_widget_instance_data(db: DBSession, request: Request, iwidget: Wid
         title=iwidget.title,
         layout=iwidget.layout,
         widget=iwidget.widget_uri,
-        layout_config=[],
+        layoutConfig=[],
         read_only=iwidget.read_only,
         permissions=iwidget.permissions
     )
@@ -364,7 +364,7 @@ async def get_widget_instance_data(db: DBSession, request: Request, iwidget: Wid
             lessOrEqual=widget_position.lessOrEqual
         )
 
-        data_ret.layout_config.append(data_layout)
+        data_ret.layoutConfig.append(data_layout)
 
     if iwidget.resource is None:
         return data_ret

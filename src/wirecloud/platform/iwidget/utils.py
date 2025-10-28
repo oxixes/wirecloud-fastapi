@@ -178,24 +178,24 @@ def check_intervals(data: list[WidgetPositionsConfig]) -> None:
 
 def update_position(iwidget: WidgetInstance, key: str, data: Union[WidgetInstanceDataCreate, WidgetInstanceDataUpdate]) -> None:
     ids = set()
-    for layout_config in data.layout_config:
-        if layout_config.id in ids:
+    for layoutConfig in data.layoutConfig:
+        if layoutConfig.id in ids:
             raise ValueError('Duplicated id field')
-        ids.add(layout_config.id)
+        ids.add(layoutConfig.id)
 
     intervals = {}
     for conf in iwidget.positions.configurations:
         intervals[conf.id] = conf
 
-    for layout_config in data.layout_config:
-        if layout_config.action not in ('update', 'delete'):
-            raise ValueError(f'Invalid value for action field: {layout_config.action}')
-        if layout_config.action == 'delete':
-            del intervals[layout_config.id]
+    for layoutConfig in data.layoutConfig:
+        if layoutConfig.action not in ('update', 'delete'):
+            raise ValueError(f'Invalid value for action field: {layoutConfig.action}')
+        if layoutConfig.action == 'delete':
+            del intervals[layoutConfig.id]
         else:
-            if not layout_config.id in intervals:
-                intervals[layout_config.id] = WidgetPositionsConfig(
-                    id=layout_config.id,
+            if not layoutConfig.id in intervals:
+                intervals[layoutConfig.id] = WidgetPositionsConfig(
+                    id=layoutConfig.id,
                     moreOrEqual=0,
                     lessOrEqual=-1,
                 )
@@ -209,23 +209,23 @@ def update_position(iwidget: WidgetInstance, key: str, data: Union[WidgetInstanc
                     titlevisible=True,
                     fulldragboard=False
                 )
-                setattr(intervals[layout_config.id], key, wgt_config)
+                setattr(intervals[layoutConfig.id], key, wgt_config)
 
-            update_screen_size_value(intervals[layout_config.id], layout_config, 'moreOrEqual')
-            update_screen_size_value(intervals[layout_config.id], layout_config, 'lessOrEqual')
-            update_position_value(getattr(intervals[layout_config.id], key), layout_config, 'top')
-            update_position_value(getattr(intervals[layout_config.id], key), layout_config, 'left')
-            update_position_value(getattr(intervals[layout_config.id], key), layout_config, 'zIndex')
-            update_size_value(getattr(intervals[layout_config.id], key), layout_config, 'height')
-            update_size_value(getattr(intervals[layout_config.id], key), layout_config, 'width')
-            update_boolean_value(getattr(intervals[layout_config.id], key), layout_config, 'minimized')
-            update_boolean_value(getattr(intervals[layout_config.id], key), layout_config, 'titlevisible')
-            update_boolean_value(getattr(intervals[layout_config.id], key), layout_config, 'fulldragboard')
-            update_boolean_value(getattr(intervals[layout_config.id], key), layout_config, 'relwidth')
-            update_boolean_value(getattr(intervals[layout_config.id], key), layout_config, 'relheight')
-            update_boolean_value(getattr(intervals[layout_config.id], key), layout_config, 'relx')
-            update_boolean_value(getattr(intervals[layout_config.id], key), layout_config, 'rely')
-            update_anchor_value(getattr(intervals[layout_config.id], key), layout_config)
+            update_screen_size_value(intervals[layoutConfig.id], layoutConfig, 'moreOrEqual')
+            update_screen_size_value(intervals[layoutConfig.id], layoutConfig, 'lessOrEqual')
+            update_position_value(getattr(intervals[layoutConfig.id], key), layoutConfig, 'top')
+            update_position_value(getattr(intervals[layoutConfig.id], key), layoutConfig, 'left')
+            update_position_value(getattr(intervals[layoutConfig.id], key), layoutConfig, 'zIndex')
+            update_size_value(getattr(intervals[layoutConfig.id], key), layoutConfig, 'height')
+            update_size_value(getattr(intervals[layoutConfig.id], key), layoutConfig, 'width')
+            update_boolean_value(getattr(intervals[layoutConfig.id], key), layoutConfig, 'minimized')
+            update_boolean_value(getattr(intervals[layoutConfig.id], key), layoutConfig, 'titlevisible')
+            update_boolean_value(getattr(intervals[layoutConfig.id], key), layoutConfig, 'fulldragboard')
+            update_boolean_value(getattr(intervals[layoutConfig.id], key), layoutConfig, 'relwidth')
+            update_boolean_value(getattr(intervals[layoutConfig.id], key), layoutConfig, 'relheight')
+            update_boolean_value(getattr(intervals[layoutConfig.id], key), layoutConfig, 'relx')
+            update_boolean_value(getattr(intervals[layoutConfig.id], key), layoutConfig, 'rely')
+            update_anchor_value(getattr(intervals[layoutConfig.id], key), layoutConfig)
 
     new_positions = list(intervals.values())
     check_intervals(new_positions)
@@ -260,7 +260,7 @@ async def save_widget_instance(db: DBSession, workspace: Workspace, iwidget: Wid
         await set_initial_values(db, new_iwidget, initial_variable_values, iwidget_info, user)
 
     await update_title_value(db, new_iwidget, iwidget)
-    if len(iwidget.layout_config) > 0:
+    if len(iwidget.layoutConfig) > 0:
         update_position(new_iwidget, 'widget', iwidget)
     else:
         # Set default positions
@@ -312,7 +312,7 @@ async def update_widget_instance(db: DBSession, request: Request,  data: WidgetI
 
     update_permissions(iwidget, data)
 
-    if data.layout_config is not None:
+    if data.layoutConfig is not None:
         update_position(iwidget, 'widget', data)
 
     if data.tab is not None:

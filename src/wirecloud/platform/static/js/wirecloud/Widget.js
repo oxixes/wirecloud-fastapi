@@ -247,17 +247,17 @@
         this.loaded_scripts = [];
     };
 
-    // It is assumed that the layout_config cover every screen size from 0 to infinity without gaps or overlaps
+    // It is assumed that the layoutConfig cover every screen size from 0 to infinity without gaps or overlaps
     // (this is guaranteed by checks in the server side code)
-    const _getCurrentLayoutConfiguration = function _getCurrentLayoutConfiguration(layout_config, windowSize) {
+    const _getCurrentLayoutConfiguration = function _getCurrentLayoutConfiguration(layoutConfig, windowSize) {
         let currentLayoutConfiguration;
-        for (const i in layout_config) {
-            const isValid = (layout_config[i].moreOrEqual !== -1 && layout_config[i].lessOrEqual === -1 && layout_config[i].moreOrEqual <= windowSize) ||
-                (layout_config[i].moreOrEqual === -1 && layout_config[i].lessOrEqual !== -1 && layout_config[i].lessOrEqual >= windowSize) ||
-                (layout_config[i].moreOrEqual !== -1 && layout_config[i].lessOrEqual !== -1 && layout_config[i].moreOrEqual <= windowSize && layout_config[i].lessOrEqual >= windowSize);
+        for (const i in layoutConfig) {
+            const isValid = (layoutConfig[i].moreOrEqual !== -1 && layoutConfig[i].lessOrEqual === -1 && layoutConfig[i].moreOrEqual <= windowSize) ||
+                (layoutConfig[i].moreOrEqual === -1 && layoutConfig[i].lessOrEqual !== -1 && layoutConfig[i].lessOrEqual >= windowSize) ||
+                (layoutConfig[i].moreOrEqual !== -1 && layoutConfig[i].lessOrEqual !== -1 && layoutConfig[i].moreOrEqual <= windowSize && layoutConfig[i].lessOrEqual >= windowSize);
 
             if (isValid) {
-                currentLayoutConfiguration = layout_config[i];
+                currentLayoutConfiguration = layoutConfig[i];
                 break;
             }
         }
@@ -441,12 +441,11 @@
             if (data == null) {
                 throw new TypeError("invalid data parameter");
             }
-            console.log("Data before", JSON.stringify(data, null, 2));
             data = utils.merge({
                 title: meta.title,
                 preferences: {},
                 properties: {},
-                layout_config: [{
+                layoutConfig: [{
                     id: 0,
                     moreOrEqual: 0,
                     lessOrEqual: -1,
@@ -465,8 +464,6 @@
                     titlevisible: true
                 }]
             }, data);
-
-            console.log("Data after", JSON.stringify(data, null, 2));
 
             this.pending_events = [];
             this.loaded_scripts = [];
@@ -506,7 +503,7 @@
                 permissions.viewer.upgrade = false;
             }
 
-            const currentLayoutConfiguration = _getCurrentLayoutConfiguration(data.layout_config, window.innerWidth);
+            const currentLayoutConfiguration = _getCurrentLayoutConfiguration(data.layoutConfig, window.innerWidth);
             privates.set(this, {
                 permissions: permissions,
                 position: {
@@ -524,7 +521,7 @@
                     width: currentLayoutConfiguration.width,
                     height: currentLayoutConfiguration.height
                 },
-                layout_config: data.layout_config,
+                layoutConfig: data.layoutConfig,
                 currentLayoutConfiguration: currentLayoutConfiguration,
                 status: STATUS.CREATED,
                 tab: tab,
@@ -628,9 +625,9 @@
                  * @memberOf Wirecloud.Widget#
                  * @type {Object}
                  */
-                layout_config: {
+                layoutConfig: {
                     get: function () {
-                        return privates.get(this).layout_config;
+                        return privates.get(this).layoutConfig;
                     }
                 }
             });
@@ -1049,7 +1046,7 @@
         }
 
         updateWindowSize(windowSize) {
-            const currentLayoutConfiguration = _getCurrentLayoutConfiguration(privates.get(this).layout_config, windowSize);
+            const currentLayoutConfiguration = _getCurrentLayoutConfiguration(privates.get(this).layoutConfig, windowSize);
             if (currentLayoutConfiguration === privates.get(this).currentLayoutConfiguration) {
                 return false;
             }
@@ -1080,7 +1077,7 @@
         }
 
         getLayoutConfigBySize(size) {
-            return _getCurrentLayoutConfiguration(privates.get(this).layout_config, size);
+            return _getCurrentLayoutConfiguration(privates.get(this).layoutConfig, size);
         }
 
         setPreferences(newValues) {
@@ -1176,7 +1173,7 @@
                 });
 
                 const payload = {
-                    layout_config: [{
+                    layoutConfig: [{
                         id: privates.get(this).currentLayoutConfiguration.id,
                         titlevisible: visibility,
                         action: 'update'

@@ -105,7 +105,7 @@
     };
 
     const getUpdatedLayoutConfigurations = function getUpdatedLayoutConfigurations(newLayout) {
-        const layoutConfigurations = this.model.layout_config;
+        const layoutConfigurations = this.model.layoutConfig;
 
         const priv = privates.get(this);
         const tabChange = priv.tab !== newLayout.dragboard.tab;
@@ -861,7 +861,7 @@
             const fulldragboard = this.layout === this.tab.dragboard.fulldragboardLayout;
 
             // We keep all or only the current layout configuration and then we clone it to add the action
-            const configs = this.model.layout_config.reduce((result, layoutConfig) => {
+            const configs = this.model.layoutConfig.reduce((result, layoutConfig) => {
                 if (allLayoutConfigurations || layoutConfig.id === this.model.currentLayoutConfig.id) {
                     const config = StyledElements.Utils.clone(layoutConfig, true);
                     config.action = action;
@@ -875,7 +875,7 @@
                 id: this.id,
                 tab: this.tab.id,
                 layout: this.tab.dragboard.layouts.indexOf(fulldragboard ? this.previousLayout : this.layout),
-                layout_config: configs
+                layoutConfig: configs
             };
         }
 
