@@ -127,7 +127,6 @@ async def get_widget_file(db: DBDep, request: Request, vendor: Vendor = Path(pat
     # DEPRECATED: This functionality is deprecated and will be removed in a future version
     # Use /api/widget/{vendor}/{name}/{version}/html endpoint instead
     if resource.resource_type() == 'widget' and entrypoint:
-        print("WARNING: Using deprecated entrypoint parameter in get_widget_file")
         logging.warning(
             "Using entrypoint parameter in get_widget_file is deprecated. "
             "Use /api/widget/{vendor}/{name}/{version}/html endpoint instead."
