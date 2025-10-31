@@ -22,6 +22,7 @@ import socket
 from email.utils import formatdate
 from inspect import Signature
 import re
+import mimetypes
 
 import orjson as json
 import inspect
@@ -463,7 +464,10 @@ def build_downloadfile_response(request: Request, file_path: str, base_dir: str)
         return build_not_found_response(request)
 
     if not getattr(settings, 'USE_XSENDFILE', False):
-        return FileResponse(fullpath, media_type='application/octet-stream')
+        mime_type, _ = mimetypes.guess_type(fullpath)
+        if mime_type is None:
+            mime_type = 'application/octet-stream'
+        return FileResponse(fullpath, media_type='mime_type')
     else:
         return Response(headers={'X-Sendfile': fullpath})
 

@@ -23,7 +23,7 @@ widget_instance_data = [
         "title": "string",
         "layout": 0,
         "widget": "vendor/name/version",
-        "layout_config": [
+        "layoutConfig": [
             {
                 "id": 0,
                 "top": 0,
@@ -97,7 +97,7 @@ widget_instance_data = [
         "title": "string",
         "layout": 0,
         "widget": "vendor/name/version",
-        "layout_config": [
+        "layoutConfig": [
             {
                 "id": 0,
                 "top": 0,
@@ -194,7 +194,7 @@ create_widget_instance_collection_widget_instance_example = {
     "title": "widget instance",
     "layout": 0,
     "widget": "vendor/name/version",
-    "layout_config": [
+    "layoutConfig": [
         {
             "action": "update",
             "id": 0,
@@ -239,7 +239,7 @@ update_widget_instance_collection_widget_instance_example = [{
     "id": "6834371a9c236eb656c30789-0-0",
     "tab": "6834371a9c236eb656c30789-0",
     "layout": 0,
-    "layout_config": [
+    "layoutConfig": [
         {
             "action": "update",
             "id": 0,
@@ -292,7 +292,7 @@ update_widget_instance_entry_widget_instance_description = "Widget instance data
 update_widget_instance_entry_widget_instance_example = {
     "tab": "6834371a9c236eb656c30789-0",
     "layout": 0,
-    "layout_config": [
+    "layoutConfig": [
         {
             "action": "update",
             "id": 0,

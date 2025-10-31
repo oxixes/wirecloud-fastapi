@@ -34,7 +34,7 @@ from src.wirecloud.commons.utils.http import http_date
 from src.wirecloud.platform.workspace.schemas import WorkspaceGlobalData
 
 
-def patch_cache_headers(response: Response, timestamp: float=None, cache_timeout: int=None, etag=None) -> Response:
+def patch_cache_headers(response: Response, timestamp: int=None, cache_timeout: int=None, etag=None) -> Response:
     current_timestamp = int(time.time())
     if timestamp is None:
         timestamp = current_timestamp

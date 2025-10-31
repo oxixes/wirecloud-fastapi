@@ -401,3 +401,12 @@ async def get_group_by_id(db: DBSession, group_id: Id) -> Optional[Group]:
 
     return GroupModel.model_validate(group)
 
+
+async def get_all_groups(db: DBSession) -> list[Group]:
+    groups = await db.client.groups.find().to_list()
+    return [GroupModel.model_validate(group) for group in groups]
+
+
+async def get_all_users(db: DBSession):
+    users = await db.client.users.find().to_list()
+    return [UserModel.model_validate(user) for user in users]

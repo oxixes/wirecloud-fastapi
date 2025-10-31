@@ -160,8 +160,8 @@
                 }
 
                 // Add action to all layout configurations
-                for (let i = 0; i < options.layoutConfigurations.length; i++) {
-                    options.layoutConfigurations[i].action = 'update';
+                for (let i = 0; i < options.layoutConfig.length; i++) {
+                    options.layoutConfig[i].action = 'update';
                 }
 
                 var content = utils.merge(options, {

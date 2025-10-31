@@ -82,6 +82,47 @@ create_resource_entry_auth_required_response_description = "Authentication is re
 create_resource_entry_permission_denied_response_description = "The user does not have permission to create the catalogue resource"
 create_resource_entry_conflict_response_description = "The catalogue resource already exists"
 
+# GET /resources
+get_resources_entries_summary = "Get catalogue resources"
+get_resources_entries_description = "Get a list of catalogue resources from the provided query (leave empty to get all)."
+get_resources_entries_response_description = "The list of catalogue resources"
+get_resources_entries_bad_request_response_description = "Missing or invalid data was provided"
+get_resources_entries_validation_error_response_description = "The request data was invalid"
+get_resources_entries_q_description = "The search query to filter the catalogue resources"
+get_resources_entries_pagenum_description = "The page number to retrieve (starting from 1)"
+get_resources_entries_maxresults_description = "The maximum number of results to return per page"
+get_resources_entries_orderby_description = "Comma-separated list of fields to order the results by. Prefix with '-' for descending order."
+get_resources_entries_scope_description = "The scope of the search: mashup, widget and operator"
+get_resources_entries_response_example = {
+    "offset": 0,
+    "pagecount": 1,
+    "pagelen": 1,
+    "pagenum": 1,
+    "results": [
+        {
+            "id": "6889005fa185ce37a5faaa5a",
+            "vendor_name": "api/workspace-1",
+            "vendor": "api",
+            "name": "workspace-1",
+            "version": "1.0",
+            "description_url": "api_workspace-1_1.0.wgt",
+            "type": "mashup",
+            "creation_date": "2025-07-29T17:09:51.480000",
+            "public": False,
+            "title": "prueba",
+            "description": "Temporal mashup for the workspace copy operation",
+            "image": "http://localhost:8000/catalogue/media/api/workspace-1/1.0/images/catalogue.png",
+            "smartphoneimage": "http://localhost:8000/catalogue/media/api/workspace-1/1.0/images/smartphone.jpeg",
+            "input_friendcodes": [],
+            "output_friendcodes": [],
+            "others": [],
+            "uri": "api/workspace-1/1.0"
+        }
+    ],
+    "total": 1
+}
+
+
 # GET /resource/{vendor}/{name}
 get_resource_entry_group_summary = "Get catalogue resource version descriptions"
 get_resource_entry_group_description = "Get the version descriptions of a catalogue resource."

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from typing import Optional
 
 # Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
 
@@ -19,6 +18,7 @@ from typing import Optional
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from fastapi import Request
+from typing import Optional
 
 from src.wirecloud.catalogue.crud import get_catalogue_resource, get_catalogue_resource_by_id
 from src.wirecloud.commons.auth.crud import get_username_by_id, get_user_with_all_info
@@ -163,7 +163,7 @@ async def process_widget_instance(db: DBSession, request: Optional[Request], iwi
         vendor=widget.vendor,
         name=widget.short_name,
         version=widget.version,
-        title=iwidget.name,
+        title=iwidget.title,
         layout=iwidget.layout,
         readonly=read_only_widgets,
         properties=properties,

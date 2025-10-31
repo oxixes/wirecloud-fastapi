@@ -23,7 +23,7 @@ from typing import Union
 from src.settings import cache
 from src.wirecloud.commons.auth.crud import get_user_preferences, set_user_preferences
 from src.wirecloud.commons.auth.schemas import User
-from src.wirecloud.database import DBSession
+from src.wirecloud.database import DBSession, commit
 from src.wirecloud.platform.preferences.schemas import PlatformPreferenceCreate, WorkspacePreference, TabPreference, \
     WorkspacePreferenceWithName
 from src.wirecloud.commons.auth.models import DBPlatformPreference as PlatformPreferenceModel
@@ -63,7 +63,7 @@ async def update_preferences(db: DBSession, user: User, preferences: PlatformPre
 
     await set_user_preferences(db, user.id, new_preferences)
 
-    await db.commit_transaction()
+    await commit(db)
 
 
 async def update_workspace_preferences(db: DBSession, user: User, workspace: Workspace,
@@ -115,7 +115,7 @@ async def update_workspace_preferences(db: DBSession, user: User, workspace: Wor
         cache_key = make_workspace_preferences_cache_key(workspace)
         await cache.delete(cache_key)
         await change_workspace(db, workspace, user)
-        await db.commit_transaction()
+        await commit(db)
 
 
 async def update_tab_preferences(db: DBSession, user: User, workspace: Workspace, tab: Tab,
@@ -168,4 +168,4 @@ async def update_tab_preferences(db: DBSession, user: User, workspace: Workspace
         cache_key = make_tab_preferences_cache_key(tab)
         await cache.delete(cache_key)
         await change_workspace(db, workspace, user)
-        await db.commit_transaction()
+        await commit(db)

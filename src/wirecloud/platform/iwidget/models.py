@@ -106,7 +106,7 @@ class WidgetInstance(BaseModel):
     id: str
     resource: Id = None
     widget_uri: str = ''
-    name: str = ''
+    title: str = ''
     layout: int = 0
     positions: WidgetPositions = {}
     read_only: bool = False

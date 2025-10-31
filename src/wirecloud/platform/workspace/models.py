@@ -113,7 +113,11 @@ class Workspace(BaseModel, populate_by_name=True):
     preferences: list[DBWorkspacePreference] = []
 
     def is_editable_by(self, user: User) -> bool:
-        return user.is_superuser or self.creator == user.id
+        return (
+            user.is_superuser
+            or self.creator == user.id
+            or any(ws_user.id == user.id for ws_user in self.users)
+        )
         # TODO check more permissions
 
     def is_shared(self) -> bool:

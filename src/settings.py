@@ -42,6 +42,14 @@ DATABASE = {
     'PASSWORD': ''
 }
 
+ELASTICSEARCH = {
+    'HOST': 'localhost',
+    'PORT': 9200,
+    'USER': 'elastic',
+    'PASSWORD': 'prueba123',
+    'SECURE': False
+}
+
 LANGUAGES = (
     ('es', 'Spanish'),
     ('en', 'English'),

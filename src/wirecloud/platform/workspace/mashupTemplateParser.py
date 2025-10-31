@@ -221,7 +221,7 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
                 icon_left=0,
                 icon_top=0,
                 layout=resource.layout,
-                layout_config=[]
+                layoutConfig=[]
             )
 
             for configuration in resource.screenSizes:
@@ -243,7 +243,7 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
                     action='update'
                 )
 
-                iwidget_data.layout_config.append(iwidget_layout_config)
+                iwidget_data.layoutConfig.append(iwidget_layout_config)
 
             iwidget = await save_widget_instance(db, workspace, iwidget_data, await get_user_with_all_info(db, user),
                                                  tab, commit=False)
