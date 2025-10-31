@@ -55,7 +55,7 @@ JWT_KEY = '15=7f)g=)&spodi3bg8%&4fqt%f3rpg%b$-aer5*#a*(rqm79e'
 
 SESSION_AGE = 60 * 60 * 24 * 14  # 2 weeks
 
-OID_CONNECT_ENABLED = False
+OID_CONNECT_ENABLED = True
 OID_CONNECT_DISCOVERY_URL = 'http://localhost:8080/realms/wirecloud/.well-known/openid-configuration'
 OID_CONNECT_CLIENT_ID = 'wirecloud'
 OID_CONNECT_CLIENT_SECRET = 'kfrwmAW8zuL6VLB6AJx0finGHTpxhsOw'

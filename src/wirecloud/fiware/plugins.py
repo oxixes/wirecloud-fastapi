@@ -89,7 +89,7 @@ class FiWareWirecloudPlugin(WirecloudPlugin):
 
     AUTH_TOKEN = None
 
-    def __init__(self, app: FastAPI):
+    def __init__(self, app: Optional[FastAPI]):
         super().__init__(app)
 
     def get_market_classes(self):
@@ -308,7 +308,7 @@ class FiWareWirecloudPlugin(WirecloudPlugin):
         return {"fiware": backchannel_logout}
 
     def get_config_validators(self) -> tuple[Callable, ...]:
-        async def validate_fiware_settings(settings) -> None:
+        async def validate_fiware_settings(settings, _offline: bool) -> None:
             global IDM_SUPPORT_ENABLED
 
             if getattr(settings, "OID_CONNECT_PLUGIN", "") != "fiware":

@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
+from typing import Optional
 from fastapi import FastAPI
 
 from src.wirecloud.platform.plugins import WirecloudPlugin
@@ -27,7 +28,10 @@ from src.wirecloud.catalogue.routes import router as catalogue_router
 class WirecloudCataloguePlugin(WirecloudPlugin):
     urls = catalogue_patterns
 
-    def __init__(self, app: FastAPI):
+    def __init__(self, app: Optional[FastAPI]):
         super().__init__(app)
+
+        if app is None:
+            return
 
         app.include_router(catalogue_router, prefix="/catalogue", tags=["Catalogue"])

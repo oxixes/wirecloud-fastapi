@@ -54,7 +54,7 @@ class WirecloudPlugin:
     features: dict[str, str] = {}
     urls: dict[str, URLTemplate] = ()
 
-    def __init__(self, app: FastAPI):
+    def __init__(self, app: Optional[FastAPI]):
         self.app = app
 
     def get_market_classes(self) -> dict[str, type]:

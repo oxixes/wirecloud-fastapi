@@ -22,7 +22,7 @@ from src import settings
 from src.wirecloud.platform.plugins import get_config_validators
 
 
-async def validate_settings():
+async def validate_settings(offline: bool = False):
     if getattr(settings, "OID_CONNECT_ENABLED", False):
         if not getattr(settings, "OID_CONNECT_CLIENT_ID", None):
             raise ValueError("OID_CONNECT_CLIENT_ID is required when OID_CONNECT_ENABLED is True")
@@ -31,6 +31,6 @@ async def validate_settings():
     for validator in validators:
         # Check if its synchronous
         if hasattr(validator, "__call__") and not asyncio.iscoroutinefunction(validator):
-            validator(settings)
+            validator(settings, offline)
         elif asyncio.iscoroutinefunction(validator):
-            await validator(settings)
+            await validator(settings, offline)

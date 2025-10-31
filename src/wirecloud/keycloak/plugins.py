@@ -33,8 +33,11 @@ from src.wirecloud.keycloak.routes import keycloak_router
 IDM_SUPPORT_ENABLED = False
 
 class WirecloudKeycloakPlugin(WirecloudPlugin):
-    def __init__(self, app: FastAPI):
+    def __init__(self, app: Optional[FastAPI]):
         super().__init__(app)
+
+        if app is None:
+            return
 
         app.include_router(keycloak_router, prefix="", tags=["Keycloak"])
 
@@ -216,7 +219,7 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
 
     # TODO Better logging
     def get_config_validators(self) -> tuple[Callable, ...]:
-        async def validate_oidc_settings(settings) -> None:
+        async def validate_oidc_settings(settings, offline: bool) -> None:
             global IDM_SUPPORT_ENABLED
 
             if getattr(settings, "OID_CONNECT_PLUGIN", "") != "keycloak":
@@ -225,7 +228,7 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
             if getattr(settings, "OID_CONNECT_ENABLED", False):
                 IDM_SUPPORT_ENABLED = True
 
-                if getattr(settings, "OID_CONNECT_DISCOVERY_URL", None):
+                if getattr(settings, "OID_CONNECT_DISCOVERY_URL", None) and not offline:
                     session = aiohttp.ClientSession()
                     try:
                         res = await session.get(
@@ -346,7 +349,7 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
                         OID_DATA["check_session_iframe"] = data["check_session_iframe"]
 
                     setattr(settings, "OID_CONNECT_DATA", OID_DATA)
-                else:
+                elif not offline:
                     data = getattr(settings, "OID_CONNECT_DATA", None)
                     if not data:
                         raise ValueError("OID_CONNECT_DATA must be set if OID_CONNECT_DISCOVERY_URL is not set")

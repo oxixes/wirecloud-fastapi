@@ -20,7 +20,24 @@
 import * as path from 'path';
 import * as fs from 'fs';
 
-import settings from '../../settings_js.json';
+// Load webpack settings JSON from an explicit path. We avoid importing a file from the project
+// root to keep the repo root clean. The generator script writes to the system temp dir by default
+// or to the path set in the WEBPACK_SETTINGS_JSON env var.
+const defaultTempFile = path.join((process.env.TEMP || process.env.TMPDIR || '/tmp'), 'wirecloud_settings_js.json');
+const settingsPath = process.env.WEBPACK_SETTINGS_JSON || process.env.npm_config_webpack_settings_json || defaultTempFile;
+
+let settings: any = { installedApps: [] };
+if (fs.existsSync(settingsPath)) {
+    try {
+        const raw = fs.readFileSync(settingsPath, 'utf-8');
+        settings = JSON.parse(raw);
+        console.log('Loaded settings JSON from', settingsPath);
+    } catch (err) {
+        console.warn('Could not parse settings JSON at', settingsPath, err);
+    }
+} else {
+    console.warn('Settings JSON not found at', settingsPath, '- expected generated file with installedApps.');
+}
 
 const VIEWS: { [key: string]: string } = {
     'classic': 'platform',
@@ -64,16 +81,41 @@ fs.readdirSync(themePath).forEach((theme) => {
 });
 
 // Search for plugin directories in the wirecloud directory. A plugin is valid if it contains a plugin.js file.
-settings.installedApps.forEach((plugin, i) => {
-    const pluginDir = path.resolve(pluginPath, plugin);
+// `settings.installedApps` can be either a list of strings (legacy) or a list of objects {name,module,path}.
+const installedApps = Array.isArray(settings.installedApps) ? settings.installedApps : [];
+
+installedApps.forEach((entry: any, i: number) => {
+    let pluginName: string;
+    let pluginDir: string | null = null;
+
+    if (typeof entry === 'string') {
+        pluginName = entry;
+    } else if (entry && typeof entry === 'object') {
+        pluginName = entry.name || entry.module || String(i);
+        // If generator resolved a filesystem path, use it.
+        if (entry.path) {
+            pluginDir = entry.path;
+        }
+    } else {
+        pluginName = String(i);
+    }
+
+    const pluginKey = `${String(i).padStart(5, '0')}_${pluginName}`;
+
+    // If we don't have an explicit path, fall back to searching inside the repo's wirecloud folder
+    if (!pluginDir) {
+        pluginDir = path.resolve(pluginPath, pluginName);
+    }
+
     const pluginFile = path.resolve(pluginDir, 'plugin.ts');
 
-    const pluginKey = `${String(i).padStart(5, '0')}_${plugin}`;
-
     if (fs.existsSync(pluginFile)) {
-        // Import the plugin file
-        plugins[pluginKey] = require(pluginFile).default;
-        plugins[pluginKey].path = pluginDir;
+        try {
+            plugins[pluginKey] = require(pluginFile).default;
+            plugins[pluginKey].path = pluginDir;
+        } catch (err) {
+            console.warn('Error requiring plugin file', pluginFile, err);
+        }
     }
 });
 

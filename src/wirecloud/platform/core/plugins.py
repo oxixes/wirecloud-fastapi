@@ -96,8 +96,11 @@ class WirecloudCorePlugin(WirecloudPlugin):
 
     urls = patterns
 
-    def __init__(self, app: FastAPI):
+    def __init__(self, app: Optional[FastAPI]):
         super().__init__(app)
+
+        if app is None:
+            return
 
         app.include_router(context_router, prefix="/api/context", tags=["Context"])
         app.include_router(localcatalogue_resources_router, prefix="/api/resources", tags=["Local Catalogue"])

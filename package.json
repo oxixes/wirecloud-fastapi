@@ -2,6 +2,9 @@
     "name": "wirecloud",
     "version": "2.0.0",
     "scripts": {
+        "prebuild": "node -e \"const {execSync}=require('child_process'); try{ execSync('python3 src/generate_webpack_settings.py',{stdio:'inherit'}); }catch(e){ execSync('python src/generate_webpack_settings.py',{stdio:'inherit'}); }\"",
+        "prebuild:css": "npm run prebuild",
+        "prebuild:js": "npm run prebuild",
         "build:css": "ts-node -r tsconfig-paths/register --project src/wirecloud/webpack/webpack-tsconfig.json ./node_modules/webpack/bin/webpack --config src/wirecloud/webpack/webpack.sass.ts",
         "build:js": "ts-node -r tsconfig-paths/register --project src/wirecloud/webpack/webpack-tsconfig.json ./node_modules/webpack/bin/webpack --config src/wirecloud/webpack/webpack.js.ts --progress",
         "build": "ts-node -r tsconfig-paths/register --project src/wirecloud/webpack/webpack-tsconfig.json ./node_modules/webpack/bin/webpack --config src/wirecloud/webpack/webpack.all.ts --progress"

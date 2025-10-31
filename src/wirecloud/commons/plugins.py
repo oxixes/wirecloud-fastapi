@@ -25,12 +25,15 @@ from src.wirecloud.commons.auth.schemas import UserLogin
 from src.wirecloud.commons.routes import router as commons_router
 
 from fastapi import FastAPI
-from typing import Any
+from typing import Any, Optional
 
 
 class WirecloudCommonsPlugin(WirecloudPlugin):
-    def __init__(self, app: FastAPI):
+    def __init__(self, app: Optional[FastAPI]):
         super().__init__(app)
+
+        if app is None:
+            return
 
         app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
         app.include_router(auth_base_router, prefix="", tags=["Auth"])
