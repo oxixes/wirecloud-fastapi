@@ -18,6 +18,7 @@
 #  along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 import os
 from typing import Optional
+import logging
 
 from fastapi import APIRouter, Request, Path, Response, Query
 from fastapi.responses import HTMLResponse
@@ -102,13 +103,16 @@ async def get_widget_file(db: DBDep, request: Request, vendor: Vendor = Path(pat
                           version: Version = Path(
                               pattern=r"^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)(?:(?:a|b|rc)[1-9]\d*)?(-dev.*)?$",
                               description=docs.get_widget_file_version_description),
+                            entrypoint: bool = Query(default=False, description=docs.get_widget_file_entrypoint_description),
+                          mode: str = Query(default='classic', description=docs.get_widget_file_mode_description),
+                          theme: Optional[str] = Query(default=None, description=docs.get_widget_file_theme_description),
                           file_path: str = Path(description=docs.get_widget_file_path_description)):
 
     if ".." in file_path:
         return build_error_response(request, 404, _("Page not found"))
     resource = await get_catalogue_resource_with_xhtml(db, vendor, name, version)
-    if resource.resource_type() not in ['widget', 'operator']:
-        raise NotFound()
+    if resource is None or resource.resource_type() not in ['widget', 'operator']:
+        return build_error_response(request, 404, _("Resource not found"))
     # For now, all widgets and operators are freely accessible/distributable
     # if not resource.is_available_for(request.user):
     #     return build_error_response(request, 403, "Forbidden")
@@ -119,6 +123,15 @@ async def get_widget_file(db: DBDep, request: Request, vendor: Vendor = Path(pat
         response = Response(status_code=304)
         patch_cache_headers(response, creation_date)
         return response
+
+    # DEPRECATED: This functionality is deprecated and will be removed in a future version
+    # Use /api/widget/{vendor}/{name}/{version}/html endpoint instead
+    if resource.resource_type() == 'widget' and entrypoint:
+        logging.warning(
+            "Using entrypoint parameter in get_widget_file is deprecated. "
+            "Use /api/widget/{vendor}/{name}/{version}/html endpoint instead."
+        )
+        return await process_widget_code(db, request, resource, mode, theme)
 
     if file_path.endswith(".wgt"):
         from src.wirecloud.catalogue.utils import wgt_deployer as wgt_deployer_catalogue

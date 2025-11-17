@@ -33,7 +33,7 @@ class WidgetInstanceDataCreate(BaseModel):
     title: str
     layout: int = 0
     widget: str
-    layout_config: list[LayoutConfig] = []
+    layoutConfig: list[LayoutConfig] = []
     icon_left: int = 0
     icon_top: int = 0
     read_only: bool = False
@@ -61,7 +61,7 @@ class WidgetInstanceDataUpdate(BaseModel):
     id: Optional[str] = None
     tab: Optional[str] = None
     layout: Optional[int] = None
-    layout_config: Optional[list[LayoutConfig]] = None
+    layoutConfig: Optional[list[LayoutConfig]] = None
     title: Optional[str] = None
     widget: Optional[str] = None
     move: Optional[bool] = None

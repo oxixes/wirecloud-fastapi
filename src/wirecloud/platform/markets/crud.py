@@ -21,7 +21,7 @@ from typing import Optional
 
 from bson import ObjectId
 
-from src.wirecloud.database import DBSession
+from src.wirecloud.database import DBSession, commit
 from src.wirecloud.commons.auth.schemas import User
 from src.wirecloud.commons.auth.models import DBUser as UserModel
 from src.wirecloud.platform.markets.models import DBMarket as MarketModel
@@ -78,7 +78,7 @@ async def delete_market_by_name(db: DBSession, user: User, name: str) -> bool:
     query = {"name": name, "user_id": user.id}
     result = await db.client.markets.delete_one(query)
 
-    await db.commit_transaction()
+    await commit(db)
 
     if result.deleted_count == 0:
         return False

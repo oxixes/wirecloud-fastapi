@@ -27,7 +27,7 @@ from src.wirecloud.commons.auth.crud import get_user_preferences, get_group_by_n
 from src.wirecloud.commons.auth.models import DBPlatformPreference as PlatformPreferenceModel
 from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
 from src.wirecloud.commons.utils.http import build_error_response, consumes, authentication_required
-from src.wirecloud.database import DBDep, Id
+from src.wirecloud.database import DBDep, Id, commit
 from src.wirecloud.platform.preferences.crud import update_preferences, \
     update_workspace_preferences, update_tab_preferences
 from src.wirecloud.platform.preferences.schemas import PlatformPreferenceCreate, WorkspacePreference, \
@@ -98,7 +98,7 @@ async def create_platform_preferences(db: DBDep, request: Request, user: UserDep
                                           description=docs.create_platform_preference_collection_platform_preference_create_description,
                                           example=docs.create_platform_preference_collection_platform_preference_create_example)):
     await update_preferences(db, user, preferences)
-    await db.commit_transaction()
+    await commit(db)
 
 
 @preferences_router.get(
@@ -220,10 +220,10 @@ async def create_workspace_preferences(db: DBDep, request: Request, user: UserDe
         if save_public:
             prefs = {'public': str(workspace.public).strip().lower()}
             await update_workspace_preferences(db, user, workspace, prefs, invalidate_cache=False)
-        await db.commit_transaction()
+        await commit(db)
 
     await update_workspace_preferences(db, user, workspace, preferences)
-    await db.commit_transaction()
+    await commit(db)
 
 
 @preferences_router.get(
@@ -307,4 +307,4 @@ async def create_tab_preferences(db: DBDep, request: Request, user: UserDep, wor
         return build_error_response(request, 403, _("You are not allowed to read this workspace"))
 
     await update_tab_preferences(db, user, workspace, tab, preferences)
-    await db.commit_transaction()
+    await commit(db)

@@ -247,17 +247,17 @@
         this.loaded_scripts = [];
     };
 
-    // It is assumed that the layoutConfigurations cover every screen size from 0 to infinity without gaps or overlaps
+    // It is assumed that the layoutConfig cover every screen size from 0 to infinity without gaps or overlaps
     // (this is guaranteed by checks in the server side code)
-    const _getCurrentLayoutConfiguration = function _getCurrentLayoutConfiguration(layoutConfigurations, windowSize) {
+    const _getCurrentLayoutConfiguration = function _getCurrentLayoutConfiguration(layoutConfig, windowSize) {
         let currentLayoutConfiguration;
-        for (const i in layoutConfigurations) {
-            const isValid = (layoutConfigurations[i].moreOrEqual !== -1 && layoutConfigurations[i].lessOrEqual === -1 && layoutConfigurations[i].moreOrEqual <= windowSize) ||
-                (layoutConfigurations[i].moreOrEqual === -1 && layoutConfigurations[i].lessOrEqual !== -1 && layoutConfigurations[i].lessOrEqual >= windowSize) ||
-                (layoutConfigurations[i].moreOrEqual !== -1 && layoutConfigurations[i].lessOrEqual !== -1 && layoutConfigurations[i].moreOrEqual <= windowSize && layoutConfigurations[i].lessOrEqual >= windowSize);
+        for (const i in layoutConfig) {
+            const isValid = (layoutConfig[i].moreOrEqual !== -1 && layoutConfig[i].lessOrEqual === -1 && layoutConfig[i].moreOrEqual <= windowSize) ||
+                (layoutConfig[i].moreOrEqual === -1 && layoutConfig[i].lessOrEqual !== -1 && layoutConfig[i].lessOrEqual >= windowSize) ||
+                (layoutConfig[i].moreOrEqual !== -1 && layoutConfig[i].lessOrEqual !== -1 && layoutConfig[i].moreOrEqual <= windowSize && layoutConfig[i].lessOrEqual >= windowSize);
 
             if (isValid) {
-                currentLayoutConfiguration = layoutConfigurations[i];
+                currentLayoutConfiguration = layoutConfig[i];
                 break;
             }
         }
@@ -441,12 +441,11 @@
             if (data == null) {
                 throw new TypeError("invalid data parameter");
             }
-
             data = utils.merge({
                 title: meta.title,
                 preferences: {},
                 properties: {},
-                layoutConfigurations: [{
+                layoutConfig: [{
                     id: 0,
                     moreOrEqual: 0,
                     lessOrEqual: -1,
@@ -504,7 +503,7 @@
                 permissions.viewer.upgrade = false;
             }
 
-            const currentLayoutConfiguration = _getCurrentLayoutConfiguration(data.layoutConfigurations, window.innerWidth);
+            const currentLayoutConfiguration = _getCurrentLayoutConfiguration(data.layoutConfig, window.innerWidth);
             privates.set(this, {
                 permissions: permissions,
                 position: {
@@ -522,7 +521,7 @@
                     width: currentLayoutConfiguration.width,
                     height: currentLayoutConfiguration.height
                 },
-                layoutConfigurations: data.layoutConfigurations,
+                layoutConfig: data.layoutConfig,
                 currentLayoutConfiguration: currentLayoutConfiguration,
                 status: STATUS.CREATED,
                 tab: tab,
@@ -626,9 +625,9 @@
                  * @memberOf Wirecloud.Widget#
                  * @type {Object}
                  */
-                layoutConfigurations: {
+                layoutConfig: {
                     get: function () {
-                        return privates.get(this).layoutConfigurations;
+                        return privates.get(this).layoutConfig;
                     }
                 }
             });
@@ -1047,7 +1046,7 @@
         }
 
         updateWindowSize(windowSize) {
-            const currentLayoutConfiguration = _getCurrentLayoutConfiguration(privates.get(this).layoutConfigurations, windowSize);
+            const currentLayoutConfiguration = _getCurrentLayoutConfiguration(privates.get(this).layoutConfig, windowSize);
             if (currentLayoutConfiguration === privates.get(this).currentLayoutConfiguration) {
                 return false;
             }
@@ -1078,7 +1077,7 @@
         }
 
         getLayoutConfigBySize(size) {
-            return _getCurrentLayoutConfiguration(privates.get(this).layoutConfigurations, size);
+            return _getCurrentLayoutConfiguration(privates.get(this).layoutConfig, size);
         }
 
         setPreferences(newValues) {
@@ -1174,7 +1173,7 @@
                 });
 
                 const payload = {
-                    layoutConfigurations: [{
+                    layoutConfig: [{
                         id: privates.get(this).currentLayoutConfiguration.id,
                         titlevisible: visibility,
                         action: 'update'

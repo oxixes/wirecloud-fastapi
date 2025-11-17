@@ -111,7 +111,7 @@ def get_widget_platform_style(request: Request, theme: str) -> tuple[str]:
     global _widget_platform_style
 
     if theme not in _widget_platform_style or settings.DEBUG:
-        base_href = get_static_path(theme, 'widget', request, 'cache.css')
+        base_href = get_static_path(theme, 'widget', request, 'css/cache.css')
         href = add_query_param(base_href, 'context', 'widget')
         safe_href = escape(href, quote=True)
 
@@ -130,7 +130,7 @@ async def get_widget_api_files(request: Request, theme: str) -> list[str]:
 
     if widget_api_files is None or settings.DEBUG:
 
-        files = [get_absolute_static_url(f"static/js/main-{theme}-widget.js", request=request, versioned=True)]
+        files = [get_absolute_static_url(f"static/js/main-{theme}-widget.js", request=request)]
         files.reverse()
         widget_api_files = tuple([get_absolute_static_url(file, request=request, versioned=True) for file in files])
         await cache.set(key, widget_api_files)
@@ -184,6 +184,7 @@ async def fix_widget_code(widget_code: Union[str, bytes], content_type: str, req
             if 'src' in script.attrib:
                 script.text = ''
 
+        head_element.insert(0, etree.Element('script', type="text/javascript", src=get_absolute_static_url('static/js/WirecloudAPI/WirecloudAPIClosure.js', request=request, versioned=True)))
         files = get_widget_api_extensions(mode, requirements)
         files.reverse()
         for file in files:
@@ -241,7 +242,7 @@ async def process_widget_code(db: DBSession, request: Request, resource: Catalog
                 f"Widget code was not encoded using the specified charset ({charset} as stated in the widget description file).")
             return build_response(request, 502, {'error_msg': msg}, WIDGET_ERROR_FORMATTERS)
 
-        xhtml.code_timestamp = time.time() * 1000
+        xhtml.code_timestamp = int(time.time() * 1000)
         await save_catalogue_resource_xhtml(db, resource.id, xhtml)
 
     try:

@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from enum import Enum
 from datetime import datetime
 from urllib.parse import urlparse
@@ -181,6 +181,18 @@ class CatalogueResourceDataSummaryGroup(CatalogueResourceDataSummaryIdentifier):
 class CatalogueResourceDeleteResults(BaseModel):
     affectedVersions: list[Version] = Field(
         description=docs.catalogue_resource_delete_results_affected_versions_description)
+
+
+class CatalogueResourceWithUsersGroups(CatalogueResource):
+    users: list[str]
+    groups: list[str]
+
+    @field_validator("users", "groups", mode="before")
+    @classmethod
+    def convert_objectid_to_str(cls, v):
+        if not v:
+            return []
+        return [str(item) for item in v]
 
 
 def get_template_url(vendor: Vendor, name: Name, version: Version, url: str, request: Optional[Request] = None,

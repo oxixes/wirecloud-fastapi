@@ -86,11 +86,11 @@ class WorkspaceGlobalData(WorkspaceData):
 
 
 class WorkspaceCreate(BaseModel):
-    name: Optional[str] = Field(pattern=r'^[^/]+$')
-    title: Optional[str]
-    workspace: Optional[str]
-    mashup: Optional[str]
-    preferences: dict[str, Union[str, WorkspacePreference]]
+    name: Optional[str] = Field(default='', pattern=r'^[^/]+$')
+    title: Optional[str] = ''
+    workspace: Optional[str] = ''
+    mashup: Optional[str] = ''
+    preferences: Optional[dict[str, Union[str, WorkspacePreference]]] = {}
     allow_renaming: bool = False
     dry_run: bool = False
 

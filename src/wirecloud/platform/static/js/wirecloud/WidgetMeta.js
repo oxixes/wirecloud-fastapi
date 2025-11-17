@@ -58,6 +58,7 @@
             } else {
                 this.codeurl += '&';
             }
+            // TODO: deprecated. Use /api/widget instead
             this.codeurl += "entrypoint=true&v=" + Wirecloud.contextManager.get('version_hash') + "&theme=" + Wirecloud.contextManager.get('theme');
 
             // Properties
