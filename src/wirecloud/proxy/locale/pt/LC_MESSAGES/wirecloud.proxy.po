@@ -1,0 +1,76 @@
+# Portuguese translations for WireCloud.
+# Copyright (C) 2025 Future Internet Consulting and Development Solutions S.L.
+# This file is distributed under the same license as the WireCloud project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: WireCloud VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-11-17 12:35+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: pt\n"
+"Language-Team: pt <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: ../../../routes.py:355 ../../../routes.py:357 ../../../routes.py:362
+msgid "Connection Error"
+msgstr ""
+
+#: ../../../routes.py:444 ../../../routes.py:483
+#, python-format
+msgid "Error processing proxy request: %s"
+msgstr ""
+
+#: ../../../routes.py:343 ../../../routes.py:345
+msgid "Gateway Timeout"
+msgstr ""
+
+#: ../../../routes.py:421 ../../../routes.py:459
+#, python-format
+msgid "Invalid protocol: %s"
+msgstr ""
+
+#: ../../../routes.py:426 ../../../routes.py:465
+msgid "Invalid request"
+msgstr ""
+
+#: ../../../routes.py:349 ../../../routes.py:351
+msgid "SSL error"
+msgstr ""
+
+#: ../../../processors.py:153
+msgid ""
+"X-WireCloud-Secure-Data: The \"data\" action is not supported for WebSocket "
+"requests."
+msgstr ""
+
+#: ../../../processors.py:72
+#, python-format
+msgid ""
+"X-WireCloud-Secure-Data: The following required parameters are invalid: "
+"%(params)s"
+msgstr ""
+
+#: ../../../processors.py:60
+#, python-format
+msgid ""
+"X-WireCloud-Secure-Data: The following required parameters are missing: "
+"%(params)s"
+msgstr ""
+
+#: ../../../processors.py:110
+msgid "X-WireCloud-Secure-Data: The request does not contain any data to process."
+msgstr ""
+
+#: ../../../processors.py:155
+#, python-format
+msgid "X-WireCloud-Secure-Data: Unknown action \"%(action)s\"."
+msgstr ""
+

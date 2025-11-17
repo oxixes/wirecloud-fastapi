@@ -1,0 +1,2629 @@
+# Portuguese translations for WireCloud.
+# Copyright (C) 2025 Future Internet Consulting and Development Solutions S.L.
+# This file is distributed under the same license as the WireCloud project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: WireCloud VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-11-17 12:35+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: pt\n"
+"Language-Team: pt <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:119
+msgid " smart"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Workspace.js:82
+#, python-format
+msgid "%(base)s (%(copy)s)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/Behaviour.js:254
+#, python-format
+msgid "%(behaviour_title)s's logs"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:126
+#, python-format
+msgid "%(columns)s columns x %(rows)s rows"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:123
+#, python-format
+msgid "%(columns)s%(smart)s columns"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggable.js:181
+#, python-format
+msgid "%(count)s error"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetView.js:199
+#, python-format
+msgid "%(errorCount)s error"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/SharingWindowMenu.js:105
+#, python-format
+msgid "%(fullname)s (You)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/wiring/Operator.js:556
+#, python-format
+msgid "%(operator_title)s's logs"
+msgstr ""
+
+#: ../../../static/js/wirecloud/UserInterfaceManager.js:109
+#, python-format
+msgid "%(subTask)s: %(percentage)s%"
+msgstr ""
+
+#: ../../../static/js/wirecloud/UserInterfaceManager.js:95
+#, python-format
+msgid "%(task)s %(percentage)s%"
+msgstr ""
+
+#: ../../../iwidget/utils.py:77
+#, python-format
+msgid "%(uri)s is not a widget"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentGroup.js:70
+#, python-format
+msgid "%(version)s (latest)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor.js:786
+#, python-format
+msgid "%(workspace_title)s - Wiring"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceTabView.js:376
+#, python-format
+msgid "(Overriden) Editing for screen size %(name)s"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:198
+msgid ""
+"... <strong>his location should appear</strong> in the <em>Technician "
+"Location</em> widget."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:195
+msgid ""
+"... <strong>the profile of the technician should appear</strong> in the "
+"<em>Technician Profile</em> widget."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:192
+msgid "... and <strong>find him</strong> in the technician list."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:218
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:238
+msgid "... and the <strong>description</strong>."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:156
+msgid "... to <em>YouTube Browser</em>'s <em>keyword</em> endpoint"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:201
+msgid ""
+"... we want to be able to <strong>call him</strong> using the <em>Technician "
+"VideoCall</em> widget."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:381
+msgid "<a>Click here</a> for a quick guide/tutorial on how to use this new feature."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:184
+msgid "<li>The <strong><t:title/></strong> <t:type/>.</li>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:165
+msgid ""
+"<p><span class=\"label label-success\">Congratulations!</span> you have "
+"finished your first <em>application mashup</em>.</p><p>As you can see, the "
+"<em>YouTube Browser</em> widget has been updated successfuly.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:247
+msgid ""
+"<p><span class=\"label label-success\">Congratulations!</span> you have "
+"finished your first <em>behaviour oriented</em> wiring "
+"configuration.</p><p>This is the end of this tutorial, but you can play with "
+"the example dashboard and check if it follow the described behaviours.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:83
+msgid ""
+"<p><span class=\"label label-success\">Great!</span> That was easy, wasn't "
+"it?.</p><p>Let's continue adding the <em>Input Box</em> widget.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:187
+msgid ""
+"<p><span class=\"label label-success\">Great!</span> We are now ready to "
+"start. Let's start by identifying the behaviours we want to model.</p><div "
+"class=\"alert alert-info\">We have installed a mashup into your account "
+"(<strong>BOW-Tutorial</strong>), you can remove it safely.</div>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:244
+msgid ""
+"<p><span class=\"label label-success\">Great!</span> We have cleaned up this "
+"behaviour successfully. Have you noticed that when we removed the components "
+"also the affected connections were removed? That saved us, again, some steps "
+":).</p><p>Anyway, you can also directly remove connections in a similar way "
+"clicking on their <em>Remove</em> button (take into account that associated "
+"components are no removed automatically in that case)</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:224
+msgid ""
+"<p><span class=\"label label-success\">Great!</span> We have finished our "
+"first behaviour. Have you noticed that when we added the connections also the"
+" affected components were added? That saved us some steps :).</p><p>Anyway, "
+"you can also directly add components in a similar way clicking on theirs "
+"<em>Add</em> button (take into account that associated connections are no "
+"added automatically in that case)</p><div class=\"alert alert-info\">The "
+"third and the fourth behaviour can be created the same way, so we are going "
+"to create them for you.</div>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:96
+msgid ""
+"<p>Also, some widgets can be parameterized through settings giving you the "
+"chance to use them for very general purporses.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:208
+msgid ""
+"<p>As you can see, we already have all the connections and components needed "
+"for implementing all the identified behaviours. The first step for converting"
+" this wiring configuration into a behaviour oriented configuration is "
+"enabling the behaviour engine.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:119
+msgid ""
+"<p>In the next steps, we are going to connect the <em>Input Box</em> and "
+"<em>YouTube Browser</em> widgets together. This will allow you to perform "
+"searches in the <em>YouTube Browser</em> through the <em>Input Box</em> "
+"widget.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:240
+msgid ""
+"<p>In this case there are components and connections that are not part of "
+"this behaviour. Let's remove them.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:118
+msgid ""
+"<p>In this sidebar you can find all the available widgets. In our example, we"
+" are interested in the widgets added to the workspace: the <em>YouTube "
+"Browser</em> and the <em>Input Box</em> (This last will be listed using the "
+"new name given in previous step).</p><p>You can also find <em>operators</em>."
+" These components can act as source, transformators or data targets as well "
+"as a combination of these behaviours.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:221
+msgid ""
+"<p>Now, we are going to add the components and the connections needed for "
+"implementing this behaviour taking them from the behaviour created by "
+"default.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:74
+msgid ""
+"<p>Ok, widgets have been installed successfuly.</p><p>Next step is to add the"
+" <em>YouTube Browser</em> widget to the workspace.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:205
+msgid ""
+"<p>Once identified the desired behaviours, we're going to create them in the "
+"Wiring Editor view.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:90
+msgid ""
+"<p>One of the main features of WireCloud is that you can edit your "
+"workspaces' layout not only by adding and removing widgets, but also moving, "
+"resizing, renaming, etc.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:190
+msgid ""
+"<p>Our <strong>first behaviour (1 of 4)</strong> is going to be: Allow "
+"technician searches</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:199
+msgid ""
+"<p>Our <strong>fourth and last behaviour (4 of 4)</strong> is going to be: "
+"Allow videocalls with the technicians.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:193
+msgid ""
+"<p>Our <strong>second behaviour (2 of 4)</strong> is going to be: Display "
+"techinican profiles.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:196
+msgid ""
+"<p>Our <strong>third behaviour (3 of 4)</strong> is going to be: Locate "
+"technicians.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/CatalogueSearchView.js:86
+msgid "<p>Showing results for <b><t:corrected_query/></b></p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:233
+msgid ""
+"<p>The last step is cleaning up our first behaviour as it currently contains "
+"all the components and connections of the wiring configuration. We have to "
+"convert it into our real first behaviour: Allow techinican "
+"searches.</p><p>We're going to start by updating the behaviour's details.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:190
+msgid ""
+"<p>These components only exist within the current behaviour "
+"<strong><t:title/></strong>:</p><ul><t:components/></ul><p>Would you like to "
+"continue?</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:69
+msgid ""
+"<p>This is the <em>Editor</em> view. In this view, you can use and modify "
+"your workspaces. Currently you are in a newly created workspace: <em>Basic "
+"concepts tutorial</em>. This workspace is empty, so the first step is to add "
+"some widgets.</p><div class=\"alert alert-info\"><p>In next steps we need "
+"some widgets, so we are going to install them for you. You can safely "
+"uninstall these widgets after finishing the tutorial.</p></div>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:114
+msgid ""
+"<p>This is the <em>Wiring Editor</em> view.</p><p>Here you can wire widgets "
+"and operators together turning your workspace into and <em>application "
+"mashup</em>.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:167
+msgid ""
+"<p>This is the end of this tutorial. Remember that you can always go to the "
+"Tutorial menu for others.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/wiring/Operator.js:227
+msgid ""
+"<p>This operator is currently not available. You or an administrator probably"
+" uninstalled it.</p><h5>Suggestions:</h5><ul><li>Remove the "
+"operator.</li><li>Reinstall the same version of the operator.</li><li>Or "
+"install another version of the operator and then use the "
+"<em>Upgrade/Downgrade</em> option.</li></ul>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:373
+msgid ""
+"<p>This widget is currently not available. You or an administrator probably "
+"uninstalled it.</p><h5>Suggestions:</h5><ul><li>Remove this widget from the "
+"dashboard</li><li>Reinstall the appropiated version of the widget</li><li>Or "
+"install another version of the widget and then use the "
+"<em>Upgrade/Downgrade</em> option</li></ul>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/CatalogueSearchView.js:118
+#, python-format
+msgid ""
+"<p>We couldn't find anything for your search - "
+"<b>%(keywords)s.</b></p><p>Suggestions:</p><ul><li>Make sure all words are "
+"spelled correctly.</li><li>Try different keywords.</li><li>Try more general "
+"keywords.</li></ul>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:66
+msgid ""
+"<p>Welcome to WireCloud!!</p><p>This tutorial will show you the basic "
+"concepts behind WireCloud.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:183
+msgid ""
+"<p>Welcome to this Step-by-Step Interactive Tutorial!</p><p>In this tutorial "
+"you will learn how to build a <strong>behaviour oriented</strong> wiring "
+"configuration, a new feature added in WireCloud v0.8.0.</p><p>To do so, we "
+"are going to convert an application mashup created using a wiring "
+"configuration that doesn't use the behaviour engine to one that does.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:215
+msgid ""
+"<p>When you enable the behaviour engine, a default behaviour will be created "
+"with all existing components and connections.</p><p>Let's continue "
+"<strong>creating the second behaviour</strong> (Display technician "
+"profiles).</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MarketplaceView.js:52
+msgid ""
+"<p>WireCloud is not connected with any "
+"marketplace.</p><p>Suggestions:</p><ul><li>Connect WireCloud with a new "
+"marketplace.</li><li>Go to the my resources view instead</li></ul>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:85
+msgid ""
+"<strong>Warning!</strong> Configured and stored data in your workspace "
+"(properties and preferences except passwords) will be shared by default!"
+msgstr ""
+
+#: ../../../static/js/WirecloudAPI/WirecloudAPICommon.js:234
+msgid ""
+"<ul><li><b>File:</b> <t:file/></li><li><b>Line: </b><t:line/></li></ul><p>See"
+" the <a href=\"http://webmasters.stackexchange.com/questions/8525/how-to-"
+"open-the-javascript-console-in-different-browsers\" target=\"_blank\">browser"
+" console</a> for more details</p>"
+msgstr ""
+
+#: ../../../workspace/routes.py:372 ../../../workspace/routes.py:471
+msgid "A tab with the given name already exists"
+msgstr ""
+
+#: ../../../workspace/routes.py:127 ../../../workspace/routes.py:151
+#: ../../../workspace/routes.py:258
+msgid "A workspace with the given name already exists"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/EmbedCodeWindowMenu.js:69
+msgid "Accept"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:234
+msgid "Active the first behaviour"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:220
+msgid "Active the second behaviour"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizedTextInputInterface.js:75
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggable.js:482
+#: ../../../static/js/wirecloud/ui/WiringEditor/Connection.js:495
+msgid "Add"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/SharingWindowMenu.js:174
+msgid "Add a person, a group or an organization"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceView.js:454
+msgid "Add components"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MarketplaceViewMenuItems.js:97
+msgid "Add marketplace"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MarketplaceViewMenuItems.js:69
+msgid "Add new marketplace"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ComponentSidebar.js:68
+msgid "Add to workspace"
+msgstr ""
+
+#: ../../../static/js/wirecloud/MarketManager.js:117
+msgid "Adding marketplace"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:68
+msgid "Advanced"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:200
+msgid "After <strong>selecting a technician</strong> ..."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/CatalogueSearchView.js:163
+msgid "All"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:237
+msgid "Allow technician searches"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetView.js:42
+msgid "Allow to move this widget"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:229
+msgid "Allow to stablish a videocall with the selected technician."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:229
+msgid "Allow videocalls with the technicians"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/SharingWindowMenu.js:159
+msgid "Anyone on the Internet can find and access this dashboard."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/SharingWindowMenu.js:160
+msgid ""
+"Anyone on the Internet can find this dashboard. Only registered users can "
+"access it."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:52
+msgid "Authors"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/EmbedCodeWindowMenu.js:53
+msgid "Auto"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/UpgradeWindowMenu.js:92
+msgid "Available versions"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:186
+msgid "BOW Tutorial"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WirecloudHeader.js:133
+#, python-format
+msgid "Back to %(user)s"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:62
+msgid "Bad Gateway"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:38
+msgid "Bad Request"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:64
+msgid "Basic concepts"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor.js:505
+msgid "Behaviour"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:182
+msgid "Behaviour Oriented Wiring"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:183
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:187
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:205
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:208
+msgid "Behaviour Oriented Wiring Tutorial"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/Behaviour.js:275
+msgid "Behaviour settings"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:71
+msgid "Block connections"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:70
+msgid "Block widgets"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:155
+msgid "Bottom"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:79
+msgid ""
+"By typing \"browser\" we can filter widgets that contains in their name or "
+"description these words"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/SharingWindowMenu.js:122
+msgid "Can view"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MissingDependenciesWindowMenu.js:66
+#: ../../../static/js/wirecloud/ui/PreferencesWindowMenu.js:235
+#: ../../../static/js/wirecloud/ui/SharingWindowMenu.js:214
+#: ../../../static/js/wirecloud/ui/UpgradeWindowMenu.js:140
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:104
+msgid "Cancel"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:116
+msgid "Center"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/CatalogueSearchView.js:43
+msgid "Clear filters"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:219
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:239
+msgid "Click <em>Accept</em>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:87
+msgid "Click <em>Add to workspace</em>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:222
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:223
+msgid "Click <em>Add</em>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:161
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:246
+msgid "Click <em>Back</em>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:216
+msgid "Click <em>Create behaviour</em>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:146
+msgid "Click <em>Find components</em> to close the sidebar"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:115
+msgid "Click <em>Find components</em> to open the sidebar"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:209
+msgid "Click <em>List Behaviours</em>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:235
+msgid "Click <em>Preferences</em>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:241
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:242
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:243
+msgid "Click <em>Remove</em>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:94
+msgid "Click <em>Rename</em>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:98
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:236
+msgid "Click <em>Settings</em>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:117
+msgid "Click <em>Widgets</em>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:206
+msgid "Click <em>Wiring</em>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:111
+msgid "Click <em>Wiring</em> to continue"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:106
+msgid "Click here to submit"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:77
+msgid "Click the <em>Add components</em> button"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:75
+msgid "Click the <em>Edit</em> button"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LogWindowMenu.js:54
+msgid "Close"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:88
+msgid "Close the component sidebar"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggablePrefs.js:58
+msgid "Collapse"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:44
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:80
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:147
+msgid "Columns"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:47
+msgid "Conflict"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:37
+msgid "Connection Refused"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/CatalogueSearchView.js:112
+msgid "Connection error: No resource retrieved."
+msgstr ""
+
+#: ../../../static/js/wirecloud/wiring/Connection.js:156
+msgid "Connection's logs"
+msgstr ""
+
+#: ../../../localcatalogue/routes.py:187
+msgid "Content cannot be downloaded from the specified url"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizedTextInputInterface.js:152
+msgid "Context"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MissingDependenciesWindowMenu.js:57
+#: ../../../static/js/wirecloud/ui/WiringEditor/Behaviour.js:364
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:103
+msgid "Continue"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/NewWorkspaceWindowMenu.js:57
+msgid "Copy Workspace"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceViewMenuItems.js:95
+#, python-format
+msgid "Copy of %(title)s"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentGroup.js:84
+msgid "Create"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/NewWorkspaceWindowMenu.js:57
+msgid "Create Workspace"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:346
+msgid "Create behaviour"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/NewWorkspaceWindowMenu.js:83
+#, python-format
+msgid "Creating a %(owner)s/%(title)s workspace"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/NewWorkspaceWindowMenu.js:81
+#, python-format
+msgid "Creating a %(owner)s/%(title)s workspace using %(mashup)s as template"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/NewWorkspaceWindowMenu.js:86
+#, python-format
+msgid "Creating a new workspace using %(mashup)s as template"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/CatalogueSearchView.js:149
+msgid "Creation date"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizeWindowMenu.js:45
+msgid "Current value"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MyResourcesView.js:59
+msgid ""
+"Currently, you do not have access to any component. You can get components "
+"using the Marketplace view or by uploading components manually using the "
+"Upload button."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/ConnectionPrefs.js:39
+msgid "Customize"
+msgstr ""
+
+#: ../../../static/js/wirecloud/PreferenceManager.js:42
+msgid "Default setting"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizeWindowMenu.js:46
+msgid "Default value"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggablePrefs.js:147
+msgid "Delete cascade"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MarketplaceViewMenuItems.js:116
+msgid "Delete marketplace"
+msgstr ""
+
+#: ../../../static/js/wirecloud/LocalCatalogue.js:182
+#, python-format
+msgid "Deleting %(title)s (%(uri)s)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/LocalCatalogue.js:171
+#, python-format
+msgid "Deleting all versions of %(title)s (%(group_id)s)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/Behaviour.js:273
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:88
+msgid "Description"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:50
+msgid "Detailed description (Markdown)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LogWindowMenu.js:121
+msgid "Details"
+msgstr ""
+
+#: ../../../static/js/wirecloud/PreferenceManager.js:43
+msgid "Detect browser language"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:401
+msgid "Disable"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetView.js:42
+msgid "Disallow to move this widget"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:217
+msgid "Display technician profiles"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:218
+msgid ""
+"Display technician profiles when they are selected in other widgets, e.g. in "
+"the technician list widget."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WirecloudHeader.js:102
+msgid "Django Admin panel"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MyResourcesView.js:396
+#, python-format
+msgid ""
+"Do you really want to remove all versions of the (vendor: \"%(vendor)s\", "
+"name: \"%(name)s\") resource?"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MyResourcesView.js:372
+#, python-format
+msgid ""
+"Do you really want to remove the \"%(name)s\" (vendor: \"%(vendor)s\", "
+"version: \"%(version)s\") resource?"
+msgstr ""
+
+#: ../../../static/js/WirecloudAPI/DashboardManagementAPI.js:148
+#: ../../../static/js/wirecloud/ui/WorkspaceViewMenuItems.js:104
+#, python-format
+msgid "Do you really want to remove the \"%(name)s\" workspace?"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MarketplaceViewMenuItems.js:118
+#, python-format
+msgid "Do you really want to remove the marketplace \"%(marketName)s\"?"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:89
+msgid "Documentation"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/UpgradeWindowMenu.js:51
+msgid "Downgrade"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/ConnectionHandle.js:70
+msgid "Drag & Drop"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:150
+msgid ""
+"Drag &amp; drop a new connection from <em>Search Box</em>'s <em>keyword</em> "
+"endpoint ..."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:125
+msgid "Drag &amp; drop the <em>Input Box</em> widget"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:138
+msgid "Drag &amp; drop the <em>YouTube Browser</em> widget"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:92
+msgid "Drag &amp; drop to move the widget"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:91
+msgid "Drag &amp; drop to resize the widget"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceViewMenuItems.js:93
+msgid "Duplicate"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceTabView.js:378
+#, python-format
+msgid "Editing for screen size %(name)s"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:48
+msgid "Email"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceViewMenuItems.js:80
+msgid "Embed"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceViewMenuItems.js:81
+msgid "Embed Code"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:72
+msgid "Embed used widgets/operators"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/CatalogueSearchView.js:64
+msgid "Empty Marketplace!"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MyResourcesView.js:58
+msgid "Empty resource list"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceListItems.js:46
+msgid "Empty workspace list"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:339
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:415
+msgid "Enable"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:211
+msgid "Enable the behaviour engine"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:378
+msgid "Enable the behaviours to enjoy with a new way to handle connections."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:95
+msgid ""
+"Enter a new name for the widget (e.g <em>Search</em>) and press "
+"<kbd>Enter</kbd> or click outside the title"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:163
+msgid "Enter a search keyword and press <kbd>Enter</kbd>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PreferencesWindowMenu.js:220
+msgid "Error"
+msgstr ""
+
+#: ../../../static/js/wirecloud/LocalCatalogue.js:128
+#: ../../../static/js/wirecloud/WorkspaceCatalogue.js:81
+#, python-format
+msgid "Error loading %(resource)s metadata"
+msgstr ""
+
+#: ../../../static/js/wirecloud/core.js:392
+msgid "Error loading WireCloud"
+msgstr ""
+
+#: ../../../widget/utils.py:256
+msgid "Error processing widget code"
+msgstr ""
+
+#: ../../../localcatalogue/routes.py:226
+msgid ""
+"Error writing the resource into the filesystem. Please, contact the server "
+"administrator."
+msgstr ""
+
+#: ../../../static/js/wirecloud/wiring/OperatorTargetEndpoint.js:90
+#: ../../../static/js/wirecloud/wiring/OperatorTargetEndpoint.js:105
+#: ../../../static/js/wirecloud/wiring/WidgetTargetEndpoint.js:94
+#: ../../../static/js/wirecloud/wiring/WidgetTargetEndpoint.js:106
+#, python-format
+msgid ""
+"Exception catched while processing an event that reached the "
+"\"%(inputendpoint)s\" input endpoint"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:1129
+#: ../../../static/js/wirecloud/ui/OperatorPreferencesWindowMenu.js:42
+msgid "Exception catched while processing preference changes"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:229
+msgid "Exit Full Dragboard"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceView.js:414
+msgid "Exit full screen"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggablePrefs.js:56
+msgid "Expand"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:55
+msgid "Expectation Failed"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:249
+msgid "Extract from grid"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:58
+msgid "Failed Dependency"
+msgstr ""
+
+#: ../../../wiring/routes.py:165
+msgid "Failed to apply patch"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Wiring.js:597
+#: ../../../static/js/wirecloud/wiring/Operator.js:225
+msgid "Failed to load operator."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:371
+#: ../../../static/js/wirecloud/Wiring.js:602
+msgid "Failed to load widget."
+msgstr ""
+
+#: ../../../iwidget/utils.py:113
+#, python-format
+msgid "Field %(data_field)s must contain a number value"
+msgstr ""
+
+#: ../../../iwidget/utils.py:137
+#, python-format
+msgid "Field %(field)s must contain a boolean value"
+msgstr ""
+
+#: ../../../iwidget/utils.py:100 ../../../iwidget/utils.py:125
+#, python-format
+msgid "Field %(field)s must contain a number value"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:238
+msgid "Find a technician by a name at the technician list."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor.js:185
+msgid "Find components"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizedTextInputInterface.js:140
+msgid "First Name"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:212
+msgid "Fixed height"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:198
+msgid "Fixed width"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:168
+msgid "Fixed x"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:183
+msgid "Fixed y"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:41
+msgid "Forbidden"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ScreenSizesInputInterface.js:211
+msgid "From (px):"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:232
+msgid "Full Dragboard"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceView.js:407
+#: ../../../static/js/wirecloud/ui/WorkspaceView.js:418
+msgid "Full screen"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:64
+msgid "Gateway Timeout"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:43
+msgid "General info"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MyResourcesView.js:80
+#: ../../../static/js/wirecloud/ui/WorkspaceView.js:194
+msgid "Get more components"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:48
+msgid "Gone"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:148
+msgid "Grid"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:46
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:82
+msgid "Grid columns. (default: 20 columns)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:91
+msgid "Grid rows. (default: 12 rows)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/LogManager.js:252
+#, python-format
+msgid "HTTP Error %(errorCode)s - %(errorDesc)s"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:65
+msgid "HTTP Version Not Supported"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:730
+msgid "Height"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:745
+msgid "Height in pixels (deprecated)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor.js:171
+msgid "Hello, welcome to the Wiring Editor view!"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizeWindowMenu.js:41
+msgid "Hidden"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetView.js:48
+msgid "Hide title"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:51
+msgid "Home page"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:61
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:97
+msgid "Horizontal Margin between widgets (in pixels)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:63
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:99
+msgid ""
+"Horizontal Margin between widgets. Must be specified in pixel units. "
+"(default: 4px)"
+msgstr ""
+
+#: ../../../iwidget/routes.py:244 ../../../iwidget/routes.py:349
+#: ../../../iwidget/routes.py:411 ../../../iwidget/routes.py:483
+#: ../../../iwidget/routes.py:548 ../../../iwidget/routes.py:611
+msgid "IWidget not found"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:46
+msgid "Id of the vendor/distributor of the mashable application component"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:61
+msgid "Image shown in catalogue (170x80 px)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor.js:172
+msgid ""
+"In this view you can connect all the components of your dashboard in a visual"
+" way."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PreferencesWindowMenu.js:106
+msgid "Inherit"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:111
+msgid "Initial behaviour"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/CatalogueView.js:67
+msgid "Install"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:67
+msgid "Insufficient Storage"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:60
+msgid "Internal Server Error"
+msgstr ""
+
+#: ../../../wiring/routes.py:167
+msgid "Invalid JSON patch"
+msgstr ""
+
+#: ../../../static/js/wirecloud/LocalCatalogue.js:278
+#, python-format
+msgid "Invalid component type: %(type)s"
+msgstr ""
+
+#: ../../../workspace/crud.py:114 ../../../workspace/routes.py:590
+msgid "Invalid mashup id"
+msgstr ""
+
+#: ../../../workspace/routes.py:695
+msgid "Invalid name"
+msgstr ""
+
+#: ../../../iwidget/utils.py:116
+#, python-format
+msgid "Invalid value for %(data_field)s field"
+msgstr ""
+
+#: ../../../iwidget/utils.py:103 ../../../iwidget/utils.py:128
+#, python-format
+msgid "Invalid value for %(field)s field"
+msgstr ""
+
+#: ../../../workspace/routes.py:692
+msgid "Invalid vendor"
+msgstr ""
+
+#: ../../../workspace/routes.py:698
+msgid "Invalid version number"
+msgstr ""
+
+#: ../../../iwidget/routes.py:355
+msgid "Iwidget cannot be deleted"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/CatalogueSearchView.js:126
+msgid "Keywords..."
+msgstr ""
+
+#: ../../../static/js/wirecloud/PreferenceManager.js:39
+msgid "Language"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizedTextInputInterface.js:145
+msgid "Last Name"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:173
+msgid "Layout configuration"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:104
+msgid "Left"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:49
+msgid "Length Required"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor.js:198
+msgid "List behaviours"
+msgstr ""
+
+#: ../../../static/js/wirecloud/core.js:403
+msgid "Loading WireCloud Platform"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:225
+msgid "Locate technicians"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:57
+msgid "Locked"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LogWindowMenu.js:34
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:72
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggablePrefs.js:138
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentPrefs.js:96
+#: ../../../static/js/wirecloud/ui/WiringEditor/Connection.js:310
+msgid "Logs"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:68
+msgid "Loop Detected"
+msgstr ""
+
+#: ../../../workspace/routes.py:688
+#, python-format
+msgid "Malformed JSON. The following field(s) are missing %(missing_fields)s"
+msgstr ""
+
+#: ../../../workspace/routes.py:362
+msgid "Malformed tab JSON: expecting tab name or title"
+msgstr ""
+
+#: ../../../markets/routes.py:129
+msgid "Market name already in use"
+msgstr ""
+
+#: ../../../markets/routes.py:175
+msgid "Market not found"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MarketplaceView.js:265
+msgid "Marketplace"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MarketplaceView.js:268
+#, python-format
+msgid "Marketplace - %(marketname)s"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:45
+msgid "Mashup Title"
+msgstr ""
+
+#: ../../../workspace/crud.py:119
+#, python-format
+msgid "Mashup not found %(mashup)s"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/CatalogueSearchView.js:165
+#: ../../../static/js/wirecloud/ui/ComponentSidebar.js:41
+msgid "Mashups"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetView.js:537
+msgid "Maximize"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:57
+msgid "Media"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetView.js:343
+msgid "Menu"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ComponentSidebar.js:68
+msgid "Merge"
+msgstr ""
+
+#: ../../../workspace/mashupTemplateParser.py:362
+msgid "Merged wiring"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:43
+msgid "Method Not Allowed"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetView.js:354
+#: ../../../static/js/wirecloud/ui/WidgetView.js:552
+msgid "Minimize"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggable.js:179
+msgid "Missing"
+msgstr ""
+
+#: ../../../localcatalogue/routes.py:151
+msgid "Missing component file in the request"
+msgstr ""
+
+#: ../../../workspace/mashupTemplateParser.py:58 ../../../workspace/routes.py:629
+msgid "Missing dependencies"
+msgstr ""
+
+#: ../../../workspace/schemas.py:100
+msgid "Missing name or title parameter"
+msgstr ""
+
+#: ../../../wiring/routes.py:158
+msgid "Missing operators variables cannot be updated"
+msgstr ""
+
+#: ../../../workspace/routes.py:583
+msgid "Missing workspace or mashup parameter"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizableValueInputInterface.js:50
+msgid "Modify"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:285
+msgid "Move to the bottom sidebar"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:294
+msgid "Move to the left sidebar"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:276
+msgid "Move to the right sidebar"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:267
+msgid "Move to the top sidebar"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MarketplaceView.js:179
+#: ../../../static/js/wirecloud/ui/MyResourcesView.js:148
+#: ../../../static/js/wirecloud/ui/MyResourcesView.js:166
+#: ../../../static/js/wirecloud/ui/WorkspaceView.js:185
+msgid "My Resources"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MyResourcesView.js:163
+#, python-format
+msgid "My Resources - %(resource)s"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MarketplaceViewMenuItems.js:75
+#: ../../../static/js/wirecloud/ui/NewWorkspaceWindowMenu.js:52
+msgid "Name"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ScreenSizesInputInterface.js:192
+msgid "Name of the screen size range."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ScreenSizesInputInterface.js:191
+msgid "Name:"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/RenameWindowMenu.js:34
+msgid "New Name"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:87
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:90
+msgid "New behaviour"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:377
+msgid "New feature"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceView.js:392
+msgid "New tab"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceViewMenuItems.js:50
+msgid "New workspace"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentGroup.js:39
+msgid "No description provided"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/Endpoint.js:171
+msgid "No description provided."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentGroup.js:61
+msgid "No image available"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/Behaviour.js:365
+msgid "No, thank you"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizeWindowMenu.js:36
+msgid "Normal"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:44
+msgid "Not Acceptable"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:69
+msgid "Not Extended"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:42
+msgid "Not Found"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:61
+msgid "Not Implemented"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:160
+msgid "Now it's time to test our creation."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:82
+msgid ""
+"Once you have the results, you can add the widget. So click <em>Add to "
+"workspace</em>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:93
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:97
+msgid "Open <em>Input Box</em> menu"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor.js:178
+msgid ""
+"Open the sidebar using the <em>Find components</em> button and drag &amp; "
+"drop components (operators/widgets) from the sidebar for being able to "
+"connect them as you wish."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/OperatorPreferencesWindowMenu.js:50
+msgid "Operator Settings"
+msgstr ""
+
+#: ../../../static/js/wirecloud/wiring/Operator.js:431
+msgid "Operator created successfully."
+msgstr ""
+
+#: ../../../static/js/wirecloud/wiring/OperatorTargetEndpoint.js:94
+msgid "Operator has not registered a callback for this input endpoint"
+msgstr ""
+
+#: ../../../static/js/wirecloud/wiring/Operator.js:230
+msgid "Operator loaded successfully."
+msgstr ""
+
+#: ../../../wiring/routes.py:153 ../../../wiring/routes.py:207
+#: ../../../wiring/routes.py:271 ../../../wiring/routes.py:279
+msgid "Operator not found"
+msgstr ""
+
+#: ../../../static/js/wirecloud/wiring/Operator.js:266
+msgid "Operator unloaded successfully."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/CatalogueSearchView.js:166
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentShowcase.js:45
+msgid "Operators"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:353
+msgid "Order behaviours"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggablePrefs.js:66
+msgid "Order endpoints"
+msgstr ""
+
+#: ../../../workspace/mashupTemplateParser.py:359
+msgid "Original wiring"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/SharingWindowMenu.js:122
+msgid "Owner"
+msgstr ""
+
+#: ../../../widget/routes.py:108
+msgid "Page not found"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizeWindowMenu.js:56
+msgid "Parametrization"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizableValueInputInterface.js:48
+msgid "Parametrize"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizeWindowMenu.js:47
+msgid "Parametrized value"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:40
+msgid "Payment Required"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:141
+msgid "Persistent variables"
+msgstr ""
+
+#: ../../../static/js/wirecloud/PlatformPreferences.js:39
+msgid "Platform Preferences"
+msgstr ""
+
+#: ../../../preferences/routes.py:66
+msgid "Platform preferences not found"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:50
+msgid "Precondition Failed"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:134
+#: ../../../static/js/wirecloud/ui/WiringEditor/Behaviour.js:48
+#: ../../../static/js/wirecloud/ui/WiringEditor/Component.js:90
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggable.js:269
+#: ../../../static/js/wirecloud/ui/WiringEditor/Connection.js:330
+#: ../../../static/js/wirecloud/ui/WorkspaceTabView.js:238
+msgid "Preferences"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/SharingWindowMenu.js:161
+msgid "Private"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:45
+msgid "Proxy Authentication Required"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MarketplaceViewMenuItems.js:94
+#: ../../../static/js/wirecloud/ui/SharingWindowMenu.js:159
+msgid "Public"
+msgstr ""
+
+#: ../../../static/js/wirecloud/LocalCatalogue.js:76
+#, python-format
+msgid "Purging %(componenttype)s info"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizeWindowMenu.js:37
+msgid "Read Only"
+msgstr ""
+
+#: ../../../wiring/utils.py:313
+msgid "Read only and hidden preferences cannot be created using this API"
+msgstr ""
+
+#: ../../../wiring/utils.py:332
+msgid "Read only and hidden preferences cannot be removed"
+msgstr ""
+
+#: ../../../wiring/utils.py:365
+msgid "Read only and hidden properties cannot be created using this API"
+msgstr ""
+
+#: ../../../wiring/utils.py:374
+msgid "Read only and hidden properties cannot be removed"
+msgstr ""
+
+#: ../../../wiring/utils.py:349 ../../../wiring/utils.py:392
+msgid "Read only and hidden status cannot be changed using this API"
+msgstr ""
+
+#: ../../../wiring/utils.py:352
+msgid "Read only preferences cannot be updated"
+msgstr ""
+
+#: ../../../wiring/utils.py:233 ../../../wiring/utils.py:395
+msgid "Read only properties cannot be updated"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/CatalogueSearchView.js:45
+#: ../../../static/js/wirecloud/ui/CatalogueSearchView.js:138
+msgid "Refresh"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/SharingWindowMenu.js:160
+msgid "Registered User"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:212
+msgid "Relative height"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:198
+msgid "Relative width"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:168
+msgid "Relative x"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:183
+msgid "Relative y"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:57
+msgid "Reload"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/SharingWindowMenu.js:126
+#: ../../../static/js/wirecloud/ui/WidgetView.js:301
+#: ../../../static/js/wirecloud/ui/WiringEditor/Behaviour.js:53
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggable.js:275
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggable.js:493
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggable.js:504
+#: ../../../static/js/wirecloud/ui/WiringEditor/Connection.js:320
+#: ../../../static/js/wirecloud/ui/WiringEditor/Connection.js:507
+#: ../../../static/js/wirecloud/ui/WiringEditor/Connection.js:519
+#: ../../../static/js/wirecloud/ui/WorkspaceTabViewMenuItems.js:67
+#: ../../../static/js/wirecloud/ui/WorkspaceViewMenuItems.js:102
+msgid "Remove"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:94
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:50
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggablePrefs.js:121
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentPrefs.js:89
+#: ../../../static/js/wirecloud/ui/WorkspaceTabViewMenuItems.js:48
+#: ../../../static/js/wirecloud/ui/WorkspaceViewMenuItems.js:56
+msgid "Rename"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggablePrefs.js:75
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentPrefs.js:47
+#, python-format
+msgid "Rename %(type)s"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceViewMenuItems.js:57
+msgid "Rename Workspace"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceTabViewMenuItems.js:49
+msgid "Rename Workspace Tab"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:51
+msgid "Request Entity Too Large"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:46
+msgid "Request Timeout"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:52
+msgid "Request-URI Too Long"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:54
+msgid "Requested Range Not Satisfiable"
+msgstr ""
+
+#: ../../../static/js/wirecloud/core.js:489
+msgid "Requesting workspace data"
+msgstr ""
+
+#: ../../../localcatalogue/routes.py:219
+msgid "Resource already exists"
+msgstr ""
+
+#: ../../../core/catalogue_manager.py:51
+#, python-format
+msgid "Resource already exists %(resource_id)s"
+msgstr ""
+
+#: ../../../iwidget/routes.py:415 ../../../iwidget/routes.py:493
+#: ../../../iwidget/routes.py:552 ../../../iwidget/routes.py:618
+msgid "Resource not found"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/ConnectionPrefs.js:91
+msgid "Restore defaults"
+msgstr ""
+
+#: ../../../static/js/wirecloud/core.js:329
+msgid "Retrieving WireCloud code"
+msgstr ""
+
+#: ../../../static/js/wirecloud/core.js:332
+msgid "Retrieving initial data"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:128
+msgid "Right"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:53
+msgid "Row Height (in pixels)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:55
+msgid "Row/cell height. Must be specified in pixel units. (default: 13px)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:89
+msgid "Rows"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PreferencesWindowMenu.js:227
+#: ../../../static/js/wirecloud/ui/SharingWindowMenu.js:210
+msgid "Save"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/NewWorkspaceWindowMenu.js:63
+msgid "Select a mashup template"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:63
+msgid "Service Unavailable"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PreferencesWindowMenu.js:203
+msgid "Set Defaults"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceTabViewMenuItems.js:54
+msgid "Set as initial"
+msgstr ""
+
+#: ../../../static/js/wirecloud/TabPreferences.js:45
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:98
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:236
+#: ../../../static/js/wirecloud/Widget/PreferencesWindowMenu.js:33
+#: ../../../static/js/wirecloud/WorkspacePreferences.js:40
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:78
+#: ../../../static/js/wirecloud/ui/WirecloudHeader.js:94
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggablePrefs.js:141
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentPrefs.js:99
+#: ../../../static/js/wirecloud/ui/WorkspaceTabViewMenuItems.js:61
+#: ../../../static/js/wirecloud/ui/WorkspaceViewMenuItems.js:86
+msgid "Settings"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceViewMenuItems.js:63
+msgid "Share"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/SharingWindowMenu.js:161
+msgid "Shared with specific people and organizations."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/SharingWindowMenu.js:150
+msgid "Sharing settings"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:49
+msgid "Short Description (plain text)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:225
+msgid "Show the current location of the selected technician."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetView.js:48
+msgid "Show title"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WirecloudHeader.js:139
+msgid "Sign out"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:35
+msgid "Smart"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:258
+msgid "Snap to grid"
+msgstr ""
+
+#: ../../../localcatalogue/routes.py:202
+msgid "Some groups do not exist"
+msgstr ""
+
+#: ../../../localcatalogue/routes.py:199
+msgid "Some users do not exist"
+msgstr ""
+
+#: ../../../markets/routes.py:231 ../../../markets/routes.py:234
+msgid "Something went wrong (see details for more info)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:736
+msgid ""
+"Specifies if the widget is being displayed, altough the user may have to do "
+"scroll to be able to see it"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:716
+msgid "Specifies the x-coordinate at which the widget is placed"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:721
+msgid "Specifies the y-coordinate at which the widget is placed"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:726
+msgid "Specifies the z-coordinate at which the widget is placed"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizeWindowMenu.js:51
+msgid "Status"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:190
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:193
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:196
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:199
+msgid "Step 1: Identify the behaviours"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:215
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:221
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:224
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:233
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:240
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:244
+msgid "Step 2: Design the behaviours"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/ConnectionPrefs.js:39
+msgid "Stop customizing"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggablePrefs.js:64
+msgid "Stop ordering"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WirecloudHeader.js:115
+#: ../../../static/js/wirecloud/ui/WirecloudHeader.js:116
+msgid "Switch User"
+msgstr ""
+
+#: ../../../static/js/wirecloud/core.js:79 ../../../static/js/wirecloud/core.js:537
+msgid "Switching active workspace"
+msgstr ""
+
+#: ../../../workspace/crud.py:76 ../../../workspace/utils.py:452
+msgid "Tab"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Workspace.js:75
+#, python-format
+msgid "Tab %(index)s"
+msgstr ""
+
+#: ../../../workspace/routes.py:527
+msgid "Tab cannot be deleted as it contains widgets that cannot be deleted"
+msgstr ""
+
+#: ../../../workspace/routes.py:522
+msgid "Tab cannot be deleted as workspaces need at least one tab"
+msgstr ""
+
+#: ../../../iwidget/routes.py:70 ../../../iwidget/routes.py:125
+#: ../../../iwidget/routes.py:186 ../../../iwidget/routes.py:239
+#: ../../../iwidget/routes.py:293 ../../../iwidget/routes.py:344
+#: ../../../iwidget/routes.py:406 ../../../iwidget/routes.py:478
+#: ../../../iwidget/routes.py:543 ../../../iwidget/routes.py:606
+#: ../../../iwidget/utils.py:320 ../../../preferences/routes.py:260
+#: ../../../preferences/routes.py:304 ../../../workspace/routes.py:410
+#: ../../../workspace/routes.py:460 ../../../workspace/routes.py:516
+msgid "Tab not found"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/NewWorkspaceWindowMenu.js:60
+msgid "Template"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:1257
+#: ../../../static/js/wirecloud/wiring/Operator.js:625
+#, python-format
+msgid "The %(type)s was downgraded to v%(version)s successfully."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:1260
+#: ../../../static/js/wirecloud/wiring/Operator.js:628
+#, python-format
+msgid "The %(type)s was replaced using v%(version)s successfully."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:1255
+#: ../../../static/js/wirecloud/wiring/Operator.js:623
+#, python-format
+msgid "The %(type)s was upgraded to v%(version)s successfully."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:207
+msgid ""
+"The <strong><t:title/></strong> <t:type/> will be <strong>definitely</strong>"
+" removed, would you like to continue?"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:166
+msgid ""
+"The <strong><t:title/></strong> <t:type/> will be removed, would you like to "
+"continue?"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:229
+msgid "The <strong>fourth behaviour</strong> was created."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:225
+msgid "The <strong>third behaviour</strong> was created."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:691
+#, python-format
+msgid "The behaviour (%(title)s) was loaded."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:100
+msgid ""
+"The behaviours will be removed but the components and connections will still "
+"exist, would you like to continue?"
+msgstr ""
+
+#: ../../../static/js/wirecloud/wiring/Connection.js:116
+#, python-format
+msgid "The connection ('%(source)s'-'%(target)s') has a missing endpoint."
+msgstr ""
+
+#: ../../../static/js/wirecloud/wiring/Connection.js:89
+#, python-format
+msgid "The connection ('%(source)s'-'%(target)s') was detached."
+msgstr ""
+
+#: ../../../static/js/wirecloud/wiring/Connection.js:80
+#, python-format
+msgid "The connection ('%(source)s'-'%(target)s') was established."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor.js:429
+msgid ""
+"The connection will also be modified for the rest of behaviours, would you "
+"like to continue?"
+msgstr ""
+
+#: ../../../static/js/wirecloud/WorkspaceTab.js:157
+#, python-format
+msgid "The destination tab (%(title)s) is readonly"
+msgstr ""
+
+#: ../../../localcatalogue/routes.py:192
+msgid "The file downloaded from the marketplace is not a zip file"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MissingDependenciesWindowMenu.js:40
+msgid "The following dependencies are missing:"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/Behaviour.js:360
+msgid ""
+"The following operation is irreversible and removes the behaviour completely."
+" Would you like to continue?"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ScreenSizesInputInterface.js:212
+msgid "The left limit of the screen size range (in pixels)."
+msgstr ""
+
+#: ../../../localcatalogue/routes.py:157 ../../../localcatalogue/routes.py:164
+msgid "The provided file is not a valid zip file"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceView.js:565
+msgid "The requested workspace is no longer available (it was deleted)."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ScreenSizesInputInterface.js:240
+msgid "The right limit of the screen size range (in pixels). Use -1 for no limit."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceTabViewMenuItems.js:69
+msgid "The tab's widgets will also be removed. Would you like to continue?"
+msgstr ""
+
+#: ../../../localcatalogue/routes.py:223
+msgid "The uploaded file is not a valid zip file"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/UpgradeWindowMenu.js:71
+#, python-format
+msgid ""
+"There is not change information between versions %(from_version)s and "
+"%(to_version)s"
+msgstr ""
+
+#: ../../../workspace/mashupTemplateParser.py:363
+msgid "This is the wiring description of the merged mashup"
+msgstr ""
+
+#: ../../../workspace/mashupTemplateParser.py:360
+msgid "This is the wiring description of the original workspace"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/CatalogueSearchView.js:65
+msgid ""
+"This marketplace is empty, that is, it does not provide any resource at this "
+"time."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizableValueInputInterface.js:58
+msgid "This value will be editable by the user"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizableValueInputInterface.js:63
+msgid "This value will be visible to the user"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizableValueInputInterface.js:55
+msgid "This value won't be editable by the user"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizableValueInputInterface.js:66
+msgid "This value won't be visible to the user"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:710
+#: ../../../static/js/wirecloud/ui/CatalogueSearchView.js:150
+#: ../../../static/js/wirecloud/ui/WiringEditor/Behaviour.js:272
+#: ../../../static/js/wirecloud/ui/WiringEditor/BehaviourEngine.js:87
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggablePrefs.js:73
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentPrefs.js:45
+#: ../../../static/js/wirecloud/wiring/Operator.js:413
+msgid "Title"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:45
+msgid "Title to display on the catalogue"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ScreenSizesInputInterface.js:239
+msgid "To (px):"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:143
+msgid "Top"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:247
+msgid "Try It Yourself"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:167
+msgid "Tutorials"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MarketplaceViewMenuItems.js:87
+msgid "Type"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:84
+msgid "Typing <em>input box</em>..."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MarketplaceViewMenuItems.js:80
+msgid "URL"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/UpgradeWindowMenu.js:76
+msgid "Unable to retrieve change log information"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:39
+msgid "Unauthorized"
+msgstr ""
+
+#: ../../../static/js/wirecloud/MarketManager.js:50
+#: ../../../static/js/wirecloud/MarketManager.js:81
+#: ../../../static/js/wirecloud/MarketManager.js:111
+#: ../../../static/js/wirecloud/Preferences.js:130
+#: ../../../static/js/wirecloud/Wiring.js:465
+#: ../../../static/js/wirecloud/Wiring.js:530
+#: ../../../static/js/wirecloud/Workspace.js:468
+#: ../../../static/js/wirecloud/Workspace.js:604
+#: ../../../static/js/wirecloud/Workspace.js:659
+#: ../../../static/js/wirecloud/WorkspaceTab.js:225
+#: ../../../static/js/wirecloud/WorkspaceTab.js:270
+#: ../../../static/js/wirecloud/core.js:193
+#: ../../../static/js/wirecloud/core.js:491
+#: ../../../static/js/wirecloud/core.js:656
+#: ../../../static/js/wirecloud/core.js:725
+#: ../../../static/js/wirecloud/core.js:731
+#: ../../../static/js/wirecloud/core.js:779
+#: ../../../static/js/wirecloud/ui/PublishResourceWindowMenu.js:104
+#: ../../../static/js/wirecloud/ui/WorkspaceTabViewDragboard.js:281
+#: ../../../static/js/wirecloud/ui/WorkspaceTabViewDragboard.js:442
+msgid "Unexpected response from server"
+msgstr ""
+
+#: ../../../static/js/wirecloud/wiring/Endpoint.js:61
+#, python-format
+msgid "Unimplemented function: %(funcName)s"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/CatalogueView.js:61
+msgid "Uninstall"
+msgstr ""
+
+#: ../../../static/js/wirecloud/LocalCatalogue.js:184
+#, python-format
+msgid "Uninstalling %(title)s (%(uri)s)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/LocalCatalogue.js:173
+#, python-format
+msgid "Uninstalling all versions of %(title)s (%(group_id)s)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:72
+msgid "Unknown status code"
+msgstr ""
+
+#: ../../../static/js/wirecloud/core.js:241
+msgid "Unloading WireCloud"
+msgstr ""
+
+#: ../../../static/js/wirecloud/LocalCatalogue.js:41
+msgid "Unloading affected operators"
+msgstr ""
+
+#: ../../../static/js/wirecloud/LocalCatalogue.js:38
+msgid "Unloading affected widgets"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:56
+msgid "Unprocessable Entity"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:53
+msgid "Unsupported Media Type"
+msgstr ""
+
+#: ../../../workspace/mashupTemplateParser.py:158
+#, python-format
+msgid "Unsupported resource type %(type)s"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/UpgradeWindowMenu.js:45
+msgid "Upgrade"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:59
+msgid "Upgrade Required"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:64
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentDraggablePrefs.js:134
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentPrefs.js:92
+msgid "Upgrade/Downgrade"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MarketplaceViewMenuItems.js:62
+#: ../../../static/js/wirecloud/ui/MyResourcesView.js:70
+msgid "Upload"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishResourceWindowMenu.js:69
+msgid "Upload resource"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishResourceWindowMenu.js:51
+msgid "Upload to"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceViewMenuItems.js:69
+msgid "Upload to my resources"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:79
+msgid "Upload workspace to my resources"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizedTextInputInterface.js:45
+msgid "Use current value"
+msgstr ""
+
+#: ../../../static/js/wirecloud/wiring/OperatorTargetEndpoint.js:75
+#: ../../../static/js/wirecloud/wiring/WidgetTargetEndpoint.js:77
+#, python-format
+msgid "Use in %(endpointName)s"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizedTextInputInterface.js:131
+#: ../../../static/js/wirecloud/ui/WirecloudHeader.js:116
+msgid "User"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizedTextInputInterface.js:135
+msgid "User Name"
+msgstr ""
+
+#: ../../../markets/routes.py:170
+msgid "User not found"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WidgetViewMenuItems.js:85
+msgid "User's Manual"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/SharingWindowMenu.js:171
+msgid "Users and groups with access"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizeWindowMenu.js:54
+msgid "Value"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/ParametrizeWindowMenu.js:52
+msgid "Value source"
+msgstr ""
+
+#: ../../../static/js/wirecloud/constants.js:66
+msgid "Variant Also Negotiates"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/CatalogueSearchView.js:151
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:46
+msgid "Vendor"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/PublishWorkspaceWindowMenu.js:47
+msgid "Version"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:69
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:105
+msgid "Vertical Margin between widgets (in pixels)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:71
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:107
+msgid ""
+"Vertical Margin between widgets. Must be specified in pixel units. (default: "
+"3px)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/SharingWindowMenu.js:155
+msgid "Visibility options"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:735
+msgid "Visible"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:755
+msgid "Volatile"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:756
+msgid "Volatile status of the widget"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:217
+msgid "We fill the <strong>title</strong> ..."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:237
+msgid "We have to change the <strong>title</strong> ..."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:191
+msgid "We want to be able to <strong>type the name of a technician</strong> ..."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:194
+#: ../../../static/js/wirecloud/Tutorials/BehaviourOrientedWiring.js:197
+msgid "When we <strong>select a technician</strong> ..."
+msgstr ""
+
+#: ../../../iwidget/utils.py:302
+msgid "Widget Instance not found"
+msgstr ""
+
+#: ../../../widget/utils.py:231
+msgid "Widget code not found"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:763
+msgid "Widget created successfully."
+msgstr ""
+
+#: ../../../static/js/wirecloud/wiring/WidgetTargetEndpoint.js:96
+msgid "Widget has not registered a callback for this input endpoint"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:376
+msgid "Widget loaded successfully."
+msgstr ""
+
+#: ../../../iwidget/utils.py:74
+msgid "Widget not available"
+msgstr ""
+
+#: ../../../iwidget/utils.py:71
+msgid "Widget not found"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:413
+msgid "Widget unloaded successfully."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:731
+msgid "Widget's height in layout cells"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:746
+msgid "Widget's height in pixels"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:711
+#: ../../../static/js/wirecloud/wiring/Operator.js:414
+msgid "Widget's title"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:741
+msgid "Widget's width in layout cells"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:751
+msgid "Widget's width in pixels"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/CatalogueSearchView.js:164
+#: ../../../static/js/wirecloud/ui/ComponentSidebar.js:54
+#: ../../../static/js/wirecloud/ui/WiringEditor/ComponentShowcase.js:58
+msgid "Widgets"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/LayoutInputInterface.js:37
+msgid ""
+"Widgets will tend to be placed on the topmost position available if this "
+"option is enabled. (default: enabled)"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:740
+msgid "Width"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:750
+msgid "Width in pixels"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:66
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:69
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:74
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:83
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:90
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:96
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:114
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:118
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:119
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:160
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:165
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:167
+msgid "WireCloud Basic Tutorial"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceView.js:176
+msgid "Wiring"
+msgstr ""
+
+#: ../../../static/js/wirecloud/core.js:585
+msgid "Workspace and mashup options cannot be used at the same time"
+msgstr ""
+
+#: ../../../workspace/routes.py:585 ../../../workspace/schemas.py:102
+msgid "Workspace and mashup parameters cannot be used at the same time"
+msgstr ""
+
+#: ../../../static/js/wirecloud/UserInterfaceManager.js:274
+msgid "Workspace loaded"
+msgstr ""
+
+#: ../../../iwidget/routes.py:65 ../../../iwidget/routes.py:121
+#: ../../../iwidget/routes.py:181 ../../../iwidget/routes.py:234
+#: ../../../iwidget/routes.py:288 ../../../iwidget/routes.py:339
+#: ../../../iwidget/routes.py:401 ../../../iwidget/routes.py:473
+#: ../../../iwidget/routes.py:538 ../../../iwidget/routes.py:598
+#: ../../../preferences/routes.py:129 ../../../preferences/routes.py:169
+#: ../../../preferences/routes.py:255 ../../../preferences/routes.py:299
+#: ../../../wiring/routes.py:86 ../../../wiring/routes.py:142
+#: ../../../wiring/routes.py:260 ../../../workspace/routes.py:134
+#: ../../../workspace/routes.py:250 ../../../workspace/routes.py:305
+#: ../../../workspace/routes.py:356 ../../../workspace/routes.py:402
+#: ../../../workspace/routes.py:453 ../../../workspace/routes.py:511
+#: ../../../workspace/routes.py:574 ../../../workspace/routes.py:604
+#: ../../../workspace/routes.py:702 ../../../workspace/utils.py:527
+msgid "Workspace not found"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:104
+msgid "Write a better label for the button, e.g <em>Search</em>."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:104
+msgid "Write a better placeholder text for the input, e.g. <em>Keywords</em>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Tutorials/BasicConcepts.js:104
+msgid "Write a label for the input, e.g. <em>Multimedia</em>."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:715
+msgid "X-Position"
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:720
+msgid "Y-Position"
+msgstr ""
+
+#: ../../../localcatalogue/routes.py:209
+msgid "You are not allowed allow to install components to other users"
+msgstr ""
+
+#: ../../../workspace/routes.py:365
+msgid "You are not allowed to create new tabs for this workspace"
+msgstr ""
+
+#: ../../../localcatalogue/routes.py:305
+msgid "You are not allowed to delete resources"
+msgstr ""
+
+#: ../../../markets/routes.py:163
+msgid "You are not allowed to delete this market"
+msgstr ""
+
+#: ../../../workspace/routes.py:308
+msgid "You are not allowed to delete this workspace"
+msgstr ""
+
+#: ../../../localcatalogue/routes.py:207
+msgid "You are not allowed to make resources publicly available to all users"
+msgstr ""
+
+#: ../../../workspace/routes.py:136
+msgid "You are not allowed to read from workspace"
+msgstr ""
+
+#: ../../../workspace/routes.py:607
+#, python-format
+msgid "You are not allowed to read from workspace %(workspace_id)s"
+msgstr ""
+
+#: ../../../preferences/routes.py:131 ../../../preferences/routes.py:263
+#: ../../../preferences/routes.py:307
+msgid "You are not allowed to read this workspace"
+msgstr ""
+
+#: ../../../wiring/utils.py:267 ../../../wiring/utils.py:272
+msgid "You are not allowed to remove or update read only connections"
+msgstr ""
+
+#: ../../../workspace/routes.py:519
+msgid "You are not allowed to remove this tab"
+msgstr ""
+
+#: ../../../localcatalogue/routes.py:292
+msgid "You are not allowed to retrieve info about this resource"
+msgstr ""
+
+#: ../../../preferences/routes.py:171 ../../../wiring/routes.py:96
+#: ../../../wiring/routes.py:176 ../../../wiring/utils.py:178
+#: ../../../wiring/utils.py:210 ../../../wiring/utils.py:237
+#: ../../../workspace/routes.py:253 ../../../workspace/routes.py:455
+#: ../../../workspace/routes.py:577
+msgid "You are not allowed to update this workspace"
+msgstr ""
+
+#: ../../../localcatalogue/routes.py:462
+msgid "You don't have access to this workspace"
+msgstr ""
+
+#: ../../../iwidget/routes.py:73 ../../../iwidget/routes.py:486
+#: ../../../iwidget/routes.py:601 ../../../wiring/routes.py:263
+#: ../../../workspace/routes.py:405 ../../../workspace/utils.py:530
+msgid "You don't have permission to access this workspace"
+msgstr ""
+
+#: ../../../markets/routes.py:116
+msgid "You don't have permissions for adding marketplaces in name of other user"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MyResourcesView.js:288
+msgid ""
+"You have not configured any marketplace to upload this resource. Please, "
+"configure one on the Marketplace view."
+msgstr ""
+
+#: ../../../iwidget/routes.py:128
+msgid "You have not enough permission for adding iwidgets to the workspace"
+msgstr ""
+
+#: ../../../iwidget/routes.py:352
+msgid "You have not enough permission for deleting this iwidget"
+msgstr ""
+
+#: ../../../iwidget/routes.py:296
+msgid "You have not enough permission for updating the iwidget"
+msgstr ""
+
+#: ../../../iwidget/routes.py:190
+msgid "You have not enough permission for updating the iwidgets of this workspace"
+msgstr ""
+
+#: ../../../iwidget/routes.py:564 ../../../iwidget/routes.py:567
+msgid ""
+"You have not enough permission for updating the persistent variables of this "
+"iwidget"
+msgstr ""
+
+#: ../../../iwidget/routes.py:432 ../../../iwidget/routes.py:435
+msgid "You have not enough permission for updating the preferences of the iwidget"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MissingDependenciesWindowMenu.js:52
+msgid "You will be able to continue after installing all the required dependencies."
+msgstr ""
+
+#: ../../../static/js/wirecloud/Widget.js:725
+msgid "Z-Position"
+msgstr ""
+
+#: ../../../static/js/wirecloud/WidgetMeta.js:84
+#, python-format
+msgid "[Widget; Vendor: %(vendor)s, Name: %(name)s, Version: %(version)s]"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/Component.js:38
+msgid "in use"
+msgstr ""
+
+#: ../../../markets/routes.py:113
+msgid "invalid user option"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MarketplaceView.js:241
+msgid "loading marketplace view..."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WorkspaceView.js:513
+#: ../../../static/js/wirecloud/ui/WorkspaceView.js:527
+msgid "loading..."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MarketplaceView.js:243
+msgid "marketplace list not available"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/Component.js:35
+msgid "missing"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/Component.js:41
+msgid "no endpoints"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/DragboardLayout.js:246
+msgid ""
+"the widget could not be associated with this layout as it already has an "
+"associated layout."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/WiringEditor/Component.js:32
+msgid "volatile"
+msgstr ""
+

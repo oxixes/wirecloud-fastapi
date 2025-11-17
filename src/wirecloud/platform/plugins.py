@@ -24,6 +24,7 @@ from typing import Optional, Any
 from collections.abc import Callable
 from pydantic import BaseModel
 from fastapi import FastAPI, Request
+from argparse import _SubParsersAction
 import inspect
 import logging
 import json
@@ -123,6 +124,9 @@ class WirecloudPlugin:
     def get_idm_backchannel_logout_functions(self) -> dict[str, Callable]:
         return {}
 
+    def get_management_commands(self, subparsers: _SubParsersAction) -> dict[str, Callable]:
+        return {}
+
     async def populate(self, db: DBSession, wirecloud_user: UserAll) -> bool:
         return False
 
@@ -130,6 +134,7 @@ class WirecloudPlugin:
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+_wirecloud_plugins_had_app = False
 _wirecloud_plugins: Optional[tuple[WirecloudPlugin, ...]] = None
 _wirecloud_features: Optional[dict[str, dict[str, str]]] = None
 _wirecloud_features_info: Optional[dict[str, str]] = None
@@ -186,8 +191,9 @@ def get_plugins(app: Optional[FastAPI] = None) -> tuple[WirecloudPlugin, ...]:
     from src import settings
     global _wirecloud_plugins
     global _wirecloud_features
+    global _wirecloud_plugins_had_app
 
-    if _wirecloud_plugins is None:
+    if _wirecloud_plugins is None or (not _wirecloud_plugins_had_app and app is not None):
         modules = getattr(settings, 'WIRECLOUD_PLUGINS', None)
         if modules is None:
             modules = find_wirecloud_plugins()
@@ -236,6 +242,8 @@ def get_plugins(app: Optional[FastAPI] = None) -> tuple[WirecloudPlugin, ...]:
 
         _wirecloud_plugins = tuple(plugins)
         _wirecloud_features = features
+
+    _wirecloud_plugins_had_app = app is not None
 
     return _wirecloud_plugins
 
@@ -533,6 +541,16 @@ def get_idm_backchannel_logout_functions() -> dict[str, Callable]:
         _wirecloud_idm_backchannel_logout_functions = functions
 
     return _wirecloud_idm_backchannel_logout_functions
+
+
+def get_management_commands(subparsers: _SubParsersAction) -> dict[str, Callable]:
+    plugins = get_plugins()
+    commands = {}
+
+    for plugin in plugins:
+        commands.update(plugin.get_management_commands(subparsers))
+
+    return commands
 
 
 def build_url_template(urltemplate: URLTemplate, kwargs: Optional[list[str]] = None, prefix: Optional[str] = None) -> str:

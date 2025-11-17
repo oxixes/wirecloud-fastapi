@@ -1,0 +1,69 @@
+# Spanish translations for WireCloud.
+# Copyright (C) 2025 Future Internet Consulting and Development Solutions S.L.
+# This file is distributed under the same license as the WireCloud project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: WireCloud VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-11-17 13:28+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: ../../../static/js/keycloak/sso.js:83
+msgid "Browser will be reloaded to accomodate to the new session info"
+msgstr ""
+
+#: ../../../plugins.py:71
+msgid "Client Id associated with this instance of WireCloud"
+msgstr ""
+
+#: ../../../plugins.py:65
+msgid "FIWARE token available"
+msgstr ""
+
+#: ../../../plugins.py:67
+msgid ""
+"Indicates if the current user has associated a FIWARE auth token that can be "
+"used for accessing other FIWARE resources"
+msgstr ""
+
+#: ../../../plugins.py:70
+msgid "Keycloak Client Id"
+msgstr ""
+
+#: ../../../plugins.py:74
+msgid "Keycloak session"
+msgstr ""
+
+#: ../../../plugins.py:143
+msgid "OIDC provider has not returned a valid response: invalid scope"
+msgstr ""
+
+#: ../../../plugins.py:146 ../../../plugins.py:166
+msgid ""
+"OIDC provider has not returned a valid response: missing access_token or "
+"refresh_token"
+msgstr ""
+
+#: ../../../plugins.py:186
+msgid "OIDC provider has not returned a valid response: missing preferred_username"
+msgstr ""
+
+#: ../../../plugins.py:75
+msgid "Session id"
+msgstr ""
+
+#: ../../../static/js/keycloak/sso.js:84
+msgid "User Session Updated"
+msgstr ""
+

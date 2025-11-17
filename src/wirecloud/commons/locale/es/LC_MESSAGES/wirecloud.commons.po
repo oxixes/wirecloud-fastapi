@@ -1,37 +1,128 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Spanish translations for WireCloud.
+# Copyright (C) 2025 Future Internet Consulting and Development Solutions S.L.
+# This file is distributed under the same license as the WireCloud project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-10-29 17:29+0100\n"
+"Project-Id-Version: WireCloud VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-11-17 13:28+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
 
-#: ../../../auth/routes.py:76
-msgid "Invalid username or password"
-msgstr "Nombre de usuario o contraseña inválidos"
+#: ../../../static/js/StyledElements/PaginationInterface.js:68
+msgid ""
+"<div class=\"se-input-group\"><t:firstBtn/><t:prevBtn/><div class=\"se-"
+"box\">Page: "
+"<t:currentPage/>/<t:totalPages/></div><t:nextBtn/><t:lastBtn/></div>"
+msgstr ""
 
-#: ../../../utils/downloader.py:46
+#: ../../../static/js/wirecloud/ui/MACSearch.js:140
 #, python-format
-msgid "Invalid schema: %(schema)s"
-msgstr "Esquema inválido: %(schema)s"
+msgid ""
+"<p>Currently, you do not have access to any %(scope)s component. You can get "
+"components using the Marketplace view or by uploading components manually "
+"using the Upload button on the My Resources view.</p>"
+msgstr ""
 
-#: ../../../utils/template/parsers/xml.py:131
-msgid "Missing document namespace"
-msgstr "Namespace del documento no encontrado"
+#: ../../../static/js/wirecloud/ui/MACSearch.js:143
+msgid ""
+"<p>Currently, you do not have access to any component. You can get components"
+" using the Marketplace view or by uploading components manually using the "
+"Upload button on the My Resources view.</p>"
+msgstr ""
 
-#: ../../../utils/template/parsers/xml.py:135
+#: ../../../static/js/wirecloud/ui/MACSearch.js:120
+msgid "<p>Showing results for <b><t:corrected_query/></b></p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MACSearch.js:137
+#, python-format
+msgid ""
+"<p>We couldn't find anything for your search - "
+"<b>%(keywords)s.</b></p><p>Suggestions:</p><ul><li>Make sure all words are "
+"spelled correctly.</li><li>Try different keywords.</li><li>Try more general "
+"keywords.</li></ul>"
+msgstr ""
+
+#: ../../../static/js/StyledElements/Form.js:246
+#: ../../../static/js/wirecloud/ui/MessageWindowMenu.js:45
+msgid "Accept"
+msgstr ""
+
+#: ../../../static/js/StyledElements/Notebook.js:168
+#: ../../../static/js/StyledElements/Notebook.js:171
+msgid "Add Tab"
+msgstr ""
+
+#: ../../../static/js/StyledElements/Form.js:257
+#: ../../../static/js/wirecloud/ui/Tutorial/SimpleDescription.js:140
+msgid "Cancel"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MACField.js:89
+msgid "Clear current selection"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/HTMLWindowMenu.js:45
+#: ../../../static/js/wirecloud/ui/MACSelectionWindowMenu.js:48
+#: ../../../static/js/wirecloud/ui/Tutorial/SimpleDescription.js:180
+#: ../../../static/js/wirecloud/ui/WindowMenu.js:127
+msgid "Close"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MACSearch.js:50
+msgid "Connection error: No resource retrieved"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MessageWindowMenu.js:29
+msgid "Error"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/TutorialCatalogue.js:52
+msgid "If you prefer, you can follow some of these tutorials:"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MessageWindowMenu.js:29
+msgid "Info"
+msgstr ""
+
+#: ../../../utils/template/parsers/rdf.py:548
+#: ../../../utils/template/parsers/rdf.py:556
+#, python-format
+msgid "Invalid code content type: %s"
+msgstr "Tipo de contenido de código inválido: %s"
+
+#: ../../../utils/template/parsers/rdf.py:396
+#, python-format
+msgid "Invalid component type in wiring: %s"
+msgstr "Tipo de componente inválido en el wiring: %s"
+
+#: ../../../utils/template/parsers/json.py:47
+#, python-format
+msgid "Invalid component type: %s"
+msgstr "Tipo de componente inválido: %s"
+
+#: ../../../utils/template/parsers/rdf.py:126
+#, python-format
+msgid "Invalid content for field: %(field)s"
+msgstr "Contenido inválido para el campo: %(field)s"
+
+#: ../../../utils/template/parsers/json.py:41
+msgid "Invalid input data"
+msgstr "Datos de entrada inválidos"
+
 #: ../../../utils/template/parsers/rdf.py:88
+#: ../../../utils/template/parsers/xml.py:135
 msgid "Invalid namespace: "
 msgstr "Namespace inválido: "
 
@@ -40,20 +131,141 @@ msgstr "Namespace inválido: "
 msgid "Invalid root element (%s)"
 msgstr "Elemento raíz inválido (%s)"
 
+#: ../../../utils/template/parsers/rdf.py:91
+msgid "Invalid root element: "
+msgstr "Elemento raíz inválido: "
+
+#: ../../../utils/downloader.py:46
+#, python-format
+msgid "Invalid schema: %(schema)s"
+msgstr "Esquema inválido: %(schema)s"
+
+#: ../../../utils/template/parsers/rdf.py:747
+#: ../../../utils/template/parsers/xml.py:646
+msgid "Invalid screen sizes present in the template."
+msgstr "Tamaños de pantalla inválidos presentes en la plantilla."
+
+#: ../../../utils/template/parsers/json.py:73
+msgid "Invalid screen sizes range present in the template"
+msgstr "Rango de tamaños de pantalla inválido presente en la plantilla"
+
+#: ../../../utils/template/parsers/rdf.py:80
+msgid "Invalid template type"
+msgstr "Tipo de plantilla inválido"
+
+#: ../../../utils/template/parsers/rdf.py:768
+#: ../../../utils/template/parsers/xml.py:688
+#, python-format
+msgid "Invalid template: %s"
+msgstr "Plantilla inválida: %s"
+
+#: ../../../auth/routes.py:97
+msgid "Invalid user"
+msgstr ""
+
+#: ../../../auth/routes.py:227
+msgid "Invalid username or password"
+msgstr "Nombre de usuario o contraseña inválidos"
+
+#: ../../../utils/template/writers/json.py:32
+#: ../../../utils/template/writers/json.py:43
+#, python-format
+msgid "Invalid value for field %s"
+msgstr "Valor inválido para el campo %s"
+
+#: ../../../utils/template/parsers/xml.py:364
+#, python-format
+msgid "Invalid wiring version: %s"
+msgstr "Versión de wiring inválida: %s"
+
+#: ../../../static/js/wirecloud/ui/MACSearch.js:183
+msgid "Keywords..."
+msgstr ""
+
 #: ../../../utils/template/parsers/xml.py:158
 #, python-format
 msgid "Missing %s element"
 msgstr "Elemento %s no encontrado"
 
-#: ../../../utils/template/parsers/xml.py:197
+#: ../../../utils/template/writers/xml.py:35
+#, python-format
+msgid "Missing %s option"
+msgstr "Opción %s no encontrada"
+
+#: ../../../utils/template/parsers/json.py:44
+msgid "Missing component type."
+msgstr "Tipo de componente no encontrado."
+
+#: ../../../utils/template/parsers/xml.py:131
+msgid "Missing document namespace"
+msgstr "Namespace del documento no encontrado"
+
+#: ../../../utils/template/parsers/xml.py:553
+msgid "Missing layout in resource or rendering element"
+msgstr "Layout no encontrado en el elemento resource o rendering"
+
+#: ../../../utils/template/parsers/xml.py:550
+msgid "Missing position/rendering or screensizes element"
+msgstr "Elemento position/rendering o screensizes no encontrado"
+
 #: ../../../utils/template/parsers/rdf.py:149
 #: ../../../utils/template/parsers/rdf.py:164
+#: ../../../utils/template/parsers/xml.py:197
 #, python-format
 msgid "Missing required field: %(field)s"
 msgstr "Campo requerido no encontrado: %(field)s"
 
-#: ../../../utils/template/parsers/xml.py:358
+#: ../../../utils/template/parsers/rdf.py:590
+msgid "Missing required field: Javascript files"
+msgstr "Campo requerido no encontrado: Archivos Javascript"
+
+#: ../../../utils/template/parsers/rdf.py:571
+msgid "Missing required field: Main content"
+msgstr "Campo requerido no encontrado: Contenido principal"
+
+#: ../../../utils/template/parsers/rdf.py:357
+msgid "Missing required field: target"
+msgstr "Campo requerido no encontrado: target"
+
+#: ../../../static/js/StyledElements/Utils.js:510
+msgid "N/A"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/Tutorial/SimpleDescription.js:123
+msgid "Next"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/AlertWindowMenu.js:78
+msgid "No"
+msgstr ""
+
+#: ../../../static/js/StyledElements/ModelTable.js:453
+msgid "No data available"
+msgstr ""
+
+#: ../../../static/js/StyledElements/Typeahead.js:89
+msgid "No results found for <em><t:query/></em>"
+msgstr ""
+
+#: ../../../auth/utils.py:192 ../../../auth/utils.py:201
+msgid "OIDC provider has not returned a valid response"
+msgstr ""
+
+#: ../../../auth/routes.py:66 ../../../auth/routes.py:69
+#: ../../../auth/routes.py:402
+msgid "OIDC provider is not configured correctly! Contact your administrator."
+msgstr ""
+
+#: ../../../auth/routes.py:63
+msgid "OIDC provider is not enabled"
+msgstr ""
+
+#: ../../../auth/utils.py:188
+msgid "OIDC provider is not reachable"
+msgstr ""
+
 #: ../../../utils/template/parsers/rdf.py:331
+#: ../../../utils/template/parsers/xml.py:358
 msgid ""
 "Only wiring version 2.0 is supported. The old 1.0 version is no longer "
 "supported."
@@ -61,72 +273,90 @@ msgstr ""
 "Sólo se soporta la versión 2.0 de wiring. La versión antigua 1.0 ya no se "
 "soporta."
 
-#: ../../../utils/template/parsers/xml.py:364
-#, python-format
-msgid "Invalid wiring version: %s"
-msgstr "Versión de wiring inválida: %s"
-
-#: ../../../utils/template/parsers/xml.py:443
-msgid "The use of the script element is not allowed in version 1.0 widgets"
-msgstr "El uso del elemento script no está permitido en widgets de la versión 1.0"
-
-#: ../../../utils/template/parsers/xml.py:550
-msgid "Missing position/rendering or screensizes element"
-msgstr "Elemento position/rendering o screensizes no encontrado"
-
-#: ../../../utils/template/parsers/xml.py:553
-msgid "Missing layout in resource or rendering element"
-msgstr "Layout no encontrado en el elemento resource o rendering"
-
-#: ../../../utils/template/parsers/xml.py:646
-#: ../../../utils/template/parsers/rdf.py:747
-msgid "Invalid screen sizes present in the template."
-msgstr "Tamaños de pantalla inválidos presentes en la plantilla."
-
-#: ../../../utils/template/parsers/xml.py:688
-#: ../../../utils/template/parsers/rdf.py:768
-#, python-format
-msgid "Invalid template: %s"
-msgstr "Plantilla inválida: %s"
-
-#: ../../../utils/template/parsers/rdf.py:80
-msgid "Invalid template type"
-msgstr "Tipo de plantilla inválido"
-
-#: ../../../utils/template/parsers/rdf.py:85
-msgid "XML document does not contain a valid rdf namespace"
-msgstr "El documento XML no contiene un namespace RDF válido"
-
-#: ../../../utils/template/parsers/rdf.py:91
-msgid "Invalid root element: "
-msgstr "Elemento raíz inválido: "
-
 #: ../../../utils/template/parsers/rdf.py:110
 msgid "RDF document does not describe a widget, operator or mashup component"
 msgstr "El documento RDF no describe un componente de widget, operador o mashup"
 
-#: ../../../utils/template/parsers/rdf.py:126
+#: ../../../static/js/StyledElements/Form.js:234
+msgid "Reset"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MACField.js:100
+msgid "Search"
+msgstr ""
+
+#: ../../../static/js/StyledElements/FileField.js:101
+#: ../../../static/js/wirecloud/ui/MACSelectionWindowMenu.js:38
+msgid "Select"
+msgstr ""
+
+#: ../../../static/js/StyledElements/Form.js:223
+msgid "Set Defaults"
+msgstr ""
+
+#: ../../../static/js/StyledElements/ModelTable.js:58
 #, python-format
-msgid "Invalid content for field: %(field)s"
-msgstr "Contenido inválido para el campo: %(field)s"
+msgid "Sort by %(column_name)s"
+msgstr ""
+
+#: ../../../static/js/StyledElements/InputInterfaces.js:82
+#, python-format
+msgid "The following field do not contain a valid version number: %(fields)s."
+msgstr ""
+
+#: ../../../static/js/StyledElements/InputInterfaces.js:85
+#, python-format
+msgid "The following fields contain invalid characters: %(fields)s."
+msgstr ""
+
+#: ../../../static/js/StyledElements/InputInterfaces.js:79
+#, python-format
+msgid "The following fields do not contain a valid E-Mail address: %(fields)s."
+msgstr ""
+
+#: ../../../static/js/StyledElements/InputInterfaces.js:76
+#, python-format
+msgid "The following fields do not contain a valid URL: %(fields)s."
+msgstr ""
+
+#: ../../../static/js/StyledElements/InputInterfaces.js:88
+#, python-format
+msgid "The following fields do not contain a valid color value: %(fields)s."
+msgstr ""
+
+#: ../../../static/js/StyledElements/InputInterfaces.js:91
+#, python-format
+msgid "The following fields does contain an out of range value: %(fields)s."
+msgstr ""
+
+#: ../../../static/js/StyledElements/InputInterfaces.js:73
+#, python-format
+msgid "The following required fields are empty: %(fields)s."
+msgstr ""
+
+#: ../../../utils/template/schemas/macdschemas.py:134
+#, python-format
+msgid "The following translation indexes are not used: %(indexes)s."
+msgstr "Los siguientes índices de traducción no se usan: %(indexes)s."
+
+#: ../../../utils/template/schemas/macdschemas.py:130
+#, python-format
+msgid "The following translation indexes need a default value: %(indexes)s."
+msgstr ""
+"Los siguientes índices de traducción necesitan un valor por defecto: "
+"%(indexes)s."
 
 #: ../../../utils/template/parsers/rdf.py:218
 msgid "The format of the macversion is invalid. It must be an integer."
 msgstr "El formato de la macversion es inválido. Debe ser un entero."
 
-#: ../../../utils/template/parsers/rdf.py:220
-msgid ""
-"The macversion is invalid. Currently only macversion 1 or 2 are supported."
-msgstr ""
-"La macversion es inválida. Actualmente sólo se soportan las macversion 1 o 2."
+#: ../../../utils/template/parsers/rdf.py:229
+msgid "The format of the name is invalid."
+msgstr "El formato del nombre es inválido."
 
 #: ../../../utils/template/parsers/rdf.py:225
 msgid "The format of the vendor is invalid."
 msgstr "El formato del vendor es inválido."
-
-#: ../../../utils/template/parsers/rdf.py:229
-msgid "The format of the name is invalid."
-msgstr "El formato del nombre es inválido."
 
 #: ../../../utils/template/parsers/rdf.py:233
 msgid ""
@@ -138,14 +368,61 @@ msgstr ""
 "entero. Ej. \"0.1\", \"1.11\" NOTA: \"1.01\" debería cambiarse a \"1.0.1\" o "
 "\"1.1\""
 
-#: ../../../utils/template/parsers/rdf.py:357
-msgid "Missing required field: target"
-msgstr "Campo requerido no encontrado: target"
+#: ../../../utils/template/parsers/rdf.py:220
+msgid "The macversion is invalid. Currently only macversion 1 or 2 are supported."
+msgstr "La macversion es inválida. Actualmente sólo se soportan las macversion 1 o 2."
 
-#: ../../../utils/template/parsers/rdf.py:396
+#: ../../../utils/http.py:283
+msgid ""
+"The requested resource is only capable of generating content not acceptable "
+"according to the Accept headers sent in the request"
+msgstr ""
+"El recurso solicitado sólo es capaz de generar contenido no aceptable según "
+"los encabezados Accept enviados en la petición"
+
+#: ../../../static/js/StyledElements/InputInterfaces.js:94
+msgid ""
+"The sceen sizes are not correct. They must cover the whole range of possible "
+"screen sizes without gaps or overlaps."
+msgstr ""
+
+#: ../../../utils/template/parsers/xml.py:443
+msgid "The use of the script element is not allowed in version 1.0 widgets"
+msgstr "El uso del elemento script no está permitido en widgets de la versión 1.0"
+
+#: ../../../utils/template/schemas/macdschemas.py:126
 #, python-format
-msgid "Invalid component type in wiring: %s"
-msgstr "Tipo de componente inválido en el wiring: %s"
+msgid ""
+"There isn't a translation element for the default translation language: "
+"(%(default_lang)s)"
+msgstr ""
+"No hay un elemento de traducción para el idioma de traducción por defecto: "
+"(%(default_lang)s)"
+
+#: ../../../static/js/wirecloud/ui/TutorialSubMenu.js:33
+msgid "Tutorials"
+msgstr ""
+
+#: ../../../utils/http.py:310
+msgid "Unsupported request media type"
+msgstr "Tipo de medio de petición no soportado"
+
+#: ../../../static/js/wirecloud/ui/AlertWindowMenu.js:85
+#: ../../../static/js/wirecloud/ui/MessageWindowMenu.js:29
+msgid "Warning"
+msgstr ""
+
+#: ../../../utils/template/parsers/rdf.py:85
+msgid "XML document does not contain a valid rdf namespace"
+msgstr "El documento XML no contiene un namespace RDF válido"
+
+#: ../../../static/js/wirecloud/ui/AlertWindowMenu.js:77
+msgid "Yes"
+msgstr ""
+
+#: ../../../auth/routes.py:354 ../../../auth/routes.py:398
+msgid "You are not logged in"
+msgstr ""
 
 #: ../../../utils/template/parsers/rdf.py:439
 msgid "missing required field: hasSourceEndpoint"
@@ -155,75 +432,3 @@ msgstr "Campo requerido no encontrado: hasSourceEndpoint"
 msgid "missing required field: hasTargetEndpoint"
 msgstr "Campo requerido no encontrado: hasTargetEndpoint"
 
-#: ../../../utils/template/parsers/rdf.py:548
-#: ../../../utils/template/parsers/rdf.py:556
-#, python-format
-msgid "Invalid code content type: %s"
-msgstr "Tipo de contenido de código inválido: %s"
-
-#: ../../../utils/template/parsers/rdf.py:571
-msgid "Missing required field: Main content"
-msgstr "Campo requerido no encontrado: Contenido principal"
-
-#: ../../../utils/template/parsers/rdf.py:590
-msgid "Missing required field: Javascript files"
-msgstr "Campo requerido no encontrado: Archivos Javascript"
-
-#: ../../../utils/template/parsers/json.py:41
-msgid "Invalid input data"
-msgstr "Datos de entrada inválidos"
-
-#: ../../../utils/template/parsers/json.py:44
-msgid "Missing component type."
-msgstr "Tipo de componente no encontrado."
-
-#: ../../../utils/template/parsers/json.py:47
-#, python-format
-msgid "Invalid component type: %s"
-msgstr "Tipo de componente inválido: %s"
-
-#: ../../../utils/template/parsers/json.py:73
-msgid "Invalid screen sizes range present in the template"
-msgstr "Rango de tamaños de pantalla inválido presente en la plantilla"
-
-#: ../../../utils/template/writers/xml.py:35
-#, python-format
-msgid "Missing %s option"
-msgstr "Opción %s no encontrada"
-
-#: ../../../utils/template/writers/json.py:32
-#: ../../../utils/template/writers/json.py:43
-#, python-format
-msgid "Invalid value for field %s"
-msgstr "Valor inválido para el campo %s"
-
-#: ../../../utils/template/schemas/macdschemas.py:124
-#, python-format
-msgid ""
-"There isn't a translation element for the default translation language: "
-"(%(default_lang)s)"
-msgstr ""
-"No hay un elemento de traducción para el idioma de traducción por defecto: "
-"(%(default_lang)s)"
-
-#: ../../../utils/template/schemas/macdschemas.py:128
-#, python-format
-msgid "The following translation indexes need a default value: %(indexes)s."
-msgstr "Los siguientes índices de traducción necesitan un valor por defecto: %(indexes)s."
-
-#: ../../../utils/template/schemas/macdschemas.py:132
-#, python-format
-msgid "The following translation indexes are not used: %(indexes)s."
-msgstr "Los siguientes índices de traducción no se usan: %(indexes)s."
-
-#: ../../../utils/http.py:258
-msgid ""
-"The requested resource is only capable of generating content not acceptable "
-"according to the Accept headers sent in the request"
-msgstr ""
-"El recurso solicitado sólo es capaz de generar contenido no aceptable según "
-"los encabezados Accept enviados en la petición"
-
-#: ../../../utils/http.py:286
-msgid "Unsupported request media type"
-msgstr "Tipo de medio de petición no soportado"

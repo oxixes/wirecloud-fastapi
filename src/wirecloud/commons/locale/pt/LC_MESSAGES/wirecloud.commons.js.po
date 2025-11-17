@@ -1,0 +1,198 @@
+# Portuguese translations for WireCloud.
+# Copyright (C) 2025 Future Internet Consulting and Development Solutions S.L.
+# This file is distributed under the same license as the WireCloud project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: WireCloud VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-11-17 12:35+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: pt\n"
+"Language-Team: pt <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: ../../../static/js/StyledElements/PaginationInterface.js:68
+msgid ""
+"<div class=\"se-input-group\"><t:firstBtn/><t:prevBtn/><div class=\"se-"
+"box\">Page: "
+"<t:currentPage/>/<t:totalPages/></div><t:nextBtn/><t:lastBtn/></div>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MACSearch.js:140
+#, python-format
+msgid ""
+"<p>Currently, you do not have access to any %(scope)s component. You can get "
+"components using the Marketplace view or by uploading components manually "
+"using the Upload button on the My Resources view.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MACSearch.js:143
+msgid ""
+"<p>Currently, you do not have access to any component. You can get components"
+" using the Marketplace view or by uploading components manually using the "
+"Upload button on the My Resources view.</p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MACSearch.js:120
+msgid "<p>Showing results for <b><t:corrected_query/></b></p>"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MACSearch.js:137
+#, python-format
+msgid ""
+"<p>We couldn't find anything for your search - "
+"<b>%(keywords)s.</b></p><p>Suggestions:</p><ul><li>Make sure all words are "
+"spelled correctly.</li><li>Try different keywords.</li><li>Try more general "
+"keywords.</li></ul>"
+msgstr ""
+
+#: ../../../static/js/StyledElements/Form.js:246
+#: ../../../static/js/wirecloud/ui/MessageWindowMenu.js:45
+msgid "Accept"
+msgstr ""
+
+#: ../../../static/js/StyledElements/Notebook.js:168
+#: ../../../static/js/StyledElements/Notebook.js:171
+msgid "Add Tab"
+msgstr ""
+
+#: ../../../static/js/StyledElements/Form.js:257
+#: ../../../static/js/wirecloud/ui/Tutorial/SimpleDescription.js:140
+msgid "Cancel"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MACField.js:89
+msgid "Clear current selection"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/HTMLWindowMenu.js:45
+#: ../../../static/js/wirecloud/ui/MACSelectionWindowMenu.js:48
+#: ../../../static/js/wirecloud/ui/Tutorial/SimpleDescription.js:180
+#: ../../../static/js/wirecloud/ui/WindowMenu.js:127
+msgid "Close"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MACSearch.js:50
+msgid "Connection error: No resource retrieved"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MessageWindowMenu.js:29
+msgid "Error"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/TutorialCatalogue.js:52
+msgid "If you prefer, you can follow some of these tutorials:"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MessageWindowMenu.js:29
+msgid "Info"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MACSearch.js:183
+msgid "Keywords..."
+msgstr ""
+
+#: ../../../static/js/StyledElements/Utils.js:510
+msgid "N/A"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/Tutorial/SimpleDescription.js:123
+msgid "Next"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/AlertWindowMenu.js:78
+msgid "No"
+msgstr ""
+
+#: ../../../static/js/StyledElements/ModelTable.js:453
+msgid "No data available"
+msgstr ""
+
+#: ../../../static/js/StyledElements/Typeahead.js:89
+msgid "No results found for <em><t:query/></em>"
+msgstr ""
+
+#: ../../../static/js/StyledElements/Form.js:234
+msgid "Reset"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/MACField.js:100
+msgid "Search"
+msgstr ""
+
+#: ../../../static/js/StyledElements/FileField.js:101
+#: ../../../static/js/wirecloud/ui/MACSelectionWindowMenu.js:38
+msgid "Select"
+msgstr ""
+
+#: ../../../static/js/StyledElements/Form.js:223
+msgid "Set Defaults"
+msgstr ""
+
+#: ../../../static/js/StyledElements/ModelTable.js:58
+#, python-format
+msgid "Sort by %(column_name)s"
+msgstr ""
+
+#: ../../../static/js/StyledElements/InputInterfaces.js:82
+#, python-format
+msgid "The following field do not contain a valid version number: %(fields)s."
+msgstr ""
+
+#: ../../../static/js/StyledElements/InputInterfaces.js:85
+#, python-format
+msgid "The following fields contain invalid characters: %(fields)s."
+msgstr ""
+
+#: ../../../static/js/StyledElements/InputInterfaces.js:79
+#, python-format
+msgid "The following fields do not contain a valid E-Mail address: %(fields)s."
+msgstr ""
+
+#: ../../../static/js/StyledElements/InputInterfaces.js:76
+#, python-format
+msgid "The following fields do not contain a valid URL: %(fields)s."
+msgstr ""
+
+#: ../../../static/js/StyledElements/InputInterfaces.js:88
+#, python-format
+msgid "The following fields do not contain a valid color value: %(fields)s."
+msgstr ""
+
+#: ../../../static/js/StyledElements/InputInterfaces.js:91
+#, python-format
+msgid "The following fields does contain an out of range value: %(fields)s."
+msgstr ""
+
+#: ../../../static/js/StyledElements/InputInterfaces.js:73
+#, python-format
+msgid "The following required fields are empty: %(fields)s."
+msgstr ""
+
+#: ../../../static/js/StyledElements/InputInterfaces.js:94
+msgid ""
+"The sceen sizes are not correct. They must cover the whole range of possible "
+"screen sizes without gaps or overlaps."
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/TutorialSubMenu.js:33
+msgid "Tutorials"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/AlertWindowMenu.js:85
+#: ../../../static/js/wirecloud/ui/MessageWindowMenu.js:29
+msgid "Warning"
+msgstr ""
+
+#: ../../../static/js/wirecloud/ui/AlertWindowMenu.js:77
+msgid "Yes"
+msgstr ""
+

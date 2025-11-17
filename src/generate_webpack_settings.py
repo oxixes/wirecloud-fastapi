@@ -18,7 +18,7 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Generate a small settings JSON for webpack in the system temporary directory.
+Generates a small settings JSON for webpack in the system temporary directory.
 The output path is taken from the WEBPACK_SETTINGS_JSON environment variable if set,
 otherwise the script writes to: <tempdir>/wirecloud_settings_js.json.
 

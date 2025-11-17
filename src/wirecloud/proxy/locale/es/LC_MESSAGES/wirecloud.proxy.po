@@ -1,44 +1,80 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Spanish translations for WireCloud.
+# Copyright (C) 2025 Future Internet Consulting and Development Solutions S.L.
+# This file is distributed under the same license as the WireCloud project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-10-29 18:04+0100\n"
+"Project-Id-Version: WireCloud VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-11-17 13:28+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-#: ../../../routes.py:154
-msgid "Gateway Timeout"
-msgstr "Tiempo de espera agotado"
+"Generated-By: Babel 2.17.0\n"
 
 #: ../../../routes.py:156
 msgid "Bad Gateway"
 msgstr "Pasarela incorrecta"
 
-#: ../../../routes.py:158
+#: ../../../routes.py:355 ../../../routes.py:357 ../../../routes.py:362
 msgid "Connection Error"
 msgstr "Error de conexión"
 
-#: ../../../routes.py:199
+#: ../../../routes.py:444 ../../../routes.py:483
+#, python-format
+msgid "Error processing proxy request: %s"
+msgstr "Error procesando la petición del proxy: %s"
+
+#: ../../../routes.py:343 ../../../routes.py:345
+msgid "Gateway Timeout"
+msgstr "Tiempo de espera agotado"
+
+#: ../../../routes.py:421 ../../../routes.py:459
 #, python-format
 msgid "Invalid protocol: %s"
 msgstr "Protocolo inválido: %s"
 
-#: ../../../routes.py:204
+#: ../../../routes.py:426 ../../../routes.py:465
 msgid "Invalid request"
 msgstr "Petición inválida"
 
-#: ../../../routes.py:223
+#: ../../../routes.py:349 ../../../routes.py:351
+msgid "SSL error"
+msgstr ""
+
+#: ../../../processors.py:153
+msgid ""
+"X-WireCloud-Secure-Data: The \"data\" action is not supported for WebSocket "
+"requests."
+msgstr ""
+
+#: ../../../processors.py:72
 #, python-format
-msgid "Error processing proxy request: %s"
-msgstr "Error procesando la petición del proxy: %s"
+msgid ""
+"X-WireCloud-Secure-Data: The following required parameters are invalid: "
+"%(params)s"
+msgstr ""
+
+#: ../../../processors.py:60
+#, python-format
+msgid ""
+"X-WireCloud-Secure-Data: The following required parameters are missing: "
+"%(params)s"
+msgstr ""
+
+#: ../../../processors.py:110
+msgid "X-WireCloud-Secure-Data: The request does not contain any data to process."
+msgstr ""
+
+#: ../../../processors.py:155
+#, python-format
+msgid "X-WireCloud-Secure-Data: Unknown action \"%(action)s\"."
+msgstr ""
+

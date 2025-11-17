@@ -18,13 +18,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-# TODO Add translations, finish the class implementation
+# TODO Add translations
 
 import os
+from argparse import _SubParsersAction
 from urllib.parse import quote_plus
 import orjson as json
 from hashlib import sha1, md5
-from typing import Any, Optional
+from typing import Any, Optional, Callable
 from fastapi import FastAPI, Request
 
 import src.wirecloud.platform as platform
@@ -35,6 +36,7 @@ from src.wirecloud.commons.utils.http import get_absolute_reverse_url
 from src.wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version
 from src.wirecloud.commons.utils.wgt import WgtFile
 from src.wirecloud.database import DBSession
+from src.wirecloud.platform.core.commands import setup_commands
 from src.wirecloud.platform.iwidget.routes import iwidget_router
 from src.wirecloud.platform.localcatalogue.schemas import ResourceCreateData, ResourceCreateFormData
 from src.wirecloud.platform.localcatalogue.utils import install_component
@@ -505,6 +507,9 @@ class WirecloudCorePlugin(WirecloudPlugin):
             "ResourceCreateData": ResourceCreateData.model_json_schema(),
             "ResourceCreateFormData": ResourceCreateFormData.model_json_schema(),
         }
+
+    def get_management_commands(self, subparsers: _SubParsersAction) -> dict[str, Callable]:
+        return setup_commands(subparsers)
 
     async def populate(self, db: DBSession, wirecloud_user: UserAll) -> bool:
         updated = False
