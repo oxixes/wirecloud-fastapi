@@ -418,6 +418,17 @@ def compiletranslations_cmd(args: argparse.Namespace) -> None:
     print("=" * 70)
 
 
+async def rebuildsearchindexes_cmd(_args: argparse.Namespace) -> None:
+    from src.wirecloud.commons.search import rebuild_all_indexes
+    from src.wirecloud.database import get_session
+
+    # get_session provides an async iterator
+    async for session in get_session():
+        await rebuild_all_indexes(session)
+
+    print("Search indexes rebuilt successfully.")
+
+
 def setup_commands(subparsers: argparse._SubParsersAction) -> dict[str, Callable]:
     runserver = subparsers.add_parser("runserver", help="Start the development server (uvicorn)")
     runserver.add_argument("-H", "--host", default="localhost", help="Host to bind to (default: localhost)")
@@ -433,8 +444,11 @@ def setup_commands(subparsers: argparse._SubParsersAction) -> dict[str, Callable
     compiletranslations.add_argument("-l", "--language", help="Compile translations for a specific language. If not specified, all languages from settings.LANGUAGES will be compiled.")
     compiletranslations.add_argument("-v", "--verbose", action="store_true", help="Show detailed output for each file compiled")
 
+    _rebuildsearchindexes = subparsers.add_parser("rebuildsearchindexes", help="Rebuild all search indexes")
+
     return {
         "runserver": runserver_cmd,
         "gentranslations": gentranslations_cmd,
-        "compiletranslations": compiletranslations_cmd
+        "compiletranslations": compiletranslations_cmd,
+        "rebuildsearchindexes": rebuildsearchindexes_cmd
     }

@@ -9,4 +9,5 @@ python-multipart
 aiocache
 aiofiles
 httpx
+elasticsearch
 Babel>=2.12.0

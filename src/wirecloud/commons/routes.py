@@ -94,36 +94,3 @@ async def search_resources(user: UserDepNoCSRF, request: Request,
     if res is None:
         return build_error_response(request, 422, _('Invalid orderby value'))
     return res
-
-
-@router.post(
-    '/api/search/rebuild/{namespace}',
-    summary=docs.rebuild_index_resources_summary,
-    description=docs.rebuild_index_resources_description,
-    response_class=Response,
-    status_code=204,
-    response_description=docs.rebuild_index_resources_response_description,
-    responses={
-        401: root_docs.generate_auth_required_response_openapi_description(
-                docs.rebuild_index_resources_auth_required_response_description
-        ),
-        403: root_docs.generate_permission_denied_response_openapi_description(
-                docs.rebuild_index_resources_permission_denied_response_description,
-            'Only superusers can rebuild the search index'
-        ),
-        422: root_docs.generate_validation_error_response_openapi_description(
-                docs.rebuild_index_resources_validation_error_response_description)
-        }
-)
-@authentication_required()
-async def rebuild_index_resources(db: DBDep, user: UserDep, request: Request,
-                                  namespace: str = Path(description=docs.rebuild_index_resources_namespace_description)):
-    if not user.is_superuser:
-        return build_error_response(request, 403, _('Only superusers can rebuild the search index'))
-
-    if not is_available_rebuild_engine(namespace):
-        return build_error_response(request, 422, _(f'Invalid search namespace {namespace}'))
-
-    await get_rebuild_engine(namespace)(db)
-
-    return Response(status_code=204)

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 # Copyright (c) 2025 Future Internet Consulting and Development Solutions S.L.
 
 # This file is part of Wirecloud.
@@ -22,6 +23,8 @@ import argparse
 import sys
 from pathlib import Path
 from typing import Optional, Callable
+
+from src.settings_validator import validate_settings
 
 # Add the parent directory to the path to allow importing src module
 # This allows the script to work when run as "python manage.py" or "python -m src.manage"
@@ -47,6 +50,7 @@ def _parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
 
 
 async def main(argv: Optional[list[str]] = None) -> int:
+    await validate_settings()
     args = _parse_args(argv)
 
     command_func = _commands.get(args.command)
@@ -58,11 +62,6 @@ async def main(argv: Optional[list[str]] = None) -> int:
         return 0
 
     return 2
-
-
-def main_sync():
-    """Synchronous wrapper for main() to be used as a console script entry point."""
-    return asyncio.run(main())
 
 
 if __name__ == "__main__":

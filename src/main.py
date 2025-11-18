@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 # Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
 
 # This file is part of Wirecloud.
@@ -38,7 +39,6 @@ from src.wirecloud import docs
 async def lifespan(app: FastAPI):
     get_plugins(app)
     await validate_settings()
-    get_plugins(app)
     yield
     close()
 
