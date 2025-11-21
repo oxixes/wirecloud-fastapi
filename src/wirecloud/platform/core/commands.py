@@ -22,6 +22,8 @@ import os
 from pathlib import Path
 from typing import Callable
 
+from src.wirecloud.platform.plugins import get_plugins
+
 
 async def runserver_cmd(args: argparse.Namespace) -> None:
     import uvicorn
@@ -429,6 +431,45 @@ async def rebuildsearchindexes_cmd(_args: argparse.Namespace) -> None:
     print("Search indexes rebuilt successfully.")
 
 
+async def populate_cmd(_args: argparse.Namespace) -> None:
+    from src.wirecloud.database import get_session
+
+    async for session in get_session():
+        # Get the wirecloud user
+        from src.wirecloud.commons.auth.crud import get_user_with_all_info_by_username
+
+        wirecloud_user = await get_user_with_all_info_by_username(session, "wirecloud")
+        if not wirecloud_user:
+            # Create the wirecloud user if it doesn't exist
+            from src.wirecloud.commons.auth.crud import create_user
+            from src.wirecloud.commons.auth.schemas import UserCreate
+            from src.wirecloud.database import commit
+
+            wirecloud_user_data = UserCreate(
+                username="wirecloud",
+                email="",
+                first_name="",
+                last_name="",
+                is_superuser=False,
+                is_staff=False,
+                is_active=True,
+                idm_data={},
+                password="!"
+            )
+
+            await create_user(session, wirecloud_user_data)
+            await commit(session)
+
+            wirecloud_user = await get_user_with_all_info_by_username(session, "wirecloud")
+
+            print("Created 'wirecloud' user.")
+
+        plugins = get_plugins()
+        for plugin in plugins:
+            if hasattr(plugin, "populate"):
+                await plugin.populate(session, wirecloud_user)
+
+
 def setup_commands(subparsers: argparse._SubParsersAction) -> dict[str, Callable]:
     runserver = subparsers.add_parser("runserver", help="Start the development server (uvicorn)")
     runserver.add_argument("-H", "--host", default="localhost", help="Host to bind to (default: localhost)")
@@ -445,10 +486,12 @@ def setup_commands(subparsers: argparse._SubParsersAction) -> dict[str, Callable
     compiletranslations.add_argument("-v", "--verbose", action="store_true", help="Show detailed output for each file compiled")
 
     _rebuildsearchindexes = subparsers.add_parser("rebuildsearchindexes", help="Rebuild all search indexes")
+    _populate = subparsers.add_parser("populate", help="Populate the database with initial data")
 
     return {
         "runserver": runserver_cmd,
         "gentranslations": gentranslations_cmd,
         "compiletranslations": compiletranslations_cmd,
-        "rebuildsearchindexes": rebuildsearchindexes_cmd
+        "rebuildsearchindexes": rebuildsearchindexes_cmd,
+        "populate": populate_cmd
     }

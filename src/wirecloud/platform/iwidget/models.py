@@ -18,7 +18,7 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from pydantic import BaseModel, Field, field_serializer, model_serializer
+from pydantic import BaseModel, Field, field_serializer, model_serializer, model_validator
 from typing import Annotated, Any, Optional
 from enum import Enum
 
@@ -38,21 +38,21 @@ class WidgetConfigAnchor(Enum):
 
 class WidgetConfig(BaseModel, use_enum_values=True):
     id: int = 0
-    top: Annotated[float, Field(ge=0)] = 0
-    left: Annotated[float, Field(ge=0)] = 0
-    zIndex: Annotated[int, Field(ge=0)] = 0
-    height: Annotated[float, Field(ge=0)] = 1
-    width: Annotated[float, Field(ge=0)] = 1
-    minimized: bool = False
-    titlevisible: bool = True
-    fulldragboard: bool = False
-    relx: bool = True
-    rely: bool = False
-    relwidth: bool = True
-    relheight: bool = False
-    anchor: WidgetConfigAnchor = WidgetConfigAnchor.top_left
-    moreOrEqual: int = 0
-    lessOrEqual: int = -1
+    top: Annotated[Optional[float], Field(ge=0)] = None
+    left: Annotated[Optional[float], Field(ge=0)] = None
+    zIndex: Annotated[Optional[int], Field(ge=0)] = None
+    height: Annotated[Optional[float], Field(ge=0)] = None
+    width: Annotated[Optional[float], Field(ge=0)] = None
+    minimized: Optional[bool] = None
+    titlevisible: Optional[bool] = None
+    fulldragboard: Optional[bool] = None
+    relx: Optional[bool] = None
+    rely: Optional[bool] = None
+    relwidth: Optional[bool] = None
+    relheight: Optional[bool] = None
+    anchor: Optional[WidgetConfigAnchor] = None
+    moreOrEqual: Optional[int] = None
+    lessOrEqual: Optional[int] = None
 
     @field_serializer("anchor")
     def serialize_enum(self, value, _info) -> str:
@@ -66,6 +66,12 @@ class WidgetPositionsConfig(BaseModel):
     moreOrEqual: Annotated[int, Field(ge=0)]
     lessOrEqual: Annotated[int, Field(ge=-1)]
     widget: WidgetConfig = WidgetConfig()
+
+    @model_validator(mode='after')
+    def set_widget_bounds(self):
+        self.widget.moreOrEqual = self.moreOrEqual
+        self.widget.lessOrEqual = self.lessOrEqual
+        return self
 
 
 class WidgetPositions(BaseModel):

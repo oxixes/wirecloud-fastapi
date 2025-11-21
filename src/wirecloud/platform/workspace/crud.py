@@ -17,6 +17,7 @@
 #
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
+
 from datetime import timezone, datetime
 from urllib.request import Request
 
@@ -44,6 +45,19 @@ from src.wirecloud.platform.search import delete_workspace_from_index, update_wo
 from src.wirecloud.platform.workspace.models import Workspace, WorkspaceAccessPermissions, Tab
 from src.wirecloud.platform.workspace.utils import create_tab, _workspace_cache_key, _variable_values_cache_key
 from src.wirecloud.translation import gettext as _
+
+
+def _sanitize_widget_layout_config(workspace_data: dict) -> None:
+    tabs = workspace_data.get('tabs') or {}
+    for tab in tabs.values():
+        widgets = tab.get('widgets') or {}
+        for widget in widgets.values():
+            lcs = widget.get('positions', {}).get('configurations', [])
+            for lc in lcs:
+                widget = lc.get('widget', {})
+                if isinstance(widget, dict):
+                    widget.pop('moreOrEqual', None)
+                    widget.pop('lessOrEqual', None)
 
 
 async def get_workspace_list(db: DBSession, user: Optional[User]) -> list[Workspace]:
@@ -74,7 +88,7 @@ async def create_empty_workspace(db: DBSession, title: str, user: User, allow_re
         creator=ObjectId(user.id),
         users=[WorkspaceAccessPermissions(id=Id(user.id))]
     )
-    tab = await create_tab(db, user, _('Tab'), workspace)
+    await create_tab(db, user, _('Tab'), workspace)
 
     if allow_renaming:
         await save_alternative(db, 'workspace', 'name', workspace)
@@ -226,7 +240,11 @@ async def insert_workspace(db: DBSession, workspace: Workspace) -> None:
     if not db.in_transaction:
         db.start_transaction()
 
-    await db.client.workspace.insert_one(workspace.model_dump(by_alias=True))
+    # Create a dict representation and remove unwanted keys from layout configurations
+    data = workspace.model_dump(by_alias=True)
+    _sanitize_widget_layout_config(data)
+
+    await db.client.workspace.insert_one(data)
 
 
 async def change_workspace(db: DBSession, workspace: Workspace, user: Optional[User]) -> None:
@@ -238,7 +256,12 @@ async def change_workspace(db: DBSession, workspace: Workspace, user: Optional[U
 
     workspace.last_modified = datetime.now(timezone.utc)
     query = {"_id": ObjectId(workspace.id)}
-    await db.client.workspace.replace_one(query, workspace.model_dump(by_alias=True))
+
+    # Create a dict representation and remove unwanted keys from layout configurations
+    data = workspace.model_dump(by_alias=True)
+    _sanitize_widget_layout_config(data)
+
+    await db.client.workspace.replace_one(query, data)
     await update_workspace_in_index(db, workspace)
 
 

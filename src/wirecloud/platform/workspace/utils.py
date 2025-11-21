@@ -137,8 +137,7 @@ def _process_variable(component_type: str, component_id: str, vardef: Union[MACD
         secure=vardef.secure
     )
 
-    if component_id in getattr(forced_values, component_type) and varname in getattr(forced_values, component_type)[
-        component_id]:
+    if component_id in getattr(forced_values, component_type) and varname in getattr(forced_values, component_type)[component_id]:
         fv_entry = getattr(forced_values, component_type)[component_id][varname]
 
         entry.value = fv_entry.value
@@ -153,6 +152,11 @@ def _process_variable(component_type: str, component_id: str, vardef: Union[MACD
     else:
         # Handle multiuser variables
         variable_user = current_user if vardef.multiuser else workspace_creator
+
+        import pprint
+        pprint.pprint(value)
+        pprint.pprint(variable_user)
+
         if value is None or value.users.get(str(variable_user.id if variable_user else "anonymous"), None) is None:
             value = parse_value_from_text(entry.model_dump(), vardef.default)
         else:
@@ -360,8 +364,8 @@ async def get_widget_instance_data(db: DBSession, request: Request, iwidget: Wid
             minimized=widget_position.minimized,
             titlevisible=widget_position.titlevisible,
             id=widget_position.id,
-            moreOrEqual=widget_position.moreOrEqual,
-            lessOrEqual=widget_position.lessOrEqual
+            moreOrEqual=layout_configuration.moreOrEqual,
+            lessOrEqual=layout_configuration.lessOrEqual
         )
 
         data_ret.layoutConfig.append(data_layout)
@@ -370,7 +374,7 @@ async def get_widget_instance_data(db: DBSession, request: Request, iwidget: Wid
         return data_ret
 
     resource = await get_catalogue_resource_by_id(db, iwidget.resource)
-    if resource is None or not await resource.is_available_for(db, user):
+    if resource is None or not await resource.is_available_for(db, await get_user_with_all_info(db, workspace.creator)):
         # The widget used by this iwidget is missing
         return data_ret
 

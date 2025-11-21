@@ -50,7 +50,7 @@ def parse_value_from_text(info: dict, value) -> Any:
 
 def process_initial_value(vardef: Union[MACDProperty, MACDPreference],
                           initial_value: Union[str, WidgetVariables, None] = None) -> Any:
-    if not vardef.readonly and initial_value is not None:
+    if (isinstance(vardef, MACDProperty) or not vardef.readonly) and initial_value is not None:
         value = initial_value
     elif vardef.value is not None:
         value = vardef.value
@@ -82,6 +82,8 @@ async def update_widget_value(db: DBSession, iwidget: WidgetInstance, data: Unio
     elif required:
         raise ValueError('Missing widget info')
 
+    return None
+
 
 async def update_title_value(db: DBSession, iwidget: WidgetInstance, data: Union[WidgetInstanceDataCreate, WidgetInstanceDataUpdate]) -> None:
     if data.title is not None:
@@ -96,6 +98,9 @@ async def update_title_value(db: DBSession, iwidget: WidgetInstance, data: Union
 def update_screen_size_value(model: WidgetPositionsConfig, data: LayoutConfig, field: str) -> None:
     value = getattr(data, field)
 
+    if value is None:
+        return
+
     if type(value) is not int:
         raise TypeError(_('Field %(field)s must contain a number value') % {"field": field})
 
@@ -107,6 +112,10 @@ def update_screen_size_value(model: WidgetPositionsConfig, data: LayoutConfig, f
 
 def update_position_value(model: WidgetConfig, data: LayoutConfig, field: str, data_field=None) -> None:
     data_field = data_field if data_field is not None else field
+
+    if getattr(data, data_field) is None:
+        return
+
     size = getattr(data, data_field)
 
     if type(size) not in (int, float):
@@ -121,6 +130,9 @@ def update_position_value(model: WidgetConfig, data: LayoutConfig, field: str, d
 def update_size_value(model: WidgetConfig, data: LayoutConfig, field: str) -> None:
     size = getattr(data, field)
 
+    if size is None:
+        return
+
     if type(size) not in (int, float):
         raise TypeError(_('Field %(field)s must contain a number value') % {"field": field})
 
@@ -133,6 +145,9 @@ def update_size_value(model: WidgetConfig, data: LayoutConfig, field: str) -> No
 def update_boolean_value(model: Union[WidgetConfig, WidgetPermissionsConfig], data: Union[WidgetConfig, WidgetInstanceDataUpdate], field: str) -> None:
     value = getattr(data, field)
 
+    if value is None:
+        return
+
     if not isinstance(value, bool):
         raise TypeError(_(f'Field %(field)s must contain a boolean value') % {"field": field})
 
@@ -140,6 +155,9 @@ def update_boolean_value(model: Union[WidgetConfig, WidgetPermissionsConfig], da
 
 
 def update_anchor_value(model: WidgetConfig, data: LayoutConfig) -> None:
+    if data.anchor is None:
+        return
+
     model.anchor = data.anchor
 
 def update_permissions(iwidget: WidgetInstance, data: WidgetInstanceDataUpdate) -> None:

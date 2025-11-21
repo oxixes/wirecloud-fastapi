@@ -180,6 +180,7 @@ class MACDMashupPreference(MACDPropertyBase):
 class MACDProperty(MACDPropertyBase):
     secure: bool = False
     multiuser: bool = False
+    value: Optional[str] = None
 
 
 class MACDWidgetOperatorVairables(BaseModel):

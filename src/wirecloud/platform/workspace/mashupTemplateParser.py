@@ -229,17 +229,22 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
                 rendering = configuration.rendering
 
                 iwidget_layout_config = LayoutConfig(
-                    moreOrEqual=configuration.moreOrEqual,
-                    lessOrEqual=configuration.lessOrEqual,
                     id=configuration.id,
-                    left=position.x,
-                    top=position.y,
-                    zIndex=position.z,
-                    width=rendering.width,
-                    height=rendering.height,
+                    left=float(position.x),
+                    top=float(position.y),
+                    zIndex=int(position.z),
+                    anchor=position.anchor,
+                    relx=position.relx,
+                    rely=position.rely,
+                    relwidth=rendering.relwidth,
+                    relheight=rendering.relheight,
+                    width=float(rendering.width),
+                    height=float(rendering.height),
                     minimized=rendering.minimized,
                     fulldragboard=rendering.fulldragboard,
                     titlevisible=rendering.titlevisible,
+                    moreOrEqual=configuration.moreOrEqual,
+                    lessOrEqual=configuration.lessOrEqual,
                     action='update'
                 )
 
