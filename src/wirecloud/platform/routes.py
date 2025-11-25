@@ -18,39 +18,74 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, Response, RedirectResponse
 from typing import Optional
+from urllib.parse import quote_plus
 import os
-import user_agents
 import jinja2
 
 from src import settings
+from src.wirecloud.commons.auth.schemas import UserAll
+from src.wirecloud.commons.auth.utils import UserDepNoCSRF
 from src.wirecloud.commons.templates.tags import get_wirecloud_bootstrap, get_translation, get_static_path, \
     get_url_from_view
-from src.wirecloud.commons.utils.http import NotFound
+from src.wirecloud.commons.utils.http import NotFound, get_absolute_reverse_url, build_error_response
 from src.wirecloud.commons.utils.theme import get_theme_static_path, get_available_themes, get_jinja2_templates
+from src.wirecloud.database import DBSession, DBDep
 from src.wirecloud.platform import docs
 from src.wirecloud import docs as root_docs
 from src.wirecloud.platform.plugins import get_template_context
+from src.wirecloud.platform.utils import get_current_view, get_current_theme
+from src.wirecloud.platform.workspace.crud import get_workspace_by_username_and_name
 
 router = APIRouter()
 
-# TODO Error pages
 
-def get_current_theme(request: Request) -> str:
-    if "themeactive" in request.query_params and request.query_params["themeactive"] in settings.AVAILABLE_THEMES:
-        return request.query_params["themeactive"]
+async def render_workspace_view(db: DBSession, request: Request, user: Optional[UserAll], owner: str, workspace: str) -> Response:
+    login_url = get_absolute_reverse_url("login", request)
+    if getattr(settings, 'OID_CONNECT_ENABLED', False):
+        if '?' in login_url:
+            login_url += '&'
+        else:
+            login_url += '?'
+        login_url += f"redirect_uri={quote_plus(get_absolute_reverse_url('oidc_login_callback', request))}"
+        login_url += f"&state={quote_plus(request.url.path + '?' + request.url.query)}"
+    else:
+        login_url += f"?next={quote_plus(request.url.path + '?' + request.url.query)}"
 
-    return settings.THEME_ACTIVE
+    if settings.ALLOW_ANONYMOUS_ACCESS is False and user is None:
+        return RedirectResponse(login_url)
+
+    workspace_db = await get_workspace_by_username_and_name(db, owner, workspace)
+
+    if workspace_db is None:
+        raise NotFound("Workspace not found")
+
+    if user is not None and not await workspace_db.is_accsessible_by(db, user):
+        return build_error_response(request, 403, "You do not have permission to access this workspace.")
+    elif user is None and not workspace_db.public:
+        return RedirectResponse(login_url)
+
+    return render_wirecloud(request, title=workspace_db.title, description=workspace_db.description)
 
 
-def get_current_view(request: Request, ignore_query: bool = False) -> str:
-    if "mode" in request.query_params and not ignore_query:
-        return request.query_params["mode"]
+async def auto_select_workspace(db: DBSession, request: Request, user: Optional[UserAll], mode: Optional[str] = None) -> Response:
+    if user is not None:
+        url = get_absolute_reverse_url("wirecloud.workspace_view", request, owner="wirecloud", name="home")
 
-    user_agent = user_agents.parse(request.headers["User-Agent"])
-    return "smartphone" if user_agent.is_mobile else "classic"
+        parameters = {}
+        if mode:
+            parameters['mode'] = mode
 
+        if 'themeactive' in request.query_params:
+            parameters['themeactive'] = request.query_params['themeactive']
+
+        if len(parameters) > 0:
+            url += "?" + "&".join([f"{k}={quote_plus(v)}" for k, v in parameters.items()])
+
+        return RedirectResponse(url)
+    else:
+        return await render_workspace_view(db, request, user, "wirecloud", "landing")
 
 @router.get(
     "/",
@@ -58,9 +93,33 @@ def get_current_view(request: Request, ignore_query: bool = False) -> str:
     summary=docs.get_root_page_summary,
     description=docs.get_root_page_description,
     response_description=docs.get_root_page_response_description,
+    responses={
+        404: root_docs.generate_not_found_response_openapi_description(
+            docs.get_root_page_not_found_response_description),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.get_root_page_permission_denied_response_description, "You do not have permission to access this workspace.")
+    }
 )
-def render_root_page(request: Request):
-    return render_wirecloud(request, title="landing")
+async def render_root_page(db: DBDep, request: Request, user: UserDepNoCSRF):
+    mode = request.query_params.get("mode", None)
+    return await auto_select_workspace(db, request, user, mode)
+
+
+@router.get(
+    "/workspace/{owner}/{name}",
+    response_class=HTMLResponse,
+    summary=docs.get_workspace_view_summary,
+    description=docs.get_workspace_view_description,
+    response_description=docs.get_workspace_view_response_description,
+    responses={
+        404: root_docs.generate_not_found_response_openapi_description(
+            docs.get_workspace_view_not_found_response_description),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.get_workspace_view_permission_denied_response_description, "You do not have permission to access this workspace.")
+    }
+)
+async def render_workspace_page(db: DBDep, request: Request, user: UserDepNoCSRF, owner: str, name: str):
+    return await render_workspace_view(db, request, user, owner, name)
 
 
 @router.get(

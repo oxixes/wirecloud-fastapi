@@ -21,6 +21,15 @@
 get_root_page_summary = "Get the root page"
 get_root_page_description = "Get the root page of the platform."
 get_root_page_response_description = "Root page"
+get_root_page_not_found_response_description = "Workspace not found"
+get_root_page_permission_denied_response_description = "Permission denied"
+
+# GET /{owner}/{name}
+get_workspace_view_summary = "Get a workspace view"
+get_workspace_view_description = "Get a workspace view."
+get_workspace_view_response_description = "Workspace view"
+get_workspace_view_not_found_response_description = "Workspace not found"
+get_workspace_view_permission_denied_response_description = "Permission denied"
 
 # GET /static/{path}
 get_static_file_summary = "Get a static file"

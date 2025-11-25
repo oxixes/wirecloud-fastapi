@@ -24,6 +24,8 @@ from aiocache import caches
 DEBUG = True
 BASEDIR = path.abspath(path.join(path.dirname(path.abspath(__file__)), pardir))
 
+ALLOW_ANONYMOUS_ACCESS = True
+
 # TODO If platform is installed, the proxy has to be installed too
 INSTALLED_APPS = (
     'wirecloud.commons',

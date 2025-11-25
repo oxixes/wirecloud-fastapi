@@ -45,7 +45,7 @@ class WorkspaceWiringOperator(WiringOperator):
 
 
 class WorkspaceWiring(Wiring):
-    operators: dict[IntegerStr, WorkspaceWiringOperator] = {}
+    operators: dict[str, WorkspaceWiringOperator] = {}
 
 
 class WorkspaceAccessPermissions(BaseModel):

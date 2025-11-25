@@ -153,10 +153,6 @@ def _process_variable(component_type: str, component_id: str, vardef: Union[MACD
         # Handle multiuser variables
         variable_user = current_user if vardef.multiuser else workspace_creator
 
-        import pprint
-        pprint.pprint(value)
-        pprint.pprint(variable_user)
-
         if value is None or value.users.get(str(variable_user.id if variable_user else "anonymous"), None) is None:
             value = parse_value_from_text(entry.model_dump(), vardef.default)
         else:
@@ -469,26 +465,26 @@ async def _get_global_workspace_data(db: DBSession, request: Request, workspace:
         try:
             resource = await get_catalogue_resource(db, vendor, name, version)
             operator_info = resource.get_processed_info(process_variables=True)
-            if not resource.is_available_for(db, await get_user_with_all_info(db, workspace.creator)):
+            if not await resource.is_available_for(db, await get_user_with_all_info(db, workspace.creator)):
                 raise CatalogueResource.DoesNotExist
         except CatalogueResource.DoesNotExist:
             operator.preferences = {}
             operator.properties = {}
             continue
 
-        operator_forced_values = forced_values.operator.get(operator_id, {})
+        operator_forced_values = forced_values.ioperator.get(operator_id, {})
         for preference_name, preference in operator.preferences.items():
             vardef = operator_info.variables.preferences.get(preference_name)
             value = preference.value
 
-            variable_user = user if vardef is not None and vardef.multiuser else workspace.creator
+            variable_user = user if vardef is not None and vardef.multiuser else await get_user_with_all_info(db, workspace.creator)
 
             if preference_name in operator_forced_values:
                 preference.value = operator_forced_values[preference_name].value
-            elif value is None or value.users.get(str(variable_user.id if variable_user else "anonymous"), None) is None:
+            elif value is None or value['users'].get(str(variable_user.id if variable_user else "anonymous"), None) is None:
                 preference.value = parse_value_from_text(vardef.model_dump(), vardef.default)
             else:
-                preference.value = value.users.get(str(variable_user.id if variable_user else "anonymous"))
+                preference.value = value['users'].get(str(variable_user.id if variable_user else "anonymous"))
 
             if vardef is not None and vardef.secure:
                 preference.value = '' if preference.value is None or decrypt_value(

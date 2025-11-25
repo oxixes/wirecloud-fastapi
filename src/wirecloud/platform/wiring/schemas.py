@@ -37,7 +37,7 @@ class WiringType(Enum):
 
 class WiringConnectionEndpoint(BaseModel):
     type: WiringType = Field(description=docs.wiring_connection_endpoint_type_description)
-    id: IntegerStr = Field(description=docs.wiring_connection_endpoint_id_description)
+    id: str = Field(description=docs.wiring_connection_endpoint_id_description)
     endpoint: str = Field(description=docs.wiring_connection_endpoint_endpoint_description)
 
     # Serialize WiringType as a string
@@ -88,7 +88,7 @@ class WiringComponent(BaseModel):
 
 
 class WiringComponents(BaseModel):
-    widget: dict[IntegerStr, WiringComponent] = Field(description=docs.wiring_components_widget_description,
+    widget: dict[str, WiringComponent] = Field(description=docs.wiring_components_widget_description,
                                                       default={})
     operator: dict[IntegerStr, WiringComponent] = Field(description=docs.wiring_components_operator_description,
                                                         default={})

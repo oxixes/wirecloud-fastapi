@@ -212,7 +212,7 @@ class Proxy:
         # Pass proxy processors to the new request
         try:
             for processor in get_request_proxy_processors():
-                if inspect.iscoroutine(processor.process_request):
+                if inspect.iscoroutinefunction(processor.process_request):
                     await processor.process_request(db, request_data)
                 else:
                     processor.process_request(db, request_data)

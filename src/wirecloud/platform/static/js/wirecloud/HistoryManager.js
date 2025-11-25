@@ -62,7 +62,10 @@
         let url, key, hash = '';
 
         if (data.workspace_owner !== "wirecloud" || data.workspace_name !== "landing") {
-            url = new URL("/" + encodeURIComponent(data.workspace_owner) + '/' + encodeURIComponent(data.workspace_name), Wirecloud.location.base);
+            url = new URL(Wirecloud.URLs.WORKSPACE_VIEW.evaluate({
+                owner: data.workspace_owner,
+                name: data.workspace_name
+            }), Wirecloud.location.base);
         } else {
             url = new URL("/", Wirecloud.location.base);
         }

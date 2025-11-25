@@ -84,5 +84,5 @@ patterns = {
     'wirecloud.workspace_entry_owner_name': URLTemplate(urlpattern='/api/workspace/{owner}/{name}', defaults={}),
     'wirecloud.switch_user_service': URLTemplate(urlpattern='/api/admin/switchuser', defaults={}),
 
-    'wirecloud.workspace_view': URLTemplate(urlpattern='/{owner}/{name}', defaults={}),
+    'wirecloud.workspace_view': URLTemplate(urlpattern='/workspace/{owner}/{name}', defaults={}),
 }

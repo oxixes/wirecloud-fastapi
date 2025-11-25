@@ -53,7 +53,7 @@ from src.wirecloud.commons.utils.theme import get_jinja2_templates
 from src.wirecloud.commons.utils.wgt import WgtDeployer, WgtFile
 from src.wirecloud.database import DBSession
 from src.wirecloud.platform.plugins import get_widget_api_extensions, get_active_features
-from src.wirecloud.platform.routes import get_current_theme
+from src.wirecloud.platform.utils import get_current_theme
 from src.wirecloud.platform.widget.crud import get_widget_from_resource
 from src.wirecloud.platform.widget.models import Widget
 from src.wirecloud.translation import gettext as _

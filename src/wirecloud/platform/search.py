@@ -21,7 +21,7 @@
 from typing import Optional
 from datetime import datetime
 
-from elasticsearch._async.helpers import async_bulk
+from elasticsearch.helpers import async_bulk
 from pydantic import BaseModel
 
 from src.wirecloud.commons.auth.crud import get_username_by_id
