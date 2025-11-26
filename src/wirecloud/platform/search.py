@@ -125,8 +125,19 @@ async def search_workspaces(user: UserAll, querytext: str, pagenum: int, max_res
     must_clauses = []
     filter_clauses = [{"term": {"searchable": True}}]
 
+    advanced_ops = [":", " AND ", " OR ", " NOT "]
+    use_query_string = any(op in querytext for op in advanced_ops)
+
     if querytext:
-        must_clauses.append({"multi_match": {"query": querytext, "fields": WORKSPACE_CONTENT_FIELDS}})
+        if use_query_string:
+            must_clauses.append({
+                "query_string": {
+                    "query": querytext,
+                    "default_operator": "AND"
+                }
+            })
+        else:
+            must_clauses.append({"multi_match": {"query": querytext, "fields": WORKSPACE_CONTENT_FIELDS}})
 
     should_clauses = [{"term": {"public": True}}]
 
