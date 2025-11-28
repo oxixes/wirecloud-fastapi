@@ -395,8 +395,8 @@
             });
 
             /* FIXME */
-            this.restricted = data.owner !== Wirecloud.contextManager.get('username') || Wirecloud.contextManager.get('mode') === 'embedded';
-            this.removable = !this.restricted && data.removable;
+            this.restricted = !data.removable || Wirecloud.contextManager.get('mode') === 'embedded';
+            this.removable = !this.restricted
             /* END FIXME */
 
             Object.defineProperties(this, {

@@ -59,8 +59,6 @@ async def get_market_user(db: DBSession, market: Market) -> Optional[User]:
 
 
 async def create_market(db: DBSession, market: Market) -> bool:
-    if not db.in_transaction:
-        db.start_transaction()
     query = {"name": market.name, "user_id": ObjectId(market.user_id)}
     found_market = await db.client.markets.find_one(query)
     if found_market is not None:
@@ -73,8 +71,6 @@ async def create_market(db: DBSession, market: Market) -> bool:
 
 
 async def delete_market_by_name(db: DBSession, user: User, name: str) -> bool:
-    if not db.in_transaction:
-        db.start_transaction()
     query = {"name": name, "user_id": user.id}
     result = await db.client.markets.delete_one(query)
 
