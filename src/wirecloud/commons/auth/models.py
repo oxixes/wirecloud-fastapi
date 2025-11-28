@@ -39,6 +39,9 @@ class Group(BaseModel, populate_by_name=True):
     name: str
     codename: str
 
+    is_organization: bool = False
+    parent: Optional[Id] = None
+
     group_permissions: list[DBPermission] = []
     users: list[Id] = []
 

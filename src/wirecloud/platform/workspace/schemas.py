@@ -48,12 +48,12 @@ class TabData(BaseModel):
 class UserWorkspaceData(BaseModel):
     fullname: str
     username: str
-    organization: bool
     accesslevel: str
 
 
 class GroupWorkspaceData(BaseModel):
     name: str
+    organization: bool
     accesslevel: str
 
 

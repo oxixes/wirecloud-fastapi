@@ -27,7 +27,8 @@ import os
 from src.wirecloud.catalogue import utils as catalogue_utils
 from src.wirecloud.catalogue.schemas import CatalogueResourceDeleteResults
 from src.wirecloud.catalogue.search import add_resource_to_index, delete_resource_from_index
-from src.wirecloud.commons.auth.crud import get_user_with_all_info, get_user_by_username, get_group_by_name
+from src.wirecloud.commons.auth.crud import get_user_with_all_info, get_user_by_username, get_group_by_name, \
+    get_top_group_organization
 from src.wirecloud.commons.auth.schemas import UserAll
 from src.wirecloud.commons.utils.template import TemplateParseException, UnsupportedFeature
 from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD
@@ -210,6 +211,12 @@ async def create_resource(db: DBDep, user: UserDep, request: Request,
             return build_error_response(request, 403, _('You are not allowed allow to install components to other users'))
         elif len(group_objs) > 0:
             # TODO Handle organizations
+            for group in group_objs:
+                if group.is_organization:
+                    organization = await get_top_group_organization(db, group)
+                    owners = organization.owners
+                    if user.id not in owners:
+                        return build_error_response(request, 403, _('You are not allowed to install components to non-owned organizations'))
             pass
 
     try:

@@ -18,8 +18,12 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from fastapi import Depends
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorClientSession
-from typing import AsyncIterator, Annotated, Any
+from pymongo import AsyncMongoClient
+from pymongo.asynchronous.client_session import AsyncClientSession
+from pymongo.errors import OperationFailure
+from typing import AsyncIterator, Annotated, Any, Optional
+
+import logging
 
 from pydantic_core import core_schema
 
@@ -27,15 +31,69 @@ from src.settings import DATABASE
 from bson import ObjectId
 
 
-class MotorSession:
-    def __init__(self, db: AsyncIOMotorClientSession):
-        self.db = db
+class CollectionWrapper:
+    def __init__(self, collection, session):
+        self._collection = collection
+        self._session = session
+
+    def __getattr__(self, item):
+        attr = getattr(self._collection, item)
+        if callable(attr):
+            def wrapper(*args, **kwargs):
+                if 'session' not in kwargs:
+                    kwargs['session'] = self._session
+                return attr(*args, **kwargs)
+            return wrapper
+        return attr
+
+
+class DatabaseWrapper:
+    def __init__(self, db, session):
+        self._db = db
+        self._session = session
+
+    def __getitem__(self, name):
+        collection = self._db[name]
+        return CollectionWrapper(collection, self._session)
+
+    def __getattr__(self, item):
+        collection = getattr(self._db, item)
+        return CollectionWrapper(collection, self._session)
+
+
+class PyMongoSession:
+    def __init__(self, session: AsyncClientSession, use_transactions: bool = True):
+        self._session = session
+        self._transactions_supported = use_transactions
 
     def __getattr__(self, item: str):
         if item == "client":
-            return self.db.client[DATABASE['NAME']]
+            db = self._session.client[DATABASE['NAME']]
+            if self._transactions_supported:
+                return DatabaseWrapper(db, self._session)
+            else:
+                return db
         else:
-            return getattr(self.db, item)
+            return getattr(self._session, item)
+
+    @property
+    def in_transaction(self) -> bool:
+        if not self._transactions_supported:
+            return False
+        return self._session.in_transaction
+
+    async def start_transaction(self):
+        if not self._transactions_supported or self._session.in_transaction:
+            return
+
+        try:
+            await self._session.start_transaction()
+        except OperationFailure as e:
+            if e.code == 20:
+                logging.warning("Transactions are not supported by the MongoDB deployment. Continuing without transactions.")
+                self._transactions_supported = False
+            else:
+                raise
 
 
 class PyObjectId(ObjectId):
@@ -80,29 +138,63 @@ def get_db_url() -> str:
     return database_url
 
 
-client = AsyncIOMotorClient(get_db_url())
+USE_TRANSACTIONS = DATABASE.get('USE_TRANSACTIONS', True)
+client = AsyncMongoClient(get_db_url())
 database = client[DATABASE['NAME']]
 
 
-def close() -> None:
-    client.close()
+async def close() -> None:
+    await client.close()
 
 
-async def get_session() -> AsyncIterator[MotorSession]:
-    session = await client.start_session()
-    try:
-        yield MotorSession(session)
-    except Exception:
-        if session.in_transaction:
+_transactions_supported: Optional[bool] = None
+
+async def check_transactions_supported() -> bool:
+    global _transactions_supported
+
+    if _transactions_supported is not None:
+        return _transactions_supported
+
+    async with client.start_session() as session:
+        try:
+            await session.start_transaction()
+            db = session.client[DATABASE['NAME']]
+            await db.command("find", "test_collection", limit=1, session=session)
             await session.abort_transaction()
-        raise
-    finally:
-        await session.end_session()
+            _transactions_supported = True
+        except OperationFailure as e:
+            if e.code == 20:
+                logging.warning(
+                    "Transactions are not supported by the MongoDB deployment. Continuing without transactions.")
+                _transactions_supported = False
+            else:
+                raise
+
+    return _transactions_supported
 
 
-async def commit(session: AsyncIOMotorClientSession) -> None:
-    await session.commit_transaction()
+async def get_session() -> AsyncIterator[PyMongoSession]:
+    async with client.start_session() as session:
+        transactions_enabled = USE_TRANSACTIONS and await check_transactions_supported()
+        pymongo_session = PyMongoSession(session, use_transactions=transactions_enabled)
+
+        try:
+            await pymongo_session.start_transaction()
+            yield pymongo_session
+            if pymongo_session.in_transaction:
+                await pymongo_session._session.commit_transaction()
+
+        except Exception:
+            if pymongo_session.in_transaction:
+                await pymongo_session._session.abort_transaction()
+            raise
 
 
-DBSession = MotorSession
-DBDep = Annotated[MotorSession, Depends(get_session)]
+async def commit(session: PyMongoSession) -> None:
+    if session.in_transaction:
+        await session._session.commit_transaction()
+        await session.start_transaction()
+
+
+DBSession = PyMongoSession
+DBDep = Annotated[PyMongoSession, Depends(get_session)]

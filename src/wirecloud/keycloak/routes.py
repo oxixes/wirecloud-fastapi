@@ -23,7 +23,7 @@ import jwt
 
 from src.wirecloud.commons.auth.crud import invalidate_tokens_by_idm_session, update_user, invalidate_all_user_tokens
 from src.wirecloud.commons.utils.http import build_error_response, consumes
-from src.wirecloud.database import DBDep, commit
+from src.wirecloud.database import DBDep
 from src.wirecloud.keycloak.crud import get_user_by_idm_user_id
 from src.wirecloud.keycloak import docs
 from src.wirecloud import docs as root_docs
@@ -96,5 +96,4 @@ async def keycloak_backchannel_logout(db: DBDep, request: Request, logout_token:
         del user.idm_data['keycloak']
         await update_user(db, user)
 
-    await commit(db)
     return Response(status_code=204)

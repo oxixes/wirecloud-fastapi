@@ -48,7 +48,7 @@ from src.wirecloud.catalogue.crud import (get_catalogue_resource_versions_for_us
                                           get_all_catalogue_resource_versions, mark_resources_as_not_available)
 from src.wirecloud.catalogue.utils import get_resource_group_data, get_resource_data
 from src.wirecloud.platform.localcatalogue.utils import install_component
-from src.wirecloud.database import DBDep, commit
+from src.wirecloud.database import DBDep
 from src.wirecloud.translation import gettext as _
 
 router = APIRouter()
@@ -245,7 +245,6 @@ async def delete_resource_versions(db: DBDep,
     await mark_resources_as_not_available(db, resources)
     for resource in resources:
         await delete_resource_from_index(resource)
-    await commit(db)
 
     return CatalogueResourceDeleteResults(affectedVersions=[resource.version for resource in resources])
 
@@ -330,7 +329,6 @@ async def delete_resource_version(db: DBDep,
     # TODO Actually delete the resources
     await mark_resources_as_not_available(db, [resource])
     await delete_resource_from_index(resource)
-    await commit(db)
 
     return CatalogueResourceDeleteResults(affectedVersions=[resource.version])
 

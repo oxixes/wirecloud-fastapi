@@ -40,7 +40,7 @@ async def lifespan(app: FastAPI):
     get_plugins(app)
     await validate_settings()
     yield
-    close()
+    await close()
 
 
 app = FastAPI(lifespan=lifespan,

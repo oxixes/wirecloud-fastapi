@@ -24,7 +24,7 @@ from datetime import datetime
 from elasticsearch.helpers import async_bulk
 from pydantic import BaseModel
 
-from src.wirecloud.commons.auth.crud import get_username_by_id
+from src.wirecloud.commons.auth.crud import get_username_by_id, get_all_user_groups
 from src.wirecloud.commons.auth.schemas import UserAll, User
 from src.wirecloud.database import DBSession
 from src.wirecloud.platform.workspace.models import Workspace
@@ -121,20 +121,32 @@ def clean_workspace_out(hit: dict) -> SearchWorkspaceOutputResponse:
     )
 
 
-async def search_workspaces(user: UserAll, querytext: str, pagenum: int, max_results: int, order_by: Optional[tuple[str]] = None):
+async def search_workspaces(db: DBSession, user: UserAll, querytext: str, pagenum: int, max_results: int, order_by: Optional[tuple[str]] = None):
     must_clauses = []
     filter_clauses = [{"term": {"searchable": True}}]
 
+    advanced_ops = [":", " AND ", " OR ", " NOT "]
+    use_query_string = any(op in querytext for op in advanced_ops)
+
     if querytext:
-        must_clauses.append({"multi_match": {"query": querytext, "fields": WORKSPACE_CONTENT_FIELDS}})
+        if use_query_string:
+            must_clauses.append({
+                "query_string": {
+                    "query": querytext,
+                    "default_operator": "AND"
+                }
+            })
+        else:
+            must_clauses.append({"multi_match": {"query": querytext, "fields": WORKSPACE_CONTENT_FIELDS}})
 
     should_clauses = [{"term": {"public": True}}]
 
     if user:
         should_clauses.append({"term": {"users": str(user.id)}})
         if user.groups:
-            for group in user.groups:
-                should_clauses.append({"term": {"groups": str(group)}})
+            groups = await get_all_user_groups(db, user)
+            group_ids = [str(group.id) for group in groups]
+            should_clauses.append({"terms": {"groups": group_ids}})
 
     body = {
         "query": {

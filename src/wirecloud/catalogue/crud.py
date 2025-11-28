@@ -26,6 +26,7 @@ from src.wirecloud.catalogue.schemas import (CatalogueResourceCreate, CatalogueR
                                              CatalogueResourceWithUsersGroups)
 from src.wirecloud.catalogue.models import DBCatalogueResource as CatalogueResourceModel
 from src.wirecloud.catalogue.models import XHTML
+from src.wirecloud.commons.auth.crud import get_all_user_groups
 from src.wirecloud.commons.auth.models import Group
 from src.wirecloud.commons.auth.schemas import UserAll, User
 from src.wirecloud.commons.utils.template.schemas.macdschemas import (MACD, Vendor, Name, Version)
@@ -48,9 +49,6 @@ def build_schema_from_resource(resource: CatalogueResourceModel) -> CatalogueRes
 
 
 async def create_catalogue_resource(db: DBSession, resource: CatalogueResourceCreate) -> CatalogueResource:
-    if not db.in_transaction:
-        db.start_transaction()
-
     catalogue = CatalogueResourceModel(
         id=ObjectId(),
         vendor=resource.vendor,
@@ -142,7 +140,8 @@ async def is_resource_available_for_user(db: DBSession, resource: CatalogueResou
 
     # Check if the resource is available for the user or any of the groups the user belongs to
     user_query = {"_id": ObjectId(resource.id), "users": ObjectId(user.id)}
-    group_query = {"_id": ObjectId(resource.id), "groups": {"$in": user.groups}}
+    user_groups = await get_all_user_groups(db, user)
+    group_query = {"_id": ObjectId(resource.id), "groups": {"$in": [group.id for group in user_groups]}}
 
     result = await db.client.catalogue_resources.find_one({"$or": [user_query, group_query]})
 
@@ -198,37 +197,26 @@ async def get_all_catalogue_resources(db: DBSession) -> list[CatalogueResource]:
 
 
 async def update_catalogue_resource_description(db: DBSession, resource_id: Id, description: MACD) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
     query = {"_id": ObjectId(resource_id)}
     update = {"$set": {"description": description.model_dump_json()}}
     await db.client.catalogue_resources.update_one(query, update)
 
 
 async def delete_catalogue_resources(db: DBSession, resource_ids: list[Id]) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
-
     query = {"_id": {"$in": [ObjectId(rid) for rid in resource_ids]}}
     await db.client.catalogue_resources.delete_many(query)
 
 
 async def mark_resources_as_not_available(db: DBSession, resources: list[CatalogueResource]) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
     for resource in resources:
         await db.client.catalogue_resources.update_one({"_id": ObjectId(resource.id)}, {"$set": {"template_uri": ""}})
 
 
 async def change_resource_publicity(db: DBSession, resource: CatalogueResource, public: bool) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
     await db.client.catalogue_resources.update_one({"_id": ObjectId(resource.id)}, {"$set": {"public": public}})
 
 
 async def install_resource_to_user(db: DBSession, resource: CatalogueResource, user: User) -> bool:
-    if not db.in_transaction:
-        db.start_transaction()
     # Check integrity
     query = {"_id": ObjectId(resource.id), "user_id": ObjectId(user.id)}
     result = await db.client.catalogue_resource_users.find_one(query)
@@ -243,8 +231,6 @@ async def install_resource_to_user(db: DBSession, resource: CatalogueResource, u
 
 async def install_resource_to_group(db: DBSession, resource: CatalogueResource, group: Group) -> bool:
     # Check integrity
-    if not db.in_transaction:
-        db.start_transaction()
     query = {"_id": ObjectId(resource.id), "groups": ObjectId(group.id)}
     result = await db.client.catalogue_resources.find_one(query)
     if result is not None:
@@ -257,8 +243,6 @@ async def install_resource_to_group(db: DBSession, resource: CatalogueResource, 
 
 
 async def uninstall_resource_to_user(db: DBSession, resource: CatalogueResource, user: User) -> bool:
-    if not db.in_transaction:
-        db.start_transaction()
     # Check integrity
     query = {"_id": ObjectId(resource.id), "users": ObjectId(user.id)}
     result = await db.client.catalogue_resources.find_one(query)
@@ -272,9 +256,6 @@ async def uninstall_resource_to_user(db: DBSession, resource: CatalogueResource,
 
 
 async def delete_resource_if_not_used(db: DBSession, resource: CatalogueResource) -> bool:
-    if not db.in_transaction:
-        db.start_transaction()
-
     # Check if the resource is not used by any user or group
     query = {"_id": ObjectId(resource.id), "users": {"$size": 0}, "groups": {"$size": 0}, "public": False}
     result = await db.client.catalogue_resources.find_one(query)
@@ -308,8 +289,6 @@ async def get_catalogue_resources_with_regex(db: DBSession, vendor: Vendor, name
 
 
 async def save_catalogue_resource_xhtml(db: DBSession, resource_id: Id, xhtml: XHTML) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
     query = {"_id": ObjectId(resource_id)}
     update = {"$set": {"xhtml": xhtml.model_dump()}}
     await db.client.catalogue_resources.update_one(query, update)
