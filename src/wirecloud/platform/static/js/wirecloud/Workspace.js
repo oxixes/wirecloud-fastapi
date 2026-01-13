@@ -394,10 +394,8 @@
                 title: data.title != null && data.title.trim() !== "" ? data.title : data.name
             });
 
-            /* FIXME */
             this.restricted = !data.removable || Wirecloud.contextManager.get('mode') === 'embedded';
-            this.removable = !this.restricted
-            /* END FIXME */
+            this.removable = !this.restricted;
 
             Object.defineProperties(this, {
                 preferences: {

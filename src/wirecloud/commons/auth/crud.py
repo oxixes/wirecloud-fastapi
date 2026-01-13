@@ -371,44 +371,70 @@ async def get_all_users(db: DBSession):
     return [UserModel.model_validate(user) for user in users]
 
 
-async def get_all_parent_groups_from_child(db: DBSession, child_group_id: Id) -> list[Group]:
-    groups = []
-    current_id = child_group_id
+async def get_all_parent_groups_from_child(db: DBSession, child_group_id: Id):
+    pipeline = [
+        {"$match": {"_id": ObjectId(child_group_id)}},
+        {
+            "$graphLookup": {
+                "from": "groups",
+                "startWith": "$parent",
+                "connectFromField": "parent",
+                "connectToField": "_id",
+                "as": "parents",
+                "depthField": "depth"
+            }
+        }
+    ]
 
-    while current_id is not None:
-        group = await db.client.groups.find_one({"_id": ObjectId(current_id)})
-        if not group:
-            break
+    cursor = await db.client.groups.aggregate(pipeline)
+    result = await cursor.to_list(length=1)
 
-        parent = GroupModel.model_validate(group)
-        groups.append(parent)
-        current_id = parent.parent
+    if not result:
+        return []
+
+    root = result[0]
+
+    groups = [GroupModel.model_validate(root)]
+    for parent in root.get("parents", []):
+        groups.append(GroupModel.model_validate(parent))
 
     return groups
 
 
 async def get_all_user_groups(db: DBSession, user: UserAll) -> list[Group]:
-    user_groups = set()
+    groups = []
     for group_id in user.groups:
-        user_groups.add(group_id)
-        parents = await get_all_parent_groups_from_child(db, group_id)
-        for p in parents:
-            user_groups.add(p.id)
+        groups += await get_all_parent_groups_from_child(db, group_id)
 
-    query = {"_id": {"$in": list(user_groups)}}
-    groups = await db.client.groups.find(query).to_list()
-    return [GroupModel.model_validate(group) for group in groups]
+    return groups
 
 
 async def get_top_group_organization(db: DBSession, group: Group) -> Group:
-    group_data = group
-    current_id = group.id
+    pipeline = [
+        {"$match": {"_id": ObjectId(group.id)}},
+        {
+            "$graphLookup": {
+                "from": "groups",
+                "startWith": "$parent",
+                "connectFromField": "parent",
+                "connectToField": "_id",
+                "as": "parents",
+                "depthField": "depth"
+            }
+        }
+    ]
 
-    while current_id is not None:
-        group_data = await db.client.groups.find_one({"_id": ObjectId(current_id)})
-        if not group_data:
-            break
+    cursor = await db.client.groups.aggregate(pipeline)
+    result = await cursor.to_list(length=1)
 
-        current_id = group_data.get("parent")
+    if not result:
+        return group
 
-    return GroupModel.model_validate(group_data)
+    root = result[0]
+
+    if not root.get("parents"):
+        return GroupModel.model_validate(root)
+
+    top_parent = max(root["parents"], key=lambda x: x.get("depth", 0))
+
+    return GroupModel.model_validate(top_parent)

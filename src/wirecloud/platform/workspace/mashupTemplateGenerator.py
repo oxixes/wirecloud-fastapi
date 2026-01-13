@@ -159,7 +159,7 @@ async def process_widget_instance(db: DBSession, request: Optional[Request], iwi
         screen_sizes.append(size)
 
     iwidget_data = MACDMashupResource(
-        id=iwidget.id.split('-')[2],
+        id=iwidget.id,
         vendor=widget.vendor,
         name=widget.short_name,
         version=widget.version,
@@ -232,6 +232,7 @@ async def build_json_template_from_workspace(db: DBSession, request: Optional[Re
     for operator_id, operator in wiring_status.operators.items():
 
         operator_data = WiringOperator(
+            id=operator_id,
             name=operator.name,
             preferences={}
         )

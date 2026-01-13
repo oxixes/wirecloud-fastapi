@@ -86,7 +86,7 @@ async def update_wiring_entry(db: DBDep, request: Request, user: UserDep,
 
     if workspace.is_editable_by(user):
         result = await check_wiring(db, request, user, new_wiring_status, old_wiring_status, can_update_secure=False)
-    elif await workspace.is_accsessible_by(db, user):
+    elif await workspace.is_accessible_by(db, user):
         result = await check_multiuser_wiring(db, request, user, new_wiring_status, old_wiring_status,
                                               workspace.creator, can_update_secure=False)
     else:
@@ -162,7 +162,7 @@ async def patch_wiring_entry(db: DBDep, request: Request, user: UserDep,
 
     if workspace.is_editable_by(user):
         result = await check_wiring(db, request, user, new_wiring_status, old_wiring_status, can_update_secure=True)
-    elif await workspace.is_accsessible_by(db, user):
+    elif await workspace.is_accessible_by(db, user):
         result = await check_multiuser_wiring(db, request, user, new_wiring_status, old_wiring_status,
                                               workspace.creator,
                                               can_update_secure=True)
@@ -252,7 +252,7 @@ async def get_operator_variables_entry(db: DBDep, request: Request, user: UserDe
     if workspace is None:
         return build_error_response(request, 404, _('Workspace not found'))
 
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You don't have permission to access this workspace"))
 
     cache_manager = VariableValueCacheManager(workspace, user)

@@ -291,7 +291,7 @@ class MACDMashupResourceScreenSize(BaseModel):
 
 
 class MACDMashupResource(BaseModel):
-    id: IntegerStr
+    id: str
     name: Name
     vendor: Vendor
     version: Version

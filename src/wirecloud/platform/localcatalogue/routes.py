@@ -214,7 +214,7 @@ async def create_resource(db: DBDep, user: UserDep, request: Request,
             for group in group_objs:
                 if group.is_organization:
                     organization = await get_top_group_organization(db, group)
-                    owners = organization.owners
+                    owners = organization.users
                     if user.id not in owners:
                         return build_error_response(request, 403, _('You are not allowed to install components to non-owned organizations'))
             pass
@@ -469,7 +469,7 @@ async def get_workspace_resource_collection(db: DBDep, user: UserDepNoCSRF, requ
     if not workspace:
         raise NotFound("Workspace not found")
 
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You don't have access to this workspace"))
 
     creator: UserAll = await get_user_with_all_info(db, workspace.creator)

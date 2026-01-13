@@ -18,16 +18,15 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from typing import Optional
-from fastapi import APIRouter, Request, Query, Path
+from fastapi import APIRouter, Request, Query
 from fastapi.responses import Response
 
-from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
-from src.wirecloud.commons.search import get_search_engine, is_available_search_engine, get_rebuild_engine, \
-    is_available_rebuild_engine, SearchResponse
+from src.wirecloud.commons.auth.utils import UserDepNoCSRF
+from src.wirecloud.commons.search import get_search_engine, is_available_search_engine, SearchResponse
 from src.wirecloud.commons.templates.tags import get_javascript_catalogue
 from src.wirecloud.commons import docs
 from src.wirecloud import docs as root_docs
-from src.wirecloud.commons.utils.http import produces, build_error_response, authentication_required
+from src.wirecloud.commons.utils.http import produces, build_error_response
 from src.wirecloud.database import DBDep
 from src.wirecloud.translation import gettext as _
 

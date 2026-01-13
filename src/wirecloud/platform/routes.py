@@ -61,7 +61,7 @@ async def render_workspace_view(db: DBSession, request: Request, user: Optional[
     if workspace_db is None:
         raise NotFound("Workspace not found")
 
-    if user is not None and not await workspace_db.is_accsessible_by(db, user):
+    if user is not None and not await workspace_db.is_accessible_by(db, user):
         return build_error_response(request, 403, "You do not have permission to access this workspace.")
     elif user is None and not workspace_db.public:
         return RedirectResponse(login_url)

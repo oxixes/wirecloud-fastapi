@@ -133,7 +133,7 @@ async def create_workspace_collection(db: DBDep, user: UserDep, request: Request
             mashup = await get_workspace_by_id(db, Id(workspace_id))
             if mashup is None:
                 return build_error_response(request, 404, _("Workspace not found"))
-            if not await mashup.is_accsessible_by(db, user):
+            if not await mashup.is_accessible_by(db, user):
                 return build_error_response(request, 403, _("You are not allowed to read from workspace"))
 
         try:
@@ -399,7 +399,7 @@ async def get_tab_entry(db: DBDep, user: UserDepNoCSRF, request: Request,
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You don't have permission to access this workspace"))
 
     try:
@@ -598,7 +598,7 @@ async def process_mashup(db: DBDep, user: UserDep, request: Request,
         from_ws = await get_workspace_by_id(db, Id(workspace_id))
         if from_ws is None:
             return build_error_response(request, 404, _("Workspace not found"))
-        if not await from_ws.is_accsessible_by(db, user):
+        if not await from_ws.is_accessible_by(db, user):
             return build_error_response(request, 403,
                                         _("You are not allowed to read from workspace %(workspace_id)s") % {
                                             'workspace_id': workspace_id})

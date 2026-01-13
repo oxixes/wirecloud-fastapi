@@ -87,7 +87,7 @@ async def parse_context_from_referer(db: DBSession, user: Optional[UserAll], req
     referer_view = resolve_url_name(parsed_referrer.path)
     if referer_view is not None and referer_view[0] == 'wirecloud.workspace_view':
         workspace = await get_workspace_by_username_and_name(db, referer_view[1]['owner'], referer_view[1]['name'])
-        if workspace is None or not await workspace.is_accsessible_by(db, user):
+        if workspace is None or not await workspace.is_accessible_by(db, user):
             raise Exception()
     elif referer_view is not None and referer_view[0] == 'wirecloud.showcase_media' or referer_view[0] == 'wirecloud|proxy':
         if request_method not in ('GET', 'POST', 'WS'):
@@ -113,7 +113,7 @@ async def parse_context_from_query(db: DBSession, user: Optional[UserAll], reque
     workspace_id = query_params.get('__wirecloud_workspace_id', None)
     if workspace_id is not None:
         workspace = await get_workspace_by_id(db, Id(workspace_id))
-        if workspace is None or not await workspace.is_accsessible_by(db, user):
+        if workspace is None or not await workspace.is_accessible_by(db, user):
             raise Exception()
     else:
         if request_method not in ('GET', 'POST', 'WS'):

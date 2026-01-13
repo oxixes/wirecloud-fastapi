@@ -126,7 +126,7 @@ async def get_workspace_preferences(db: DBDep, request: Request, user: UserDepNo
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You are not allowed to read this workspace"))
 
     return await get_workspace_preference_values(workspace)
@@ -257,7 +257,7 @@ async def get_tab_preferences(db: DBDep, request: Request, user: UserDepNoCSRF, 
     except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You are not allowed to read this workspace"))
 
     result = await get_tab_preference_values(tab)
@@ -301,7 +301,7 @@ async def create_tab_preferences(db: DBDep, request: Request, user: UserDep, wor
     except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You are not allowed to read this workspace"))
 
     await update_tab_preferences(db, user, workspace, tab, preferences)

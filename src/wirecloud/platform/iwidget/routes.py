@@ -69,7 +69,7 @@ async def get_widget_instance_collection(db: DBDep, user: UserDepNoCSRF, request
     except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You don't have permission to access this workspace"))
 
     cache_manager = VariableValueCacheManager(workspace, user)
@@ -427,7 +427,7 @@ async def update_widget_instance_preferences(db: DBDep, user: UserDep, request: 
             if not workspace.is_editable_by(user):
                 return build_error_response(request, 403,
                                             _(f"You have not enough permission for updating the preferences of the iwidget"))
-        elif not await workspace.is_accsessible_by(db, user):
+        elif not await workspace.is_accessible_by(db, user):
             return build_error_response(request, 403,
                                         _("You have not enough permission for updating the preferences of the iwidget"))
 
@@ -478,7 +478,7 @@ async def get_widget_instance_preferences(db: DBDep, user: UserDepNoCSRF, reques
     except KeyError:
         return build_error_response(request, 404, _("IWidget not found"))
 
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You don't have permission to access this workspace"))
 
     if iwidget.resource is None:
@@ -558,7 +558,7 @@ async def update_widget_instance_properties(db: DBDep, user: UserDep, request: R
             if not workspace.is_editable_by(user):
                 return build_error_response(request, 403,
                                             _(f"You have not enough permission for updating the persistent variables of this iwidget"))
-        elif not await workspace.is_accsessible_by(db, user):
+        elif not await workspace.is_accessible_by(db, user):
             return build_error_response(request, 403,
                                         _("You have not enough permission for updating the persistent variables of this iwidget"))
 
@@ -592,7 +592,7 @@ async def get_widget_instance_properties(db: DBDep, user: UserDepNoCSRF, request
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You don't have permission to access this workspace"))
 
     try:

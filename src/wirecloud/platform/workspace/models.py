@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field, StringConstraints
 from typing import Optional, Annotated, Any
 from datetime import datetime, timezone
 
-from src.wirecloud.commons.auth.crud import get_user_by_id, get_user_groups, get_all_user_groups
+from src.wirecloud.commons.auth.crud import get_user_by_id, get_all_user_groups
 from src.wirecloud.commons.auth.schemas import User, UserAll
 from src.wirecloud.database import Id, DBSession
 from src.wirecloud.platform.iwidget.models import WidgetInstance
@@ -123,13 +123,12 @@ class Workspace(BaseModel, populate_by_name=True):
     def is_shared(self) -> bool:
         return self.public or len(self.users) > 1 or len(self.groups) > 1
 
-    async def is_accsessible_by(self, db: DBSession, user: Optional[UserAll]) -> bool:
+    async def is_accessible_by(self, db: DBSession, user: Optional[UserAll]) -> bool:
         if user is None:
             return self.public and not self.requireauth
         user_groups = await get_all_user_groups(db, user)
         return (user.is_superuser
                 or self.public and not self.requireauth
-                or self.public and user is None
                 or user is not None and (
                         self.creator == user.id
                         or await get_user_by_id(db, user.id) is not None
