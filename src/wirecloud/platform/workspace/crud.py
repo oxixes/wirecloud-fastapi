@@ -186,14 +186,14 @@ async def create_workspace(db: DBSession, request: Optional[Request], owner: Use
 
 async def get_workspace_description(db: DBSession, workspace: Workspace) -> str:
     query = {"_id": ObjectId(workspace.id)}
-    workspaces = [Workspace.model_validate(workspace).widgets for workspace in
+    workspaces = [Workspace.model_validate(workspace) for workspace in
                   await db.client.workspace.find(query).to_list()]
 
     resources = []
     for workspace in workspaces:
         for tab in workspace.tabs.values():
             for widget in tab.widgets.values():
-                resources.append(await get_catalogue_resource_by_id(db, widget.widget_id))
+                resources.append(widget)
 
     description = 'Wirecloud Mashup composed of: '
     for resource in resources:

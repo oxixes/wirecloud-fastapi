@@ -179,6 +179,7 @@
             var key;
 
             this.form.acceptButton.addClassName('busy');
+            data.type = "mashup";
             data.name = URLify(data.title);
 
             data.parametrization = {

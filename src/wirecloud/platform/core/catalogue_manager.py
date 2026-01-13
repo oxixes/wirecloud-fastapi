@@ -21,6 +21,7 @@
 from fastapi import Request
 from typing import Optional
 
+from src.wirecloud.catalogue.search import add_resource_to_index
 from src.wirecloud.commons.utils.wgt import WgtFile
 from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD
 from src.wirecloud.commons.auth.schemas import User
@@ -49,6 +50,8 @@ class WirecloudCatalogueManager(MarketManager):
             added, resource = await install_component(db, wgt_file, users=[user])
             if not added:
                 raise Exception(_('Resource already exists %(resource_id)s') % {'resource_id': resource.local_uri_part})
+
+            await add_resource_to_index(db, resource)
 
             return resource
         else:
