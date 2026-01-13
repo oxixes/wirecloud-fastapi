@@ -191,9 +191,9 @@ def write_mashup_wiring_tree(mashup: etree.Element, options: MACDMashup) -> None
         if connection.readonly:
             element.set('readonly', 'true')
 
-        etree.SubElement(element, 'source', type=connection.source.type, id=connection.source.id,
+        etree.SubElement(element, 'source', type=connection.source.type.value, id=connection.source.id,
                          endpoint=connection.source.endpoint)
-        etree.SubElement(element, 'target', type=connection.target.type, id=connection.target.id,
+        etree.SubElement(element, 'target', type=connection.target.type.value, id=connection.target.id,
                          endpoint=connection.target.endpoint)
 
     visual_description = etree.SubElement(wiring, 'visualdescription')

@@ -674,11 +674,11 @@ def check_json_fields(json_data, fields):
 @consumes(["application/json", "multipart/form-data"])
 async def publish_workspace(db: DBDep, user: UserDep, request: Request,
                             workspace_id: Id = Path(description=docs.process_publish_service_workspace_id_description),
-                            json_data: str = Form(description=docs.process_publish_service_json_data_description,
+                            json_data: str = Form(alias="json", description=docs.process_publish_service_json_data_description,
                                                   example=docs.process_publish_service_json_data_example),
-                            image_file: Optional[UploadFile] = File(None,
+                            image: Optional[UploadFile] = File(None,
                                                                     description=docs.process_publish_service_image_file_description),
-                            smartphoneimage_file: Optional[UploadFile] = File(None,
+                            smartphoneimage: Optional[UploadFile] = File(None,
                                                                               description=docs.process_publish_service_smartphoneimage_file_description)):  # TODO: put schema in json_data
     extra_files = []
 
@@ -703,12 +703,12 @@ async def publish_workspace(db: DBDep, user: UserDep, request: Request,
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
-    if image_file is not None:
-        json_data.image = 'images/catalogue' + os.path.splitext(image_file.filename)[1]
-        extra_files.append((json_data.image, image_file.file))
-    if smartphoneimage_file is not None:
-        json_data.smartphoneimage = 'images/smartphone' + os.path.splitext(smartphoneimage_file.filename)[1]
-        extra_files.append((json_data.smartphoneimage, smartphoneimage_file.file))
+    if image is not None:
+        json_data.image = 'images/catalogue' + os.path.splitext(image.filename)[1]
+        extra_files.append((json_data.image, image.file))
+    if smartphoneimage is not None:
+        json_data.smartphoneimage = 'images/smartphone' + os.path.splitext(smartphoneimage.filename)[1]
+        extra_files.append((json_data.smartphoneimage, smartphoneimage.file))
     if json_data.longdescription != '':
         extra_files.append(('DESCRIPTION.md', BytesIO(json_data.longdescription.encode('utf-8'))))
         json_data.longdescription = 'DESCRIPTION.md'
