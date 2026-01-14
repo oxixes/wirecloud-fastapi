@@ -23,6 +23,17 @@ from src.wirecloud.commons.urls import get_urlpatterns
 from src.wirecloud.platform.plugins import WirecloudPlugin, URLTemplate
 from src.wirecloud.commons.auth.schemas import UserLogin
 from src.wirecloud.commons.routes import router as commons_router
+from src.wirecloud.commons.routes import (
+    error_response_handler,
+    permission_denied_handler,
+    not_found_handler,
+    validation_exception_handler,
+    value_error_handler,
+    general_exception_handler
+)
+from src.wirecloud.commons.exceptions import ErrorResponse
+from src.wirecloud.commons.utils.http import PermissionDenied, NotFound
+from fastapi.exceptions import RequestValidationError
 
 from fastapi import FastAPI
 from typing import Any, Optional
@@ -38,6 +49,14 @@ class WirecloudCommonsPlugin(WirecloudPlugin):
         app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
         app.include_router(auth_base_router, prefix="", tags=["Auth"])
         app.include_router(commons_router, prefix="", tags=["Other"])
+
+        # Register exception handlers
+        app.add_exception_handler(ErrorResponse, error_response_handler)
+        app.add_exception_handler(PermissionDenied, permission_denied_handler)
+        app.add_exception_handler(NotFound, not_found_handler)
+        app.add_exception_handler(RequestValidationError, validation_exception_handler)
+        app.add_exception_handler(ValueError, value_error_handler)
+        app.add_exception_handler(Exception, general_exception_handler)
 
     def get_urls(self) -> dict[str, URLTemplate]:
         return get_urlpatterns()

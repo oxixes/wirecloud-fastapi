@@ -36,8 +36,7 @@ from src.wirecloud import docs
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    get_plugins(app)
+async def lifespan(_: FastAPI):
     await validate_settings()
     yield
     await close()
@@ -47,7 +46,7 @@ app = FastAPI(lifespan=lifespan,
               default_response_class=ORJSONResponse)
 
 install_all_middlewares(app)
-
+get_plugins(app)
 
 def custom_openapi():
     if app.openapi_schema:

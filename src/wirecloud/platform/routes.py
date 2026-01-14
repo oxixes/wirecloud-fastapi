@@ -171,6 +171,7 @@ def render_wirecloud(request: Request, view: Optional[str] = None, page: Optiona
         "LANG": request.state.lang,
         'environ': os.environ,
         'request': request,
+        'request_path': request.url.path,
 
         "trans": lambda text, **kwargs: get_translation(get_current_theme(request), request.state.lang, text, **kwargs),
         "static": lambda path: get_static_path(get_current_theme(request), view, request, path),

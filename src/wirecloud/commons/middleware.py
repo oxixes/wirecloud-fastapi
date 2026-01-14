@@ -110,6 +110,8 @@ class LocaleWSMiddleware:
         scope["state"]["lang"] = language
 
         await self.app(scope, receive, send)
+        return None
+
 
 class ContentTypeUTF8Middleware(BaseHTTPMiddleware):
     def __init__(self, app: FastAPI):

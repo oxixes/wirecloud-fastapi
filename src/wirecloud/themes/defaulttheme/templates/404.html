@@ -1,4 +1,4 @@
-{% extends 'wirecloud/views/wirecloud/views/base_plain.html' %}
+{% extends 'wirecloud/views/base_plain.html' %}
 {% block path %}{% block title %}{{ trans("Error 404 - Not Found") }}{% endblock %}{% endblock %}
 {% block content %}
     <p>{{ trans("The requested URL \"%(request_path)s\" was not found on this server.", request_path=request_path) }}</p>

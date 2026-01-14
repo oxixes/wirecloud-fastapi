@@ -20,13 +20,16 @@
 from typing import Optional
 from fastapi import APIRouter, Request, Query
 from fastapi.responses import Response
+from fastapi.exceptions import RequestValidationError
 
+import src.settings as settings
 from src.wirecloud.commons.auth.utils import UserDepNoCSRF
 from src.wirecloud.commons.search import get_search_engine, is_available_search_engine, SearchResponse
 from src.wirecloud.commons.templates.tags import get_javascript_catalogue
 from src.wirecloud.commons import docs
 from src.wirecloud import docs as root_docs
-from src.wirecloud.commons.utils.http import produces, build_error_response
+from src.wirecloud.commons.utils.http import produces, build_error_response, PermissionDenied, NotFound
+from src.wirecloud.commons.exceptions import ErrorResponse
 from src.wirecloud.database import DBDep
 from src.wirecloud.translation import gettext as _
 
@@ -34,6 +37,56 @@ router = APIRouter()
 
 class JSResponse(Response):
     media_type = "application/javascript"
+
+
+# Exception handlers
+async def error_response_handler(request: Request, exc: ErrorResponse):
+    return exc.response
+
+
+async def permission_denied_handler(request: Request, exc: PermissionDenied):
+    error_msg = str(exc) if str(exc) else _('Permission denied')
+    return build_error_response(request, 403, error_msg)
+
+
+async def not_found_handler(request: Request, exc: NotFound):
+    error_msg = str(exc) if str(exc) else _('Resource not found')
+    return build_error_response(request, 404, error_msg)
+
+
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = {}
+    for error in exc.errors():
+        field = '.'.join(str(loc) for loc in error['loc'])
+        if field not in errors:
+            errors[field] = []
+        errors[field].append(error['msg'])
+
+    return build_error_response(
+        request,
+        422,
+        _('Validation error'),
+        details=errors
+    )
+
+
+async def value_error_handler(request: Request, exc: ValueError):
+    error_msg = str(exc) if str(exc) else _('Invalid value')
+    return build_error_response(request, 400, error_msg)
+
+
+async def general_exception_handler(request: Request, exc: Exception):
+    # Log the exception for debugging purposes TODO better logging
+    import traceback
+    traceback.print_exc()
+
+    error_msg = _('An unexpected error occurred')
+
+    if settings.DEBUG:
+        error_msg = f"{error_msg}: {str(exc)}"
+
+    return build_error_response(request, 500, error_msg)
+
 
 @router.get(
     "/api/i18n/js_catalogue",

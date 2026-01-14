@@ -63,6 +63,15 @@ class NotFound(Exception):
     pass
 
 
+def get_html_basic_error_response(request: Optional[Request], mimetype: str, status_code: int, context: dict) -> str:
+    from src.wirecloud.platform.routes import render_wirecloud
+
+    try:
+        return render_wirecloud(request, page=f"{status_code}", title="Error").body.decode("utf-8")
+    except NotFound:
+        return render_wirecloud(request, page=f"500", title="Error").body.decode("utf-8")
+
+
 def get_xml_error_response(request: Optional[Request], mimetype: str, status_code: int, context: dict) -> str:
     doc = etree.Element('error')
 
@@ -116,8 +125,8 @@ def get_plain_text_error_response(request: Optional[Request], mimetype: str, sta
 ERROR_FORMATTERS = {
     'application/json; charset=utf-8': get_json_error_response,
     'application/xml; charset=utf-8': get_xml_error_response,
-    # 'text/html; charset=utf-8': get_html_basic_error_response,
-    # 'application/xhtml+xml; charset=utf-8': get_html_basic_error_response,
+    'text/html; charset=utf-8': get_html_basic_error_response,
+    'application/xhtml+xml; charset=utf-8': get_html_basic_error_response,
     'text/plain; charset=utf-8': get_plain_text_error_response,
     '': get_plain_text_error_response,  # Fallback
 }

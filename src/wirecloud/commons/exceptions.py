@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-# TODO Add FastAPI handler for this
 class ErrorResponse(Exception):
     def __init__(self, response):
         self.response = response

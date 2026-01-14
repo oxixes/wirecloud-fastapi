@@ -1,4 +1,4 @@
-{% extends 'wirecloud/views/wirecloud/views/base_plain.html' %}
+{% extends 'wirecloud/views/base_plain.html' %}
 {% block path %}{% block title %}{{ trans("Error 403 - Forbidden") }}{% endblock %}{% endblock %}
 {% block content %}
     <p>{{ trans("You don't have permission to access the requested URL \"%(request_path)s\".", request_path=request_path) }}</p>
