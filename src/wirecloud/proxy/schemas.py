@@ -28,9 +28,9 @@ from src.wirecloud.platform.workspace.models import Workspace
 
 
 class ProxyRequestData(BaseModel, arbitrary_types_allowed=True):
-    workspace: Optional[Workspace]
-    component_type: Optional[str]
-    component_id: Optional[str]
+    workspace: Optional[Workspace] = None
+    component_type: Optional[str] = None
+    component_id: Optional[str] = None
     headers: dict[str, str] = {}
     data: Union[AsyncGenerator[bytes, None], bytes, None] = None
     method: str = "GET"

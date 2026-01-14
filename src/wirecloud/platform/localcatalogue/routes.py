@@ -20,6 +20,7 @@ from typing import Union, Optional
 
 import orjson
 from fastapi import APIRouter, Request, Response, Query, UploadFile, Path
+from fastapi.responses import StreamingResponse
 
 import errno
 import os
@@ -184,8 +185,14 @@ async def create_resource(db: DBDep, user: UserDep, request: Request,
             if response.status_code >= 300 or response.status_code < 200:
                 raise Exception()
 
-            downloaded_file = await response.body()
-        except Exception:
+            if isinstance(response, StreamingResponse):
+                downloaded_file = b""
+                async for chunk in response.body_iterator:
+                    downloaded_file += chunk
+            else:
+                downloaded_file = response.render(None)
+        except Exception as e:
+            print(e)
             return build_error_response(request, 409, _('Content cannot be downloaded from the specified url'))
 
         try:
