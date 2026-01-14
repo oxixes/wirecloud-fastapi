@@ -323,7 +323,7 @@
     const on_load = function on_load() {
 
         if ((this.meta.macversion > 1 && this.wrapperElement.loadedURL !== this.codeurl) ||
-            ((this.meta.missing || this.meta.macversion === 1) && this.wrapperElement.contentWindow.location.href !== this.codeurl)) {
+            ((this.meta.missing || this.meta.macversion === 1) && this.wrapperElement.contentWindow.location.href !== this.codeurl)) {
             return;
         }
 

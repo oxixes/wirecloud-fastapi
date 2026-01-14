@@ -139,7 +139,7 @@ async def get_widget_api_files(request: Request, theme: str) -> list[str]:
 
 
 async def fix_widget_code(widget_code: Union[str, bytes], content_type: str, request: Request, encoding: str,
-                          use_platform_style: bool, requirements, mode: str, theme: str, macversion: int) -> Optional[bytes]:
+                          use_platform_style: bool, requirements: list[str], mode: str, theme: str, macversion: int) -> Optional[bytes]:
     # This line is here for raising UnicodeDecodeError in case the widget_code is not encoded using the specified encoding
     widget_code.decode(encoding)
 

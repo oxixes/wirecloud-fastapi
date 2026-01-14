@@ -18,7 +18,6 @@
 #  along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 import os
 from typing import Optional
-import logging
 
 from fastapi import APIRouter, Request, Path, Response, Query
 from fastapi.responses import HTMLResponse
@@ -127,10 +126,6 @@ async def get_widget_file(db: DBDep, request: Request, vendor: Vendor = Path(pat
     # DEPRECATED: This functionality is deprecated and will be removed in a future version
     # Use /api/widget/{vendor}/{name}/{version}/html endpoint instead
     if resource.resource_type() == 'widget' and entrypoint:
-        logging.warning(
-            "Using entrypoint parameter in get_widget_file is deprecated. "
-            "Use /api/widget/{vendor}/{name}/{version}/html endpoint instead."
-        )
         return await process_widget_code(db, request, resource, mode, theme)
 
     if file_path.endswith(".wgt"):

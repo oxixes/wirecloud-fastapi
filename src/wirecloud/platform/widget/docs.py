@@ -32,7 +32,11 @@ get_widget_html_theme_description = "The theme to be used to render the widget."
 
 # GET /{vendor}/{name}/{version}/docs/{file_path:path}
 get_widget_file_summary = "Get a file from a widget or operator package"
-get_widget_file_description = " Get a file from a widget or operator package. The file can be any file included in the widget package, including the entry point file (if it is a widget). The entry point file is the one that will be used to render the widget in the platform."
+get_widget_file_description = """
+Get a file from a widget or operator package. The file can be any file included in the widget package, including the entry point file (if it is a widget). The entry point file is the one that will be used to render the widget in the platform.
+
+Warning: the `entrypoint` parameter is deprecated, use the `/api/widget/{vendor}/{name}/{version}/html` endpoint instead.
+"""
 get_widget_file_response_description = "The file requested from the widget package."
 get_widget_file_found_response_description = "The file has been found and the response will be a redirect to the file."
 get_widget_file_not_modified_response_description = "The file has not been modified since the last request."

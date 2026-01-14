@@ -46,7 +46,7 @@ def get_translation(theme: str, lang: str, text: str, **kwargs) -> str:
 
     return translation
 
-def get_static_path(theme: str, view:str, request: Request, path: str) -> str:
+def get_static_path(theme: str, view: str, request: Request, path: str) -> str:
     # Get query from the path and add themeactive and view to it
     parsed_url = urlparse(path)
     query_dict = parse_qs(parsed_url.query)
