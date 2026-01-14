@@ -32,7 +32,7 @@ from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
 from src.wirecloud.commons.utils.cache import CacheableData
 from src.wirecloud.commons.utils.http import authentication_required, consumes, build_error_response, \
     get_current_domain, get_absolute_reverse_url
-from src.wirecloud.database import DBDep, Id, commit
+from src.wirecloud.database import DBDep, Id
 from src.wirecloud.platform.wiring.schemas import WiringEntryPatch, WiringOperatorVariables
 from src.wirecloud.platform.wiring import docs
 from src.wirecloud.platform.wiring.utils import check_wiring, check_multiuser_wiring, get_operator_cache_key, \
@@ -78,9 +78,6 @@ async def update_wiring_entry(db: DBDep, request: Request, user: UserDep,
                               new_wiring_status: WorkspaceWiring = Body(
                                   description=docs.update_wiring_entry_wiring_description,
                                   example=docs.update_wiring_entry_wiring_example)):
-    if not db.in_transaction:
-        db.start_transaction()
-
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _('Workspace not found'))
@@ -89,7 +86,7 @@ async def update_wiring_entry(db: DBDep, request: Request, user: UserDep,
 
     if workspace.is_editable_by(user):
         result = await check_wiring(db, request, user, new_wiring_status, old_wiring_status, can_update_secure=False)
-    elif await workspace.is_accsessible_by(db, user):
+    elif await workspace.is_accessible_by(db, user):
         result = await check_multiuser_wiring(db, request, user, new_wiring_status, old_wiring_status,
                                               workspace.creator, can_update_secure=False)
     else:
@@ -100,7 +97,6 @@ async def update_wiring_entry(db: DBDep, request: Request, user: UserDep,
 
     workspace.wiring_status = new_wiring_status
     await change_workspace(db, workspace, user)
-    await commit(db)
 
     return Response(status_code=204)
 
@@ -135,8 +131,6 @@ async def patch_wiring_entry(db: DBDep, request: Request, user: UserDep,
                              req: list[WiringEntryPatch] = Body(description=docs.patch_wiring_entry_wiring_description,
                                                                 example=docs.patch_wiring_entry_wiring_example,
                                                                 media_type='application/json-patch+json')):
-    if not db.in_transaction:
-        db.start_transaction()
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _('Workspace not found'))
@@ -168,7 +162,7 @@ async def patch_wiring_entry(db: DBDep, request: Request, user: UserDep,
 
     if workspace.is_editable_by(user):
         result = await check_wiring(db, request, user, new_wiring_status, old_wiring_status, can_update_secure=True)
-    elif await workspace.is_accsessible_by(db, user):
+    elif await workspace.is_accessible_by(db, user):
         result = await check_multiuser_wiring(db, request, user, new_wiring_status, old_wiring_status,
                                               workspace.creator,
                                               can_update_secure=True)
@@ -180,7 +174,6 @@ async def patch_wiring_entry(db: DBDep, request: Request, user: UserDep,
 
     workspace.wiring_status = new_wiring_status
     await change_workspace(db, workspace, user)
-    await commit(db)
 
     return Response(status_code=204)
 
@@ -259,7 +252,7 @@ async def get_operator_variables_entry(db: DBDep, request: Request, user: UserDe
     if workspace is None:
         return build_error_response(request, 404, _('Workspace not found'))
 
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You don't have permission to access this workspace"))
 
     cache_manager = VariableValueCacheManager(workspace, user)

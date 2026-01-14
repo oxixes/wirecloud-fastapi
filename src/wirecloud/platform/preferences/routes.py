@@ -98,7 +98,6 @@ async def create_platform_preferences(db: DBDep, request: Request, user: UserDep
                                           description=docs.create_platform_preference_collection_platform_preference_create_description,
                                           example=docs.create_platform_preference_collection_platform_preference_create_example)):
     await update_preferences(db, user, preferences)
-    await commit(db)
 
 
 @preferences_router.get(
@@ -127,7 +126,7 @@ async def get_workspace_preferences(db: DBDep, request: Request, user: UserDepNo
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You are not allowed to read this workspace"))
 
     return await get_workspace_preference_values(workspace)
@@ -183,14 +182,14 @@ async def create_workspace_preferences(db: DBDep, request: Request, user: UserDe
 
         for item in sharelist:
             entrytype = ShareListPreference.model_validate(item)
-            if entrytype.type in (ShareListEnum.user, ShareListEnum.organization):
+            if entrytype.type == ShareListEnum.user:
                 user = await get_user_by_username(db, entrytype.name)
                 if user is None:
                     continue
                 await add_user_to_workspace(db, workspace, user)
                 # TODO: Add organization support
 
-            elif entrytype.type == ShareListEnum.group:
+            elif entrytype.type in (ShareListEnum.group, ShareListEnum.organization):
                 group = await get_group_by_name(db, entrytype.name)
                 if group is None:
                     continue
@@ -223,7 +222,6 @@ async def create_workspace_preferences(db: DBDep, request: Request, user: UserDe
         await commit(db)
 
     await update_workspace_preferences(db, user, workspace, preferences)
-    await commit(db)
 
 
 @preferences_router.get(
@@ -259,7 +257,7 @@ async def get_tab_preferences(db: DBDep, request: Request, user: UserDepNoCSRF, 
     except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You are not allowed to read this workspace"))
 
     result = await get_tab_preference_values(tab)
@@ -303,8 +301,7 @@ async def create_tab_preferences(db: DBDep, request: Request, user: UserDep, wor
     except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You are not allowed to read this workspace"))
 
     await update_tab_preferences(db, user, workspace, tab, preferences)
-    await commit(db)

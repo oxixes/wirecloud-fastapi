@@ -25,17 +25,15 @@ from elasticsearch.helpers import async_bulk
 from pydantic import BaseModel
 
 from src import settings
-from src.wirecloud.catalogue.search import ResourceOutResponse, ResourceOut, RESOURCES_INDEX
+from src.wirecloud.catalogue.search import ResourceOutResponse, RESOURCES_INDEX
 from src.wirecloud.commons.auth.crud import get_all_users, get_all_groups
 from src.wirecloud.commons.auth.models import Group
 from src.wirecloud.commons.auth.schemas import User
 from src.wirecloud.database import DBSession
-from src.wirecloud.platform.search import SearchWorkspaceOutputResponse, SearchWorkspaceOutput
+from src.wirecloud.platform.search import SearchWorkspaceOutputResponse
 
 es_client = AsyncElasticsearch(hosts=f"{'https' if settings.ELASTICSEARCH['SECURE'] else 'http'}://{settings.ELASTICSEARCH['HOST']}:{settings.ELASTICSEARCH['PORT']}",
                                http_auth=(settings.ELASTICSEARCH['USER'], settings.ELASTICSEARCH['PASSWORD']))
-
-# TODO: organizations
 
 USERS_INDEX = 'users'
 GROUPS_INDEX = 'groups'
@@ -119,7 +117,8 @@ GROUP_MAPPINGS = {
                 "fields": {
                     "keyword": {"type": "keyword"}
                 }
-            }
+            },
+            "is_organization": {"type": "boolean"}
         }
     }
 }
@@ -131,12 +130,11 @@ _available_rebuild_engines = None
 class SearchUserOutput(BaseModel):
     fullname: str
     username: str
-    # TODO: Organizations
 
 
 class SearchGroupOutput(BaseModel):
     name: str
-    # TODO: Organizations
+    is_organization: bool
 
 
 class SearchResponse(BaseModel):
@@ -273,14 +271,16 @@ async def add_user_to_index(user: User):
 
 async def add_group_to_index(group: Group):
     await es_client.index(index=GROUPS_INDEX, id=str(group.id), document=SearchGroupOutput(
-        name=group.name
+        name=group.name,
+        is_organization=group.is_organization
     ).model_dump())
 
 
 def clean_group_out(hit: dict) -> SearchGroupOutput:
     source = hit["_source"]
     return SearchGroupOutput(
-        name=source["name"]
+        name=source["name"],
+        is_organization=source["is_organization"]
     )
 
 
@@ -350,7 +350,8 @@ async def rebuild_group_index(db: DBSession):
         "mappings": GROUP_MAPPINGS["mappings"]})
     data = await get_all_groups(db)
     actions = [{'_index': GROUPS_INDEX, '_id': str(group.id), '_source': SearchGroupOutput(
-        name=group.name
+        name=group.name,
+        is_organization=group.is_organization
     ).model_dump()} for group in data]
     await async_bulk(es_client, actions)
 

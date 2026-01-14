@@ -88,7 +88,7 @@ def is_valid_connection(connection: WiringConnection, id_mapping: IdMapping) -> 
         else:
             return endpoint.id in id_mapping.operator
 
-    return is_valid_endpoint(connection.source and is_valid_endpoint(connection.target))
+    return is_valid_endpoint(connection.source) and is_valid_endpoint(connection.target)
 
 
 def _remap_component_ids(id_mapping: IdMapping, components_description: WiringComponents,
@@ -285,7 +285,6 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
 
             await set_initial_values(db, iwidget, initial_variable_values, iwidget_info,
                                      await get_user_by_id(db, workspace.creator))
-            # await insert_widget_instance_into_tab(db, tab, iwidget)
             workspace.tabs[tab.id].widgets[iwidget.id] = iwidget
 
             if len(iwidget_forced_values) > 0:

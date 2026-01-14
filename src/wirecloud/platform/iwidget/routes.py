@@ -23,7 +23,7 @@ from fastapi import APIRouter, Request, Body, Path, Response
 from src.wirecloud.catalogue.crud import get_catalogue_resource_by_id
 from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
 from src.wirecloud.commons.utils.http import authentication_required, build_error_response, consumes, NotFound
-from src.wirecloud.database import DBDep, Id, commit
+from src.wirecloud.database import DBDep, Id
 from src.wirecloud import docs as root_docs
 from src.wirecloud.platform.iwidget import docs
 from src.wirecloud.platform.iwidget.schemas import WidgetInstanceData, WidgetInstanceDataCreate, \
@@ -69,7 +69,7 @@ async def get_widget_instance_collection(db: DBDep, user: UserDepNoCSRF, request
     except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You don't have permission to access this workspace"))
 
     cache_manager = VariableValueCacheManager(workspace, user)
@@ -204,8 +204,6 @@ async def update_widget_instance_collection(db: DBDep, user: UserDep, request: R
     if len(iwidgets) > 0:
         await change_workspace(db, workspace, user)
 
-    await commit(db)
-
     return Response(status_code=204)
 
 
@@ -307,8 +305,6 @@ async def update_widget_instance_entry(db: DBDep, user: UserDep, request: Reques
     except ValueError as e:
         return build_error_response(request, 422, str(e))
 
-    await commit(db)
-
 
 @iwidget_router.delete(
     "/{workspace_id}/tab/{tab_id}/widget_instances/{iwidget_id}",
@@ -358,7 +354,6 @@ async def delete_widget_instance_entry(db: DBDep, user: UserDep, request: Reques
 
     del workspace.tabs[tab_id].widgets[iwidget_id]
     await change_workspace(db, workspace, user)
-    await commit(db)
 
     return Response(status_code=204)
 
@@ -432,7 +427,7 @@ async def update_widget_instance_preferences(db: DBDep, user: UserDep, request: 
             if not workspace.is_editable_by(user):
                 return build_error_response(request, 403,
                                             _(f"You have not enough permission for updating the preferences of the iwidget"))
-        elif not await workspace.is_accsessible_by(db, user):
+        elif not await workspace.is_accessible_by(db, user):
             return build_error_response(request, 403,
                                         _("You have not enough permission for updating the preferences of the iwidget"))
 
@@ -440,7 +435,6 @@ async def update_widget_instance_preferences(db: DBDep, user: UserDep, request: 
 
     workspace.tabs[tab_id].widgets[iwidget_id] = iwidget
     await change_workspace(db, workspace, user)
-    await commit(db)
 
     return Response(status_code=204)
 
@@ -484,7 +478,7 @@ async def get_widget_instance_preferences(db: DBDep, user: UserDepNoCSRF, reques
     except KeyError:
         return build_error_response(request, 404, _("IWidget not found"))
 
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You don't have permission to access this workspace"))
 
     if iwidget.resource is None:
@@ -564,7 +558,7 @@ async def update_widget_instance_properties(db: DBDep, user: UserDep, request: R
             if not workspace.is_editable_by(user):
                 return build_error_response(request, 403,
                                             _(f"You have not enough permission for updating the persistent variables of this iwidget"))
-        elif not await workspace.is_accsessible_by(db, user):
+        elif not await workspace.is_accessible_by(db, user):
             return build_error_response(request, 403,
                                         _("You have not enough permission for updating the persistent variables of this iwidget"))
 
@@ -572,7 +566,6 @@ async def update_widget_instance_properties(db: DBDep, user: UserDep, request: R
 
     workspace.tabs[tab_id].widgets[iwidget_id] = iwidget
     await change_workspace(db, workspace, user)
-    await commit(db)
     return Response(status_code=204)
 
 
@@ -599,7 +592,7 @@ async def get_widget_instance_properties(db: DBDep, user: UserDepNoCSRF, request
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You don't have permission to access this workspace"))
 
     try:

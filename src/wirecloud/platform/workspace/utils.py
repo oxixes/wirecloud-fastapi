@@ -425,7 +425,6 @@ async def _get_global_workspace_data(db: DBSession, request: Request, workspace:
             data_ret.users.append(UserWorkspaceData(
                 fullname=u_all.get_full_name(),
                 username=u_all.username,
-                organization=False,  # TODO: check this
                 accesslevel="owner" if u.id == workspace.creator else "read"
             ))
 
@@ -434,6 +433,7 @@ async def _get_global_workspace_data(db: DBSession, request: Request, workspace:
             group = await get_group_by_id(db, g.id)
             data_ret.groups.append(GroupWorkspaceData(
                 name=group.name,
+                organization=group.is_organization,
                 accesslevel="read"
             ))
 
@@ -526,7 +526,7 @@ async def get_workspace_entry(db: DBSession, user: Optional[UserAll], request: R
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
-    if not await workspace.is_accsessible_by(db, user):
+    if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You don't have permission to access this workspace"))
 
     last_modified = workspace.last_modified

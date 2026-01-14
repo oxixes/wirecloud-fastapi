@@ -29,7 +29,7 @@ from io import BytesIO
 from src.settings import cache
 from src.wirecloud.catalogue import utils as catalogue
 from src.wirecloud.catalogue.crud import get_catalogue_resource, get_catalogue_resource_by_id
-from src.wirecloud.commons.auth.crud import get_user_by_username
+from src.wirecloud.commons.auth.crud import get_user_by_username, get_all_user_groups
 from src.wirecloud.commons.utils.db import save_alternative
 from src.wirecloud.commons.utils.downloader import download_http_content
 from src.wirecloud.commons.utils.template import TemplateParser
@@ -60,11 +60,14 @@ def _sanitize_widget_layout_config(workspace_data: dict) -> None:
                     widget.pop('lessOrEqual', None)
 
 
-async def get_workspace_list(db: DBSession, user: Optional[User]) -> list[Workspace]:
+async def get_workspace_list(db: DBSession, user: Optional[UserAll]) -> list[Workspace]:
     if user is not None:
+        user_groups = await get_all_user_groups(db, user)
+
         query = { "$or": [
             {'public': True, 'searchable': True},
-            {'users.id': ObjectId(user.id)}
+            {'users.id': ObjectId(user.id)},
+            {'groups.id': {"$in": [group.id for group in user_groups]}},
         ]}
     else:
         query = {"public": True, "searchable": True}
@@ -109,20 +112,11 @@ async def get_workspace_by_id(db: DBSession, workspace_id: Id) -> Optional[Works
     return Workspace.model_validate(workspace)
 
 
-async def get_workspace_groups(db: DBSession, workspace: Workspace) -> list[Group]:
-    query = {"_id": {"$in": workspace.get("groups")}}
-    results = [GroupModel.model_validate(result) for result in await db.client.groups.find(query).to_list()]
-    return results
-
-
 async def create_workspace(db: DBSession, request: Optional[Request], owner: UserAll, mashup: Union[str, WgtFile, Workspace],
                            new_name: str = None,
                            new_title: str = None, preferences: dict[str, Union[str, WorkspacePreference]] = {},
                            searchable: bool = True, public: bool = False,
                            allow_renaming: bool = False, dry_run: bool = False) -> Optional[Workspace]:
-    if not db.in_transaction:
-        db.start_transaction()
-
     if type(mashup) == str:
         values = mashup.split('/', 3)
         if len(values) != 3:
@@ -209,37 +203,26 @@ async def get_workspace_description(db: DBSession, workspace: Workspace) -> str:
 
 
 async def clear_workspace_users(db: DBSession, workspace: Workspace) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
     query = {"_id": ObjectId(workspace.id)}
     await db.client.workspace.update_one(query, {"$set": {"users": []}})
 
 
 async def clear_workspace_groups(db: DBSession, workspace: Workspace) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
     query = {"_id": ObjectId(workspace.id)}
     await db.client.workspace.update_one(query, {"$set": {"groups": []}})
 
 
 async def add_group_to_workspace(db: DBSession, workspace: Workspace, group: Group) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
     query = {"_id": ObjectId(workspace.id)}
     await db.client.workspace.update_one(query, {"$push": {"groups": ObjectId(group.id)}})
 
 
 async def add_user_to_workspace(db: DBSession, workspace: Workspace, user: User) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
     query = {"_id": ObjectId(workspace.id)}
     await db.client.workspace.update_one(query, {"$push": {"users": ObjectId(user.id)}})
 
 
 async def insert_workspace(db: DBSession, workspace: Workspace) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
-
     # Create a dict representation and remove unwanted keys from layout configurations
     data = workspace.model_dump(by_alias=True)
     _sanitize_widget_layout_config(data)
@@ -248,9 +231,6 @@ async def insert_workspace(db: DBSession, workspace: Workspace) -> None:
 
 
 async def change_workspace(db: DBSession, workspace: Workspace, user: Optional[User]) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
-
     await cache.delete(_workspace_cache_key(workspace, user))
     await cache.delete(_variable_values_cache_key(workspace, user))
 
@@ -284,17 +264,12 @@ async def is_a_workspace_with_that_name(db: DBSession, name: str) -> bool:
 
 
 async def delete_workspace(db: DBSession, workspace: Workspace) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
     query = {"_id": ObjectId(workspace.id)}
     await db.client.workspace.delete_one(query)
     await delete_workspace_from_index(workspace)
 
 
 async def change_tab(db: DBSession, user: User, workspace: Workspace, tab: Tab, save_workspace: bool = True) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
-
     workspace.tabs[tab.id] = tab
 
     if save_workspace:
@@ -302,9 +277,6 @@ async def change_tab(db: DBSession, user: User, workspace: Workspace, tab: Tab, 
 
 
 async def set_visible_tab(db: DBSession, user: User, workspace: Workspace, tab: Tab) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
-
     for visible_tab in workspace.tabs.values():
         visible_tab.visible = False
         await change_tab(db, user, workspace, visible_tab, save_workspace=False)

@@ -120,9 +120,6 @@ async def update_workspace_preferences(db: DBSession, user: User, workspace: Wor
 
 async def update_tab_preferences(db: DBSession, user: User, workspace: Workspace, tab: Tab,
                                  preferences: dict[str, Union[str, TabPreference]]):
-    if not db.in_transaction:
-        db.start_transaction()
-
     changes = False
     current_preferences = {}
     for current_preference in tab.preferences:

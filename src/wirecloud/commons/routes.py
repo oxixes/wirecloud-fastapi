@@ -18,16 +18,15 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from typing import Optional
-from fastapi import APIRouter, Request, Query, Path
+from fastapi import APIRouter, Request, Query
 from fastapi.responses import Response
 
-from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
-from src.wirecloud.commons.search import get_search_engine, is_available_search_engine, get_rebuild_engine, \
-    is_available_rebuild_engine, SearchResponse
+from src.wirecloud.commons.auth.utils import UserDepNoCSRF
+from src.wirecloud.commons.search import get_search_engine, is_available_search_engine, SearchResponse
 from src.wirecloud.commons.templates.tags import get_javascript_catalogue
 from src.wirecloud.commons import docs
 from src.wirecloud import docs as root_docs
-from src.wirecloud.commons.utils.http import produces, build_error_response, authentication_required
+from src.wirecloud.commons.utils.http import produces, build_error_response
 from src.wirecloud.database import DBDep
 from src.wirecloud.translation import gettext as _
 
@@ -67,7 +66,7 @@ def get_js_catalogue(themeactive: str, language: str):
     }
 )
 @produces(["application/json"])
-async def search_resources(user: UserDepNoCSRF, request: Request,
+async def search_resources(db: DBDep, user: UserDepNoCSRF, request: Request,
                            namespace: str = Query(description=docs.get_search_resources_namespace_description),
                            q: Optional[str] = Query(default='', description=docs.get_search_resources_q_description),
                            pagenum: int = Query(default=1, description=docs.get_search_resources_pagenum_description),
@@ -82,7 +81,7 @@ async def search_resources(user: UserDepNoCSRF, request: Request,
     func = get_search_engine(namespace)
 
     if namespace == 'workspace':
-        res = await func(user, q, pagenum, maxresults, orderby)
+        res = await func(db, user, q, pagenum, maxresults, orderby)
     elif namespace == 'resource':
         res = await func(request, user, q, pagenum, maxresults, order_by=orderby)
     else:

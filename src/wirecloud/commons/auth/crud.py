@@ -30,9 +30,6 @@ from src.wirecloud.database import DBSession, Id
 
 
 async def create_token(db: DBSession, expiration: datetime, user_id: Id, idm_session: Optional[str] = None) -> ObjectId:
-    if not db.in_transaction:
-        db.start_transaction()
-
     token = {
         "_id": ObjectId(),
         "valid": True,
@@ -48,9 +45,6 @@ async def create_token(db: DBSession, expiration: datetime, user_id: Id, idm_ses
 
 
 async def is_token_valid(db: DBSession, token_id: ObjectId) -> bool:
-    if not db.in_transaction:
-        db.start_transaction()
-
     token = await db.client.tokens.find_one({"_id": token_id})
 
     if token is None:
@@ -65,33 +59,21 @@ async def is_token_valid(db: DBSession, token_id: ObjectId) -> bool:
 
 
 async def set_token_expiration(db: DBSession, token_id: ObjectId, expiration: datetime) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
-
     query = {"_id": token_id}, {"$set": {"expiration": expiration}}
     await db.client.tokens.update_one(*query)
 
 
 async def invalidate_token(db: DBSession, token_id: ObjectId) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
-
     query = {"_id": token_id}, {"$set": {"valid": False}}
     await db.client.tokens.update_one(*query)
 
 
 async def invalidate_tokens_by_idm_session(db: DBSession, idm_session: str) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
-
     query = {"idm_session": idm_session}, {"$set": {"valid": False}}
     await db.client.tokens.update_many(*query)
 
 
 async def invalidate_all_user_tokens(db: DBSession, user_id: Id) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
-
     query = {"user_id": user_id}, {"$set": {"valid": False}}
     await db.client.tokens.update_many(*query)
 
@@ -112,16 +94,10 @@ async def create_user(db: DBSession, user_info: UserCreate) -> None:
         last_login=None
     )
 
-    if not db.in_transaction:
-        db.start_transaction()
-
     await db.client.users.insert_one(user_created.model_dump(by_alias=True))
 
 
 async def update_user(db: DBSession, user_info: User) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
-
     # Make sure the user_info is a User and not UserAll or similar
     user_info = User(**user_info.model_dump(include=User.model_fields.keys()))
 
@@ -281,9 +257,6 @@ async def get_user_with_password(db: DBSession, username: str) -> Optional[UserW
 
 
 async def add_user_to_groups_by_codename(db: DBSession, user_id: Id, group_names: list[str]) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
-
     query = {"codename": {"$in": group_names}}
     groups = await db.client.groups.find(query).to_list()
 
@@ -308,16 +281,10 @@ async def create_group_if_not_exists(db: DBSession, group_info: Group) -> None:
     group = await db.client.groups.find_one(query)
 
     if group is None:
-        if not db.in_transaction:
-            db.start_transaction()
-
         await db.client.groups.insert_one(group_info.model_dump(by_alias=True))
 
 
 async def remove_user_from_all_groups(db: DBSession, user_id: Id) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
-
     query = {"_id": ObjectId(user_id)}
     user = await db.client.users.find_one(query, {"groups": 1})
 
@@ -336,16 +303,11 @@ async def remove_user_from_all_groups(db: DBSession, user_id: Id) -> None:
     await db.client.users.update_one(query, {"$set": {"groups": []}})
 
 async def set_login_date_for_user(db: DBSession, user_id: Id) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
     query = {"_id": ObjectId(user_id)}, {"$set": {"last_login": datetime.now(timezone.utc)}}
     await db.client.users.update_one(*query)
 
 
 async def remove_user_idm_data(db: DBSession, user_id: Id, provider: str) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
-
     query = {"_id": ObjectId(user_id)}, {"$unset": {f"idm_data.{provider}": ""}}
     await db.client.users.update_one(*query)
 
@@ -377,9 +339,6 @@ async def get_user_preferences(db: DBSession, user_id: Id, name: str = None) -> 
 
 
 async def set_user_preferences(db: DBSession, user_id: Id, preferences: list[PlatformPreferenceModel]) -> None:
-    if not db.in_transaction:
-        db.start_transaction()
-
     query = {"_id": ObjectId(user_id)}, {"$set": {"preferences": [pref.model_dump() for pref in preferences]}}
     await db.client.users.update_one(*query)
 
@@ -410,3 +369,72 @@ async def get_all_groups(db: DBSession) -> list[Group]:
 async def get_all_users(db: DBSession):
     users = await db.client.users.find().to_list()
     return [UserModel.model_validate(user) for user in users]
+
+
+async def get_all_parent_groups_from_child(db: DBSession, child_group_id: Id):
+    pipeline = [
+        {"$match": {"_id": ObjectId(child_group_id)}},
+        {
+            "$graphLookup": {
+                "from": "groups",
+                "startWith": "$parent",
+                "connectFromField": "parent",
+                "connectToField": "_id",
+                "as": "parents",
+                "depthField": "depth"
+            }
+        }
+    ]
+
+    cursor = await db.client.groups.aggregate(pipeline)
+    result = await cursor.to_list(length=1)
+
+    if not result:
+        return []
+
+    root = result[0]
+
+    groups = [GroupModel.model_validate(root)]
+    for parent in root.get("parents", []):
+        groups.append(GroupModel.model_validate(parent))
+
+    return groups
+
+
+async def get_all_user_groups(db: DBSession, user: UserAll) -> list[Group]:
+    groups = []
+    for group_id in user.groups:
+        groups += await get_all_parent_groups_from_child(db, group_id)
+
+    return groups
+
+
+async def get_top_group_organization(db: DBSession, group: Group) -> Group:
+    pipeline = [
+        {"$match": {"_id": ObjectId(group.id)}},
+        {
+            "$graphLookup": {
+                "from": "groups",
+                "startWith": "$parent",
+                "connectFromField": "parent",
+                "connectToField": "_id",
+                "as": "parents",
+                "depthField": "depth"
+            }
+        }
+    ]
+
+    cursor = await db.client.groups.aggregate(pipeline)
+    result = await cursor.to_list(length=1)
+
+    if not result:
+        return group
+
+    root = result[0]
+
+    if not root.get("parents"):
+        return GroupModel.model_validate(root)
+
+    top_parent = max(root["parents"], key=lambda x: x.get("depth", 0))
+
+    return GroupModel.model_validate(top_parent)

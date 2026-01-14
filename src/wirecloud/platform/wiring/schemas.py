@@ -63,7 +63,7 @@ class WiringOperatorPreference(BaseModel):
 
 
 class WiringOperator(BaseModel):
-    id: Optional[IntegerStr] = Field(description=docs.wiring_operator_id_description),
+    id: Optional[IntegerStr] = Field(description=docs.wiring_operator_id_description)
     name: ResourceName = Field(description=docs.wiring_operator_name_description)
     preferences: dict[str, WiringOperatorPreference] = Field(description=docs.wiring_operator_preference_description)
 
@@ -84,7 +84,8 @@ class WiringComponent(BaseModel):
     endpoints: Optional[WiringComponentEndpoints] = Field(description=docs.wiring_component_endpoints_description,
                                                           default=None)
     position: Optional[WiringPosition] = Field(description=docs.wiring_component_position_description,
-                                               default=None)
+                                               default=None),
+    name: Optional[ResourceName] = Field(default=None)
 
 
 class WiringComponents(BaseModel):
