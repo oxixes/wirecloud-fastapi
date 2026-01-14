@@ -53,8 +53,8 @@ def get_static_path(theme: str, view:str, request: Request, path: str) -> str:
     if "view" not in query_dict:
         query_dict["view"] = [view]
 
-    return html.escape(urljoin(request.url.path, "/static/" + parsed_url.path) + "?" + "&".join(
-        [f"{k}={v[0]}" for k, v in query_dict.items()]))
+    return urljoin(request.url.path, "/static/" + parsed_url.path) + "?" + "&".join(
+        [f"{k}={v[0]}" for k, v in query_dict.items()])
 
 def get_url_from_view(request: Request, view: str, **kwargs) -> str:
     return get_absolute_reverse_url(view, request, **kwargs)
