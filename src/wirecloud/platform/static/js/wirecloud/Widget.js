@@ -865,7 +865,7 @@
 
             privates.get(this).status = STATUS.LOADING;
             if (this.meta.macversion > 1) {
-                this.wrapperElement.load(this.codeurl);
+                this.wrapperElement.load(this.codeurl, this.meta.base_url);
             } else {
                 this.wrapperElement.contentWindow.location.replace(this.codeurl);
                 this.wrapperElement.setAttribute('type', this.meta.codecontenttype);
@@ -882,7 +882,7 @@
             priv.status = STATUS.UNLOADING;
 
             if (this.meta.macversion > 1) {
-                this.wrapperElement.load(this.wrapperElement.loadedURL);
+                this.wrapperElement.load(this.wrapperElement.loadedURL, this.wrapperElement.baseURL);
             } else {
                 this.wrapperElement.setAttribute('type', this.meta.codecontenttype);
                 this.wrapperElement.contentWindow.location.reload();

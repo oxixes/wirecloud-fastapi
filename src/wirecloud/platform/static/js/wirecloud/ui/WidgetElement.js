@@ -28,6 +28,7 @@
             super();
             this.hasShadowDOM = false;
             this.loadedURL = "";
+            this.baseURL = "";
         }
 
         connectedCallback() {
@@ -45,7 +46,7 @@
             this._unload();
         }
 
-        load(codeurl) {
+        load(codeurl, baseurl) {
             if (!this.hasShadowDOM) {
                 throw new Error('Cannot load widget: widget is not attached to the DOM');
             }
@@ -53,32 +54,32 @@
             this._unload();
 
             this.codeurl = codeurl;
+            this.baseURL = baseurl;
 
             // Load the widget code
-            const xmlhttp = new XMLHttpRequest();
-            xmlhttp.onreadystatechange = () => {
-                if (xmlhttp.readyState === XMLHttpRequest.DONE) {
-                    if (xmlhttp.status === 200) {
-                        if (xmlhttp.getResponseHeader('Content-Type').indexOf('text/html') === -1) {
-                            throw new Error('Error loading widget: non-HTML content type');
-                        }
-
-                        this.loadedURL = codeurl;
-
-                        // Load the widget code into the shadow DOM
-                        this._handleHTMLResponse(xmlhttp.responseText);
-
-                        // Dispatch onload event
-                        this.dispatchEvent(new Event('load'));
-                    } else {
-                        // Maybe show an error screen in the shadow DOM?
-                        throw new Error('Error loading widget (HTTP ' + xmlhttp.status + '): ' + xmlhttp.responseText);
+            Wirecloud.io.makeRequest(codeurl, {
+                method: 'GET'
+            }).then((response) => {
+                if (response.status === 200) {
+                    const contentType = response.transport.getResponseHeader('Content-Type') || '';
+                    if (contentType.indexOf('text/html') === -1) {
+                        throw new Error('Error loading widget: non-HTML content type');
                     }
-                }
-            };
 
-            xmlhttp.open('GET', codeurl, true);
-            xmlhttp.send();
+                    this.loadedURL = codeurl;
+
+                    // Load the widget code into the shadow DOM
+                    this._handleHTMLResponse(response.responseText);
+
+                    // Dispatch onload event
+                    this.dispatchEvent(new Event('load'));
+                } else {
+                    // Maybe show an error screen in the shadow DOM?
+                    throw new Error('Error loading widget (HTTP ' + response.status + '): ' + response.statusText);
+                }
+            }).catch((error) => {
+                throw new Error('Error loading widget: ' + error.message);
+            });
         }
 
         _unload() {
@@ -111,7 +112,7 @@
                 if (node.nodeType === Node.ELEMENT_NODE) {
                     ATTR_LIST.forEach((attr) => {
                         if (node.hasAttribute(attr)) {
-                            const url = new URL(node.getAttribute(attr), this.codeurl);
+                            const url = new URL(node.getAttribute(attr), this.baseURL);
                             node.setAttribute(attr, url.href);
                         }
                     });
@@ -120,7 +121,7 @@
                     if (node.hasAttribute('srcset')) {
                         const srcset = node.getAttribute('srcset').split(',').map((src) => {
                             const [url, size] = src.trim().split(' ');
-                            const absolute_url = new URL(url, this.codeurl);
+                            const absolute_url = new URL(url, this.baseURL);
                             return `${absolute_url.href} ${size}`;
                         }).join(', ');
                         node.setAttribute('srcset', srcset);

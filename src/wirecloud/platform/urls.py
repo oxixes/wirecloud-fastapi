@@ -40,6 +40,7 @@ patterns = {
     'wirecloud.resource_description_entry': URLTemplate(
         urlpattern='/api/resource/{vendor}/{name}/{version}/description', defaults={}),
     'wirecloud.missing_widget_code_entry': URLTemplate(urlpattern='/api/widget/missing_widget', defaults={}),
+    'wirecloud.widget_html': URLTemplate(urlpattern='/api/widget/{vendor}/{name}/{version}/html', defaults={}),
 
     # IWidgets
     'wirecloud.iwidget_collection': URLTemplate(

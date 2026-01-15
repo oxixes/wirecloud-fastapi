@@ -423,6 +423,8 @@ class WirecloudCorePlugin(WirecloudPlugin):
                          url=build_url_template(url_patterns['wirecloud.market_entry'], ['user', 'market'], prefix)),
             AjaxEndpoint(id='MISSING_WIDGET_CODE_ENTRY',
                          url=build_url_template(url_patterns['wirecloud.missing_widget_code_entry'], [], prefix)),
+            AjaxEndpoint(id='WIDGET_CODE_ENTRY',
+                         url=build_url_template(url_patterns['wirecloud.widget_html'], ['vendor', 'name', 'version'], prefix)),
             AjaxEndpoint(id='OPERATOR_ENTRY', url=build_url_template(url_patterns['wirecloud.operator_code_entry'],
                                                                      ['vendor', 'name', 'version'], prefix)),
             AjaxEndpoint(id='PLATFORM_CONTEXT_COLLECTION',

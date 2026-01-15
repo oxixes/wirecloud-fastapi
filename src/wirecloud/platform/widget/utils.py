@@ -45,11 +45,10 @@ from src.wirecloud.commons.templates.tags import get_static_path
 from src.wirecloud.commons.utils.cache import patch_cache_headers
 from src.wirecloud.commons.utils.downloader import download_local_file
 from src.wirecloud.commons.utils.http import get_current_domain, build_response, ERROR_FORMATTERS, \
-    get_absolute_static_url
+    get_absolute_static_url, get_absolute_reverse_url
 from src.wirecloud.commons.utils.template import UnsupportedFeature
 from src.wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version, MACDRequirement, MACDWidget, \
     MACType
-from src.wirecloud.commons.utils.theme import get_jinja2_templates
 from src.wirecloud.commons.utils.wgt import WgtDeployer, WgtFile
 from src.wirecloud.database import DBSession
 from src.wirecloud.platform.plugins import get_widget_api_extensions, get_active_features
@@ -62,10 +61,10 @@ wgt_deployer = WgtDeployer(settings.WIDGET_DEPLOYMENT_DIR)
 WIDGET_ERROR_FORMATTERS = ERROR_FORMATTERS.copy()
 
 
-def get_html_error_response(request: Request, mimetype: str, status_code: int, context: dict) -> Response:
-    templates = get_jinja2_templates(get_current_theme(request))
-    return templates.TemplateResponse(request=request, name="wirecloud/widget_error.html", context=context,
-                                      status_code=status_code, media_type=mimetype)
+def get_html_error_response(request: Request, mimetype: str, status_code: int, context: dict) -> str:
+    from src.wirecloud.platform.routes import render_wirecloud
+
+    return render_wirecloud(request, page="wirecloud/widget_error", extra_context=context).body.decode("utf-8")
 
 
 WIDGET_ERROR_FORMATTERS.update({
@@ -111,11 +110,10 @@ def get_widget_platform_style(request: Request, theme: str) -> tuple[str]:
     global _widget_platform_style
 
     if theme not in _widget_platform_style or settings.DEBUG:
-        base_href = get_static_path(theme, 'widget', request, 'css/cache.css')
+        base_href = get_static_path(escape(theme, quote=True), 'widget', request, 'css/cache.css')
         href = add_query_param(base_href, 'context', 'widget')
-        safe_href = escape(href, quote=True)
 
-        files = [safe_href]
+        files = [href]
         files.reverse()
 
         _widget_platform_style[theme] = tuple(files)
@@ -139,7 +137,8 @@ async def get_widget_api_files(request: Request, theme: str) -> list[str]:
 
 
 async def fix_widget_code(widget_code: Union[str, bytes], content_type: str, request: Request, encoding: str,
-                          use_platform_style: bool, requirements: list[str], mode: str, theme: str, macversion: int) -> Optional[bytes]:
+                          use_platform_style: bool, requirements, mode: str, theme: str, macversion: int,
+                          vendor: Vendor, name: Name, version: Version) -> Optional[bytes]:
     # This line is here for raising UnicodeDecodeError in case the widget_code is not encoded using the specified encoding
     widget_code.decode(encoding)
 
@@ -177,6 +176,12 @@ async def fix_widget_code(widget_code: Union[str, bytes], content_type: str, req
         base_elements = xpath(xmltree, '/xhtml:html/xhtml:head/xhtml:base', xmlns)
         for base_element in base_elements[1:]:
             base_element.getparent().remove(base_element)
+
+        # Add new base element
+        base_element = etree.Element('base', href=get_absolute_reverse_url('wirecloud.showcase_media', request=request,
+                                                                           vendor=vendor, name=name, version=version,
+                                                                           path=''))
+        head_element.insert(0, base_element)
 
         # Fix scripts
         scripts = xpath(xmltree, '/xhtml:html//xhtml:script', xmlns)
@@ -246,9 +251,11 @@ async def process_widget_code(db: DBSession, request: Request, resource: Catalog
         await save_catalogue_resource_xhtml(db, resource.id, xhtml)
 
     try:
+        processed_info = resource.get_processed_info()
         code = await fix_widget_code(code, content_type, request, charset, xhtml.use_platform_style,
                                      process_requirements(widget_info.requirements), mode, theme,
-                                     resource.get_processed_info().macversion)
+                                     processed_info.macversion, processed_info.vendor, processed_info.name,
+                                     processed_info.version)
     except UnicodeDecodeError:
         msg = _(
             f"Widget code was not encoded using the specified charset ({charset} as stated in the widget description file).")

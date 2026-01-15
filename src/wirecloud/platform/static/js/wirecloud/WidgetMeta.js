@@ -42,7 +42,11 @@
                 this.codeurl = (new URL(Wirecloud.URLs.MISSING_WIDGET_CODE_ENTRY, Wirecloud.location.base)).href + '?lang=' + Wirecloud.contextManager.get('language');
                 this.codecontenttype = "application/xhtml+xml";
             } else {
-                this.codeurl = desc.contents.src;
+                this.codeurl = (new URL(Wirecloud.URLs.WIDGET_CODE_ENTRY.evaluate({
+                    vendor: this.vendor,
+                    name: this.name,
+                    version: this.version
+                }), Wirecloud.location.base)).href;
                 this.codecontenttype = desc.contents.contenttype || "application/xhtml+xml";
                 if (this.macversion > 1) {
                     this.entrypoint = desc.entrypoint;
@@ -58,8 +62,7 @@
             } else {
                 this.codeurl += '&';
             }
-            // TODO: deprecated. Use /api/widget instead
-            this.codeurl += "entrypoint=true&v=" + Wirecloud.contextManager.get('version_hash') + "&theme=" + Wirecloud.contextManager.get('theme');
+            this.codeurl += "v=" + Wirecloud.contextManager.get('version_hash') + "&theme=" + Wirecloud.contextManager.get('theme');
 
             // Properties
             this.properties = {};
