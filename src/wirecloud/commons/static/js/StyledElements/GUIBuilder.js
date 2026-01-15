@@ -254,6 +254,11 @@
                 throw new TypeError('document is not a Document or cannot be parsed into a Document');
             }
 
+            // Check for <parsererror>
+            if (document.getElementsByTagName('parsererror').length > 0) {
+                throw new Error('Document cannot be parsed: ' + document.getElementsByTagName('parsererror')[0].textContent);
+            }
+
             return processRoot(this, document.documentElement, tcomponents, context);
         }
 
