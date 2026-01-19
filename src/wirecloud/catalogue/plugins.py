@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Optional
+import os
+from typing import Optional, Callable
 from fastapi import FastAPI
 
 from src.wirecloud.platform.plugins import WirecloudPlugin
@@ -34,3 +35,26 @@ class WirecloudCataloguePlugin(WirecloudPlugin):
             return
 
         app.include_router(catalogue_router, prefix="/catalogue", tags=["Catalogue"])
+
+    # TODO Better logging
+    def get_config_validators(self) -> tuple[Callable, ...]:
+        def validate_catalogue_settings(settings, _offline: bool) -> None:
+            from os import path
+
+            # CATALOGUE_MEDIA_ROOT (default: BASEDIR/catalogue/media)
+            if not hasattr(settings, 'CATALOGUE_MEDIA_ROOT'):
+                setattr(settings, 'CATALOGUE_MEDIA_ROOT', path.join(settings.BASEDIR, 'catalogue', 'media'))
+
+            if not isinstance(settings.CATALOGUE_MEDIA_ROOT, str):
+                raise ValueError("CATALOGUE_MEDIA_ROOT must be a string")
+
+            # Create directory if it doesn't exist
+            if not os.path.exists(settings.CATALOGUE_MEDIA_ROOT):
+                try:
+                    os.makedirs(settings.CATALOGUE_MEDIA_ROOT, exist_ok=True)
+                    print(f"Created CATALOGUE_MEDIA_ROOT directory: {settings.CATALOGUE_MEDIA_ROOT}")
+                except Exception as e:
+                    raise ValueError(f"Failed to create CATALOGUE_MEDIA_ROOT directory: {e}")
+
+        return (validate_catalogue_settings,)
+

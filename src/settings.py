@@ -24,12 +24,12 @@ BASEDIR = path.abspath(path.join(path.dirname(path.abspath(__file__)), pardir))
 
 ALLOW_ANONYMOUS_ACCESS = True
 
-# TODO If platform is installed, the proxy has to be installed too
 INSTALLED_APPS = (
     'wirecloud.commons',
     'wirecloud.platform',
     'wirecloud.catalogue',
     'wirecloud.proxy',
+    'wirecloud.fiware',
     'wirecloud.keycloak'
 )
 
@@ -64,7 +64,7 @@ JWT_KEY = '15=7f)g=)&spodi3bg8%&4fqt%f3rpg%b$-aer5*#a*(rqm79e'
 
 SESSION_AGE = 60 * 60 * 24 * 14  # 2 weeks
 
-OID_CONNECT_ENABLED = False
+OID_CONNECT_ENABLED = True
 OID_CONNECT_DISCOVERY_URL = 'http://localhost:8080/realms/wirecloud/.well-known/openid-configuration'
 OID_CONNECT_CLIENT_ID = 'wirecloud'
 OID_CONNECT_CLIENT_SECRET = 'kfrwmAW8zuL6VLB6AJx0finGHTpxhsOw'
@@ -82,7 +82,6 @@ AVAILABLE_THEMES = [
 ]
 THEME_ACTIVE = "defaulttheme"
 
-# TODO Allow to define a list of known proxies to trust the X-Forwarded-For header
 PROXY_WS_MAX_MSG_SIZE = 4 * 1024 * 1024 # 4MiB
 
 caches.set_config({

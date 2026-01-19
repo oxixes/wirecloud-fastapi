@@ -119,6 +119,60 @@ class WirecloudCorePlugin(WirecloudPlugin):
         app.include_router(operator_router, prefix="/api/operator", tags=["Operator"])
         app.include_router(platform_router, prefix="", tags=["Platform"])
 
+    def get_config_validators(self) -> tuple[Callable, ...]:
+        def validate_platform_settings(settings, _offline: bool) -> None:
+            from os import path
+
+            # WIDGET_DEPLOYMENT_DIR (default: BASEDIR/deployment/widgets)
+            if not hasattr(settings, 'WIDGET_DEPLOYMENT_DIR'):
+                setattr(settings, 'WIDGET_DEPLOYMENT_DIR', path.join(settings.BASEDIR, 'deployment', 'widgets'))
+
+            if not isinstance(settings.WIDGET_DEPLOYMENT_DIR, str):
+                raise ValueError("WIDGET_DEPLOYMENT_DIR must be a string")
+
+            # Create directory if it doesn't exist
+            if not os.path.exists(settings.WIDGET_DEPLOYMENT_DIR):
+                try:
+                    os.makedirs(settings.WIDGET_DEPLOYMENT_DIR, exist_ok=True)
+                    print(f"Created WIDGET_DEPLOYMENT_DIR directory: {settings.WIDGET_DEPLOYMENT_DIR}")
+                except Exception as e:
+                    raise ValueError(f"Failed to create WIDGET_DEPLOYMENT_DIR directory: {e}")
+
+            # CACHE_DIR validation
+            if hasattr(settings, 'CACHE_DIR'):
+                if not isinstance(settings.CACHE_DIR, str):
+                    raise ValueError("CACHE_DIR must be a string")
+
+                # Create directory if it doesn't exist
+                if not os.path.exists(settings.CACHE_DIR):
+                    try:
+                        os.makedirs(settings.CACHE_DIR, exist_ok=True)
+                        print(f"Created CACHE_DIR directory: {settings.CACHE_DIR}")
+                    except Exception as e:
+                        raise ValueError(f"Failed to create CACHE_DIR directory: {e}")
+
+            # AVAILABLE_THEMES (default: ['defaulttheme'])
+            if not hasattr(settings, 'AVAILABLE_THEMES'):
+                setattr(settings, 'AVAILABLE_THEMES', ['defaulttheme'])
+
+            if not isinstance(settings.AVAILABLE_THEMES, list):
+                raise ValueError("AVAILABLE_THEMES must be a list")
+
+            if len(settings.AVAILABLE_THEMES) == 0:
+                raise ValueError("AVAILABLE_THEMES must contain at least one theme")
+
+            # THEME_ACTIVE (default: 'defaulttheme')
+            if not hasattr(settings, 'THEME_ACTIVE'):
+                setattr(settings, 'THEME_ACTIVE', 'defaulttheme')
+
+            if not isinstance(settings.THEME_ACTIVE, str):
+                raise ValueError("THEME_ACTIVE must be a string")
+
+            if settings.THEME_ACTIVE not in settings.AVAILABLE_THEMES:
+                raise ValueError(f"THEME_ACTIVE '{settings.THEME_ACTIVE}' is not in AVAILABLE_THEMES")
+
+        return (validate_platform_settings,)
+
     def get_platform_context_definitions(self) -> dict[str, BaseContextKey]:
         return {
             'language': BaseContextKey(
