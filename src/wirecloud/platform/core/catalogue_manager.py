@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-
-# Copyright (c) 2012-2017 CoNWeT Lab., Universidad Politécnica de Madrid
-# Copyright (c) 2019-2021 Future Internet Consulting and Development Solutions S.L.
+# Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
 
 # This file is part of Wirecloud.
 

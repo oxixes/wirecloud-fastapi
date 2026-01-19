@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
+# Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
+
 # This file is part of Wirecloud.
 
 # Wirecloud is free software: you can redistribute it and/or modify

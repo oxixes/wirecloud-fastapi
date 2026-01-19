@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-# Copyright (c) 2024 Future Internet Consulting and Development Solutions S.L.
+# Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
 
 # This file is part of Wirecloud.
 
@@ -16,7 +15,6 @@
 
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
-
 
 from pydantic import BaseModel, Field
 from typing import Optional

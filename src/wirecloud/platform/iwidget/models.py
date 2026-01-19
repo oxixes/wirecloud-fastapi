@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-# Copyright (c) 2012-2016 CoNWeT Lab., Universidad Politécnica de Madrid
+# Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
 
 # This file is part of Wirecloud.
 
@@ -16,7 +15,6 @@
 
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
-
 
 from pydantic import BaseModel, Field, field_serializer, model_serializer, model_validator
 from typing import Annotated, Any, Optional
