@@ -17,6 +17,7 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 import aiohttp
+import logging
 from fastapi import FastAPI, Request
 from typing import Callable, Optional, Union
 from urllib.parse import urlparse, quote
@@ -30,6 +31,8 @@ from src.wirecloud.platform.context.schemas import BaseContextKey
 from src.wirecloud.platform.plugins import WirecloudPlugin, URLTemplate, AjaxEndpoint, get_plugin_urls
 from src.wirecloud.translation import gettext as _
 from src.wirecloud.keycloak.routes import keycloak_router
+
+logger = logging.getLogger(__name__)
 
 IDM_SUPPORT_ENABLED = False
 
@@ -212,13 +215,11 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
                         data=data
                     )
                 except Exception as e:
-                    # TODO Better logging
                     # Log the error but do not fail the logout process
-                    print(f"OIDC backchannel logout failed: {e}")
+                    logger.error(f"OIDC backchannel logout failed: {e}")
 
         return {"keycloak": backchannel_logout}
 
-    # TODO Better logging
     def get_config_validators(self) -> tuple[Callable, ...]:
         async def validate_oidc_settings(settings, offline: bool) -> None:
             global IDM_SUPPORT_ENABLED
@@ -306,7 +307,7 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
 
                     if "jwks_uri" not in data:
                         keys = {}
-                        print("WARNING: OIDC provider does not contain jwks_uri. Token signature validation will not succeed.")
+                        logger.warning("OIDC provider does not contain jwks_uri. Token signature validation will not succeed.")
                     else:
                         keys = {}
 
@@ -320,13 +321,13 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
 
                         for key_data in keys_data["keys"]:
                             if 'kid' not in key_data:
-                                print("WARNING: OIDC provider jwks_uri contains a key without kid. Skipping")
+                                logger.warning("OIDC provider jwks_uri contains a key without kid. Skipping")
                                 continue
 
                             try:
                                 keys[key_data['kid']] = format_jwks_key(key_data)
                             except Exception as e:
-                                print(f"WARNING: OIDC provider jwks_uri contains an invalid key: {str(e)}")
+                                logger.warning(f"OIDC provider jwks_uri contains an invalid key: {str(e)}")
 
                     OID_DATA = {
                         "issuer": data["issuer"],
@@ -344,7 +345,7 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
                     if "wirecloud" in data["scopes_supported"]:
                         OID_DATA["scopes"].append("wirecloud")
                     else:
-                        print("WARNING: wirecloud scope not supported by OIDC provider. Users will be created with default permissions.")
+                        logger.warning("wirecloud scope not supported by OIDC provider. Users will be created with default permissions.")
 
                     if "check_session_iframe" in data:
                         OID_DATA["check_session_iframe"] = data["check_session_iframe"]
@@ -378,7 +379,7 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
                         raise ValueError("OID_CONNECT_DATA scopes must contain openid")
 
                     if "keys" not in data or not isinstance(data["keys"], dict):
-                        print("WARNING: OIDC provider does not contain keys. Token signature validation will not succeed.")
+                        logger.warning("OIDC provider does not contain keys. Token signature validation will not succeed.")
                         data["keys"] = {}
 
                     if "check_session_iframe" in data and not isinstance(data["check_session_iframe"], str):

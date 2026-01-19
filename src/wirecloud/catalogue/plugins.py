@@ -17,12 +17,16 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import logging
 from typing import Optional, Callable
 from fastapi import FastAPI
 
 from src.wirecloud.platform.plugins import WirecloudPlugin
 from src.wirecloud.catalogue.urls import patterns as catalogue_patterns
 from src.wirecloud.catalogue.routes import router as catalogue_router
+
+
+logger = logging.getLogger(__name__)
 
 
 class WirecloudCataloguePlugin(WirecloudPlugin):
@@ -36,7 +40,6 @@ class WirecloudCataloguePlugin(WirecloudPlugin):
 
         app.include_router(catalogue_router, prefix="/catalogue", tags=["Catalogue"])
 
-    # TODO Better logging
     def get_config_validators(self) -> tuple[Callable, ...]:
         def validate_catalogue_settings(settings, _offline: bool) -> None:
             from os import path
@@ -52,9 +55,8 @@ class WirecloudCataloguePlugin(WirecloudPlugin):
             if not os.path.exists(settings.CATALOGUE_MEDIA_ROOT):
                 try:
                     os.makedirs(settings.CATALOGUE_MEDIA_ROOT, exist_ok=True)
-                    print(f"Created CATALOGUE_MEDIA_ROOT directory: {settings.CATALOGUE_MEDIA_ROOT}")
+                    logger.info(f"Created CATALOGUE_MEDIA_ROOT directory: {settings.CATALOGUE_MEDIA_ROOT}")
                 except Exception as e:
                     raise ValueError(f"Failed to create CATALOGUE_MEDIA_ROOT directory: {e}")
 
         return (validate_catalogue_settings,)
-

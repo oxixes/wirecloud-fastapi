@@ -18,7 +18,6 @@
 
 import orjson
 import os
-import html
 from gettext import GNUTranslations
 from typing import Optional
 import gettext as gt
@@ -40,7 +39,6 @@ def get_translation(theme: str, lang: str, text: str, **kwargs) -> str:
 
     translation = _trans(text, lang=lang, translation=theme_translation)
     for k, v in kwargs.items():
-        print(f"{k} -> {v}")
         translation = translation.replace(f"%({k})s", v)
 
     return translation

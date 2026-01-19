@@ -18,10 +18,13 @@
 
 import asyncio
 import os
+import logging
 from os import path
 
 from src import settings
 from src.wirecloud.platform.plugins import get_config_validators
+
+logger = logging.getLogger(__name__)
 
 
 def _set_default_if_missing(attr: str, default_value):
@@ -147,7 +150,7 @@ def _validate_and_set_defaults():
         raise ValueError("JWT_KEY is required and must not be empty")
 
     if len(settings.JWT_KEY) < 32:
-        print("WARNING: JWT_KEY should be at least 32 characters long for security")
+        logger.warning("JWT_KEY should be at least 32 characters long for security")
 
     # SESSION_AGE (default: 2 weeks)
     _set_default_if_missing('SESSION_AGE', 60 * 60 * 24 * 14)
@@ -160,7 +163,7 @@ def _validate_and_set_defaults():
         raise ValueError("SECRET_KEY is required and must not be empty")
 
     if len(settings.SECRET_KEY) < 32:
-        print("WARNING: SECRET_KEY should be at least 32 characters long for security")
+        logger.warning("SECRET_KEY should be at least 32 characters long for security")
 
     # === OpenID Connect Settings ===
 

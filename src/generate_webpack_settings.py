@@ -30,6 +30,7 @@ import os
 import sys
 import tempfile
 import asyncio
+import logging
 from os import path
 
 # Project root is assumed to be the parent of the scripts/ directory
@@ -114,4 +115,6 @@ except Exception:
 with open(out_path, 'w', encoding='utf-8') as f:
     json.dump(payload, f, indent=2, ensure_ascii=False)
 
-print(f'Generated webpack settings at: {out_path}')
+logging.basicConfig(level=logging.INFO, format='%(message)s')
+logger = logging.getLogger(__name__)
+logger.info(f'Generated webpack settings at: {out_path}')

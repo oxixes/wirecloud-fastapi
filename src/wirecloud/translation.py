@@ -19,6 +19,7 @@
 import inspect
 import gettext as gt
 import os
+import logging
 from gettext import NullTranslations
 from typing import Optional, Callable
 from fastapi import Request, WebSocket
@@ -27,6 +28,9 @@ from src import settings
 
 
 translations = {}
+
+logger = logging.getLogger(__name__)
+
 
 def generate_translations() -> None:
     for plugin_name in settings.INSTALLED_APPS:
@@ -89,7 +93,7 @@ def gettext(text: str, lang: Optional[str] = None, translation: Optional[NullTra
             translation = translations.get((plugin, lang)) if translations else None
 
         if translation is None:
-            print(f"WARNING: Translation for language {lang} in module {plugin} not found, but was requested")
+            logger.warning(f"Translation for language {lang} in module {plugin} not found, but was requested")
             return text
 
     return translation.gettext(text)

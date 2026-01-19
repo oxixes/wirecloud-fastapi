@@ -17,6 +17,7 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 import zipfile
+import logging
 from typing import Union, Optional
 
 import orjson
@@ -51,6 +52,8 @@ from src.wirecloud.proxy.routes import parse_context_from_referer, WIRECLOUD_PRO
 from src.wirecloud.proxy.schemas import ProxyRequestData
 from src.wirecloud.translation import gettext as _
 from src.wirecloud import docs as root_docs
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 resources_router = APIRouter()
@@ -193,7 +196,7 @@ async def create_resource(db: DBDep, user: UserDep, request: Request,
             else:
                 downloaded_file = response.render(None)
         except Exception as e:
-            print(e)
+            logger.error(f"Failed to download content from marketplace: {e}")
             return build_error_response(request, 409, _('Content cannot be downloaded from the specified url'))
 
         try:

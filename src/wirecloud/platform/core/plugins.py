@@ -19,6 +19,7 @@
 # TODO Add translations
 
 import os
+import logging
 from argparse import _SubParsersAction
 from urllib.parse import quote_plus
 import orjson as json
@@ -68,19 +69,21 @@ MARKDOWN_EDITOR_FILE = os.path.join(BASE_PATH, 'initial', 'CoNWeT_markdown-edito
 LANDING_DASHBOARD_FILE = os.path.join(BASE_PATH, 'initial', 'WireCloud_landing-dashboard_1.0.wgt')
 
 
+logger = logging.getLogger(__name__)
+
+
 def get_version_hash():
     return sha1(json.dumps(get_active_features_info())).hexdigest()
 
 
-# TODO Better logging
 async def populate_component(db: DBSession, wirecloud_user: UserAll, vendor: Vendor, name: Name,
                              version: Version, wgt_path: str) -> bool:
     if await get_catalogue_resource(db, vendor, name, version):
         return False
 
-    print(f"Installing the {name} widget... ", end='')
+    logger.info(f"Installing the %s widget...", name)
     await install_component(db, WgtFile(wgt_path), executor_user=wirecloud_user, users=[wirecloud_user])
-    print("DONE")
+    logger.info("DONE")
     return True
 
 
@@ -134,7 +137,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
             if not os.path.exists(settings.WIDGET_DEPLOYMENT_DIR):
                 try:
                     os.makedirs(settings.WIDGET_DEPLOYMENT_DIR, exist_ok=True)
-                    print(f"Created WIDGET_DEPLOYMENT_DIR directory: {settings.WIDGET_DEPLOYMENT_DIR}")
+                    logger.info(f"Created WIDGET_DEPLOYMENT_DIR directory: {settings.WIDGET_DEPLOYMENT_DIR}")
                 except Exception as e:
                     raise ValueError(f"Failed to create WIDGET_DEPLOYMENT_DIR directory: {e}")
 
@@ -147,7 +150,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
                 if not os.path.exists(settings.CACHE_DIR):
                     try:
                         os.makedirs(settings.CACHE_DIR, exist_ok=True)
-                        print(f"Created CACHE_DIR directory: {settings.CACHE_DIR}")
+                        logger.info(f"Created CACHE_DIR directory: {settings.CACHE_DIR}")
                     except Exception as e:
                         raise ValueError(f"Failed to create CACHE_DIR directory: {e}")
 
@@ -574,10 +577,10 @@ class WirecloudCorePlugin(WirecloudPlugin):
         if await get_workspace_by_username_and_name(db, "wirecloud", "home") is None:
             updated = True
 
-            print("Creating a initial version of the wirecloud/home workspace...  ", end='')
+            logger.info("Creating a initial version of the wirecloud/home workspace...")
             await create_workspace(db, None, wirecloud_user, WgtFile(INITIAL_HOME_DASHBOARD_FILE),
                                    searchable=False, public=True)
-            print("DONE")
+            logger.info("DONE")
 
         updated |= await populate_component(db, wirecloud_user, "CoNWeT", "markdown-viewer", "0.1.1",
                                            MARKDOWN_VIEWER_FILE)
@@ -587,9 +590,9 @@ class WirecloudCorePlugin(WirecloudPlugin):
         if await get_workspace_by_username_and_name(db, "wirecloud", "landing") is None:
             updated = True
 
-            print("Creating a initial version of the wirecloud/landing workspace...  ", end='')
+            logger.info("Creating a initial version of the wirecloud/landing workspace...")
             await create_workspace(db, None, wirecloud_user, WgtFile(LANDING_DASHBOARD_FILE),
                                    searchable=False, public=True)
-            print("DONE")
+            logger.info("DONE")
 
         return updated

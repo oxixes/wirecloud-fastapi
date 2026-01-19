@@ -17,11 +17,15 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from typing import Optional, Callable
+import logging
 from fastapi import FastAPI
 
 from src.wirecloud.platform.plugins import WirecloudPlugin
 from src.wirecloud.proxy.urls import patterns as proxy_patterns
 from src.wirecloud.proxy.routes import router as proxy_router
+
+
+logger = logging.getLogger(__name__)
 
 
 class WirecloudProxyPlugin(WirecloudPlugin):
@@ -35,7 +39,6 @@ class WirecloudProxyPlugin(WirecloudPlugin):
 
         app.include_router(proxy_router, prefix="/cdp", tags=["Proxy"])
 
-    # TODO Better logging
     def get_config_validators(self) -> tuple[Callable, ...]:
         def validate_proxy_settings(settings, _offline: bool) -> None:
             # PROXY_WS_MAX_MSG_SIZE (default: 4 MiB)
@@ -50,6 +53,6 @@ class WirecloudProxyPlugin(WirecloudPlugin):
 
             # Warn if the size is too large (> 100MB)
             if settings.PROXY_WS_MAX_MSG_SIZE > 100 * 1024 * 1024:
-                print(f"WARNING: PROXY_WS_MAX_MSG_SIZE is very large ({settings.PROXY_WS_MAX_MSG_SIZE} bytes). This may cause memory issues.")
+                logger.warning(f"PROXY_WS_MAX_MSG_SIZE is very large ({settings.PROXY_WS_MAX_MSG_SIZE} bytes). This may cause memory issues.")
 
         return (validate_proxy_settings,)

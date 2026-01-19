@@ -18,6 +18,7 @@
 
 import os
 import base64
+import logging
 from typing import Optional, Callable, Union, Any
 from urllib.parse import quote, urlparse, urljoin
 
@@ -46,6 +47,8 @@ FIWARE_AUTHORIZATION_ENDPOINT = 'oauth2/authorize'
 FIWARE_ACCESS_TOKEN_ENDPOINT = 'oauth2/token'
 FIWARE_REVOKE_TOKEN_ENDPOINT = 'oauth2/revoke'
 FIWARE_USER_DATA_ENDPOINT = 'user'
+
+logger = logging.getLogger(__name__)
 
 class FIWAREBAEManager(MarketManager):
     _user: str = None
@@ -301,9 +304,8 @@ class FiWareWirecloudPlugin(WirecloudPlugin):
                     logout_url = urljoin(getattr(settings, 'FIWARE_IDM_SERVER', ''), FIWARE_REVOKE_TOKEN_ENDPOINT)
                     await make_oidc_provider_request(logout_url, data, auth=self.AUTH_TOKEN, auth_type="Basic")
                 except Exception as e:
-                    # TODO Better logging
                     # Log the error but do not fail the logout process
-                    print(f"Keyrock token revocation failed: {e}")
+                    logger.error(f"Keyrock token revocation failed: {e}")
 
         return {"fiware": backchannel_logout}
 

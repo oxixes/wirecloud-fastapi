@@ -20,6 +20,7 @@ import errno
 from io import BytesIO
 import os
 import re
+import logging
 from urllib.parse import urljoin
 from urllib.request import pathname2url, url2pathname
 import time
@@ -47,6 +48,9 @@ from src.wirecloud.commons.utils.wgt import InvalidContents, WgtDeployer, WgtFil
 from src.wirecloud.database import DBSession, commit
 from src.wirecloud.platform.widget.utils import create_widget_from_wgt
 from src.wirecloud.translation import gettext as _
+
+
+logger = logging.getLogger(__name__)
 
 
 wgt_deployer: WgtDeployer = WgtDeployer(settings.CATALOGUE_MEDIA_ROOT)
@@ -374,7 +378,7 @@ async def update_resource_catalogue_cache(db: DBSession) -> None:
         raise Exception('There are some mashable application components that are not supported anymore (use WIRECLOUD_REMOVE_UNSUPPORTED_RESOURCES_MIGRATION for removing automatically them in the migration process')
 
     for resource in resources_to_remove:
-        print('    Removing %s' % (resource.vendor + '/' + resource.short_name + '/' + resource.version))
+        logger.info('    Removing %s' % (resource.vendor + '/' + resource.short_name + '/' + resource.version))
 
     await delete_catalogue_resources(db, [resource.id for resource in resources_to_remove])
     await commit(db)
