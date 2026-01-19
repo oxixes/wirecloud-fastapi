@@ -68,6 +68,12 @@ class UserAll(User):
     groups: list[Id] = Field(default=[])
     permissions: list[Permission] = Field(default=[])
 
+    def has_perm(self, codename: str) -> bool:
+        for permission in self.permissions:
+            if permission.codename == codename:
+                return True
+        return False
+
 
 class OIDCToken(BaseModel):
     refresh: str

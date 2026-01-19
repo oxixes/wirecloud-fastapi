@@ -1,0 +1,2 @@
+This is a list of defined user permissions:
+- ALLOW_TOKEN_TO_OTHER_USERS: Allow token to be used by other users (as a workspace owner).

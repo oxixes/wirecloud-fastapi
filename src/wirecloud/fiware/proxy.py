@@ -151,6 +151,9 @@ class IDMTokenProcessor:
                 or not user.idm_data[getattr(settings, "OID_CONNECT_PLUGIN")]['idm_token']:
             raise ValidationError(_('User has not an active FIWARE profile'))
 
+        if user is not None and source == 'workspace' and not user.has_perm("ALLOW_TOKEN_TO_OTHER_USERS"):
+            raise ValidationError(_('Workspace owner does not have permission to give their token to other users'))
+
         token_data_get_func = get_idm_get_token_functions()[getattr(settings, "OID_CONNECT_PLUGIN")]
 
         try:
