@@ -69,6 +69,9 @@ class WirecloudPlugin:
     async def get_platform_context_current_values(self, db: DBSession, request: Optional[Request], user: Optional[UserAll], session: Optional[Session]):
         return {}
 
+    def get_platform_preferences(self) -> list[PreferenceKey]:
+        return []
+
     def get_tab_preferences(self) -> list[TabPreferenceKey]:
         return []
 
@@ -313,6 +316,16 @@ def get_wirecloud_ajax_endpoints(view: str, request: Request) -> list[AjaxEndpoi
     return endpoints
 
 
+def get_platform_preferences() -> list[PreferenceKey]:
+    plugins = get_plugins()
+    preferences = []
+
+    for plugin in plugins:
+        preferences += plugin.get_platform_preferences()
+
+    return preferences
+
+
 def get_tab_preferences() -> list[TabPreferenceKey]:
     plugins = get_plugins()
     preferences = []
@@ -339,6 +352,7 @@ def get_constants() -> list[dict[str, str]]:
     for plugin in plugins:
         constants_dict.update(plugin.get_constants())
 
+    constants_dict['PLATFORM_PREFERENCES'] = [pref.model_dump() for pref in get_platform_preferences()]
     constants_dict['WORKSPACE_PREFERENCES'] = [pref.model_dump() for pref in get_workspace_preferences()]
     constants_dict['TAB_PREFERENCES'] = [pref.model_dump() for pref in get_tab_preferences()]
 

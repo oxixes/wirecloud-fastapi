@@ -95,6 +95,9 @@
                 dialog.show();
             });
             item.addIconClass('fas fa-cog');
+            if (Object.keys(Wirecloud.preferences.meta.preferences).length === 0) {
+                item.disable();
+            }
             user_menu.append(item);
 
             if (Wirecloud.contextManager.get('isstaff') === true && 'DJANGO_ADMIN' in Wirecloud.URLs) {

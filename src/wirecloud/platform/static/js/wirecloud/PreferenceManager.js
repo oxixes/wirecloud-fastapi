@@ -28,26 +28,8 @@
         constructor() {
             this.preferencesDef = {};
 
-            // Platform Preferences
-            const platformPreferences = [
-                {
-                    "name": "language",
-                    "label": utils.gettext('Language'),
-                    "type": "select",
-                    "initialEntries": [
-                        {value: 'default', label: utils.gettext('Default setting')},
-                        {value: 'browser', label: utils.gettext('Detect browser language')}
-                    ]
-                }
-            ];
-
-            // Initialize some dynamic preferences (language)
-            Wirecloud.constants.AVAILABLE_LANGUAGES.forEach((language) => {
-                platformPreferences[0].initialEntries.push(language);
-            });
-
             // Save them into our structures
-            let definitions = this.processDefinitions(platformPreferences);
+            let definitions = this.processDefinitions(Wirecloud.constants.PLATFORM_PREFERENCES);
             this.preferencesDef.platform = [Wirecloud.PlatformPreferencesDef, definitions];
             definitions = this.processDefinitions(Wirecloud.constants.WORKSPACE_PREFERENCES);
             this.preferencesDef.workspace = [Wirecloud.WorkspacePreferencesDef, definitions];
