@@ -21,11 +21,11 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 
-from src.wirecloud.commons.auth.schemas import User, UserWithPassword, Permission, UserAll, UserCreate
-from src.wirecloud.commons.auth.models import DBUser as UserModel
-from src.wirecloud.commons.auth.models import Group as GroupModel, Group
-from src.wirecloud.commons.auth.models import DBPlatformPreference as PlatformPreferenceModel
-from src.wirecloud.database import DBSession, Id
+from wirecloud.commons.auth.schemas import User, UserWithPassword, Permission, UserAll, UserCreate
+from wirecloud.commons.auth.models import DBUser as UserModel
+from wirecloud.commons.auth.models import Group as GroupModel, Group
+from wirecloud.commons.auth.models import DBPlatformPreference as PlatformPreferenceModel
+from wirecloud.database import DBSession, Id
 
 
 async def create_token(db: DBSession, expiration: datetime, user_id: Id, idm_session: Optional[str] = None) -> ObjectId:

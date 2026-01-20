@@ -25,7 +25,7 @@ project_root = Path(__file__).parent.resolve()
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-# Import and run the main function from src.manage
+# Import and run the main function from manage
 from src.manage import main
 import asyncio
 

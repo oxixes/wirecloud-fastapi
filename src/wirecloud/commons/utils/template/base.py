@@ -21,7 +21,7 @@ import re as regex
 from typing import Union, Optional
 from pydantic import BaseModel, Field
 
-from src.wirecloud.commons.utils.template import docs
+from wirecloud.commons.utils.template import docs
 
 
 class Contact(BaseModel):

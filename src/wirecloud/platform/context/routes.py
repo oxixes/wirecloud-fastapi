@@ -19,10 +19,10 @@
 from fastapi import APIRouter, Request
 from typing import Optional
 
-from src.wirecloud.database import DBDep
-from src.wirecloud.platform.context.schemas import Context
-from src.wirecloud.platform.context.utils import get_platform_context, get_workspace_context_definitions
-from src.wirecloud.commons.auth.utils import SessionDepNoCSRF, UserDepNoCSRF
+from wirecloud.database import DBDep
+from wirecloud.platform.context.schemas import Context
+from wirecloud.platform.context.utils import get_platform_context, get_workspace_context_definitions
+from wirecloud.commons.auth.utils import SessionDepNoCSRF, UserDepNoCSRF
 
 router = APIRouter()
 

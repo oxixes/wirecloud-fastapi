@@ -19,17 +19,17 @@
 from typing import Union, Any, Optional
 from fastapi import Request, Response
 
-from src.wirecloud.catalogue.crud import get_catalogue_resource, get_catalogue_resource_by_id
-from src.wirecloud.catalogue.schemas import CatalogueResource
-from src.wirecloud.commons.auth.schemas import User, UserAll
-from src.wirecloud.commons.utils.http import NotFound, build_error_response
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACDWidget, MACDProperty, MACDPreference
-from src.wirecloud.database import DBSession
-from src.wirecloud.platform.iwidget.models import WidgetVariables, WidgetInstance, WidgetPositionsConfig, WidgetConfig, \
+from wirecloud.catalogue.crud import get_catalogue_resource, get_catalogue_resource_by_id
+from wirecloud.catalogue.schemas import CatalogueResource
+from wirecloud.commons.auth.schemas import User, UserAll
+from wirecloud.commons.utils.http import NotFound, build_error_response
+from wirecloud.commons.utils.template.schemas.macdschemas import MACDWidget, MACDProperty, MACDPreference
+from wirecloud.database import DBSession
+from wirecloud.platform.iwidget.models import WidgetVariables, WidgetInstance, WidgetPositionsConfig, WidgetConfig, \
     WidgetPermissionsConfig, WidgetPositions
-from src.wirecloud.platform.iwidget.schemas import WidgetInstanceDataUpdate, WidgetInstanceDataCreate, LayoutConfig
-from src.wirecloud.platform.workspace.models import Workspace, Tab
-from src.wirecloud.translation import gettext as _
+from wirecloud.platform.iwidget.schemas import WidgetInstanceDataUpdate, WidgetInstanceDataCreate, LayoutConfig
+from wirecloud.platform.workspace.models import Workspace, Tab
+from wirecloud.translation import gettext as _
 
 def parse_value_from_text(info: dict, value) -> Any:
     if info['type'] == 'boolean':
@@ -298,7 +298,7 @@ async def save_widget_instance(db: DBSession, workspace: Workspace, iwidget: Wid
 
     if commit:
         tab.widgets[new_iwidget.id] = new_iwidget
-        from src.wirecloud.platform.workspace.crud import change_tab
+        from wirecloud.platform.workspace.crud import change_tab
         await change_tab(db, user, workspace, tab)
 
     return new_iwidget
@@ -345,7 +345,7 @@ async def update_widget_instance(db: DBSession, request: Request,  data: WidgetI
         workspace.tabs[tab.id].widgets[iwidget.id] = iwidget
 
     if update_cache:
-        from src.wirecloud.platform.workspace.crud import change_workspace
+        from wirecloud.platform.workspace.crud import change_workspace
         await change_workspace(db, workspace, user)
 
 

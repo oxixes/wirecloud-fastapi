@@ -18,8 +18,8 @@
 
 from pydantic import BaseModel, Field
 from typing import Optional
-from src.wirecloud.database import Id
-from src.wirecloud.platform.markets import docs
+from wirecloud.database import Id
+from wirecloud.platform.markets import docs
 
 
 class MarketOptions(BaseModel):

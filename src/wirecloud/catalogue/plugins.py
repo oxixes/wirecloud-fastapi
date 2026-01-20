@@ -21,9 +21,9 @@ import logging
 from typing import Optional, Callable
 from fastapi import FastAPI
 
-from src.wirecloud.platform.plugins import WirecloudPlugin
-from src.wirecloud.catalogue.urls import patterns as catalogue_patterns
-from src.wirecloud.catalogue.routes import router as catalogue_router
+from wirecloud.platform.plugins import WirecloudPlugin
+from wirecloud.catalogue.urls import patterns as catalogue_patterns
+from wirecloud.catalogue.routes import router as catalogue_router
 
 
 logger = logging.getLogger(__name__)

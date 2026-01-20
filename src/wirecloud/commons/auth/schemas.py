@@ -21,8 +21,8 @@ from typing import Optional, Any
 from enum import Enum
 from datetime import datetime
 
-from src.wirecloud.commons.auth import docs
-from src.wirecloud.database import Id
+from wirecloud.commons.auth import docs
+from wirecloud.database import Id
 
 class Permission(BaseModel):
     codename: str = Field(description=docs.permission_codename_description, min_length=1, max_length=255)

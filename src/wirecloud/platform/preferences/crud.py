@@ -18,17 +18,17 @@
 
 from typing import Union
 
-from src.settings import cache
-from src.wirecloud.commons.auth.crud import get_user_preferences, set_user_preferences
-from src.wirecloud.commons.auth.schemas import User
-from src.wirecloud.database import DBSession, commit
-from src.wirecloud.platform.preferences.schemas import PlatformPreferenceCreate, WorkspacePreference, TabPreference, \
+from wirecloud.settings import cache
+from wirecloud.commons.auth.crud import get_user_preferences, set_user_preferences
+from wirecloud.commons.auth.schemas import User
+from wirecloud.database import DBSession, commit
+from wirecloud.platform.preferences.schemas import PlatformPreferenceCreate, WorkspacePreference, TabPreference, \
     WorkspacePreferenceWithName
-from src.wirecloud.commons.auth.models import DBPlatformPreference as PlatformPreferenceModel
-from src.wirecloud.platform.preferences.utils import make_workspace_preferences_cache_key, \
+from wirecloud.commons.auth.models import DBPlatformPreference as PlatformPreferenceModel
+from wirecloud.platform.preferences.utils import make_workspace_preferences_cache_key, \
     make_tab_preferences_cache_key
-from src.wirecloud.platform.workspace.crud import change_workspace
-from src.wirecloud.platform.workspace.models import DBTabPreference, Workspace, Tab
+from wirecloud.platform.workspace.crud import change_workspace
+from wirecloud.platform.workspace.models import DBTabPreference, Workspace, Tab
 
 
 async def update_preferences(db: DBSession, user: User, preferences: PlatformPreferenceCreate):

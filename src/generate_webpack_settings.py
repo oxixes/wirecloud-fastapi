@@ -36,11 +36,11 @@ from os import path
 # Project root is assumed to be the parent of the scripts/ directory
 ROOT = path.abspath(path.join(path.dirname(path.abspath(__file__)), '..'))
 
-# Make sure we can import src.settings
+# Make sure we can import settings
 # Use slice assignment to avoid potential type warnings from some linters
 sys.path[0:0] = [ROOT]
 
-from src.settings_validator import validate_settings
+from wirecloud.settings_validator import validate_settings
 
 # Run settings validation to ensure settings are correct as async
 asyncio.run(validate_settings(True))

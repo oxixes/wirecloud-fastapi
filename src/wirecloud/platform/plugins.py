@@ -28,12 +28,12 @@ import inspect
 import logging
 import json
 
-from src.wirecloud.commons.utils.encoding import LazyEncoderXHTML
-from src.wirecloud.database import DBSession
-from src.wirecloud.platform.context.schemas import BaseContextKey, WorkspaceContextKey
-from src.wirecloud.platform.preferences.schemas import PreferenceKey, TabPreferenceKey
-from src.wirecloud.commons.auth.schemas import UserAll, Session
-from src.wirecloud.platform.workspace.models import Workspace
+from wirecloud.commons.utils.encoding import LazyEncoderXHTML
+from wirecloud.database import DBSession
+from wirecloud.platform.context.schemas import BaseContextKey, WorkspaceContextKey
+from wirecloud.platform.preferences.schemas import PreferenceKey, TabPreferenceKey
+from wirecloud.commons.auth.schemas import UserAll, Session
+from wirecloud.platform.workspace.models import Workspace
 
 
 class URLTemplate(BaseModel):
@@ -161,23 +161,19 @@ def find_wirecloud_plugins() -> list[WirecloudPlugin]:
         if app == 'wirecloud.platform':
             continue
 
-        plugins_module = 'src.%s.plugins' % app
+        plugins_module = '%s.plugins' % app
         try:
             mod = import_module(plugins_module)
-        except (NameError, ImportError, SyntaxError):
-            try:
-                # Try to import the module without the 'src.' prefix
-                mod = import_module(plugins_module[4:])
-            except (NameError, ImportError, SyntaxError) as exc:
-                error_message = str(exc)
-                if error_message not in (
-                        "No module named plugins", "No module named " + plugins_module,
-                        "No module named '" + plugins_module + "'"):
-                    logger.error(
-                        "Error importing %(module)s (%(error_message)s). Any WireCloud plugin available through the %(app)s app will be ignored" % {
-                            "module": plugins_module, "error_message": error_message, "app": app})
-                    logger.error("Backtrace: ", exc_info=True)
-                continue
+        except (NameError, ImportError, SyntaxError) as exc:
+            error_message = str(exc)
+            if error_message not in (
+                    "No module named plugins", "No module named " + plugins_module,
+                    "No module named '" + plugins_module + "'"):
+                logger.error(
+                    "Error importing %(module)s (%(error_message)s). Any WireCloud plugin available through the %(app)s app will be ignored" % {
+                        "module": plugins_module, "error_message": error_message, "app": app})
+                logger.error("Backtrace: ", exc_info=True)
+            continue
 
         mod_plugins = [cls for name, cls in mod.__dict__.items() if
                        inspect.isclass(cls) and cls != WirecloudPlugin and issubclass(cls, WirecloudPlugin)]
@@ -215,7 +211,7 @@ def get_plugins(app: Optional[FastAPI] = None) -> tuple[WirecloudPlugin, ...]:
             plugins.append(plugin)
 
         if 'wirecloud.platform' in getattr(settings, 'INSTALLED_APPS', []):
-            from src.wirecloud.platform.core.plugins import WirecloudCorePlugin
+            from wirecloud.platform.core.plugins import WirecloudCorePlugin
             add_plugin('src.wirecloud.platform.WirecloudCorePlugin', WirecloudCorePlugin(app))
 
         for entry in modules:

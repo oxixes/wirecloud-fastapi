@@ -74,7 +74,7 @@ def gettext(text: str, lang: Optional[str] = None, translation: Optional[NullTra
         plugin: Optional[str] = None
         module_name = inspect.stack()[1].frame.f_globals.get('__name__')
         for plugin_name in settings.INSTALLED_APPS:
-            if module_name.startswith(f"src.{plugin_name}"):
+            if module_name.startswith(f"{plugin_name}"):
                 plugin = plugin_name
                 break
 

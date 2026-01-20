@@ -16,10 +16,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from pydantic import BaseModel
+import sys
 
-from wirecloud.database import Id
+try:
+    from settings import *
+except ImportError:
+    # Try adding the project root to the path
+    from pathlib import Path
+    project_root = Path(__file__).parent.parent.resolve()
+    sys.path.insert(0, str(project_root))
 
-class Widget(BaseModel):
-    resource: Id
-    xhtml: str
+    from settings import *

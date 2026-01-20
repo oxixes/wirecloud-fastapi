@@ -23,24 +23,24 @@ from pydantic import ValidationError
 import jwt
 import asyncio
 
-from src.wirecloud.commons.auth.models import Group
-from src.wirecloud.database import Id
-from src.wirecloud.commons.auth.schemas import UserLogin, UserToken, UserWithPassword, UserTokenType, User, UserCreate
-from src.wirecloud.commons.auth.crud import get_user_with_password, set_login_date_for_user, get_user_by_username, \
+from wirecloud.commons.auth.models import Group
+from wirecloud.database import Id
+from wirecloud.commons.auth.schemas import UserLogin, UserToken, UserWithPassword, UserTokenType, User, UserCreate
+from wirecloud.commons.auth.crud import get_user_with_password, set_login_date_for_user, get_user_by_username, \
     create_user, update_user, create_token, invalidate_token, add_user_to_groups_by_codename, \
     create_group_if_not_exists, remove_user_from_all_groups, set_token_expiration, remove_user_idm_data
-from src.wirecloud.commons.auth.utils import check_password, SessionDepNoCSRF, SessionDep, \
+from wirecloud.commons.auth.utils import check_password, SessionDepNoCSRF, SessionDep, \
     UserDep, UserDepNoCSRF
-from src.wirecloud.database import DBDep, commit
-from src.wirecloud.commons.utils.http import build_error_response, build_validation_error_response, produces, consumes, \
+from wirecloud.database import DBDep, commit
+from wirecloud.commons.utils.http import build_error_response, build_validation_error_response, produces, consumes, \
     get_redirect_response, get_absolute_reverse_url
 from src import settings
-from src.wirecloud import docs as root_docs
-from src.wirecloud.commons.auth import docs
-from src.wirecloud.platform.plugins import get_idm_get_token_functions, get_idm_get_user_functions, \
+from wirecloud import docs as root_docs
+from wirecloud.commons.auth import docs
+from wirecloud.platform.plugins import get_idm_get_token_functions, get_idm_get_user_functions, \
     get_idm_backchannel_logout_functions
-from src.wirecloud.platform.routes import render_wirecloud
-from src.wirecloud.translation import gettext as _
+from wirecloud.platform.routes import render_wirecloud
+from wirecloud.translation import gettext as _
 
 router = APIRouter()
 base_router = APIRouter()

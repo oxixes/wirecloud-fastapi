@@ -18,7 +18,7 @@
 
 from pydantic import BaseModel, Field
 
-from src.wirecloud.database import Id
+from wirecloud.database import Id
 
 
 class DBConstant(BaseModel, populate_by_name=True):

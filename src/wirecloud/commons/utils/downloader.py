@@ -23,8 +23,8 @@ import platform
 import requests
 from urllib.parse import urlparse
 
-from src.wirecloud import platform as wirecloud
-from src.wirecloud.translation import gettext as _
+from wirecloud import platform as wirecloud
+from wirecloud.translation import gettext as _
 
 VERSIONS = {
     'wirecloud_version': wirecloud.__version__,

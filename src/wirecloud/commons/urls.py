@@ -17,7 +17,7 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from src import settings
-from src.wirecloud.platform.plugins import URLTemplate, get_idm_get_authorization_url_functions
+from wirecloud.platform.plugins import URLTemplate, get_idm_get_authorization_url_functions
 
 patterns: dict[str, URLTemplate] = {
     # Auth

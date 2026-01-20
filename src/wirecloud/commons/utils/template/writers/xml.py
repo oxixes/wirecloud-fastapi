@@ -19,12 +19,12 @@
 from lxml import etree
 from typing import Union, Optional
 
-from src.wirecloud.commons.utils.template.base import stringify_contact_info
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACDMashup, MACType, MACDMashupResourcePreference
-from src.wirecloud.platform.wiring.schemas import WiringOperatorPreference, WiringVisualDescription, WiringBehaviour, \
+from wirecloud.commons.utils.template.base import stringify_contact_info
+from wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACDMashup, MACType, MACDMashupResourcePreference
+from wirecloud.platform.wiring.schemas import WiringOperatorPreference, WiringVisualDescription, WiringBehaviour, \
     WiringVisualDescriptionConnection, WiringConnectionHandlePositionType, WiringComponents
 
-from src.wirecloud.translation import gettext as _
+from wirecloud.translation import gettext as _
 
 
 def process_option(options, field: str, required: bool = False, type: str = 'string') -> Optional[str]:

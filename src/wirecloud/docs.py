@@ -18,7 +18,7 @@
 
 import orjson as json
 from typing import Optional
-from src.wirecloud.commons.utils.http import get_xml_error_response, get_json_error_response, HTTPError
+from wirecloud.commons.utils.http import get_xml_error_response, get_json_error_response, HTTPError
 
 title = "WireCloud"
 logo_url = "https://raw.githubusercontent.com/Wirecloud/wirecloud/develop/src/wirecloud/defaulttheme/static/images/logos/wc1.png"

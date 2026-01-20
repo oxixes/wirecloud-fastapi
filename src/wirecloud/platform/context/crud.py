@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from src.wirecloud.platform.context.schemas import Constant
-from src.wirecloud.platform.context.models import DBConstant as ConstantModel
-from src.wirecloud.database import DBSession
+from wirecloud.platform.context.schemas import Constant
+from wirecloud.platform.context.models import DBConstant as ConstantModel
+from wirecloud.database import DBSession
 
 
 async def get_all_constants(db: DBSession) -> list[Constant]:

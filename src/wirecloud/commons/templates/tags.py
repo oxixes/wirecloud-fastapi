@@ -26,10 +26,10 @@ from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from urllib.parse import urljoin, urlparse, parse_qs
 
-from src.wirecloud.commons.utils.http import get_absolute_reverse_url
-from src.wirecloud.commons.utils.theme import get_theme_translation
-from src.wirecloud.platform.plugins import get_constants, get_wirecloud_ajax_endpoints
-from src.wirecloud.translation import gettext as _trans
+from wirecloud.commons.utils.http import get_absolute_reverse_url
+from wirecloud.commons.utils.theme import get_theme_translation
+from wirecloud.platform.plugins import get_constants, get_wirecloud_ajax_endpoints
+from wirecloud.translation import gettext as _trans
 from src import settings
 
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), './templatefiles'))

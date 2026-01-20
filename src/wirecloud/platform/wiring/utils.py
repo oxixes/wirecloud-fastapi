@@ -23,19 +23,19 @@ from fastapi import Request, Response
 from lxml import etree
 
 from src import settings
-from src.settings import cache
-from src.wirecloud.commons.auth.schemas import User
-from src.wirecloud.commons.utils.http import build_error_response, get_absolute_static_url, get_current_domain
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACDRequirement
-from src.wirecloud.database import DBSession, Id
-from src.wirecloud.platform.wiring.schemas import Wiring, WiringConnection, WiringConnectionEndpoint, WiringType, \
+from wirecloud.settings import cache
+from wirecloud.commons.auth.schemas import User
+from wirecloud.commons.utils.http import build_error_response, get_absolute_static_url, get_current_domain
+from wirecloud.commons.utils.template.schemas.macdschemas import MACDRequirement
+from wirecloud.database import DBSession, Id
+from wirecloud.platform.wiring.schemas import Wiring, WiringConnection, WiringConnectionEndpoint, WiringType, \
     WiringVisualDescriptionConnection, WiringVisualDescription, WiringBehaviour, WiringComponents, \
     WiringOperatorPreference
-from src.wirecloud.translation import gettext as _
+from wirecloud.translation import gettext as _
 
 if TYPE_CHECKING:
-    from src.wirecloud.platform.workspace.models import WorkspaceWiring
-    from src.wirecloud.catalogue.schemas import CatalogueResource
+    from wirecloud.platform.workspace.models import WorkspaceWiring
+    from wirecloud.catalogue.schemas import CatalogueResource
 
 
 def remove_widget_from_wiring_status(id: str, status: Wiring) -> Wiring:
@@ -114,7 +114,7 @@ def get_operator_cache_key(operator: 'CatalogueResource', domain: str, mode: str
 
 
 async def get_operator_api_files(request: Request, theme: str) -> list[str]:
-    from src.wirecloud.platform.core.plugins import get_version_hash
+    from wirecloud.platform.core.plugins import get_version_hash
     key = f'operator_api_files/{get_current_domain(request)}?v={get_version_hash()}'
     operator_api_files = await cache.get(key)
 
@@ -127,28 +127,28 @@ async def get_operator_api_files(request: Request, theme: str) -> list[str]:
 
 async def generate_xhtml_operator_code(js_files: list[str], base_url: str, request: Request, requirements: list[str],
                                        mode: str) -> str:
-    from src.wirecloud.platform.plugins import get_operator_api_extensions
+    from wirecloud.platform.plugins import get_operator_api_extensions
     extra_api_js_files = [get_absolute_static_url(url, request=request, versioned=True) for url in
                           get_operator_api_extensions(mode, requirements)]
-    from src.wirecloud.platform.routes import get_current_theme
+    from wirecloud.platform.routes import get_current_theme
     api_js = await get_operator_api_files(request, get_current_theme(request)) + extra_api_js_files
 
     context = {'request': request, 'base_url': base_url, 'js_files': api_js + js_files}
 
-    from src.wirecloud.commons.templates.tags import templates
+    from wirecloud.commons.templates.tags import templates
     return templates.TemplateResponse('operator_xhtml.html', context).body.decode('utf-8')
 
 
 def handle_multiuser(user: User, secure: bool, new_variable: WiringOperatorPreference,
                      old_variable: WiringOperatorPreference):
     if secure:
-        from src.wirecloud.platform.workspace.utils import encrypt_value
+        from wirecloud.platform.workspace.utils import encrypt_value
         new_value = encrypt_value(new_variable.value)
     else:
         new_value = new_variable.value
 
     new_variable = deepcopy(old_variable)
-    from src.wirecloud.platform.workspace.models import WiringOperatorPreferenceValue
+    from wirecloud.platform.workspace.models import WiringOperatorPreferenceValue
     if not isinstance(new_variable.value, WiringOperatorPreferenceValue):
         new_variable.value = WiringOperatorPreferenceValue(users={})
     new_variable.value.users[str(user.id)] = new_value
@@ -180,7 +180,7 @@ async def check_multiuser_wiring(db: DBSession, request: Request, user: User, ne
         old_operator = old_wiring_status.operators[operator_id]
 
         vendor, name, version = operator.name.split("/")
-        from src.wirecloud.catalogue.crud import get_catalogue_resource
+        from wirecloud.catalogue.crud import get_catalogue_resource
         db_resource = await get_catalogue_resource(db, vendor, name, version)
         if db_resource is not None:
             resource = db_resource.get_processed_info(process_variables=True)
@@ -256,7 +256,7 @@ async def check_multiuser_wiring(db: DBSession, request: Request, user: User, ne
 
 async def check_wiring(db: DBSession, request: Request, user: User, new_wiring_status: 'WorkspaceWiring',
                        old_wiring_status: 'WorkspaceWiring', can_update_secure: bool = False) -> Union[Response, bool]:
-    from src.wirecloud.platform.workspace.models import WiringOperatorPreferenceValue
+    from wirecloud.platform.workspace.models import WiringOperatorPreferenceValue
 
     # Check read only connections
     old_read_only_connections = [connection for connection in old_wiring_status.connections if connection.readonly]
@@ -293,7 +293,7 @@ async def check_wiring(db: DBSession, request: Request, user: User, new_wiring_s
             updated_properties = ()
 
         vendor, name, version = operator.name.split("/")
-        from src.wirecloud.catalogue.crud import get_catalogue_resource
+        from wirecloud.catalogue.crud import get_catalogue_resource
         db_resource = await get_catalogue_resource(db, vendor, name, version)
         if db_resource is not None:
             resource = db_resource.get_processed_info(process_variables=True)
@@ -319,7 +319,7 @@ async def check_wiring(db: DBSession, request: Request, user: User, new_wiring_s
                 preference_secure = False
 
             if preference_secure:
-                from src.wirecloud.platform.workspace.utils import encrypt_value
+                from wirecloud.platform.workspace.utils import encrypt_value
                 new_value = encrypt_value(new_preference.value)
             else:
                 new_value = new_preference.value

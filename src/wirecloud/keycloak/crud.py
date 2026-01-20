@@ -18,9 +18,9 @@
 
 from typing import Optional
 
-from src.wirecloud.commons.auth.models import DBUser as UserModel
-from src.wirecloud.commons.auth.schemas import User
-from src.wirecloud.database import DBSession
+from wirecloud.commons.auth.models import DBUser as UserModel
+from wirecloud.commons.auth.schemas import User
+from wirecloud.database import DBSession
 
 async def get_user_by_idm_user_id(db: DBSession, idm_user_id: str) -> Optional[User]:
     user_data = await db.client.users.find_one({"idm_data.keycloak.idm_user": idm_user_id})

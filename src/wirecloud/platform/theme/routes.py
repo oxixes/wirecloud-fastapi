@@ -37,13 +37,13 @@ import os
 import jinja2
 from fastapi import APIRouter, Request, Path, Query
 
-from src.wirecloud.commons.templates.tags import get_translation, get_static_path, get_url_from_view
-from src.wirecloud.platform.plugins import get_templates
-from src.wirecloud.commons.utils.http import NotFound
-from src.wirecloud.commons.utils.theme import get_available_themes, get_jinja2_templates
-from src.wirecloud.platform.theme import docs
-import src.wirecloud.docs as root_docs
-from src.wirecloud.platform.theme.schemas import ThemeInfo
+from wirecloud.commons.templates.tags import get_translation, get_static_path, get_url_from_view
+from wirecloud.platform.plugins import get_templates
+from wirecloud.commons.utils.http import NotFound
+from wirecloud.commons.utils.theme import get_available_themes, get_jinja2_templates
+from wirecloud.platform.theme import docs
+import wirecloud.docs as root_docs
+from wirecloud.platform.theme.schemas import ThemeInfo
 
 router = APIRouter()
 

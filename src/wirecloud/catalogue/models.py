@@ -22,9 +22,9 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
 
-from src.settings import cache
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD
-from src.wirecloud.database import Id
+from wirecloud.settings import cache
+from wirecloud.commons.utils.template.schemas.macdschemas import MACD
+from wirecloud.database import Id
 
 
 class XHTML(BaseModel):

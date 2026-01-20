@@ -19,21 +19,21 @@
 from fastapi import Request
 from typing import Optional
 
-from src.wirecloud.catalogue.crud import get_catalogue_resource, get_catalogue_resource_by_id
-from src.wirecloud.commons.auth.crud import get_username_by_id, get_user_with_all_info
-from src.wirecloud.commons.utils.template.base import Contact
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACDMashupWithParametrization, MACDTab, \
+from wirecloud.catalogue.crud import get_catalogue_resource, get_catalogue_resource_by_id
+from wirecloud.commons.auth.crud import get_username_by_id, get_user_with_all_info
+from wirecloud.commons.utils.template.base import Contact
+from wirecloud.commons.utils.template.schemas.macdschemas import MACDMashupWithParametrization, MACDTab, \
     MACDMashupEmbedded, MACDMashupWiring, IntegerStr, MACDParametrizationOptions, MACDParametrizationOptionsStatus, \
     MACDParametrizationOptionsSource, MACDMashupResourcePreference, MACDMashupResourcePropertyBase, \
     MACDMashupResourceScreenSize, MACDMashupResourcePosition, MACDMashupResourceRendering, MACDMashupResource
-from src.wirecloud.database import DBSession
-from src.wirecloud.platform.iwidget.models import WidgetInstance
-from src.wirecloud.platform.wiring.schemas import WiringOperator, WiringOperatorPreference, WiringConnection, \
+from wirecloud.database import DBSession
+from wirecloud.platform.iwidget.models import WidgetInstance
+from wirecloud.platform.wiring.schemas import WiringOperator, WiringOperatorPreference, WiringConnection, \
     WiringOutput, WiringInput
-from src.wirecloud.platform.workspace.crud import get_workspace_description
-from src.wirecloud.platform.workspace.models import Workspace
-from src.wirecloud.platform.workspace.utils import VariableValueCacheManager
-from src.wirecloud.commons.utils.template.writers import xml
+from wirecloud.platform.workspace.crud import get_workspace_description
+from wirecloud.platform.workspace.models import Workspace
+from wirecloud.platform.workspace.utils import VariableValueCacheManager
+from wirecloud.commons.utils.template.writers import xml
 
 
 async def process_widget_instance(db: DBSession, request: Optional[Request], iwidget: WidgetInstance, wiring: MACDMashupWiring,

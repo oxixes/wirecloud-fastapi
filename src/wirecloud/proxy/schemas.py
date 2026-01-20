@@ -22,8 +22,8 @@ from typing import AsyncGenerator, Optional, Union
 from pydantic import BaseModel
 from fastapi import Request, WebSocket
 
-from src.wirecloud.commons.auth.schemas import UserAll
-from src.wirecloud.platform.workspace.models import Workspace
+from wirecloud.commons.auth.schemas import UserAll
+from wirecloud.platform.workspace.models import Workspace
 
 
 class ProxyRequestData(BaseModel, arbitrary_types_allowed=True):

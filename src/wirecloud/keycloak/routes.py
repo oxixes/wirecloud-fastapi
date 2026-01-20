@@ -20,12 +20,12 @@ from fastapi import APIRouter, Request, Response, Form
 from typing import Annotated
 import jwt
 
-from src.wirecloud.commons.auth.crud import invalidate_tokens_by_idm_session, update_user, invalidate_all_user_tokens
-from src.wirecloud.commons.utils.http import build_error_response, consumes
-from src.wirecloud.database import DBDep
-from src.wirecloud.keycloak.crud import get_user_by_idm_user_id
-from src.wirecloud.keycloak import docs
-from src.wirecloud import docs as root_docs
+from wirecloud.commons.auth.crud import invalidate_tokens_by_idm_session, update_user, invalidate_all_user_tokens
+from wirecloud.commons.utils.http import build_error_response, consumes
+from wirecloud.database import DBDep
+from wirecloud.keycloak.crud import get_user_by_idm_user_id
+from wirecloud.keycloak import docs
+from wirecloud import docs as root_docs
 from src import settings
 
 keycloak_router = APIRouter()

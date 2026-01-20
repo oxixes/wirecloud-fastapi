@@ -22,13 +22,13 @@ import rdflib
 from lxml import etree
 from pydantic import ValidationError
 
-from src.wirecloud.commons.utils.mimeparser import InvalidMimeType, parse_mime_type
-from src.wirecloud.commons.utils.template.base import is_valid_name, is_valid_vendor, is_valid_version
-from src.wirecloud.commons.utils.template.schemas.macdschemas import *
-from src.wirecloud.platform.wiring.schemas import *
-from src.wirecloud.platform.wiring.utils import get_wiring_skeleton
+from wirecloud.commons.utils.mimeparser import InvalidMimeType, parse_mime_type
+from wirecloud.commons.utils.template.base import is_valid_name, is_valid_vendor, is_valid_version
+from wirecloud.commons.utils.template.schemas.macdschemas import *
+from wirecloud.platform.wiring.schemas import *
+from wirecloud.platform.wiring.utils import get_wiring_skeleton
 
-from src.wirecloud.translation import gettext as _
+from wirecloud.translation import gettext as _
 
 # Namespaces used by rdflib
 WIRE = rdflib.Namespace("http://wirecloud.conwet.fi.upm.es/ns/widget#")

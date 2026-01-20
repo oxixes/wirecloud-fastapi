@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from src.wirecloud.database import DBSession
-from src.wirecloud.fiware.proxy import IDMTokenProcessor
-from src.wirecloud.proxy.schemas import ProxyRequestData
+from wirecloud.database import DBSession
+from wirecloud.fiware.proxy import IDMTokenProcessor
+from wirecloud.proxy.schemas import ProxyRequestData
 
 
 class KeycloakTokenProcessor:

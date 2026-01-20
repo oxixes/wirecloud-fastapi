@@ -19,11 +19,11 @@
 import json
 from typing import Any
 
-from src.wirecloud.platform.plugins import get_workspace_preferences, get_tab_preferences
-from src.wirecloud.platform.preferences.schemas import WorkspacePreference
-from src.wirecloud.platform.workspace.models import DBWorkspacePreference
-from src.wirecloud.platform.workspace.models import Workspace, Tab
-from src.settings import cache
+from wirecloud.platform.plugins import get_workspace_preferences, get_tab_preferences
+from wirecloud.platform.preferences.schemas import WorkspacePreference
+from wirecloud.platform.workspace.models import DBWorkspacePreference
+from wirecloud.platform.workspace.models import Workspace, Tab
+from wirecloud.settings import cache
 
 def make_workspace_preferences_cache_key(workspace: Workspace):
     return f'_workspace_preferences_cache/{workspace.id}/{workspace.last_modified}'

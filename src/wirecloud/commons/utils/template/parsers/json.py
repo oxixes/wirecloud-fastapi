@@ -20,10 +20,10 @@ import orjson as json
 
 from pydantic import ValidationError
 from typing import Union
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACDWidget, MACDOperator, MACDMashup, MACDTranslationIndexUsage, MACType, Name, Vendor, Version
-from src.wirecloud.commons.utils.template.base import TemplateParseException
-from src.wirecloud.commons.utils.translation import get_trans_index
-from src.wirecloud.translation import gettext as _
+from wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACDWidget, MACDOperator, MACDMashup, MACDTranslationIndexUsage, MACType, Name, Vendor, Version
+from wirecloud.commons.utils.template.base import TemplateParseException
+from wirecloud.commons.utils.translation import get_trans_index
+from wirecloud.translation import gettext as _
 
 
 class JSONTemplateParser(object):

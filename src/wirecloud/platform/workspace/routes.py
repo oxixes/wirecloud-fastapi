@@ -23,31 +23,31 @@ from io import BytesIO
 
 from fastapi import APIRouter, Response, Request, Body, Form, UploadFile, File, Path
 
-from src.wirecloud import docs as root_docs
-from src.wirecloud.catalogue.utils import wgt_deployer
-from src.wirecloud.catalogue.crud import get_catalogue_resource
-from src.wirecloud.commons.utils.http import produces, authentication_required, consumes, build_error_response
-from src.wirecloud.commons.utils.template import TemplateParser, is_valid_vendor, is_valid_name, is_valid_version
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACDMashupWithParametrization, MACType, MACD
-from src.wirecloud.commons.utils.wgt import WgtFile
-from src.wirecloud.platform.markets.utils import get_local_catalogue
-from src.wirecloud.platform.preferences.crud import update_workspace_preferences
-from src.wirecloud.platform.search import add_workspace_to_index
-from src.wirecloud.platform.workspace.crud import get_workspace_list, create_empty_workspace, get_workspace_by_id, \
+from wirecloud import docs as root_docs
+from wirecloud.catalogue.utils import wgt_deployer
+from wirecloud.catalogue.crud import get_catalogue_resource
+from wirecloud.commons.utils.http import produces, authentication_required, consumes, build_error_response
+from wirecloud.commons.utils.template import TemplateParser, is_valid_vendor, is_valid_name, is_valid_version
+from wirecloud.commons.utils.template.schemas.macdschemas import MACDMashupWithParametrization, MACType, MACD
+from wirecloud.commons.utils.wgt import WgtFile
+from wirecloud.platform.markets.utils import get_local_catalogue
+from wirecloud.platform.preferences.crud import update_workspace_preferences
+from wirecloud.platform.search import add_workspace_to_index
+from wirecloud.platform.workspace.crud import get_workspace_list, create_empty_workspace, get_workspace_by_id, \
     create_workspace, get_workspace_by_username_and_name, is_a_workspace_with_that_name, change_workspace, \
     delete_workspace, change_tab, set_visible_tab
-from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
-from src.wirecloud.platform.workspace.mashupTemplateGenerator import build_json_template_from_workspace, \
+from wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
+from wirecloud.platform.workspace.mashupTemplateGenerator import build_json_template_from_workspace, \
     build_xml_template_from_workspace
-from src.wirecloud.platform.workspace.mashupTemplateParser import check_mashup_dependencies, MissingDependencies, \
+from wirecloud.platform.workspace.mashupTemplateParser import check_mashup_dependencies, MissingDependencies, \
     fill_workspace_using_template
-from src.wirecloud.platform.workspace.schemas import WorkspaceData, WorkspaceCreate, WorkspaceGlobalData, \
+from wirecloud.platform.workspace.schemas import WorkspaceData, WorkspaceCreate, WorkspaceGlobalData, \
     WorkspaceEntry, TabCreate, TabData, TabCreateEntry, MashupMergeService
-from src.wirecloud.database import DBDep, Id
-from src.wirecloud.platform.workspace.utils import get_workspace_data, get_global_workspace_data, create_tab, \
+from wirecloud.database import DBDep, Id
+from wirecloud.platform.workspace.utils import get_workspace_data, get_global_workspace_data, create_tab, \
     get_tab_data, get_workspace_entry
-from src.wirecloud.platform.workspace import docs
-from src.wirecloud.translation import gettext as _
+from wirecloud.platform.workspace import docs
+from wirecloud.translation import gettext as _
 
 workspace_router = APIRouter()
 workspaces_router = APIRouter()

@@ -31,23 +31,23 @@ from fastapi import Request
 from src import settings
 import markdown
 
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACType
-from src.wirecloud.catalogue.schemas import (CatalogueResource, CatalogueResourceCreate, CatalogueResourceType,
+from wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACType
+from wirecloud.catalogue.schemas import (CatalogueResource, CatalogueResourceCreate, CatalogueResourceType,
                                              CatalogueResourceDataSummaryPermissions, CatalogueResourceDataSummary,
                                              CatalogueResourceDataSummaryGroup, CatalogueResourceDataSummaryBase)
-from src.wirecloud.catalogue.crud import (create_catalogue_resource, has_resource_user,
+from wirecloud.catalogue.crud import (create_catalogue_resource, has_resource_user,
                                           get_all_catalogue_resource_versions, get_all_catalogue_resources,
                                           update_catalogue_resource_description, delete_catalogue_resources)
-from src.wirecloud.commons.auth.schemas import User, UserAll
-from src.wirecloud.commons.utils.downloader import download_http_content, download_local_file
-from src.wirecloud.commons.utils.html import clean_html
-from src.wirecloud.commons.utils.http import get_absolute_reverse_url, force_trailing_slash
-from src.wirecloud.commons.utils.template import ObsoleteFormatError, TemplateParser, TemplateFormatError, TemplateParseException
-from src.wirecloud.commons.utils.version import Version
-from src.wirecloud.commons.utils.wgt import InvalidContents, WgtDeployer, WgtFile
-from src.wirecloud.database import DBSession, commit
-from src.wirecloud.platform.widget.utils import create_widget_from_wgt
-from src.wirecloud.translation import gettext as _
+from wirecloud.commons.auth.schemas import User, UserAll
+from wirecloud.commons.utils.downloader import download_http_content, download_local_file
+from wirecloud.commons.utils.html import clean_html
+from wirecloud.commons.utils.http import get_absolute_reverse_url, force_trailing_slash
+from wirecloud.commons.utils.template import ObsoleteFormatError, TemplateParser, TemplateFormatError, TemplateParseException
+from wirecloud.commons.utils.version import Version
+from wirecloud.commons.utils.wgt import InvalidContents, WgtDeployer, WgtFile
+from wirecloud.database import DBSession, commit
+from wirecloud.platform.widget.utils import create_widget_from_wgt
+from wirecloud.translation import gettext as _
 
 
 logger = logging.getLogger(__name__)
@@ -414,7 +414,7 @@ async def create_widget_on_resource_creation(db: DBSession, resource: CatalogueR
 
 
 def deploy_operators_on_resource_creation(resource: CatalogueResource):
-    from src.wirecloud.platform.widget.utils import wgt_deployer as wgt_deployer_widget
+    from wirecloud.platform.widget.utils import wgt_deployer as wgt_deployer_widget
     if resource.resource_type() == 'operator':
         base_dir = wgt_deployer.get_base_dir(resource.vendor, resource.short_name, resource.version)
         wgt_file = WgtFile(os.path.join(base_dir, resource.template_uri))

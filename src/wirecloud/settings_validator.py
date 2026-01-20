@@ -21,8 +21,8 @@ import os
 import logging
 from os import path
 
-from src import settings
-from src.wirecloud.platform.plugins import get_config_validators
+from wirecloud import settings
+from wirecloud.platform.plugins import get_config_validators
 
 logger = logging.getLogger(__name__)
 

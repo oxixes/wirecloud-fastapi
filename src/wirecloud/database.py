@@ -26,7 +26,7 @@ import logging
 
 from pydantic_core import core_schema
 
-from src.settings import DATABASE
+from wirecloud.settings import DATABASE
 from bson import ObjectId
 
 

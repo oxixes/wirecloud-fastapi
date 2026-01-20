@@ -40,10 +40,10 @@ from collections.abc import Callable
 from urllib.parse import urljoin, unquote, urlparse, quote
 
 from src import settings
-from src.wirecloud.commons.auth.utils import UserDepNoCSRF
-from src.wirecloud.commons.exceptions import ErrorResponse
-from src.wirecloud.commons.utils import mimeparser
-from src.wirecloud.translation import gettext as _
+from wirecloud.commons.auth.utils import UserDepNoCSRF
+from wirecloud.commons.exceptions import ErrorResponse
+from wirecloud.commons.utils import mimeparser
+from wirecloud.translation import gettext as _
 
 
 class HTTPError(BaseModel):
@@ -64,7 +64,7 @@ class NotFound(Exception):
 
 
 def get_html_basic_error_response(request: Optional[Request], mimetype: str, status_code: int, context: dict) -> str:
-    from src.wirecloud.platform.routes import render_wirecloud
+    from wirecloud.platform.routes import render_wirecloud
 
     try:
         return render_wirecloud(request, page=f"{status_code}", title="Error").body.decode("utf-8")
@@ -245,8 +245,8 @@ def generate_new_param_signature(sig: Signature, new_param_name: str, new_param_
 
 
 def authentication_required(csrf: bool = True):
-    from src.wirecloud.commons.auth.schemas import UserAll
-    from src.wirecloud.commons.auth.utils import UserDep
+    from wirecloud.commons.auth.schemas import UserAll
+    from wirecloud.commons.auth.utils import UserDep
 
     def wrap(handler):
         # Check that the handler has a user and request parameter
@@ -392,7 +392,7 @@ def get_absolute_reverse_url(viewname: str, request: Optional[Request] = None, *
 
 # FIXME Request.url_for could be used instead of this
 def get_relative_reverse_url(viewname: str, request: Optional[Request] = None, **kwargs) -> str:
-    from src.wirecloud.platform.plugins import get_plugin_urls
+    from wirecloud.platform.plugins import get_plugin_urls
 
     patterns = get_plugin_urls()
     if viewname not in patterns:
@@ -413,7 +413,7 @@ def get_relative_reverse_url(viewname: str, request: Optional[Request] = None, *
 
 
 def resolve_url_name(path: str) -> Optional[tuple[str, dict[str, str]]]:
-    from src.wirecloud.platform.plugins import get_plugin_urls
+    from wirecloud.platform.plugins import get_plugin_urls
 
     for name, url in get_plugin_urls().items():
         # Check if the pattern matches the path, to do so, convert the pattern to a regex
@@ -490,7 +490,7 @@ def get_absolute_static_url(url, request: Optional[Request] = None, versioned: b
     base = urljoin(scheme + '://' + get_current_domain(request), '/static')
 
     if versioned:
-        from src.wirecloud.platform.core.plugins import get_version_hash
+        from wirecloud.platform.core.plugins import get_version_hash
         url += f"?v={get_version_hash()}"
 
     return urljoin(base, url)

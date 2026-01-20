@@ -19,8 +19,8 @@
 from typing import Optional
 from pydantic import BaseModel, Field
 
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD
-from src.wirecloud.platform.localcatalogue import docs
+from wirecloud.commons.utils.template.schemas.macdschemas import MACD
+from wirecloud.platform.localcatalogue import docs
 
 
 class MultipleResourcesInstalledResponse(BaseModel):

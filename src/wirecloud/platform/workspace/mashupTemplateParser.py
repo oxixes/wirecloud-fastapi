@@ -20,31 +20,31 @@ from typing import Optional, Union
 from bson import ObjectId
 from fastapi import Request
 
-from src.wirecloud.catalogue.crud import get_catalogue_resource, is_resource_available_for_user
-from src.wirecloud.commons.auth.crud import get_user_by_id, get_user_with_all_info
-from src.wirecloud.commons.auth.schemas import UserAll, User
-from src.wirecloud.commons.utils.db import save_alternative
-from src.wirecloud.commons.utils.template import TemplateParser
-from src.wirecloud.commons.utils.template.parsers import TemplateValueProcessor
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACType
-from src.wirecloud.commons.utils.urlify import URLify
-from src.wirecloud.database import DBSession
-from src.wirecloud.platform.context.utils import get_context_values
-from src.wirecloud.platform.iwidget.schemas import WidgetInstanceData, LayoutConfig
-from src.wirecloud.platform.iwidget.utils import save_widget_instance, set_initial_values
-from src.wirecloud.platform.preferences.crud import update_workspace_preferences, update_tab_preferences
-from src.wirecloud.platform.preferences.schemas import WorkspacePreference, TabPreference
-from src.wirecloud.platform.wiring.schemas import WiringConnectionEndpoint, WiringType, WiringConnection, \
+from wirecloud.catalogue.crud import get_catalogue_resource, is_resource_available_for_user
+from wirecloud.commons.auth.crud import get_user_by_id, get_user_with_all_info
+from wirecloud.commons.auth.schemas import UserAll, User
+from wirecloud.commons.utils.db import save_alternative
+from wirecloud.commons.utils.template import TemplateParser
+from wirecloud.commons.utils.template.parsers import TemplateValueProcessor
+from wirecloud.commons.utils.template.schemas.macdschemas import MACType
+from wirecloud.commons.utils.urlify import URLify
+from wirecloud.database import DBSession
+from wirecloud.platform.context.utils import get_context_values
+from wirecloud.platform.iwidget.schemas import WidgetInstanceData, LayoutConfig
+from wirecloud.platform.iwidget.utils import save_widget_instance, set_initial_values
+from wirecloud.platform.preferences.crud import update_workspace_preferences, update_tab_preferences
+from wirecloud.platform.preferences.schemas import WorkspacePreference, TabPreference
+from wirecloud.platform.wiring.schemas import WiringConnectionEndpoint, WiringType, WiringConnection, \
     WiringComponents, WiringVisualDescription, WiringVisualDescriptionConnection, WiringBehaviour
-from src.wirecloud.platform.wiring.utils import get_endpoint_name, is_empty_wiring
-from src.wirecloud.platform.workspace.crud import change_workspace, \
+from wirecloud.platform.wiring.utils import get_endpoint_name, is_empty_wiring
+from wirecloud.platform.workspace.crud import change_workspace, \
     is_a_workspace_with_that_name, insert_workspace
-from src.wirecloud.platform.workspace.models import Workspace, WorkspaceExtraPreference, WorkspaceForcedValue, \
+from wirecloud.platform.workspace.models import Workspace, WorkspaceExtraPreference, WorkspaceForcedValue, \
     WorkspaceWiringOperator, WorkspaceAccessPermissions
-from src.wirecloud.platform.workspace.schemas import IdMapping, WorkspaceForcedValues, IdMappingOperator, \
+from wirecloud.platform.workspace.schemas import IdMapping, WorkspaceForcedValues, IdMappingOperator, \
     IdMappingWidget
-from src.wirecloud.platform.workspace.utils import create_tab
-from src.wirecloud.translation import gettext as _
+from wirecloud.platform.workspace.utils import create_tab
+from wirecloud.translation import gettext as _
 
 
 class MissingDependencies(Exception):
@@ -149,7 +149,7 @@ def _remap_connection_endpoints(source_mapping: dict, target_mapping: dict,
 
 async def fill_workspace_using_template(db: DBSession, request: Request, user_func: User, workspace: Workspace,
                                         template: TemplateParser) -> None:
-    from src.wirecloud.platform.widget.utils import get_or_add_widget_from_catalogue
+    from wirecloud.platform.widget.utils import get_or_add_widget_from_catalogue
     user = workspace.creator
 
     if template.get_resource_type() != MACType.mashup:

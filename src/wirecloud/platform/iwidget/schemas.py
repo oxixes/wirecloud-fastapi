@@ -20,7 +20,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel
 
-from src.wirecloud.platform.iwidget.models import WidgetPermissions, WidgetConfig, WidgetVariables
+from wirecloud.platform.iwidget.models import WidgetPermissions, WidgetConfig, WidgetVariables
 
 
 class LayoutConfig(WidgetConfig):

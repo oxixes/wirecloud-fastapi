@@ -20,16 +20,16 @@ from typing import Optional
 
 from bson import ObjectId
 
-from src.wirecloud.catalogue.schemas import (CatalogueResourceCreate, CatalogueResource, CatalogueResourceBase,
+from wirecloud.catalogue.schemas import (CatalogueResourceCreate, CatalogueResource, CatalogueResourceBase,
                                              CatalogueResourceType, CatalogueResourceXHTML,
                                              CatalogueResourceWithUsersGroups)
-from src.wirecloud.catalogue.models import DBCatalogueResource as CatalogueResourceModel
-from src.wirecloud.catalogue.models import XHTML
-from src.wirecloud.commons.auth.crud import get_all_user_groups
-from src.wirecloud.commons.auth.models import Group
-from src.wirecloud.commons.auth.schemas import UserAll, User
-from src.wirecloud.commons.utils.template.schemas.macdschemas import (MACD, Vendor, Name, Version)
-from src.wirecloud.database import DBSession, Id, commit
+from wirecloud.catalogue.models import DBCatalogueResource as CatalogueResourceModel
+from wirecloud.catalogue.models import XHTML
+from wirecloud.commons.auth.crud import get_all_user_groups
+from wirecloud.commons.auth.models import Group
+from wirecloud.commons.auth.schemas import UserAll, User
+from wirecloud.commons.utils.template.schemas.macdschemas import (MACD, Vendor, Name, Version)
+from wirecloud.database import DBSession, Id, commit
 
 
 def build_schema_from_resource(resource: CatalogueResourceModel) -> CatalogueResource:

@@ -21,21 +21,21 @@ from typing import Union
 
 from fastapi import APIRouter, Request, Response, Body, Path
 
-from src.wirecloud.commons.auth.crud import get_user_preferences, get_group_by_name, get_user_by_username
-from src.wirecloud.commons.auth.models import DBPlatformPreference as PlatformPreferenceModel
-from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
-from src.wirecloud.commons.utils.http import build_error_response, consumes, authentication_required
-from src.wirecloud.database import DBDep, Id, commit
-from src.wirecloud.platform.preferences.crud import update_preferences, \
+from wirecloud.commons.auth.crud import get_user_preferences, get_group_by_name, get_user_by_username
+from wirecloud.commons.auth.models import DBPlatformPreference as PlatformPreferenceModel
+from wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
+from wirecloud.commons.utils.http import build_error_response, consumes, authentication_required
+from wirecloud.database import DBDep, Id, commit
+from wirecloud.platform.preferences.crud import update_preferences, \
     update_workspace_preferences, update_tab_preferences
-from src.wirecloud.platform.preferences.schemas import PlatformPreferenceCreate, WorkspacePreference, \
+from wirecloud.platform.preferences.schemas import PlatformPreferenceCreate, WorkspacePreference, \
     ShareListPreference, ShareListEnum, TabPreference, PlatformPreferenceCreateValue
-from src.wirecloud.platform.preferences.utils import get_tab_preference_values, get_workspace_preference_values
-from src.wirecloud.platform.workspace.crud import get_workspace_by_id, clear_workspace_users, \
+from wirecloud.platform.preferences.utils import get_tab_preference_values, get_workspace_preference_values
+from wirecloud.platform.workspace.crud import get_workspace_by_id, clear_workspace_users, \
     clear_workspace_groups, add_user_to_workspace, add_group_to_workspace, change_workspace
-from src.wirecloud import docs as root_docs
-from src.wirecloud.platform.preferences import docs
-from src.wirecloud.translation import gettext as _
+from wirecloud import docs as root_docs
+from wirecloud.platform.preferences import docs
+from wirecloud.translation import gettext as _
 
 preferences_router = APIRouter()
 

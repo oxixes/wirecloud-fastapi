@@ -33,34 +33,34 @@ import os
 from lxml.etree import _ElementTree, _Element
 
 from src import settings
-from src.settings import cache
-from src.wirecloud.catalogue.crud import get_catalogue_resources_with_regex, get_catalogue_resource_with_xhtml, \
+from wirecloud.settings import cache
+from wirecloud.catalogue.crud import get_catalogue_resources_with_regex, get_catalogue_resource_with_xhtml, \
     save_catalogue_resource_xhtml
-from src.wirecloud.catalogue.models import XHTML
-from src.wirecloud.catalogue.schemas import CatalogueResource, CatalogueResourceXHTML
-from src.wirecloud.commons.auth.schemas import UserAll
-from src.wirecloud.commons.templates.tags import get_static_path
-from src.wirecloud.commons.utils.cache import patch_cache_headers
-from src.wirecloud.commons.utils.downloader import download_local_file
-from src.wirecloud.commons.utils.http import get_current_domain, build_response, ERROR_FORMATTERS, \
+from wirecloud.catalogue.models import XHTML
+from wirecloud.catalogue.schemas import CatalogueResource, CatalogueResourceXHTML
+from wirecloud.commons.auth.schemas import UserAll
+from wirecloud.commons.templates.tags import get_static_path
+from wirecloud.commons.utils.cache import patch_cache_headers
+from wirecloud.commons.utils.downloader import download_local_file
+from wirecloud.commons.utils.http import get_current_domain, build_response, ERROR_FORMATTERS, \
     get_absolute_static_url, get_absolute_reverse_url
-from src.wirecloud.commons.utils.template import UnsupportedFeature
-from src.wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version, MACDRequirement, MACDWidget, \
+from wirecloud.commons.utils.template import UnsupportedFeature
+from wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version, MACDRequirement, MACDWidget, \
     MACType
-from src.wirecloud.commons.utils.wgt import WgtDeployer, WgtFile
-from src.wirecloud.database import DBSession
-from src.wirecloud.platform.plugins import get_widget_api_extensions, get_active_features
-from src.wirecloud.platform.utils import get_current_theme
-from src.wirecloud.platform.widget.crud import get_widget_from_resource
-from src.wirecloud.platform.widget.models import Widget
-from src.wirecloud.translation import gettext as _
+from wirecloud.commons.utils.wgt import WgtDeployer, WgtFile
+from wirecloud.database import DBSession
+from wirecloud.platform.plugins import get_widget_api_extensions, get_active_features
+from wirecloud.platform.utils import get_current_theme
+from wirecloud.platform.widget.crud import get_widget_from_resource
+from wirecloud.platform.widget.models import Widget
+from wirecloud.translation import gettext as _
 
 wgt_deployer = WgtDeployer(settings.WIDGET_DEPLOYMENT_DIR)
 WIDGET_ERROR_FORMATTERS = ERROR_FORMATTERS.copy()
 
 
 def get_html_error_response(request: Request, mimetype: str, status_code: int, context: dict) -> str:
-    from src.wirecloud.platform.routes import render_wirecloud
+    from wirecloud.platform.routes import render_wirecloud
 
     return render_wirecloud(request, page="wirecloud/widget_error", extra_context=context).body.decode("utf-8")
 
@@ -120,7 +120,7 @@ def get_widget_platform_style(request: Request, theme: str) -> tuple[str]:
 
 
 async def get_widget_api_files(request: Request, theme: str) -> list[str]:
-    from src.wirecloud.platform.core.plugins import get_version_hash
+    from wirecloud.platform.core.plugins import get_version_hash
     key = f"widget_api_files/{get_current_domain(request)}?v={get_version_hash()}"
     widget_api_files = await cache.get(key)
 

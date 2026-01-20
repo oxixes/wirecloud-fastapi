@@ -22,20 +22,20 @@ from typing import Optional
 from fastapi import APIRouter, Request, Path, Response, Query
 from fastapi.responses import HTMLResponse
 
-from src.wirecloud import docs as root_docs
-from src.wirecloud.catalogue.crud import get_catalogue_resource_with_xhtml
-import src.wirecloud.platform.widget.utils as showcase_utils
-from src.wirecloud.commons.templates.tags import get_translation, get_url_from_view, get_static_path
-from src.wirecloud.commons.utils.cache import check_if_modified_since, patch_cache_headers
-from src.wirecloud.commons.utils.http import NotFound, build_downloadfile_response, get_absolute_reverse_url, \
+from wirecloud import docs as root_docs
+from wirecloud.catalogue.crud import get_catalogue_resource_with_xhtml
+import wirecloud.platform.widget.utils as showcase_utils
+from wirecloud.commons.templates.tags import get_translation, get_url_from_view, get_static_path
+from wirecloud.commons.utils.cache import check_if_modified_since, patch_cache_headers
+from wirecloud.commons.utils.http import NotFound, build_downloadfile_response, get_absolute_reverse_url, \
     build_error_response
-from src.wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version
-from src.wirecloud.commons.utils.theme import get_jinja2_templates
-from src.wirecloud.database import DBDep
-from src.wirecloud.platform.routes import get_current_theme, get_current_view
-from src.wirecloud.platform.widget.utils import get_widget_platform_style, process_widget_code
-from src.wirecloud.platform.widget import docs
-from src.wirecloud.translation import gettext as _
+from wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version
+from wirecloud.commons.utils.theme import get_jinja2_templates
+from wirecloud.database import DBDep
+from wirecloud.platform.routes import get_current_theme, get_current_view
+from wirecloud.platform.widget.utils import get_widget_platform_style, process_widget_code
+from wirecloud.platform.widget import docs
+from wirecloud.translation import gettext as _
 
 widget_router = APIRouter()
 showcase_router = APIRouter()
@@ -129,7 +129,7 @@ async def get_widget_file(db: DBDep, request: Request, vendor: Vendor = Path(pat
         return await process_widget_code(db, request, resource, mode, theme)
 
     if file_path.endswith(".wgt"):
-        from src.wirecloud.catalogue.utils import wgt_deployer as wgt_deployer_catalogue
+        from wirecloud.catalogue.utils import wgt_deployer as wgt_deployer_catalogue
         base_dir = wgt_deployer_catalogue.get_base_dir(vendor, name, version)
     else:
         base_dir = showcase_utils.wgt_deployer.get_base_dir(vendor, name, version)
@@ -158,7 +158,7 @@ async def get_missing_widget_html(request: Request, theme: Optional[str] = Query
     style = get_widget_platform_style(request, theme)
     if theme is None:
         theme = get_current_theme(request)
-    from src.wirecloud.platform.core.plugins import get_version_hash
+    from wirecloud.platform.core.plugins import get_version_hash
     context = {
         "uri": request.url.scheme + "://" + request.url.netloc + request.url.path + "?" + request.url.query,
         "LANGUAGE_CODE": request.state.lang,

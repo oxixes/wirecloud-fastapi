@@ -20,9 +20,9 @@ from typing import Optional, Callable
 import logging
 from fastapi import FastAPI
 
-from src.wirecloud.platform.plugins import WirecloudPlugin
-from src.wirecloud.proxy.urls import patterns as proxy_patterns
-from src.wirecloud.proxy.routes import router as proxy_router
+from wirecloud.platform.plugins import WirecloudPlugin
+from wirecloud.proxy.urls import patterns as proxy_patterns
+from wirecloud.proxy.routes import router as proxy_router
 
 
 logger = logging.getLogger(__name__)

@@ -25,30 +25,30 @@ from urllib.request import pathname2url, url2pathname
 import zipfile
 import errno
 
-import src.wirecloud.catalogue.utils as catalogue_utils
-from src.wirecloud.catalogue.search import add_resource_to_index, delete_resource_from_index
-from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
-from src.wirecloud.commons.search import get_search_engine, SearchResponse
-from src.wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version
-from src.wirecloud.commons.utils.http import (PermissionDenied, NotFound,
+import wirecloud.catalogue.utils as catalogue_utils
+from wirecloud.catalogue.search import add_resource_to_index, delete_resource_from_index
+from wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
+from wirecloud.commons.search import get_search_engine, SearchResponse
+from wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version
+from wirecloud.commons.utils.http import (PermissionDenied, NotFound,
                                               produces, consumes, authentication_required, XHTMLResponse,
                                               force_trailing_slash, build_downloadfile_response,
                                               get_absolute_reverse_url, build_error_response)
-from src.wirecloud.commons.utils.downloader import download_local_file
-from src.wirecloud.commons.utils.html import clean_html, filter_changelog
-from src.wirecloud.commons.utils.version import Version as VersionType
-from src.wirecloud.commons.utils.wgt import WgtFile, InvalidContents
-from src.wirecloud.commons.utils.template import TemplateParseException
-from src.wirecloud.catalogue import docs
-from src.wirecloud import docs as root_docs
-from src.wirecloud.catalogue.schemas import (CatalogueResourceDataSummary, CatalogueResourceDataSummaryGroup,
+from wirecloud.commons.utils.downloader import download_local_file
+from wirecloud.commons.utils.html import clean_html, filter_changelog
+from wirecloud.commons.utils.version import Version as VersionType
+from wirecloud.commons.utils.wgt import WgtFile, InvalidContents
+from wirecloud.commons.utils.template import TemplateParseException
+from wirecloud.catalogue import docs
+from wirecloud import docs as root_docs
+from wirecloud.catalogue.schemas import (CatalogueResourceDataSummary, CatalogueResourceDataSummaryGroup,
                                              CatalogueResourceDeleteResults)
-from src.wirecloud.catalogue.crud import (get_catalogue_resource_versions_for_user, get_catalogue_resource,
+from wirecloud.catalogue.crud import (get_catalogue_resource_versions_for_user, get_catalogue_resource,
                                           get_all_catalogue_resource_versions, mark_resources_as_not_available)
-from src.wirecloud.catalogue.utils import get_resource_group_data, get_resource_data
-from src.wirecloud.platform.localcatalogue.utils import install_component
-from src.wirecloud.database import DBDep
-from src.wirecloud.translation import gettext as _
+from wirecloud.catalogue.utils import get_resource_group_data, get_resource_data
+from wirecloud.platform.localcatalogue.utils import install_component
+from wirecloud.database import DBDep
+from wirecloud.translation import gettext as _
 
 router = APIRouter()
 

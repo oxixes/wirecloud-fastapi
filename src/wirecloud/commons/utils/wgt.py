@@ -24,7 +24,7 @@ from typing import Optional, IO, Union
 from urllib.request import pathname2url
 import zipfile
 
-from src.wirecloud.commons.utils.template import TemplateParser
+from wirecloud.commons.utils.template import TemplateParser
 
 
 class InvalidContents(Exception):

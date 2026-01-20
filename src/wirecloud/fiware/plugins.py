@@ -25,17 +25,17 @@ from urllib.parse import quote, urlparse, urljoin
 from fastapi import FastAPI, Request
 
 from src import settings
-from src.wirecloud import fiware
-from src.wirecloud.commons.auth.schemas import UserAll, Session
-from src.wirecloud.commons.auth.utils import make_oidc_provider_request
-from src.wirecloud.database import DBSession
-from src.wirecloud.platform.context.schemas import BaseContextKey
-from src.wirecloud.platform.core.plugins import populate_component
-from src.wirecloud.platform.markets.models import MarketOptions
-from src.wirecloud.platform.markets.utils import MarketManager
-from src.wirecloud.platform.plugins import WirecloudPlugin, URLTemplate
-from src.wirecloud.platform.workspace.crud import create_workspace, get_workspace_by_username_and_name
-from src.wirecloud.translation import gettext as _
+from wirecloud import fiware
+from wirecloud.commons.auth.schemas import UserAll, Session
+from wirecloud.commons.auth.utils import make_oidc_provider_request
+from wirecloud.database import DBSession
+from wirecloud.platform.context.schemas import BaseContextKey
+from wirecloud.platform.core.plugins import populate_component
+from wirecloud.platform.markets.models import MarketOptions
+from wirecloud.platform.markets.utils import MarketManager
+from wirecloud.platform.plugins import WirecloudPlugin, URLTemplate
+from wirecloud.platform.workspace.crud import create_workspace, get_workspace_by_username_and_name
+from wirecloud.translation import gettext as _
 
 BASE_PATH = os.path.dirname(__file__)
 BAE_BROWSER_WIDGET = os.path.join(BASE_PATH, 'initial', 'CoNWeT_bae-browser_0.1.1.wgt')

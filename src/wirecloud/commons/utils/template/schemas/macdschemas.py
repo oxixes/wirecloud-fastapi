@@ -22,10 +22,10 @@ from pydantic import BaseModel, StringConstraints, Field, model_validator, field
 from enum import Enum
 from typing import Optional, Annotated, Union
 
-from src.wirecloud.platform.wiring.schemas import WiringEndpoints, Wiring
-from src.wirecloud.commons.utils.template.base import Contact, parse_contacts_info, TemplateParseException
+from wirecloud.platform.wiring.schemas import WiringEndpoints, Wiring
+from wirecloud.commons.utils.template.base import Contact, parse_contacts_info, TemplateParseException
 
-from src.wirecloud.translation import gettext as _
+from wirecloud.translation import gettext as _
 
 
 IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]

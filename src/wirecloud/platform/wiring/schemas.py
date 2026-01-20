@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator, field
 from typing import Any, Optional, Union, Annotated
 from enum import Enum
 
-from src.wirecloud.platform.wiring import docs
+from wirecloud.platform.wiring import docs
 
 IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
 ResourceName = Annotated[str, StringConstraints(

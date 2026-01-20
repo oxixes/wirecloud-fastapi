@@ -18,8 +18,8 @@
 
 import orjson as json
 
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACType
-from src.wirecloud.translation import gettext as _
+from wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACType
+from wirecloud.translation import gettext as _
 
 
 def remove_empty_string_fields(fields: tuple[str, ...], data: dict) -> None:

@@ -24,12 +24,12 @@ from pydantic import BaseModel
 from datetime import datetime
 from fastapi import Request
 
-from src.wirecloud.catalogue.crud import get_all_catalogue_resources_with_usersgroups, \
+from wirecloud.catalogue.crud import get_all_catalogue_resources_with_usersgroups, \
     get_catalogue_resource_with_usersgroups_by_id
-from src.wirecloud.catalogue.schemas import CatalogueResource, get_template_url, CatalogueResourceWithUsersGroups
-from src.wirecloud.commons.auth.schemas import UserAll
-from src.wirecloud.commons.utils.version import Version
-from src.wirecloud.database import DBSession
+from wirecloud.catalogue.schemas import CatalogueResource, get_template_url, CatalogueResourceWithUsersGroups
+from wirecloud.commons.auth.schemas import UserAll
+from wirecloud.commons.utils.version import Version
+from wirecloud.database import DBSession
 
 RESOURCES_INDEX = 'resources'
 RESOURCE_CONTENT_FIELDS = ["name^1.5", "vendor", "version", "type", "title^1.5", "description", "endpoint_descriptions"]
@@ -245,7 +245,7 @@ async def search_resources(request: Request, user: Optional[UserAll], querytext:
 
         sort_list.append({name: {"order": order}})
 
-    from src.wirecloud.commons.search import build_search_response
+    from wirecloud.commons.search import build_search_response
     return await build_search_response(index=RESOURCES_INDEX, body=body, pagenum=pagenum, max_results=maxresults, clean=clean_resource_out, request=request)
 
 
@@ -288,7 +288,7 @@ def prepare_resource_for_indexing(resource: CatalogueResourceWithUsersGroups) ->
 
 
 async def rebuild_resource_index(db: DBSession):
-    from src.wirecloud.commons.search import es_client
+    from wirecloud.commons.search import es_client
 
     if await es_client.indices.exists(index=RESOURCES_INDEX):
         await es_client.indices.delete(index=RESOURCES_INDEX)
@@ -305,14 +305,14 @@ async def rebuild_resource_index(db: DBSession):
 
 
 async def add_resource_to_index(db: DBSession, resource: CatalogueResource):
-    from src.wirecloud.commons.search import es_client
+    from wirecloud.commons.search import es_client
     res = await get_catalogue_resource_with_usersgroups_by_id(db, resource.id)
 
     await es_client.index(index=RESOURCES_INDEX, id=str(res.id), document=prepare_resource_for_indexing(res).model_dump())
 
 
 async def delete_resource_from_index(resource: CatalogueResource):
-    from src.wirecloud.commons.search import es_client
+    from wirecloud.commons.search import es_client
 
     await es_client.delete(index=RESOURCES_INDEX, id=str(resource.id))
 

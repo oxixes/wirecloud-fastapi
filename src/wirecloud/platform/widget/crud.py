@@ -18,8 +18,8 @@
 
 from typing import Optional
 
-from src.wirecloud.database import DBSession, Id
-from src.wirecloud.platform.widget.models import Widget
+from wirecloud.database import DBSession, Id
+from wirecloud.platform.widget.models import Widget
 
 
 async def get_widget_from_resource(db: DBSession, resource_id: Id) -> Optional[Widget]:

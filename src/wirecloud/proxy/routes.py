@@ -28,19 +28,19 @@ import hashlib
 import logging
 import inspect
 
-from src.wirecloud.commons.auth.utils import UserDepNoCSRF
-from src.wirecloud.database import DBDep, DBSession, Id
-from src.wirecloud.platform.workspace.crud import get_workspace_by_username_and_name, get_workspace_by_id
-from src.wirecloud.proxy import docs
-from src.wirecloud.proxy.schemas import ProxyRequestData
-from src.wirecloud.proxy.utils import is_valid_response_header
-from src.wirecloud.commons.utils.http import (build_error_response, resolve_url_name, iri_to_uri, get_current_domain,
+from wirecloud.commons.auth.utils import UserDepNoCSRF
+from wirecloud.database import DBDep, DBSession, Id
+from wirecloud.platform.workspace.crud import get_workspace_by_username_and_name, get_workspace_by_id
+from wirecloud.proxy import docs
+from wirecloud.proxy.schemas import ProxyRequestData
+from wirecloud.proxy.utils import is_valid_response_header
+from wirecloud.commons.utils.http import (build_error_response, resolve_url_name, iri_to_uri, get_current_domain,
                                               get_relative_reverse_url)
-from src.wirecloud.commons.auth.schemas import UserAll
-from src.wirecloud.platform.plugins import get_request_proxy_processors, get_response_proxy_processors
+from wirecloud.commons.auth.schemas import UserAll
+from wirecloud.platform.plugins import get_request_proxy_processors, get_response_proxy_processors
 from src import settings
-from src.wirecloud import docs as root_docs
-from src.wirecloud.translation import gettext as _
+from wirecloud import docs as root_docs
+from wirecloud.translation import gettext as _
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

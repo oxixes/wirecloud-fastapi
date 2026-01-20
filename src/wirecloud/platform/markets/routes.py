@@ -21,20 +21,20 @@ import os
 from bson import ObjectId
 from fastapi import APIRouter, Request, Body, Path, Response
 
-from src.wirecloud.platform.markets.schemas import MarketData, MarketCreate, Market, PublishData, MarketPermissions
-from src.wirecloud.platform.markets import docs
-from src.wirecloud.platform.markets.crud import (get_markets_for_user, get_market_user, create_market,
+from wirecloud.platform.markets.schemas import MarketData, MarketCreate, Market, PublishData, MarketPermissions
+from wirecloud.platform.markets import docs
+from wirecloud.platform.markets.crud import (get_markets_for_user, get_market_user, create_market,
                                                  delete_market_by_name)
-from src.wirecloud.platform.markets.utils import get_market_managers
-from src.wirecloud.commons.auth.crud import get_user_by_username, get_user_with_all_info_by_username
-from src.wirecloud.commons.utils.http import produces, consumes, authentication_required, build_error_response
-from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
-from src.wirecloud.commons.utils.wgt import WgtFile
-from src.wirecloud.catalogue.crud import get_catalogue_resource
-from src.wirecloud.catalogue import utils as catalogue
-from src.wirecloud import docs as root_docs
-from src.wirecloud.database import DBDep
-from src.wirecloud.translation import gettext as _
+from wirecloud.platform.markets.utils import get_market_managers
+from wirecloud.commons.auth.crud import get_user_by_username, get_user_with_all_info_by_username
+from wirecloud.commons.utils.http import produces, consumes, authentication_required, build_error_response
+from wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
+from wirecloud.commons.utils.wgt import WgtFile
+from wirecloud.catalogue.crud import get_catalogue_resource
+from wirecloud.catalogue import utils as catalogue
+from wirecloud import docs as root_docs
+from wirecloud.database import DBDep
+from wirecloud.translation import gettext as _
 
 router = APIRouter()
 markets_router = APIRouter()

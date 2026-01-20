@@ -1,0 +1,13 @@
+# TODO
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wirecloud"
+version = "2.0.0"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]

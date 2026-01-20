@@ -19,8 +19,8 @@
 from pydantic import BaseModel, Field
 from typing import Any
 
-from src.wirecloud.platform.context import docs
-from src.wirecloud.platform.context.models import DBConstant
+from wirecloud.platform.context import docs
+from wirecloud.platform.context.models import DBConstant
 
 Constant = DBConstant
 

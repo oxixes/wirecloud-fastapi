@@ -19,15 +19,15 @@
 from fastapi import Request
 from typing import Optional
 
-from src.wirecloud.catalogue.search import add_resource_to_index
-from src.wirecloud.commons.utils.wgt import WgtFile
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD
-from src.wirecloud.commons.auth.schemas import User
-from src.wirecloud.platform.localcatalogue.utils import install_component
-from src.wirecloud.platform.markets.utils import MarketManager
-from src.wirecloud.platform.markets.schemas import MarketOptions, MarketEndpoint
-from src.wirecloud.database import DBSession
-from src.wirecloud.translation import gettext as _
+from wirecloud.catalogue.search import add_resource_to_index
+from wirecloud.commons.utils.wgt import WgtFile
+from wirecloud.commons.utils.template.schemas.macdschemas import MACD
+from wirecloud.commons.auth.schemas import User
+from wirecloud.platform.localcatalogue.utils import install_component
+from wirecloud.platform.markets.utils import MarketManager
+from wirecloud.platform.markets.schemas import MarketOptions, MarketEndpoint
+from wirecloud.database import DBSession
+from wirecloud.translation import gettext as _
 
 
 class WirecloudCatalogueManager(MarketManager):

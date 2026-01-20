@@ -19,7 +19,7 @@
 import os
 import subprocess
 
-from src.wirecloud import platform as wirecloud
+from wirecloud import platform as wirecloud
 
 
 def get_git_info() -> tuple[str, str, bool]:

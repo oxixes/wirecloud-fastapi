@@ -22,15 +22,15 @@ from fastapi import FastAPI, Request
 from typing import Callable, Optional, Union
 from urllib.parse import urlparse, quote
 
-from src import settings
-from src.wirecloud.commons.auth.schemas import UserAll, Session
-from src.wirecloud.commons.auth.utils import make_oidc_provider_request
-from src.wirecloud.database import DBSession
-from src.wirecloud.keycloak.utils import format_jwks_key
-from src.wirecloud.platform.context.schemas import BaseContextKey
-from src.wirecloud.platform.plugins import WirecloudPlugin, URLTemplate, AjaxEndpoint, get_plugin_urls
-from src.wirecloud.translation import gettext as _
-from src.wirecloud.keycloak.routes import keycloak_router
+from wirecloud import settings
+from wirecloud.commons.auth.schemas import UserAll, Session
+from wirecloud.commons.auth.utils import make_oidc_provider_request
+from wirecloud.database import DBSession
+from wirecloud.keycloak.utils import format_jwks_key
+from wirecloud.platform.context.schemas import BaseContextKey
+from wirecloud.platform.plugins import WirecloudPlugin, URLTemplate, AjaxEndpoint
+from wirecloud.translation import gettext as _
+from wirecloud.keycloak.routes import keycloak_router
 
 logger = logging.getLogger(__name__)
 

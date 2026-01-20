@@ -21,7 +21,7 @@ import os
 from pathlib import Path
 from typing import Callable
 
-from src.wirecloud.platform.plugins import get_plugins
+from wirecloud.platform.plugins import get_plugins
 
 
 async def runserver_cmd(args: argparse.Namespace) -> None:
@@ -29,7 +29,7 @@ async def runserver_cmd(args: argparse.Namespace) -> None:
 
     # Import the FastAPI application
     try:
-        from src.main import app as application
+        from wirecloud.main import app as application
     except Exception as exc:
         print("Failed to import the FastAPI application from 'src.main'.")
         print(f"Error: {exc}")
@@ -420,8 +420,8 @@ def compiletranslations_cmd(args: argparse.Namespace) -> None:
 
 
 async def rebuildsearchindexes_cmd(_args: argparse.Namespace) -> None:
-    from src.wirecloud.commons.search import rebuild_all_indexes
-    from src.wirecloud.database import get_session
+    from wirecloud.commons.search import rebuild_all_indexes
+    from wirecloud.database import get_session
 
     # get_session provides an async iterator
     async for session in get_session():
@@ -431,18 +431,18 @@ async def rebuildsearchindexes_cmd(_args: argparse.Namespace) -> None:
 
 
 async def populate_cmd(_args: argparse.Namespace) -> None:
-    from src.wirecloud.database import get_session
+    from wirecloud.database import get_session
 
     async for session in get_session():
         # Get the wirecloud user
-        from src.wirecloud.commons.auth.crud import get_user_with_all_info_by_username
+        from wirecloud.commons.auth.crud import get_user_with_all_info_by_username
 
         wirecloud_user = await get_user_with_all_info_by_username(session, "wirecloud")
         if not wirecloud_user:
             # Create the wirecloud user if it doesn't exist
-            from src.wirecloud.commons.auth.crud import create_user
-            from src.wirecloud.commons.auth.schemas import UserCreate
-            from src.wirecloud.database import commit
+            from wirecloud.commons.auth.crud import create_user
+            from wirecloud.commons.auth.schemas import UserCreate
+            from wirecloud.database import commit
 
             wirecloud_user_data = UserCreate(
                 username="wirecloud",

@@ -21,10 +21,10 @@ import asyncio
 from typing import Optional
 
 from src import settings
-from src.wirecloud.commons.auth.crud import update_user
-from src.wirecloud.commons.auth.schemas import UserAll
-from src.wirecloud.database import DBSession
-from src.wirecloud.platform.plugins import get_idm_get_token_functions
+from wirecloud.commons.auth.crud import update_user
+from wirecloud.commons.auth.schemas import UserAll
+from wirecloud.database import DBSession
+from wirecloud.platform.plugins import get_idm_get_token_functions
 
 
 async def first_step_openstack(url: str, idm_token: str) -> str:

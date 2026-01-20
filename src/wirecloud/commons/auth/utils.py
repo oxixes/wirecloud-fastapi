@@ -28,10 +28,10 @@ from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
 from src import settings
-from src.wirecloud.database import DBDep, Id
-from src.wirecloud.commons.auth.schemas import Session, UserAll
-from src.wirecloud.commons.auth.crud import is_token_valid, get_user_with_all_info
-from src.wirecloud.translation import gettext as _
+from wirecloud.database import DBDep, Id
+from wirecloud.commons.auth.schemas import Session, UserAll
+from wirecloud.commons.auth.crud import is_token_valid, get_user_with_all_info
+from wirecloud.translation import gettext as _
 
 SUPPORTED_HASHES = ['pbkdf2_sha256']
 

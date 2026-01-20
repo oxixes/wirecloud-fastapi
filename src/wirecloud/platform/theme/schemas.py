@@ -18,7 +18,7 @@
 
 from pydantic import BaseModel, Field
 
-from src.wirecloud.platform.theme import docs
+from wirecloud.platform.theme import docs
 
 class ThemeInfo(BaseModel):
     name: str = Field(description=docs.theme_info_name_description)

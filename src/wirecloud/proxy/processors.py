@@ -23,11 +23,11 @@ from urllib.parse import unquote, quote as urlquote, urlparse
 
 from fastapi import Request
 
-from src.wirecloud.database import DBSession
-from src.wirecloud.platform.workspace.utils import VariableValueCacheManager
-from src.wirecloud.proxy.schemas import ProxyRequestData
-from src.wirecloud.proxy.utils import ValidationError
-from src.wirecloud.translation import gettext as _
+from wirecloud.database import DBSession
+from wirecloud.platform.workspace.utils import VariableValueCacheManager
+from wirecloud.proxy.schemas import ProxyRequestData
+from wirecloud.proxy.utils import ValidationError
+from wirecloud.translation import gettext as _
 
 WIRECLOUD_SECURE_DATA_HEADER = 'x-wirecloud-secure-data'
 WIRECLOUD_SECURE_DATA_QUERY_PARAM = '__wirecloud_secure_data'

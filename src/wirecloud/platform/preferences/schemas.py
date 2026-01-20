@@ -55,7 +55,7 @@ class WorkspacePreference(BaseModel):
     value: Optional[str] = None
 
 
-from src.wirecloud.platform.workspace.models import DBWorkspacePreference
+from wirecloud.platform.workspace.models import DBWorkspacePreference
 
 WorkspacePreferenceWithName = DBWorkspacePreference
 

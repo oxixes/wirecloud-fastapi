@@ -24,25 +24,25 @@ from typing import Optional, Union
 import os
 from io import BytesIO
 
-from src.settings import cache
-from src.wirecloud.catalogue import utils as catalogue
-from src.wirecloud.catalogue.crud import get_catalogue_resource, get_catalogue_resource_by_id
-from src.wirecloud.commons.auth.crud import get_user_by_username, get_all_user_groups
-from src.wirecloud.commons.utils.db import save_alternative
-from src.wirecloud.commons.utils.downloader import download_http_content
-from src.wirecloud.commons.utils.template import TemplateParser
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACDMashupWithParametrization, MACType
-from src.wirecloud.commons.utils.urlify import URLify
-from src.wirecloud.commons.utils.wgt import WgtFile
-from src.wirecloud.database import DBSession, Id
-from src.wirecloud.commons.auth.schemas import User, UserAll
-from src.wirecloud.platform.localcatalogue.utils import install_component
-from src.wirecloud.platform.preferences.schemas import WorkspacePreference
-from src.wirecloud.commons.auth.models import Group as GroupModel, Group
-from src.wirecloud.platform.search import delete_workspace_from_index, update_workspace_in_index
-from src.wirecloud.platform.workspace.models import Workspace, WorkspaceAccessPermissions, Tab
-from src.wirecloud.platform.workspace.utils import create_tab, _workspace_cache_key, _variable_values_cache_key
-from src.wirecloud.translation import gettext as _
+from wirecloud.settings import cache
+from wirecloud.catalogue import utils as catalogue
+from wirecloud.catalogue.crud import get_catalogue_resource, get_catalogue_resource_by_id
+from wirecloud.commons.auth.crud import get_user_by_username, get_all_user_groups
+from wirecloud.commons.utils.db import save_alternative
+from wirecloud.commons.utils.downloader import download_http_content
+from wirecloud.commons.utils.template import TemplateParser
+from wirecloud.commons.utils.template.schemas.macdschemas import MACDMashupWithParametrization, MACType
+from wirecloud.commons.utils.urlify import URLify
+from wirecloud.commons.utils.wgt import WgtFile
+from wirecloud.database import DBSession, Id
+from wirecloud.commons.auth.schemas import User, UserAll
+from wirecloud.platform.localcatalogue.utils import install_component
+from wirecloud.platform.preferences.schemas import WorkspacePreference
+from wirecloud.commons.auth.models import Group as GroupModel, Group
+from wirecloud.platform.search import delete_workspace_from_index, update_workspace_in_index
+from wirecloud.platform.workspace.models import Workspace, WorkspaceAccessPermissions, Tab
+from wirecloud.platform.workspace.utils import create_tab, _workspace_cache_key, _variable_values_cache_key
+from wirecloud.translation import gettext as _
 
 
 def _sanitize_widget_layout_config(workspace_data: dict) -> None:
@@ -139,7 +139,7 @@ async def create_workspace(db: DBSession, request: Optional[Request], owner: Use
             description='Temporal mashup for the workspace copy operation',
             email='a@example.com'
         )
-        from src.wirecloud.platform.workspace.mashupTemplateGenerator import build_json_template_from_workspace
+        from wirecloud.platform.workspace.mashupTemplateGenerator import build_json_template_from_workspace
         parser = await build_json_template_from_workspace(db, request, options, mashup)
 
         template = TemplateParser(parser.model_dump())
@@ -161,7 +161,7 @@ async def create_workspace(db: DBSession, request: Optional[Request], owner: Use
             extra_resource_contents = WgtFile(resource_file)
             await install_component(db, extra_resource_contents, executor_user=owner, users=[owner])
 
-    from src.wirecloud.platform.workspace.mashupTemplateParser import check_mashup_dependencies, \
+    from wirecloud.platform.workspace.mashupTemplateParser import check_mashup_dependencies, \
         build_workspace_from_template
     await check_mashup_dependencies(db, template, owner)
 
@@ -176,7 +176,7 @@ async def create_workspace(db: DBSession, request: Optional[Request], owner: Use
         return None
 
     if len(preferences) > 0:
-        from src.wirecloud.platform.preferences.crud import update_workspace_preferences
+        from wirecloud.platform.preferences.crud import update_workspace_preferences
         await update_workspace_preferences(db, owner, workspace, preferences, invalidate_cache=False)
 
     return workspace

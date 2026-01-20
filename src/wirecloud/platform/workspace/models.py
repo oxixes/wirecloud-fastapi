@@ -20,13 +20,13 @@ from pydantic import BaseModel, Field, StringConstraints
 from typing import Optional, Annotated, Any
 from datetime import datetime, timezone
 
-from src.wirecloud.commons.auth.crud import get_user_by_id, get_all_user_groups
-from src.wirecloud.commons.auth.schemas import User, UserAll
-from src.wirecloud.database import Id, DBSession
-from src.wirecloud.platform.iwidget.models import WidgetInstance
-from src.wirecloud.platform.preferences.schemas import WorkspacePreference
-from src.wirecloud.platform.wiring.schemas import Wiring, WiringOperatorPreference, WiringOperator
-from src.wirecloud.platform.wiring.utils import get_wiring_skeleton
+from wirecloud.commons.auth.crud import get_user_by_id, get_all_user_groups
+from wirecloud.commons.auth.schemas import User, UserAll
+from wirecloud.database import Id, DBSession
+from wirecloud.platform.iwidget.models import WidgetInstance
+from wirecloud.platform.preferences.schemas import WorkspacePreference
+from wirecloud.platform.wiring.schemas import Wiring, WiringOperatorPreference, WiringOperator
+from wirecloud.platform.wiring.utils import get_wiring_skeleton
 
 IntegerStr = Annotated[str, StringConstraints(pattern=r'^\d+$')]
 

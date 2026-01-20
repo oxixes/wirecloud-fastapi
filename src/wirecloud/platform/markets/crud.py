@@ -20,11 +20,11 @@ from typing import Optional
 
 from bson import ObjectId
 
-from src.wirecloud.database import DBSession, commit
-from src.wirecloud.commons.auth.schemas import User
-from src.wirecloud.commons.auth.models import DBUser as UserModel
-from src.wirecloud.platform.markets.models import DBMarket as MarketModel
-from src.wirecloud.platform.markets.schemas import Market
+from wirecloud.database import DBSession, commit
+from wirecloud.commons.auth.schemas import User
+from wirecloud.commons.auth.models import DBUser as UserModel
+from wirecloud.platform.markets.models import DBMarket as MarketModel
+from wirecloud.platform.markets.schemas import Market
 
 
 async def get_markets_for_user(db: DBSession, user: Optional[User]) -> list[Market]:

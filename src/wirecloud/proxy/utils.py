@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from src.wirecloud.commons.utils.http import build_error_response
+from wirecloud.commons.utils.http import build_error_response
 
 # Remove hop-by-hop headers (http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.5.1)
 BLACKLISTED_HEADERS = {

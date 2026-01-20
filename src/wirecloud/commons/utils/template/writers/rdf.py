@@ -20,11 +20,11 @@ import rdflib
 from urllib.parse import quote as urlquote
 from typing import Union
 
-from src.wirecloud.commons.utils.translation import replace_trans_index
-from src.wirecloud.commons.utils.template.schemas.macdschemas import (MACD, MACDMashup, MACType,
+from wirecloud.commons.utils.translation import replace_trans_index
+from wirecloud.commons.utils.template.schemas.macdschemas import (MACD, MACDMashup, MACType,
                                                                       MACDTranslationIndexUsage, MACDWidgetContents,
                                                                       MACDWidgetContentsAlternative)
-from src.wirecloud.platform.wiring.schemas import (WiringComponents, WiringConnectionHandlePositionType, WiringPosition,
+from wirecloud.platform.wiring.schemas import (WiringComponents, WiringConnectionHandlePositionType, WiringPosition,
                                                    WiringVisualDescriptionConnection)
 
 

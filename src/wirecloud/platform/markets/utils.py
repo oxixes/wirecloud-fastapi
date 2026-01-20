@@ -19,14 +19,14 @@
 from typing import Optional
 from fastapi import Request
 
-from src.wirecloud.platform.plugins import get_plugins
-from src.wirecloud.platform.markets.schemas import MarketOptions
-from src.wirecloud.platform.markets.crud import get_markets_for_user, get_market_user
-from src.wirecloud.platform.markets.schemas import MarketEndpoint
-from src.wirecloud.commons.auth.schemas import User, UserAll
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD
-from src.wirecloud.commons.utils.wgt import WgtFile
-from src.wirecloud.database import DBSession
+from wirecloud.platform.plugins import get_plugins
+from wirecloud.platform.markets.schemas import MarketOptions
+from wirecloud.platform.markets.crud import get_markets_for_user, get_market_user
+from wirecloud.platform.markets.schemas import MarketEndpoint
+from wirecloud.commons.auth.schemas import User, UserAll
+from wirecloud.commons.utils.template.schemas.macdschemas import MACD
+from wirecloud.commons.utils.wgt import WgtFile
+from wirecloud.database import DBSession
 
 
 class MarketManager:

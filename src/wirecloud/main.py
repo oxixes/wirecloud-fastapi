@@ -22,16 +22,24 @@ import sys
 if sys.version_info < (3, 9):
     raise Exception("Wirecloud is only compatible with Python 3.9 or higher")
 
+# Make sure the wirecloud directory is identified as a module
+try:
+    from wirecloud import __init__
+except ImportError:
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 from fastapi.openapi.utils import get_openapi
 
-from src.settings_validator import validate_settings
-from src.wirecloud.database import close
-from src.wirecloud.platform.plugins import get_plugins, get_extra_openapi_schemas
-from src.wirecloud.commons.middleware import install_all_middlewares
-from src.wirecloud import docs
+from wirecloud.settings_validator import validate_settings
+from wirecloud.database import close
+from wirecloud.platform.plugins import get_plugins, get_extra_openapi_schemas
+from wirecloud.commons.middleware import install_all_middlewares
+from wirecloud import docs
 
 
 @asynccontextmanager

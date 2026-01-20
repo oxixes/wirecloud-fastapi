@@ -16,8 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from src.wirecloud.commons.utils.template.base import is_valid_name, is_valid_vendor, is_valid_version, UnsupportedFeature
-from src.wirecloud.commons.utils.template.parsers import ObsoleteFormatError, TemplateFormatError, TemplateParseException, TemplateParser
+from wirecloud.commons.utils.template.base import is_valid_name, is_valid_vendor, is_valid_version, UnsupportedFeature
+from wirecloud.commons.utils.template.parsers import ObsoleteFormatError, TemplateFormatError, TemplateParseException, TemplateParser
 
 __all__ = (
     "is_valid_name", "is_valid_vendor", "is_valid_version",

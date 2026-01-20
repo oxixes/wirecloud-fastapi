@@ -22,10 +22,10 @@ from datetime import datetime
 from elasticsearch.helpers import async_bulk
 from pydantic import BaseModel
 
-from src.wirecloud.commons.auth.crud import get_username_by_id, get_all_user_groups
-from src.wirecloud.commons.auth.schemas import UserAll, User
-from src.wirecloud.database import DBSession
-from src.wirecloud.platform.workspace.models import Workspace
+from wirecloud.commons.auth.crud import get_username_by_id, get_all_user_groups
+from wirecloud.commons.auth.schemas import UserAll, User
+from wirecloud.database import DBSession
+from wirecloud.platform.workspace.models import Workspace
 
 WORKSPACES_INDEX = 'workspaces'
 # TODO check this
@@ -160,7 +160,7 @@ async def search_workspaces(db: DBSession, user: UserAll, querytext: str, pagenu
     if order_by:
         body["sort"] = [{f.lstrip("-") + ".keyword": {"order": "desc" if f.startswith("-") else "asc"} for f in order_by}]
 
-    from src.wirecloud.commons.search import build_search_response
+    from wirecloud.commons.search import build_search_response
     return await build_search_response(index=WORKSPACES_INDEX, body=body, pagenum=pagenum, max_results=max_results, clean=clean_workspace_out)
 
 
@@ -182,7 +182,7 @@ def prepare_workspace_for_indexing(workspace: Workspace, owner_username: str) ->
 
 
 async def rebuild_workspace_index(db: DBSession):
-    from src.wirecloud.commons.search import es_client
+    from wirecloud.commons.search import es_client
 
     if await es_client.indices.exists(index=WORKSPACES_INDEX):
         await es_client.indices.delete(index=WORKSPACES_INDEX)
@@ -191,7 +191,7 @@ async def rebuild_workspace_index(db: DBSession):
         "settings": {"index": {"max_ngram_diff": 18}, "analysis": WORKSPACE_MAPPINGS["settings"]["analysis"]},
         "mappings": WORKSPACE_MAPPINGS["mappings"]})
 
-    from src.wirecloud.platform.workspace.crud import get_all_workspaces
+    from wirecloud.platform.workspace.crud import get_all_workspaces
     data = await get_all_workspaces(db)
     actions = [{'_index': WORKSPACES_INDEX, '_id': str(workspace.id),
                 '_source': prepare_workspace_for_indexing(workspace, await get_username_by_id(db, workspace.creator)).model_dump()} for workspace in data]
@@ -199,20 +199,20 @@ async def rebuild_workspace_index(db: DBSession):
 
 
 async def add_workspace_to_index(user: User, workspace: Workspace):
-    from src.wirecloud.commons.search import es_client
+    from wirecloud.commons.search import es_client
 
     await es_client.index(index=WORKSPACES_INDEX, id=str(workspace.id),
                           document=prepare_workspace_for_indexing(workspace, user.username).model_dump())
 
 
 async def delete_workspace_from_index(workspace: Workspace):
-    from src.wirecloud.commons.search import es_client
+    from wirecloud.commons.search import es_client
 
     await es_client.delete(index=WORKSPACES_INDEX, id=str(workspace.id))
 
 
 async def update_workspace_in_index(db: DBSession, workspace: Workspace):
-    from src.wirecloud.commons.search import es_client
+    from wirecloud.commons.search import es_client
 
     if await es_client.exists(index=WORKSPACES_INDEX, id=str(workspace.id)):
         username = await get_username_by_id(db, workspace.creator)

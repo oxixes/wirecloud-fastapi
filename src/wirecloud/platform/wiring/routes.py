@@ -22,24 +22,24 @@ import jsonpatch
 
 from fastapi import APIRouter, Request, Path, Body, Response, Query
 
-from src.settings import cache
-from src.wirecloud import docs as root_docs
-from src.wirecloud.catalogue.crud import get_catalogue_resource
-from src.wirecloud.catalogue.schemas import CatalogueResourceType
-from src.wirecloud.commons.auth.crud import get_user_with_all_info
-from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
-from src.wirecloud.commons.utils.cache import CacheableData
-from src.wirecloud.commons.utils.http import authentication_required, consumes, build_error_response, \
+from wirecloud.settings import cache
+from wirecloud import docs as root_docs
+from wirecloud.catalogue.crud import get_catalogue_resource
+from wirecloud.catalogue.schemas import CatalogueResourceType
+from wirecloud.commons.auth.crud import get_user_with_all_info
+from wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
+from wirecloud.commons.utils.cache import CacheableData
+from wirecloud.commons.utils.http import authentication_required, consumes, build_error_response, \
     get_current_domain, get_absolute_reverse_url
-from src.wirecloud.database import DBDep, Id
-from src.wirecloud.platform.wiring.schemas import WiringEntryPatch, WiringOperatorVariables
-from src.wirecloud.platform.wiring import docs
-from src.wirecloud.platform.wiring.utils import check_wiring, check_multiuser_wiring, get_operator_cache_key, \
+from wirecloud.database import DBDep, Id
+from wirecloud.platform.wiring.schemas import WiringEntryPatch, WiringOperatorVariables
+from wirecloud.platform.wiring import docs
+from wirecloud.platform.wiring.utils import check_wiring, check_multiuser_wiring, get_operator_cache_key, \
     generate_xhtml_operator_code, process_requirements
-from src.wirecloud.platform.workspace.crud import get_workspace_by_id, change_workspace
-from src.wirecloud.platform.workspace.models import WorkspaceWiring
-from src.wirecloud.platform.workspace.utils import VariableValueCacheManager
-from src.wirecloud.translation import gettext as _
+from wirecloud.platform.workspace.crud import get_workspace_by_id, change_workspace
+from wirecloud.platform.workspace.models import WorkspaceWiring
+from wirecloud.platform.workspace.utils import VariableValueCacheManager
+from wirecloud.translation import gettext as _
 
 wiring_router = APIRouter()
 operator_router = APIRouter()
@@ -217,7 +217,7 @@ async def get_operator_html(db: DBDep, request: Request,
 
 
 # TODO Check this, why is it needed?
-from src.wirecloud.platform.workspace.schemas import CacheVariableData
+from wirecloud.platform.workspace.schemas import CacheVariableData
 
 WiringOperatorVariables.model_rebuild()
 

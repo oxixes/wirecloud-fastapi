@@ -23,8 +23,6 @@ import sys
 from pathlib import Path
 from typing import Optional, Callable
 
-from src.settings_validator import validate_settings
-
 # Add the parent directory to the path to allow importing src module
 # This allows the script to work when run as "python manage.py" or "python -m src.manage"
 current_file = Path(__file__).resolve()
@@ -32,7 +30,12 @@ project_root = current_file.parent.parent  # Go up from src/ to project root
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from src.wirecloud.platform.plugins import get_management_commands
+project_sources = current_file.parent
+if str(project_sources) not in sys.path:
+    sys.path.insert(0, str(project_sources))
+
+from wirecloud.settings_validator import validate_settings
+from wirecloud.platform.plugins import get_management_commands
 
 _commands: dict[str, Callable[[argparse.Namespace], None]] = {}
 

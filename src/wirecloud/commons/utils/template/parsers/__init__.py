@@ -25,13 +25,13 @@ from urllib.parse import urljoin
 from lxml import etree
 import rdflib
 
-from src.wirecloud.commons.utils.template.base import ObsoleteFormatError, TemplateFormatError, TemplateParseException
-from src.wirecloud.commons.utils.template.schemas.macdschemas import *
-from src.wirecloud.database import Id
-from src.wirecloud.platform.wiring.schemas import WiringInput, WiringOutput
-from src.wirecloud.commons.utils.template.parsers.json import JSONTemplateParser
-from src.wirecloud.commons.utils.template.parsers.xml import ApplicationMashupTemplateParser
-from src.wirecloud.commons.utils.template.parsers.rdf import RDFTemplateParser
+from wirecloud.commons.utils.template.base import ObsoleteFormatError, TemplateFormatError, TemplateParseException
+from wirecloud.commons.utils.template.schemas.macdschemas import *
+from wirecloud.database import Id
+from wirecloud.platform.wiring.schemas import WiringInput, WiringOutput
+from wirecloud.commons.utils.template.parsers.json import JSONTemplateParser
+from wirecloud.commons.utils.template.parsers.xml import ApplicationMashupTemplateParser
+from wirecloud.commons.utils.template.parsers.rdf import RDFTemplateParser
 
 __all__ = ('ObsoleteFormatError', 'TemplateFormatError', 'TemplateParseException', 'TemplateParser')
 

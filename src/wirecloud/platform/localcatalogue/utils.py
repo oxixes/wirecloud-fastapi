@@ -19,18 +19,18 @@
 import re
 from typing import Optional
 
-import src.wirecloud.catalogue.utils as catalogue_utils
-from src.wirecloud.commons.auth.models import Group
-from src.wirecloud.database import DBSession, commit
-from src.wirecloud.commons.utils.wgt import WgtFile
-from src.wirecloud.catalogue.utils import add_packaged_resource, check_vendor_permissions
-from src.wirecloud.catalogue.crud import (get_catalogue_resource, delete_catalogue_resources, install_resource_to_user,
+import wirecloud.catalogue.utils as catalogue_utils
+from wirecloud.commons.auth.models import Group
+from wirecloud.database import DBSession, commit
+from wirecloud.commons.utils.wgt import WgtFile
+from wirecloud.catalogue.utils import add_packaged_resource, check_vendor_permissions
+from wirecloud.catalogue.crud import (get_catalogue_resource, delete_catalogue_resources, install_resource_to_user,
                                           install_resource_to_group, change_resource_publicity)
-from src.wirecloud.commons.auth.schemas import UserAll, User
-from src.wirecloud.catalogue.schemas import CatalogueResource
-from src.wirecloud.commons.utils.template import TemplateParser
-from src.wirecloud.commons.utils.http import PermissionDenied
-from src.wirecloud.commons.utils.template.writers.json import write_json_description
+from wirecloud.commons.auth.schemas import UserAll, User
+from wirecloud.catalogue.schemas import CatalogueResource
+from wirecloud.commons.utils.template import TemplateParser
+from wirecloud.commons.utils.http import PermissionDenied
+from wirecloud.commons.utils.template.writers.json import write_json_description
 
 
 async def install_resource(db: DBSession, wgt_file: WgtFile, executor_user: Optional[UserAll], restricted: bool = False) -> CatalogueResource:

@@ -24,12 +24,12 @@ from elasticsearch.helpers import async_bulk
 from pydantic import BaseModel
 
 from src import settings
-from src.wirecloud.catalogue.search import ResourceOutResponse, RESOURCES_INDEX
-from src.wirecloud.commons.auth.crud import get_all_users, get_all_groups
-from src.wirecloud.commons.auth.models import Group
-from src.wirecloud.commons.auth.schemas import User
-from src.wirecloud.database import DBSession
-from src.wirecloud.platform.search import SearchWorkspaceOutputResponse
+from wirecloud.catalogue.search import ResourceOutResponse, RESOURCES_INDEX
+from wirecloud.commons.auth.crud import get_all_users, get_all_groups
+from wirecloud.commons.auth.models import Group
+from wirecloud.commons.auth.schemas import User
+from wirecloud.database import DBSession
+from wirecloud.platform.search import SearchWorkspaceOutputResponse
 
 es_client = AsyncElasticsearch(hosts=f"{'https' if settings.ELASTICSEARCH['SECURE'] else 'http'}://{settings.ELASTICSEARCH['HOST']}:{settings.ELASTICSEARCH['PORT']}",
                                http_auth=(settings.ELASTICSEARCH['USER'], settings.ELASTICSEARCH['PASSWORD']))
@@ -149,8 +149,8 @@ def get_available_search_engines() -> dict[str, Callable[[str, int, int, Optiona
     global _available_search_engines
 
     if _available_search_engines is None:
-        from src.wirecloud.platform.search import search_workspaces
-        from src.wirecloud.catalogue.search import search_resources
+        from wirecloud.platform.search import search_workspaces
+        from wirecloud.catalogue.search import search_resources
         _available_search_engines = {"group": search_groups,
                                      "user": search_users,
                                      "workspace": search_workspaces,
@@ -164,8 +164,8 @@ def get_available_rebuild_engines() -> dict[str, Callable[[DBSession], None]]:
     global _available_rebuild_engines
 
     if _available_rebuild_engines is None:
-        from src.wirecloud.platform.search import rebuild_workspace_index
-        from src.wirecloud.catalogue.search import rebuild_resource_index
+        from wirecloud.platform.search import rebuild_workspace_index
+        from wirecloud.catalogue.search import rebuild_resource_index
         _available_rebuild_engines = {"group": rebuild_group_index,
                                       "user": rebuild_user_index,
                                       "workspace": rebuild_workspace_index,
@@ -356,8 +356,8 @@ async def rebuild_group_index(db: DBSession):
 
 
 async def rebuild_all_indexes(db: DBSession):
-    from src.wirecloud.platform.search import rebuild_workspace_index
-    from src.wirecloud.catalogue.search import rebuild_resource_index
+    from wirecloud.platform.search import rebuild_workspace_index
+    from wirecloud.catalogue.search import rebuild_resource_index
 
     await rebuild_user_index(db)
     await rebuild_group_index(db)

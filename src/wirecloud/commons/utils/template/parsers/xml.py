@@ -22,13 +22,13 @@ import os
 from lxml import etree
 from pydantic import ValidationError
 
-from src.wirecloud.commons.utils.template.base import ObsoleteFormatError
-from src.wirecloud.commons.utils.template.schemas.macdschemas import *
-from src.wirecloud.commons.utils.translation import get_trans_index
-from src.wirecloud.platform.wiring.schemas import *
-from src.wirecloud.platform.wiring.utils import get_behaviour_skeleton, get_wiring_skeleton
+from wirecloud.commons.utils.template.base import ObsoleteFormatError
+from wirecloud.commons.utils.template.schemas.macdschemas import *
+from wirecloud.commons.utils.translation import get_trans_index
+from wirecloud.platform.wiring.schemas import *
+from wirecloud.platform.wiring.utils import get_behaviour_skeleton, get_wiring_skeleton
 
-from src.wirecloud.translation import gettext as _
+from wirecloud.translation import gettext as _
 
 XMLSCHEMA_FILE = codecs.open(os.path.join(os.path.dirname(__file__), '../schemas/xml_schema.xsd'), 'rb')
 XMLSCHEMA_DOC = etree.parse(XMLSCHEMA_FILE)

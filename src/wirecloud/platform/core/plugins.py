@@ -25,40 +25,40 @@ from hashlib import sha1, md5
 from typing import Any, Optional, Callable
 from fastapi import FastAPI, Request
 
-import src.wirecloud.platform as platform
+import wirecloud.platform as platform
 from src import settings
-from src.wirecloud.catalogue.crud import get_catalogue_resource
-from src.wirecloud.commons.auth.crud import get_user_groups
-from src.wirecloud.commons.utils.http import get_absolute_reverse_url
-from src.wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version
-from src.wirecloud.commons.utils.wgt import WgtFile
-from src.wirecloud.database import DBSession
-from src.wirecloud.platform.core.commands import setup_commands
-from src.wirecloud.platform.iwidget.routes import iwidget_router
-from src.wirecloud.platform.localcatalogue.schemas import ResourceCreateData, ResourceCreateFormData
-from src.wirecloud.platform.localcatalogue.utils import install_component
-from src.wirecloud.platform.widget.routes import widget_router, showcase_router
-from src.wirecloud.platform.wiring.routes import wiring_router, operator_router
-from src.wirecloud.platform.workspace.crud import get_workspace_by_username_and_name, create_workspace
-from src.wirecloud.platform.workspace.routes import workspace_router, workspaces_router
-from src.wirecloud.platform.plugins import (get_active_features_info, get_plugin_urls, AjaxEndpoint, build_url_template,
+from wirecloud.catalogue.crud import get_catalogue_resource
+from wirecloud.commons.auth.crud import get_user_groups
+from wirecloud.commons.utils.http import get_absolute_reverse_url
+from wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version
+from wirecloud.commons.utils.wgt import WgtFile
+from wirecloud.database import DBSession
+from wirecloud.platform.core.commands import setup_commands
+from wirecloud.platform.iwidget.routes import iwidget_router
+from wirecloud.platform.localcatalogue.schemas import ResourceCreateData, ResourceCreateFormData
+from wirecloud.platform.localcatalogue.utils import install_component
+from wirecloud.platform.widget.routes import widget_router, showcase_router
+from wirecloud.platform.wiring.routes import wiring_router, operator_router
+from wirecloud.platform.workspace.crud import get_workspace_by_username_and_name, create_workspace
+from wirecloud.platform.workspace.routes import workspace_router, workspaces_router
+from wirecloud.platform.plugins import (get_active_features_info, get_plugin_urls, AjaxEndpoint, build_url_template,
                                             WirecloudPlugin, URLTemplate)
-from src.wirecloud.platform.context.schemas import BaseContextKey, WorkspaceContextKey
-from src.wirecloud.platform.preferences.routes import preferences_router
-from src.wirecloud.platform.preferences.schemas import PreferenceKey, SelectEntry, TabPreferenceKey
-from src.wirecloud.platform.urls import patterns
-from src.wirecloud.platform.routes import get_current_theme, get_current_view
-from src.wirecloud.commons.auth.schemas import UserAll, Session
+from wirecloud.platform.context.schemas import BaseContextKey, WorkspaceContextKey
+from wirecloud.platform.preferences.routes import preferences_router
+from wirecloud.platform.preferences.schemas import PreferenceKey, SelectEntry, TabPreferenceKey
+from wirecloud.platform.urls import patterns
+from wirecloud.platform.routes import get_current_theme, get_current_view
+from wirecloud.commons.auth.schemas import UserAll, Session
 
-from src.wirecloud.platform.context.routes import router as context_router
-from src.wirecloud.platform.localcatalogue.routes import (router as localcatalogue_router,
+from wirecloud.platform.context.routes import router as context_router
+from wirecloud.platform.localcatalogue.routes import (router as localcatalogue_router,
                                                           resources_router as localcatalogue_resources_router,
                                                           workspace_router as localcatalogue_workspace_router)
-from src.wirecloud.platform.markets.routes import router as market_router, markets_router
-from src.wirecloud.platform.routes import router as platform_router
-from src.wirecloud.platform.theme.routes import router as theme_router
-from src.wirecloud.platform.core.catalogue_manager import WirecloudCatalogueManager
-from src.wirecloud.translation import gettext as _
+from wirecloud.platform.markets.routes import router as market_router, markets_router
+from wirecloud.platform.routes import router as platform_router
+from wirecloud.platform.theme.routes import router as theme_router
+from wirecloud.platform.core.catalogue_manager import WirecloudCatalogueManager
+from wirecloud.translation import gettext as _
 
 BASE_PATH = os.path.dirname(__file__)
 WORKSPACE_BROWSER_FILE = os.path.join(BASE_PATH, 'initial', 'WireCloud_workspace-browser_0.1.4a1.wgt')

@@ -28,8 +28,8 @@ import time
 
 from email.utils import parsedate_to_datetime
 
-from src.wirecloud.commons.utils.http import http_date
-from src.wirecloud.platform.workspace.schemas import WorkspaceGlobalData
+from wirecloud.commons.utils.http import http_date
+from wirecloud.platform.workspace.schemas import WorkspaceGlobalData
 
 
 def patch_cache_headers(response: Response, timestamp: int=None, cache_timeout: int=None, etag=None) -> Response:

@@ -27,31 +27,31 @@ from fastapi.responses import StreamingResponse
 import errno
 import os
 
-from src.wirecloud.catalogue import utils as catalogue_utils
-from src.wirecloud.catalogue.schemas import CatalogueResourceDeleteResults
-from src.wirecloud.catalogue.search import add_resource_to_index, delete_resource_from_index
-from src.wirecloud.commons.auth.crud import get_user_with_all_info, get_user_by_username, get_group_by_name, \
+from wirecloud.catalogue import utils as catalogue_utils
+from wirecloud.catalogue.schemas import CatalogueResourceDeleteResults
+from wirecloud.catalogue.search import add_resource_to_index, delete_resource_from_index
+from wirecloud.commons.auth.crud import get_user_with_all_info, get_user_by_username, get_group_by_name, \
     get_top_group_organization
-from src.wirecloud.commons.auth.schemas import UserAll
-from src.wirecloud.commons.utils.template import TemplateParseException, UnsupportedFeature
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD
-from src.wirecloud.commons.auth.utils import UserDepNoCSRF, UserDep
-from src.wirecloud.commons.utils.http import produces, NotFound, build_error_response, authentication_required, \
+from wirecloud.commons.auth.schemas import UserAll
+from wirecloud.commons.utils.template import TemplateParseException, UnsupportedFeature
+from wirecloud.commons.utils.template.schemas.macdschemas import MACD
+from wirecloud.commons.auth.utils import UserDepNoCSRF, UserDep
+from wirecloud.commons.utils.http import produces, NotFound, build_error_response, authentication_required, \
     consumes, build_downloadfile_response
-from src.wirecloud.catalogue.crud import get_catalogue_resource_versions_for_user, get_catalogue_resource_by_id, \
+from wirecloud.catalogue.crud import get_catalogue_resource_versions_for_user, get_catalogue_resource_by_id, \
     is_resource_available_for_user, get_catalogue_resource, get_user_catalogue_resource, get_user_catalogue_resources, \
     delete_catalogue_resources, uninstall_resource_to_user, delete_resource_if_not_used
-from src.wirecloud.commons.utils.wgt import WgtFile, InvalidContents
-from src.wirecloud.platform.localcatalogue import docs
-from src.wirecloud.database import DBDep, Id, DBSession
-from src.wirecloud.platform.localcatalogue.schemas import MultipleResourcesInstalledResponse, ResourceCreateData
-from src.wirecloud.platform.localcatalogue.utils import fix_dev_version, install_component
-from src.wirecloud.platform.workspace.crud import get_workspace_by_id
-from src.wirecloud.platform.workspace.models import Workspace
-from src.wirecloud.proxy.routes import parse_context_from_referer, WIRECLOUD_PROXY
-from src.wirecloud.proxy.schemas import ProxyRequestData
-from src.wirecloud.translation import gettext as _
-from src.wirecloud import docs as root_docs
+from wirecloud.commons.utils.wgt import WgtFile, InvalidContents
+from wirecloud.platform.localcatalogue import docs
+from wirecloud.database import DBDep, Id, DBSession
+from wirecloud.platform.localcatalogue.schemas import MultipleResourcesInstalledResponse, ResourceCreateData
+from wirecloud.platform.localcatalogue.utils import fix_dev_version, install_component
+from wirecloud.platform.workspace.crud import get_workspace_by_id
+from wirecloud.platform.workspace.models import Workspace
+from wirecloud.proxy.routes import parse_context_from_referer, WIRECLOUD_PROXY
+from wirecloud.proxy.schemas import ProxyRequestData
+from wirecloud.translation import gettext as _
+from wirecloud import docs as root_docs
 
 logger = logging.getLogger(__name__)
 

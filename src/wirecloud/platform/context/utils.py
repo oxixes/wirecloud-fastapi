@@ -19,13 +19,13 @@
 from typing import Optional, Any
 from urllib.request import Request
 
-from src.settings import cache
-from src.wirecloud.platform.context.crud import get_all_constants
-from src.wirecloud.platform.plugins import get_plugins
-from src.wirecloud.platform.context.schemas import BaseContextKey, PlatformContextKey
-from src.wirecloud.commons.auth.schemas import UserAll, Session
-from src.wirecloud.database import DBSession
-from src.wirecloud.platform.workspace.models import Workspace
+from wirecloud.settings import cache
+from wirecloud.platform.context.crud import get_all_constants
+from wirecloud.platform.plugins import get_plugins
+from wirecloud.platform.context.schemas import BaseContextKey, PlatformContextKey
+from wirecloud.commons.auth.schemas import UserAll, Session
+from wirecloud.database import DBSession
+from wirecloud.platform.workspace.models import Workspace
 
 
 # TODO Add type hints to these functions

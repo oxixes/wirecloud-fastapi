@@ -21,16 +21,16 @@ from fastapi import APIRouter, Request, Query
 from fastapi.responses import Response
 from fastapi.exceptions import RequestValidationError
 
-import src.settings as settings
-from src.wirecloud.commons.auth.utils import UserDepNoCSRF
-from src.wirecloud.commons.search import get_search_engine, is_available_search_engine, SearchResponse
-from src.wirecloud.commons.templates.tags import get_javascript_catalogue
-from src.wirecloud.commons import docs
-from src.wirecloud import docs as root_docs
-from src.wirecloud.commons.utils.http import produces, build_error_response, PermissionDenied, NotFound
-from src.wirecloud.commons.exceptions import ErrorResponse
-from src.wirecloud.database import DBDep
-from src.wirecloud.translation import gettext as _
+import settings as settings
+from wirecloud.commons.auth.utils import UserDepNoCSRF
+from wirecloud.commons.search import get_search_engine, is_available_search_engine, SearchResponse
+from wirecloud.commons.templates.tags import get_javascript_catalogue
+from wirecloud.commons import docs
+from wirecloud import docs as root_docs
+from wirecloud.commons.utils.http import produces, build_error_response, PermissionDenied, NotFound
+from wirecloud.commons.exceptions import ErrorResponse
+from wirecloud.database import DBDep
+from wirecloud.translation import gettext as _
 
 router = APIRouter()
 

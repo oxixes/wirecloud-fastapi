@@ -20,10 +20,10 @@ from pydantic import BaseModel, Field, model_validator
 from typing import Optional
 from typing_extensions import Self
 
-from src.wirecloud.platform.markets import docs
-from src.wirecloud.commons.utils.http import validate_url_param
-from src.wirecloud.platform.wiring.schemas import ResourceName
-from src.wirecloud.platform.markets.models import DBMarket, MarketOptions
+from wirecloud.platform.markets import docs
+from wirecloud.commons.utils.http import validate_url_param
+from wirecloud.platform.wiring.schemas import ResourceName
+from wirecloud.platform.markets.models import DBMarket, MarketOptions
 
 Market = DBMarket
 
@@ -39,7 +39,7 @@ class MarketCreate(MarketOptions):
 
     @model_validator(mode="after")
     def check_type(self) -> Self:
-        from src.wirecloud.platform.markets.utils import get_market_classes
+        from wirecloud.platform.markets.utils import get_market_classes
 
         if self.type not in get_market_classes():
             raise ValueError("Invalid market type")

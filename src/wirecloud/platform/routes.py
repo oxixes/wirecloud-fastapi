@@ -24,18 +24,18 @@ import os
 import jinja2
 
 from src import settings
-from src.wirecloud.commons.auth.schemas import UserAll
-from src.wirecloud.commons.auth.utils import UserDepNoCSRF
-from src.wirecloud.commons.templates.tags import get_wirecloud_bootstrap, get_translation, get_static_path, \
+from wirecloud.commons.auth.schemas import UserAll
+from wirecloud.commons.auth.utils import UserDepNoCSRF
+from wirecloud.commons.templates.tags import get_wirecloud_bootstrap, get_translation, get_static_path, \
     get_url_from_view
-from src.wirecloud.commons.utils.http import NotFound, get_absolute_reverse_url, build_error_response
-from src.wirecloud.commons.utils.theme import get_theme_static_path, get_available_themes, get_jinja2_templates
-from src.wirecloud.database import DBSession, DBDep
-from src.wirecloud.platform import docs
-from src.wirecloud import docs as root_docs
-from src.wirecloud.platform.plugins import get_template_context
-from src.wirecloud.platform.utils import get_current_view, get_current_theme
-from src.wirecloud.platform.workspace.crud import get_workspace_by_username_and_name
+from wirecloud.commons.utils.http import NotFound, get_absolute_reverse_url, build_error_response
+from wirecloud.commons.utils.theme import get_theme_static_path, get_available_themes, get_jinja2_templates
+from wirecloud.database import DBSession, DBDep
+from wirecloud.platform import docs
+from wirecloud import docs as root_docs
+from wirecloud.platform.plugins import get_template_context
+from wirecloud.platform.utils import get_current_view, get_current_theme
+from wirecloud.platform.workspace.crud import get_workspace_by_username_and_name
 
 router = APIRouter()
 
@@ -151,7 +151,7 @@ def serve_static(path: str, themeactive: str = settings.THEME_ACTIVE, view: str 
 
 
 def render_wirecloud(request: Request, view: Optional[str] = None, page: Optional[str] = None, title: str = "", description: str = "", extra_context: dict = None):
-    from src.wirecloud.platform.core.plugins import get_version_hash
+    from wirecloud.platform.core.plugins import get_version_hash
 
     templates = get_jinja2_templates(get_current_theme(request))
     if view is None:

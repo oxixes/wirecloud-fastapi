@@ -21,14 +21,14 @@ from typing import Union
 from urllib.parse import quote_plus, urlparse
 
 from src import settings
-from src.wirecloud.commons.auth.crud import get_user_with_all_info, update_user
-from src.wirecloud.database import DBSession
-from src.wirecloud.fiware import FIWARE_LAB_CLOUD_SERVER
-from src.wirecloud.fiware.openstack_token_manager import OpenStackTokenManager
-from src.wirecloud.platform.plugins import get_idm_get_token_functions
-from src.wirecloud.proxy.schemas import ProxyRequestData
-from src.wirecloud.proxy.utils import ValidationError
-from src.wirecloud.translation import gettext as _
+from wirecloud.commons.auth.crud import get_user_with_all_info, update_user
+from wirecloud.database import DBSession
+from wirecloud.fiware import FIWARE_LAB_CLOUD_SERVER
+from wirecloud.fiware.openstack_token_manager import OpenStackTokenManager
+from wirecloud.platform.plugins import get_idm_get_token_functions
+from wirecloud.proxy.schemas import ProxyRequestData
+from wirecloud.proxy.utils import ValidationError
+from wirecloud.translation import gettext as _
 
 
 def get_header_or_query(request: ProxyRequestData, header: str, delete: bool = False) -> Union[str, None]:

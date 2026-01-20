@@ -27,28 +27,28 @@ import markdown
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 
-from src.wirecloud.catalogue.crud import get_catalogue_resource_by_id, get_catalogue_resource
-from src.wirecloud.catalogue.schemas import CatalogueResource
-from src.wirecloud.commons.auth.crud import get_username_by_id, get_user_by_id, get_group_by_id, get_user_with_all_info
-from src.wirecloud.commons.utils.cache import CacheableData, check_if_modified_since, patch_cache_headers
-from src.wirecloud.commons.utils.html import clean_html
-from src.wirecloud.commons.utils.http import build_error_response
-from src.wirecloud.commons.utils.template.parsers import TemplateValueProcessor
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACDPreference, MACDProperty
-from src.wirecloud.commons.utils.urlify import URLify
-from src.wirecloud.database import DBSession, Id
-from src.wirecloud.platform.context.utils import get_context_values
-from src.wirecloud.platform.iwidget.models import WidgetVariables, WidgetInstance, WidgetConfig
-from src.wirecloud.platform.iwidget.schemas import WidgetInstanceData
-from src.wirecloud.platform.iwidget.utils import parse_value_from_text, get_widget_instances_from_workspace
-from src.wirecloud.platform.preferences.schemas import WorkspacePreference
-from src.wirecloud.platform.preferences.utils import get_workspace_preference_values, get_tab_preference_values
-from src.wirecloud.commons.auth.schemas import User, UserAll
-from src.settings import cache, SECRET_KEY
-from src.wirecloud.platform.workspace.models import Workspace, Tab, WiringOperatorPreferenceValue
-from src.wirecloud.platform.workspace.schemas import WorkspaceForcedValues, CacheEntry, CacheVariableData, \
+from wirecloud.catalogue.crud import get_catalogue_resource_by_id, get_catalogue_resource
+from wirecloud.catalogue.schemas import CatalogueResource
+from wirecloud.commons.auth.crud import get_username_by_id, get_user_by_id, get_group_by_id, get_user_with_all_info
+from wirecloud.commons.utils.cache import CacheableData, check_if_modified_since, patch_cache_headers
+from wirecloud.commons.utils.html import clean_html
+from wirecloud.commons.utils.http import build_error_response
+from wirecloud.commons.utils.template.parsers import TemplateValueProcessor
+from wirecloud.commons.utils.template.schemas.macdschemas import MACDPreference, MACDProperty
+from wirecloud.commons.utils.urlify import URLify
+from wirecloud.database import DBSession, Id
+from wirecloud.platform.context.utils import get_context_values
+from wirecloud.platform.iwidget.models import WidgetVariables, WidgetInstance, WidgetConfig
+from wirecloud.platform.iwidget.schemas import WidgetInstanceData
+from wirecloud.platform.iwidget.utils import parse_value_from_text, get_widget_instances_from_workspace
+from wirecloud.platform.preferences.schemas import WorkspacePreference
+from wirecloud.platform.preferences.utils import get_workspace_preference_values, get_tab_preference_values
+from wirecloud.commons.auth.schemas import User, UserAll
+from wirecloud.settings import cache, SECRET_KEY
+from wirecloud.platform.workspace.models import Workspace, Tab, WiringOperatorPreferenceValue
+from wirecloud.platform.workspace.schemas import WorkspaceForcedValues, CacheEntry, CacheVariableData, \
     WorkspaceData, TabData, WorkspaceGlobalData, UserWorkspaceData, GroupWorkspaceData
-from src.wirecloud.translation import gettext as _
+from wirecloud.translation import gettext as _
 
 
 def _variable_values_cache_key(workspace: Workspace, user: Optional[User]) -> str:
@@ -318,11 +318,11 @@ async def create_tab(db: DBSession, user: Optional[User], title: str, workspace:
     )
 
     if allow_renaming:
-        from src.wirecloud.commons.utils.db import save_alternative_tab
+        from wirecloud.commons.utils.db import save_alternative_tab
         tab = await save_alternative_tab(db, tab)
 
     workspace.tabs[id_tab] = tab
-    from src.wirecloud.platform.workspace.crud import change_workspace
+    from wirecloud.platform.workspace.crud import change_workspace
     await change_workspace(db, workspace, user)
 
     return tab
@@ -389,7 +389,7 @@ async def get_widget_instance_data(db: DBSession, request: Request, iwidget: Wid
 async def get_tab_data(db: DBSession, request: Request, tab: Tab, workspace: Workspace = None,
                        cache_manager: VariableValueCacheManager = None, user: Optional[User] = None) -> TabData:
     if workspace is None:
-        from src.wirecloud.platform.workspace.crud import get_workspace_by_id
+        from wirecloud.platform.workspace.crud import get_workspace_by_id
         workspace = await get_workspace_by_id(db, Id(tab.id.split('-')[0]))
 
     if cache_manager is None:

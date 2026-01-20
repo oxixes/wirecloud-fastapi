@@ -20,9 +20,9 @@ from pydantic import BaseModel, Field, field_serializer, model_serializer, model
 from typing import Annotated, Any, Optional
 from enum import Enum
 
-from src.wirecloud.catalogue.crud import get_catalogue_resource_by_id
-from src.wirecloud.commons.auth.schemas import User
-from src.wirecloud.database import Id, DBSession
+from wirecloud.catalogue.crud import get_catalogue_resource_by_id
+from wirecloud.commons.auth.schemas import User
+from wirecloud.database import Id, DBSession
 
 
 class WidgetConfigAnchor(Enum):
@@ -126,7 +126,7 @@ class WidgetInstance(BaseModel):
 
         vardef = iwidget_info.variables.all[var_name]
         if vardef.secure:
-            from src.wirecloud.platform.workspace.utils import encrypt_value
+            from wirecloud.platform.workspace.utils import encrypt_value
             value = encrypt_value(value)
         elif vardef.type == 'boolean':
             if isinstance(value, str):

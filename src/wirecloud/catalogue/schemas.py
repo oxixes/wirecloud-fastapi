@@ -24,16 +24,16 @@ from fastapi import Request
 from typing import Optional
 import random
 
-from src.settings import cache
-from src.wirecloud.catalogue.models import XHTML
-from src.wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACType, Vendor, Name, Version
-from src.wirecloud.commons.utils.template.base import Contact
-from src.wirecloud.commons.auth.schemas import User, UserAll
-from src.wirecloud.commons.utils.http import get_absolute_reverse_url
-from src.wirecloud.commons.utils.template import TemplateParser
-from src.wirecloud.database import DBSession, Id
+from wirecloud.settings import cache
+from wirecloud.catalogue.models import XHTML
+from wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACType, Vendor, Name, Version
+from wirecloud.commons.utils.template.base import Contact
+from wirecloud.commons.auth.schemas import User, UserAll
+from wirecloud.commons.utils.http import get_absolute_reverse_url
+from wirecloud.commons.utils.template import TemplateParser
+from wirecloud.database import DBSession, Id
 
-from src.wirecloud.catalogue import docs
+from wirecloud.catalogue import docs
 
 RESOURCE_MIMETYPES = ('application/x-widget+mashable-application-component',
                       'application/x-mashup+mashable-application-component',
@@ -63,7 +63,7 @@ class CatalogueResourceBase(BaseModel):
 
     # TODO Take into account user permissions too
     async def is_removable_by(self, db: DBSession, user: UserAll, vendor: bool = False) -> bool:
-        from src.wirecloud.catalogue.utils import check_vendor_permissions
+        from wirecloud.catalogue.utils import check_vendor_permissions
 
         if user.is_superuser:
             return True
@@ -72,7 +72,7 @@ class CatalogueResourceBase(BaseModel):
 
     # TODO Take into account user permissions too
     async def is_available_for(self, db: DBSession, user: Optional[UserAll]) -> bool:
-        from src.wirecloud.catalogue.crud import is_resource_available_for_user
+        from wirecloud.catalogue.crud import is_resource_available_for_user
 
         return self.public or (user is not None and await is_resource_available_for_user(db, self, user))
 

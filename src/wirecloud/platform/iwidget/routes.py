@@ -20,18 +20,18 @@ from typing import Any
 
 from fastapi import APIRouter, Request, Body, Path, Response
 
-from src.wirecloud.catalogue.crud import get_catalogue_resource_by_id
-from src.wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
-from src.wirecloud.commons.utils.http import authentication_required, build_error_response, consumes, NotFound
-from src.wirecloud.database import DBDep, Id
-from src.wirecloud import docs as root_docs
-from src.wirecloud.platform.iwidget import docs
-from src.wirecloud.platform.iwidget.schemas import WidgetInstanceData, WidgetInstanceDataCreate, \
+from wirecloud.catalogue.crud import get_catalogue_resource_by_id
+from wirecloud.commons.auth.utils import UserDep, UserDepNoCSRF
+from wirecloud.commons.utils.http import authentication_required, build_error_response, consumes, NotFound
+from wirecloud.database import DBDep, Id
+from wirecloud import docs as root_docs
+from wirecloud.platform.iwidget import docs
+from wirecloud.platform.iwidget.schemas import WidgetInstanceData, WidgetInstanceDataCreate, \
     WidgetInstanceDataUpdate
-from src.wirecloud.platform.iwidget.utils import save_widget_instance, update_widget_instance
-from src.wirecloud.platform.workspace.crud import get_workspace_by_id, change_workspace
-from src.wirecloud.platform.workspace.utils import VariableValueCacheManager, get_widget_instance_data
-from src.wirecloud.translation import gettext as _
+from wirecloud.platform.iwidget.utils import save_widget_instance, update_widget_instance
+from wirecloud.platform.workspace.crud import get_workspace_by_id, change_workspace
+from wirecloud.platform.workspace.utils import VariableValueCacheManager, get_widget_instance_data
+from wirecloud.translation import gettext as _
 
 iwidget_router = APIRouter()
 

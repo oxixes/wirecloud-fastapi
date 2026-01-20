@@ -24,10 +24,10 @@ from fastapi.templating import Jinja2Templates
 from jinja2.loaders import FileSystemLoader
 from jinja2 import Environment
 
-from src.settings import AVAILABLE_THEMES, LANGUAGES
-from src.wirecloud import themes
-from src.wirecloud.commons.utils.http import NotFound
-from src.wirecloud.platform.plugins import get_plugins
+from wirecloud.settings import AVAILABLE_THEMES, LANGUAGES
+from wirecloud import themes
+from wirecloud.commons.utils.http import NotFound
+from wirecloud.platform.plugins import get_plugins
 
 DIST_PATH = os.path.join(os.path.dirname(__file__), "../../dist")
 JINJA2_TEMPLATES = {}
@@ -141,7 +141,7 @@ def get_available_themes(lang: str) -> list[dict[str, str]]:
     return result
 
 def get_theme_static_path(theme: str, path: str) -> str:
-    from src.wirecloud.platform.core.plugins import WirecloudCorePlugin
+    from wirecloud.platform.core.plugins import WirecloudCorePlugin
 
     if theme not in AVAILABLE_THEMES:
         raise NotFound("Theme not found")
