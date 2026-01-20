@@ -1,0 +1,89 @@
+# Spanish translations for WireCloud.
+# Copyright (C) 2026 Future Internet Consulting and Development Solutions S.L.
+# This file is distributed under the same license as the WireCloud project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: WireCloud VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-01-20 10:07+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: ../../../plugins.py:116
+msgid "FIWARE token available"
+msgstr ""
+
+#: ../../../plugins.py:106 ../../../plugins.py:112
+msgid "FIWARE version"
+msgstr ""
+
+#: ../../../plugins.py:107 ../../../plugins.py:113
+msgid "FIWARE version of the platform"
+msgstr ""
+
+#: ../../../proxy.py:169
+msgid "Failed to get token from IdM"
+msgstr ""
+
+#: ../../../proxy.py:136
+msgid "IdM support not enabled"
+msgstr ""
+
+#: ../../../plugins.py:118
+msgid ""
+"Indicates if the current user has associated a FIWARE auth token that can be "
+"used for accessing other FIWARE resources"
+msgstr ""
+
+#: ../../../proxy.py:148
+msgid "Invalid FIWARE OAuth token source"
+msgstr ""
+
+#: ../../../proxy.py:99
+msgid "No body data to replace pattern"
+msgstr ""
+
+#: ../../../plugins.py:253
+msgid ""
+"OIDC provider has not returned a valid response: missing access_token or "
+"refresh_token"
+msgstr ""
+
+#: ../../../plugins.py:272
+msgid "OIDC provider has not returned a valid response: missing username"
+msgstr ""
+
+#: ../../../plugins.py:326
+msgid "The FIWARE App ID must be configured when using the OIDC plugin with FIWARE."
+msgstr ""
+
+#: ../../../plugins.py:329
+msgid ""
+"The FIWARE App Secret must be configured when using the OIDC plugin with "
+"FIWARE."
+msgstr ""
+
+#: ../../../plugins.py:323
+msgid ""
+"The FIWARE IDM server must be configured when using the OIDC plugin with "
+"FIWARE."
+msgstr ""
+
+#: ../../../proxy.py:152
+msgid "User has not an active FIWARE profile"
+msgstr ""
+
+#: ../../../proxy.py:155
+msgid "Workspace owner does not have permission to give their token to other users"
+msgstr ""
+

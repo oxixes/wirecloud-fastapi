@@ -1,14 +1,14 @@
 # Spanish translations for WireCloud.
-# Copyright (C) 2025 Future Internet Consulting and Development Solutions S.L.
+# Copyright (C) 2026 Future Internet Consulting and Development Solutions S.L.
 # This file is distributed under the same license as the WireCloud project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: WireCloud VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-11-17 13:28+0100\n"
+"POT-Creation-Date: 2026-01-20 10:07+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -64,6 +64,14 @@ msgstr ""
 msgid "Add Tab"
 msgstr ""
 
+#: ../../../routes.py:82
+msgid "An unexpected error occurred"
+msgstr ""
+
+#: ../../../routes.py:143
+msgid "Authentication required"
+msgstr ""
+
 #: ../../../static/js/StyledElements/Form.js:257
 #: ../../../static/js/wirecloud/ui/Tutorial/SimpleDescription.js:140
 msgid "Cancel"
@@ -96,84 +104,92 @@ msgstr ""
 msgid "Info"
 msgstr ""
 
-#: ../../../utils/template/parsers/rdf.py:548
-#: ../../../utils/template/parsers/rdf.py:556
+#: ../../../utils/template/parsers/rdf.py:546
+#: ../../../utils/template/parsers/rdf.py:554
 #, python-format
 msgid "Invalid code content type: %s"
 msgstr "Tipo de contenido de código inválido: %s"
 
-#: ../../../utils/template/parsers/rdf.py:396
+#: ../../../utils/template/parsers/rdf.py:394
 #, python-format
 msgid "Invalid component type in wiring: %s"
 msgstr "Tipo de componente inválido en el wiring: %s"
 
-#: ../../../utils/template/parsers/json.py:47
+#: ../../../utils/template/parsers/json.py:45
 #, python-format
 msgid "Invalid component type: %s"
 msgstr "Tipo de componente inválido: %s"
 
-#: ../../../utils/template/parsers/rdf.py:126
+#: ../../../utils/template/parsers/rdf.py:124
 #, python-format
 msgid "Invalid content for field: %(field)s"
 msgstr "Contenido inválido para el campo: %(field)s"
 
-#: ../../../utils/template/parsers/json.py:41
+#: ../../../utils/template/parsers/json.py:39
 msgid "Invalid input data"
 msgstr "Datos de entrada inválidos"
 
-#: ../../../utils/template/parsers/rdf.py:88
-#: ../../../utils/template/parsers/xml.py:135
+#: ../../../utils/template/parsers/rdf.py:86
+#: ../../../utils/template/parsers/xml.py:133
 msgid "Invalid namespace: "
 msgstr "Namespace inválido: "
 
-#: ../../../utils/template/parsers/xml.py:138
+#: ../../../routes.py:146
+msgid "Invalid orderby value"
+msgstr ""
+
+#: ../../../utils/template/parsers/xml.py:136
 #, python-format
 msgid "Invalid root element (%s)"
 msgstr "Elemento raíz inválido (%s)"
 
-#: ../../../utils/template/parsers/rdf.py:91
+#: ../../../utils/template/parsers/rdf.py:89
 msgid "Invalid root element: "
 msgstr "Elemento raíz inválido: "
 
-#: ../../../utils/downloader.py:46
+#: ../../../utils/downloader.py:45
 #, python-format
 msgid "Invalid schema: %(schema)s"
 msgstr "Esquema inválido: %(schema)s"
 
-#: ../../../utils/template/parsers/rdf.py:747
-#: ../../../utils/template/parsers/xml.py:646
+#: ../../../utils/template/parsers/rdf.py:745
+#: ../../../utils/template/parsers/xml.py:644
 msgid "Invalid screen sizes present in the template."
 msgstr "Tamaños de pantalla inválidos presentes en la plantilla."
 
-#: ../../../utils/template/parsers/json.py:73
+#: ../../../utils/template/parsers/json.py:71
 msgid "Invalid screen sizes range present in the template"
 msgstr "Rango de tamaños de pantalla inválido presente en la plantilla"
 
-#: ../../../utils/template/parsers/rdf.py:80
+#: ../../../utils/template/parsers/rdf.py:78
 msgid "Invalid template type"
 msgstr "Tipo de plantilla inválido"
 
-#: ../../../utils/template/parsers/rdf.py:768
-#: ../../../utils/template/parsers/xml.py:688
+#: ../../../utils/template/parsers/rdf.py:766
+#: ../../../utils/template/parsers/xml.py:686
 #, python-format
 msgid "Invalid template: %s"
 msgstr "Plantilla inválida: %s"
 
-#: ../../../auth/routes.py:97
+#: ../../../auth/routes.py:96
 msgid "Invalid user"
 msgstr ""
 
-#: ../../../auth/routes.py:227
+#: ../../../auth/routes.py:226
 msgid "Invalid username or password"
 msgstr "Nombre de usuario o contraseña inválidos"
 
-#: ../../../utils/template/writers/json.py:32
-#: ../../../utils/template/writers/json.py:43
+#: ../../../routes.py:73
+msgid "Invalid value"
+msgstr ""
+
+#: ../../../utils/template/writers/json.py:30
+#: ../../../utils/template/writers/json.py:41
 #, python-format
 msgid "Invalid value for field %s"
 msgstr "Valor inválido para el campo %s"
 
-#: ../../../utils/template/parsers/xml.py:364
+#: ../../../utils/template/parsers/xml.py:362
 #, python-format
 msgid "Invalid wiring version: %s"
 msgstr "Versión de wiring inválida: %s"
@@ -182,48 +198,48 @@ msgstr "Versión de wiring inválida: %s"
 msgid "Keywords..."
 msgstr ""
 
-#: ../../../utils/template/parsers/xml.py:158
+#: ../../../utils/template/parsers/xml.py:156
 #, python-format
 msgid "Missing %s element"
 msgstr "Elemento %s no encontrado"
 
-#: ../../../utils/template/writers/xml.py:35
+#: ../../../utils/template/writers/xml.py:33
 #, python-format
 msgid "Missing %s option"
 msgstr "Opción %s no encontrada"
 
-#: ../../../utils/template/parsers/json.py:44
+#: ../../../utils/template/parsers/json.py:42
 msgid "Missing component type."
 msgstr "Tipo de componente no encontrado."
 
-#: ../../../utils/template/parsers/xml.py:131
+#: ../../../utils/template/parsers/xml.py:129
 msgid "Missing document namespace"
 msgstr "Namespace del documento no encontrado"
 
-#: ../../../utils/template/parsers/xml.py:553
+#: ../../../utils/template/parsers/xml.py:551
 msgid "Missing layout in resource or rendering element"
 msgstr "Layout no encontrado en el elemento resource o rendering"
 
-#: ../../../utils/template/parsers/xml.py:550
+#: ../../../utils/template/parsers/xml.py:548
 msgid "Missing position/rendering or screensizes element"
 msgstr "Elemento position/rendering o screensizes no encontrado"
 
-#: ../../../utils/template/parsers/rdf.py:149
-#: ../../../utils/template/parsers/rdf.py:164
-#: ../../../utils/template/parsers/xml.py:197
+#: ../../../utils/template/parsers/rdf.py:147
+#: ../../../utils/template/parsers/rdf.py:162
+#: ../../../utils/template/parsers/xml.py:195
 #, python-format
 msgid "Missing required field: %(field)s"
 msgstr "Campo requerido no encontrado: %(field)s"
 
-#: ../../../utils/template/parsers/rdf.py:590
+#: ../../../utils/template/parsers/rdf.py:588
 msgid "Missing required field: Javascript files"
 msgstr "Campo requerido no encontrado: Archivos Javascript"
 
-#: ../../../utils/template/parsers/rdf.py:571
+#: ../../../utils/template/parsers/rdf.py:569
 msgid "Missing required field: Main content"
 msgstr "Campo requerido no encontrado: Contenido principal"
 
-#: ../../../utils/template/parsers/rdf.py:357
+#: ../../../utils/template/parsers/rdf.py:355
 msgid "Missing required field: target"
 msgstr "Campo requerido no encontrado: target"
 
@@ -247,25 +263,25 @@ msgstr ""
 msgid "No results found for <em><t:query/></em>"
 msgstr ""
 
-#: ../../../auth/utils.py:192 ../../../auth/utils.py:201
+#: ../../../auth/utils.py:191 ../../../auth/utils.py:200
 msgid "OIDC provider has not returned a valid response"
 msgstr ""
 
-#: ../../../auth/routes.py:66 ../../../auth/routes.py:69
-#: ../../../auth/routes.py:402
+#: ../../../auth/routes.py:65 ../../../auth/routes.py:68
+#: ../../../auth/routes.py:401
 msgid "OIDC provider is not configured correctly! Contact your administrator."
 msgstr ""
 
-#: ../../../auth/routes.py:63
+#: ../../../auth/routes.py:62
 msgid "OIDC provider is not enabled"
 msgstr ""
 
-#: ../../../auth/utils.py:188
+#: ../../../auth/utils.py:187
 msgid "OIDC provider is not reachable"
 msgstr ""
 
-#: ../../../utils/template/parsers/rdf.py:331
-#: ../../../utils/template/parsers/xml.py:358
+#: ../../../utils/template/parsers/rdf.py:329
+#: ../../../utils/template/parsers/xml.py:356
 msgid ""
 "Only wiring version 2.0 is supported. The old 1.0 version is no longer "
 "supported."
@@ -273,12 +289,20 @@ msgstr ""
 "Sólo se soporta la versión 2.0 de wiring. La versión antigua 1.0 ya no se "
 "soporta."
 
-#: ../../../utils/template/parsers/rdf.py:110
+#: ../../../routes.py:47
+msgid "Permission denied"
+msgstr ""
+
+#: ../../../utils/template/parsers/rdf.py:108
 msgid "RDF document does not describe a widget, operator or mashup component"
 msgstr "El documento RDF no describe un componente de widget, operador o mashup"
 
 #: ../../../static/js/StyledElements/Form.js:234
 msgid "Reset"
+msgstr ""
+
+#: ../../../routes.py:52
+msgid "Resource not found"
 msgstr ""
 
 #: ../../../static/js/wirecloud/ui/MACField.js:100
@@ -334,31 +358,31 @@ msgstr ""
 msgid "The following required fields are empty: %(fields)s."
 msgstr ""
 
-#: ../../../utils/template/schemas/macdschemas.py:134
+#: ../../../utils/template/schemas/macdschemas.py:133
 #, python-format
 msgid "The following translation indexes are not used: %(indexes)s."
 msgstr "Los siguientes índices de traducción no se usan: %(indexes)s."
 
-#: ../../../utils/template/schemas/macdschemas.py:130
+#: ../../../utils/template/schemas/macdschemas.py:129
 #, python-format
 msgid "The following translation indexes need a default value: %(indexes)s."
 msgstr ""
 "Los siguientes índices de traducción necesitan un valor por defecto: "
 "%(indexes)s."
 
-#: ../../../utils/template/parsers/rdf.py:218
+#: ../../../utils/template/parsers/rdf.py:216
 msgid "The format of the macversion is invalid. It must be an integer."
 msgstr "El formato de la macversion es inválido. Debe ser un entero."
 
-#: ../../../utils/template/parsers/rdf.py:229
+#: ../../../utils/template/parsers/rdf.py:227
 msgid "The format of the name is invalid."
 msgstr "El formato del nombre es inválido."
 
-#: ../../../utils/template/parsers/rdf.py:225
+#: ../../../utils/template/parsers/rdf.py:223
 msgid "The format of the vendor is invalid."
 msgstr "El formato del vendor es inválido."
 
-#: ../../../utils/template/parsers/rdf.py:233
+#: ../../../utils/template/parsers/rdf.py:231
 msgid ""
 "The format of the version number is invalid. Format: X.X.X where X is an "
 "integer. Ex. \"0.1\", \"1.11\" NOTE: \"1.01\" should be changed to \"1.0.1\" "
@@ -368,11 +392,11 @@ msgstr ""
 "entero. Ej. \"0.1\", \"1.11\" NOTA: \"1.01\" debería cambiarse a \"1.0.1\" o "
 "\"1.1\""
 
-#: ../../../utils/template/parsers/rdf.py:220
+#: ../../../utils/template/parsers/rdf.py:218
 msgid "The macversion is invalid. Currently only macversion 1 or 2 are supported."
 msgstr "La macversion es inválida. Actualmente sólo se soportan las macversion 1 o 2."
 
-#: ../../../utils/http.py:283
+#: ../../../utils/http.py:293
 msgid ""
 "The requested resource is only capable of generating content not acceptable "
 "according to the Accept headers sent in the request"
@@ -386,11 +410,11 @@ msgid ""
 "screen sizes without gaps or overlaps."
 msgstr ""
 
-#: ../../../utils/template/parsers/xml.py:443
+#: ../../../utils/template/parsers/xml.py:441
 msgid "The use of the script element is not allowed in version 1.0 widgets"
 msgstr "El uso del elemento script no está permitido en widgets de la versión 1.0"
 
-#: ../../../utils/template/schemas/macdschemas.py:126
+#: ../../../utils/template/schemas/macdschemas.py:125
 #, python-format
 msgid ""
 "There isn't a translation element for the default translation language: "
@@ -403,16 +427,20 @@ msgstr ""
 msgid "Tutorials"
 msgstr ""
 
-#: ../../../utils/http.py:310
+#: ../../../utils/http.py:320
 msgid "Unsupported request media type"
 msgstr "Tipo de medio de petición no soportado"
+
+#: ../../../routes.py:67
+msgid "Validation error"
+msgstr ""
 
 #: ../../../static/js/wirecloud/ui/AlertWindowMenu.js:85
 #: ../../../static/js/wirecloud/ui/MessageWindowMenu.js:29
 msgid "Warning"
 msgstr ""
 
-#: ../../../utils/template/parsers/rdf.py:85
+#: ../../../utils/template/parsers/rdf.py:83
 msgid "XML document does not contain a valid rdf namespace"
 msgstr "El documento XML no contiene un namespace RDF válido"
 
@@ -420,15 +448,15 @@ msgstr "El documento XML no contiene un namespace RDF válido"
 msgid "Yes"
 msgstr ""
 
-#: ../../../auth/routes.py:354 ../../../auth/routes.py:398
+#: ../../../auth/routes.py:353 ../../../auth/routes.py:397
 msgid "You are not logged in"
 msgstr ""
 
-#: ../../../utils/template/parsers/rdf.py:439
+#: ../../../utils/template/parsers/rdf.py:437
 msgid "missing required field: hasSourceEndpoint"
 msgstr "Campo requerido no encontrado: hasSourceEndpoint"
 
-#: ../../../utils/template/parsers/rdf.py:448
+#: ../../../utils/template/parsers/rdf.py:446
 msgid "missing required field: hasTargetEndpoint"
 msgstr "Campo requerido no encontrado: hasTargetEndpoint"
 

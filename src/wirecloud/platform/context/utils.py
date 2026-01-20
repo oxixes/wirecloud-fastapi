@@ -27,26 +27,18 @@ from src.wirecloud.commons.auth.schemas import UserAll, Session
 from src.wirecloud.database import DBSession
 from src.wirecloud.platform.workspace.models import Workspace
 
-_wirecloud_platform_context_definitions: Optional[dict[str, BaseContextKey]] = None
-_wirecloud_workspace_context_definitions: Optional[dict[str, BaseContextKey]] = None
-
 
 # TODO Add type hints to these functions
 
 
 def get_platform_context_definitions() -> dict[str, BaseContextKey]:
-    global _wirecloud_platform_context_definitions
+    plugins = get_plugins()
+    context = {}
 
-    if _wirecloud_platform_context_definitions is None:
-        plugins = get_plugins()
-        context = {}
+    for plugin in plugins:
+        context.update(plugin.get_platform_context_definitions())
 
-        for plugin in plugins:
-            context.update(plugin.get_platform_context_definitions())
-
-        _wirecloud_platform_context_definitions = context
-
-    return _wirecloud_platform_context_definitions
+    return context
 
 
 async def get_platform_context_current_values(db: DBSession, request: Optional[Request],
@@ -75,18 +67,13 @@ async def get_platform_context(db: DBSession, request: Request, user: Optional[U
 
 
 def get_workspace_context_definitions() -> dict[str, BaseContextKey]:
-    global _wirecloud_workspace_context_definitions
+    plugins = get_plugins()
+    context = {}
 
-    if _wirecloud_workspace_context_definitions is None:
-        plugins = get_plugins()
-        context = {}
+    for plugin in plugins:
+        context.update(plugin.get_workspace_context_definitions())
 
-        for plugin in plugins:
-            context.update(plugin.get_workspace_context_definitions())
-
-        _wirecloud_workspace_context_definitions = context
-
-    return _wirecloud_workspace_context_definitions
+    return context
 
 
 def get_workspace_context_current_values(workspace: Workspace, user: Optional[UserAll]) -> dict[str, Any]:

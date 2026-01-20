@@ -1,14 +1,14 @@
 # Spanish translations for WireCloud.
-# Copyright (C) 2025 Future Internet Consulting and Development Solutions S.L.
+# Copyright (C) 2026 Future Internet Consulting and Development Solutions S.L.
 # This file is distributed under the same license as the WireCloud project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: WireCloud VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-11-17 13:28+0100\n"
+"POT-Creation-Date: 2026-01-20 10:07+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -19,29 +19,29 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:136
+#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:132
 #, python-format
 msgid "Become %(user)s again"
 msgstr ""
 
-#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:105
+#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:101
 msgid "Django Admin panel"
 msgstr ""
 
-#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:97
+#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:93
 msgid "Settings"
 msgstr ""
 
-#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:142
+#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:138
 msgid "Sign out"
 msgstr ""
 
-#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:118
-#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:119
+#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:114
+#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:115
 msgid "Switch User"
 msgstr ""
 
-#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:119
+#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:115
 msgid "User"
 msgstr ""
 

@@ -29,7 +29,7 @@ from src.wirecloud.database import DBDep, Id, commit
 from src.wirecloud.platform.preferences.crud import update_preferences, \
     update_workspace_preferences, update_tab_preferences
 from src.wirecloud.platform.preferences.schemas import PlatformPreferenceCreate, WorkspacePreference, \
-    ShareListPreference, ShareListEnum, TabPreference
+    ShareListPreference, ShareListEnum, TabPreference, PlatformPreferenceCreateValue
 from src.wirecloud.platform.preferences.utils import get_tab_preference_values, get_workspace_preference_values
 from src.wirecloud.platform.workspace.crud import get_workspace_by_id, clear_workspace_users, \
     clear_workspace_groups, add_user_to_workspace, add_group_to_workspace, change_workspace
@@ -91,11 +91,12 @@ async def get_platform_preferences(db: DBDep, request: Request, user: UserDepNoC
 )
 @authentication_required()
 @consumes(["application/json"])
-async def create_platform_preferences(db: DBDep, request: Request, user: UserDep,
-                                      preferences: PlatformPreferenceCreate = Body(
+async def create_platform_preferences(db: DBDep, user: UserDep,
+                                      preferences: dict[str, Union[str, PlatformPreferenceCreateValue]] = Body(
                                           description=docs.create_platform_preference_collection_platform_preference_create_description,
                                           example=docs.create_platform_preference_collection_platform_preference_create_example)):
-    await update_preferences(db, user, preferences)
+    create_obj = PlatformPreferenceCreate(preferences=preferences)
+    await update_preferences(db, user, create_obj)
 
 
 @preferences_router.get(

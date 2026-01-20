@@ -1,14 +1,14 @@
 # Spanish translations for WireCloud.
-# Copyright (C) 2025 Future Internet Consulting and Development Solutions S.L.
+# Copyright (C) 2026 Future Internet Consulting and Development Solutions S.L.
 # This file is distributed under the same license as the WireCloud project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: WireCloud VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-11-17 13:28+0100\n"
+"POT-Creation-Date: 2026-01-20 10:07+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -28,7 +28,7 @@ msgstr ""
 msgid "Django Admin panel"
 msgstr ""
 
-#: ../../../../__init__.py:23
+#: ../../../../__init__.py:22
 msgid "FIWARE Lab"
 msgstr ""
 

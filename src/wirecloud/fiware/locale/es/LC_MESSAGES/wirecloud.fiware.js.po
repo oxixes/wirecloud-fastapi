@@ -19,11 +19,17 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-#: ../../../static/js/keycloak/sso.js:80
-msgid "Browser will be reloaded to accomodate to the new session info"
+#: ../../../static/js/NGSI/NGSIManager.js:79
+msgid "Error connecting to the WireCloud's proxy"
 msgstr ""
 
-#: ../../../static/js/keycloak/sso.js:81
-msgid "User Session Updated"
+#: ../../../static/js/NGSI/NGSIManager.js:90
+msgid "Unexpected response from WireCloud's proxy"
+msgstr ""
+
+#: ../../../static/js/NGSI/NGSIManager.js:84
+msgid ""
+"You aren't allowed to use the WireCloud's proxy. Have you signed off from "
+"WireCloud?"
 msgstr ""
 

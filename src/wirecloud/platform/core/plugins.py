@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-# TODO Add translations
-
 import os
 import logging
 from argparse import _SubParsersAction
@@ -60,6 +58,7 @@ from src.wirecloud.platform.markets.routes import router as market_router, marke
 from src.wirecloud.platform.routes import router as platform_router
 from src.wirecloud.platform.theme.routes import router as theme_router
 from src.wirecloud.platform.core.catalogue_manager import WirecloudCatalogueManager
+from src.wirecloud.translation import gettext as _
 
 BASE_PATH = os.path.dirname(__file__)
 WORKSPACE_BROWSER_FILE = os.path.join(BASE_PATH, 'initial', 'WireCloud_workspace-browser_0.1.4a1.wgt')
@@ -179,64 +178,64 @@ class WirecloudCorePlugin(WirecloudPlugin):
     def get_platform_context_definitions(self) -> dict[str, BaseContextKey]:
         return {
             'language': BaseContextKey(
-                label='Language',
-                description='Current language used in the platform',
+                label=_('Language'),
+                description=_('Current language used in the platform'),
             ),
             'username': BaseContextKey(
-                label='Username',
-                description='User name of the current logged user',
+                label=_('Username'),
+                description=_('User name of the current logged user'),
             ),
             'fullname': BaseContextKey(
-                label='Full name',
-                description='Full name of the logged user',
+                label=_('Full name'),
+                description=_('Full name of the logged user'),
             ),
             'avatar': BaseContextKey(
-                label='Avatar',
-                description='URL of the avatar',
+                label=_('Avatar'),
+                description=_('URL of the avatar'),
             ),
             'isanonymous': BaseContextKey(
-                label='Is Anonymous',
-                description='Boolean. Designates whether current user is logged in the system.',
+                label=_('Is Anonymous'),
+                description=_('Boolean. Designates whether current user is logged in the system.'),
             ),
             'isstaff': BaseContextKey(
-                label='Is Staff',
-                description='Boolean. Designates whether current user can access the admin site.',
+                label=_('Is Staff'),
+                description=_('Boolean. Designates whether current user can access the admin site.'),
             ),
             'issuperuser': BaseContextKey(
-                label='Is Superuser',
-                description='Boolean. Designates whether current user is a super user.',
+                label=_('Is Superuser'),
+                description=_('Boolean. Designates whether current user is a super user.'),
             ),
             'groups': BaseContextKey(
-                label='Groups',
-                description='List of groups the user belongs to',
+                label=_('Groups'),
+                description=_('List of groups the user belongs to'),
             ),
             'mode': BaseContextKey(
-                label='Mode',
-                description='Rendering mode used by the platform (available modes: classic, smartphone and embedded)',
+                label=_('Mode'),
+                description=_('Rendering mode used by the platform (available modes: classic, smartphone and embedded)'),
             ),
             'organizations': BaseContextKey(
-                label='User Organizations',
-                description='List of the organizations the user belongs to.',
+                label=_('User Organizations'),
+                description=_('List of the organizations the user belongs to.'),
             ),
             'orientation': BaseContextKey(
-                label='Orientation',
-                description='Current screen orientation',
+                label=_('Orientation'),
+                description=_('Current screen orientation'),
             ),
             'realuser': BaseContextKey(
-                label='Real User Username',
-                description='User name of the real logged user',
+                label=_('Real User Username'),
+                description=_('User name of the real logged user'),
             ),
             'theme': BaseContextKey(
-                label='Theme',
-                description='Name of the theme used by the platform',
+                label=_('Theme'),
+                description=_('Name of the theme used by the platform'),
             ),
             'version': BaseContextKey(
-                label='Version',
-                description='Version of the platform',
+                label=_('Version'),
+                description=_('Version of the platform'),
             ),
             'version_hash': BaseContextKey(
-                label='Version Hash',
-                description='Hash for the current version of the platform. This hash changes when the platform is updated or when an addon is added or removed',
+                label=_('Version Hash'),
+                description=_('Hash for the current version of the platform. This hash changes when the platform is updated or when an addon is added or removed'),
             ),
         }
 
@@ -275,32 +274,32 @@ class WirecloudCorePlugin(WirecloudPlugin):
     def get_workspace_context_definitions(self) -> dict[str, WorkspaceContextKey]:
         return {
             'description': WorkspaceContextKey(
-                label='Description',
-                description='Short description of the workspace without formating',
+                label=_('Description'),
+                description=_('Short description of the workspace without formating'),
             ),
             'editing': WorkspaceContextKey(
-                label='Editing mode',
-                description='Boolean. Designates whether the workspace is in editing mode.',
+                label=_('Editing mode'),
+                description=_('Boolean. Designates whether the workspace is in editing mode.'),
             ),
             'title': WorkspaceContextKey(
-                label='Title',
-                description='Current title of the workspace',
+                label=_('Title'),
+                description=_('Current title of the workspace'),
             ),
             'name': WorkspaceContextKey(
-                label='Name',
-                description='Current name of the workspace',
+                label=_('Name'),
+                description=_('Current name of the workspace'),
             ),
             'owner': WorkspaceContextKey(
-                label='Owner',
-                description='Workspace\'s owner username',
+                label=_('Owner'),
+                description=_('Workspace\'s owner username'),
             ),
             'longdescription': WorkspaceContextKey(
-                label='Long description',
-                description='Detailed workspace\'s description. This description can contain formatting.',
+                label=_('Long description'),
+                description=_('Detailed workspace\'s description. This description can contain formatting.'),
             ),
             'params': WorkspaceContextKey(
-                label='Params',
-                description='Dictionary with the parameters of the workspace',
+                label=_('Params'),
+                description=_('Dictionary with the parameters of the workspace'),
             ),
         }
 
@@ -308,43 +307,43 @@ class WirecloudCorePlugin(WirecloudPlugin):
         return [
             PreferenceKey(
                 name='public',
-                label='Public',
+                label=_('Public'),
                 type='boolean',
                 hidden=True,
-                description='Allow any user to open this workspace (in read-only mode). (default: disabled)',
+                description=_('Allow any user to open this workspace (in read-only mode). (default: disabled)'),
                 defaultValue=False
             ),
             PreferenceKey(
                 name='requireauth',
-                label='Required registered user',
+                label=_('Required registered user'),
                 type='boolean',
                 hidden=True,
-                description='Require users to be logged in to access the workspace (This option has only effect if the workspace is public). (default: disabled)',
+                description=_('Require users to be logged in to access the workspace (This option has only effect if the workspace is public). (default: disabled)'),
                 defaultValue=False
             ),
             PreferenceKey(
                 name='sharelist',
-                label='Share list',
+                label=_('Share list'),
                 type='layout',  # TODO This is layout type in the original code, but that does not make sense
                 hidden=True,
-                description='List of users with access to this workspace. (default: [])',
+                description=_('List of users with access to this workspace. (default: [])'),
                 defaultValue=[]
             ),
             PreferenceKey(
                 name='initiallayout',
-                label='Initial layout',
+                label=_('Initial layout'),
                 type='select',
                 initialEntries=[
                     SelectEntry(value='Fixed', label='Base'),
                     SelectEntry(value='Free', label='Free')
                 ],
-                description='Default layout for the new widgets.'
+                description=_('Default layout for the new widgets.')
             ),
             PreferenceKey(
                 name='screenSizes',
-                label='Screen sizes',
+                label=_('Screen sizes'),
                 type='screenSizes',
-                description='List of screen sizes supported by the workspace. Each screen size is defined by a range of screen widths and different widget configurations are associated with it.',
+                description=_('List of screen sizes supported by the workspace. Each screen size is defined by a range of screen widths and different widget configurations are associated with it.'),
                 defaultValue=[
                     {
                         "moreOrEqual": 0,
@@ -356,7 +355,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
             ),
             PreferenceKey(
                 name='baselayout',
-                label='Base layout',
+                label=_('Base layout'),
                 type='layout',
                 defaultValue={
                     "type": "columnlayout",

@@ -17,7 +17,7 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 __version_info__: tuple[int, int, int] = (2, 0, 0)
-__version__: str = '.'.join(map(str, __version_info__)) + 'a1'
+__version__: str = '.'.join(map(str, __version_info__))
 __application_mashup_version_info__: tuple[int, int] = (2, 2)
 __application_mashup_version__: str = '.'.join(map(str, __application_mashup_version_info__))
 

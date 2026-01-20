@@ -41,11 +41,9 @@ create_platform_preference_collection_auth_required_response_description = "Auth
 create_platform_preference_collection_validation_error_response_description = "Validation error"
 create_platform_preference_collection_not_acceptable_response_description = "Invalid request content type"
 create_platform_preference_collection_platform_preference_create_example = {
-    "preferences": {
-        "name": "lola-name",
-        "preference-1": {
-            "value": "3"
-        }
+    "name": "lola-name",
+    "preference-1": {
+        "value": "3"
     }
 }
 

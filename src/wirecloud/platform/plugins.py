@@ -140,10 +140,7 @@ _wirecloud_features_info: Optional[dict[str, str]] = None
 _wirecloud_proxy_processors: Optional[tuple[type, ...]] = None
 _wirecloud_request_proxy_processors: tuple[Any, ...] = ()
 _wirecloud_response_proxy_processors: tuple[Any, ...] = ()
-_wirecloud_constants: Optional[list[dict[str, str]]] = None
 _wirecloud_api_auth_backends: Optional[dict[str, Callable]] = None
-_wirecloud_tab_preferences: Optional[list[TabPreferenceKey]] = None
-_wirecloud_workspace_preferences: Optional[list[PreferenceKey]] = None
 _wirecloud_templates: Optional[dict[str, list[str]]] = {}
 _wirecloud_config_validators: Optional[tuple[Callable, ...]] = None
 _wirecloud_idm_get_authorization_url_functions: Optional[dict[str, Callable]] = None
@@ -317,55 +314,40 @@ def get_wirecloud_ajax_endpoints(view: str, request: Request) -> list[AjaxEndpoi
 
 
 def get_tab_preferences() -> list[TabPreferenceKey]:
-    global _wirecloud_tab_preferences
+    plugins = get_plugins()
+    preferences = []
 
-    if _wirecloud_tab_preferences is None:
-        plugins = get_plugins()
-        preferences = []
+    for plugin in plugins:
+        preferences += plugin.get_tab_preferences()
 
-        for plugin in plugins:
-            preferences += plugin.get_tab_preferences()
-
-        _wirecloud_tab_preferences = preferences
-
-    return _wirecloud_tab_preferences
+    return preferences
 
 
 def get_workspace_preferences() -> list[PreferenceKey]:
-    global _wirecloud_workspace_preferences
+    plugins = get_plugins()
+    preferences = []
 
-    if _wirecloud_workspace_preferences is None:
-        plugins = get_plugins()
-        preferences = []
+    for plugin in plugins:
+        preferences += plugin.get_workspace_preferences()
 
-        for plugin in plugins:
-            preferences += plugin.get_workspace_preferences()
-
-        _wirecloud_workspace_preferences = preferences
-
-    return _wirecloud_workspace_preferences
+    return preferences
 
 
 def get_constants() -> list[dict[str, str]]:
-    global _wirecloud_constants
+    plugins = get_plugins()
+    constants_dict = {}
+    for plugin in plugins:
+        constants_dict.update(plugin.get_constants())
 
-    if _wirecloud_constants is None:
-        plugins = get_plugins()
-        constants_dict = {}
-        for plugin in plugins:
-            constants_dict.update(plugin.get_constants())
+    constants_dict['WORKSPACE_PREFERENCES'] = [pref.model_dump() for pref in get_workspace_preferences()]
+    constants_dict['TAB_PREFERENCES'] = [pref.model_dump() for pref in get_tab_preferences()]
 
-        constants_dict['WORKSPACE_PREFERENCES'] = [pref.model_dump() for pref in get_workspace_preferences()]
-        constants_dict['TAB_PREFERENCES'] = [pref.model_dump() for pref in get_tab_preferences()]
+    constants = []
+    for constant_key in constants_dict:
+        constants.append(
+            {'key': constant_key, 'value': json.dumps(constants_dict[constant_key], cls=LazyEncoderXHTML)})
 
-        constants = []
-        for constant_key in constants_dict:
-            constants.append(
-                {'key': constant_key, 'value': json.dumps(constants_dict[constant_key], cls=LazyEncoderXHTML)})
-
-        _wirecloud_constants = constants
-
-    return _wirecloud_constants
+    return constants
 
 
 def get_widget_api_extensions(view: str, features: list[str]) -> list[str]:

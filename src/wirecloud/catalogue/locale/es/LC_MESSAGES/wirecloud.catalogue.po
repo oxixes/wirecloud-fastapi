@@ -1,14 +1,14 @@
 # Spanish translations for WireCloud.
-# Copyright (C) 2025 Future Internet Consulting and Development Solutions S.L.
+# Copyright (C) 2026 Future Internet Consulting and Development Solutions S.L.
 # This file is distributed under the same license as the WireCloud project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: WireCloud VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-11-17 13:28+0100\n"
+"POT-Creation-Date: 2026-01-20 10:07+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-#: ../../../utils.py:183
+#: ../../../utils.py:185
 #, python-format
 msgid ""
 "%(file_name)s was not encoded using the specified charset (%(charset)s "
@@ -74,11 +74,11 @@ msgstr ""
 msgid "Download"
 msgstr ""
 
-#: ../../../routes.py:350
+#: ../../../routes.py:390
 msgid "Error opening the changelog file"
 msgstr "Error abriendo el archivo de registro de cambios"
 
-#: ../../../routes.py:426
+#: ../../../routes.py:466
 msgid "Error opening the userguide file"
 msgstr "Error abriendo el archivo de guía de usuario"
 
@@ -86,7 +86,7 @@ msgstr "Error abriendo el archivo de guía de usuario"
 msgid "Error uploading the following components:"
 msgstr ""
 
-#: ../../../routes.py:117
+#: ../../../routes.py:118
 msgid ""
 "Error writing the resource into the filesystem. Please, contact the server "
 "administrator."
@@ -103,10 +103,14 @@ msgstr ""
 msgid "Installing component from %(url)s"
 msgstr ""
 
-#: ../../../utils.py:153
+#: ../../../utils.py:155
 #, python-format
 msgid "Invalid embedded file: %s"
 msgstr "Archivo embebido inválido: %s"
+
+#: ../../../routes.py:166
+msgid "Invalid orderby value"
+msgstr ""
 
 #: ../../../static/js/wirecloud/ui/ResourcePainter.js:139
 msgid "Issue tracker"
@@ -120,11 +124,11 @@ msgstr ""
 msgid "Main Info"
 msgstr ""
 
-#: ../../../routes.py:98
+#: ../../../routes.py:99
 msgid "Missing component file in the request"
 msgstr "Archivo de componente faltante en la petición"
 
-#: ../../../utils.py:147
+#: ../../../utils.py:149
 #, python-format
 msgid "Missing embedded file: %s"
 msgstr "Archivo embebido no encontrado: %s"
@@ -149,7 +153,7 @@ msgstr ""
 msgid "Remove this file"
 msgstr ""
 
-#: ../../../routes.py:114
+#: ../../../routes.py:115
 msgid "Resource already exists"
 msgstr "El recurso ya existe"
 
@@ -161,15 +165,15 @@ msgstr ""
 msgid "Size"
 msgstr ""
 
-#: ../../../routes.py:108
+#: ../../../routes.py:109
 msgid "The uploaded file is not a zip file"
 msgstr "El archivo subido no es un archivo zip"
 
-#: ../../../utils.py:166
+#: ../../../utils.py:168
 msgid "Unable to process component description file"
 msgstr "No se puede procesar el archivo de descripción del componente"
 
-#: ../../../utils.py:163 ../../../utils.py:168
+#: ../../../utils.py:165 ../../../utils.py:170
 #, python-format
 msgid "Unable to process component description file: %s"
 msgstr "No se puede procesar el archivo de descripción del componente: %s"
@@ -204,7 +208,7 @@ msgstr ""
 msgid "Uploading packaged components"
 msgstr ""
 
-#: ../../../routes.py:407
+#: ../../../routes.py:447
 #, python-format
 msgid ""
 "You can find the userguide of this component in this external <a "
@@ -213,27 +217,27 @@ msgstr ""
 "Puede encontrar la guía de usuario de este componente en este <a "
 "target=\"_blank\" href=\"%s\">enlace</a> externo"
 
-#: ../../../utils.py:110
+#: ../../../utils.py:112
 #, python-format
 msgid "file cannot be parsed as markdown: %s"
 msgstr "archivo no puede ser interpretado como markdown: %s"
 
-#: ../../../utils.py:104
+#: ../../../utils.py:106
 #, python-format
 msgid "file is not encoded using UTF-8: %s"
 msgstr "archivo no codificado en UTF-8: %s"
 
-#: ../../../utils.py:99
+#: ../../../utils.py:101
 #, python-format
 msgid "missing file: %s"
 msgstr "archivo no encontrado: %s"
 
-#: ../../../utils.py:137
+#: ../../../utils.py:139
 #, python-format
 msgid "missing image file: %s"
 msgstr "archivo de imagen no encontrado: %s"
 
-#: ../../../routes.py:200 ../../../routes.py:284
+#: ../../../routes.py:239 ../../../routes.py:324
 #, python-format
 msgid "user %(username)s is not the owner of the resource %(resource_id)s"
 msgstr "el usuario %(username)s no es el propietario del recurso %(resource_id)s"
