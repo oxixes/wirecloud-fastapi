@@ -77,6 +77,11 @@ async def invalidate_all_user_tokens(db: DBSession, user_id: Id) -> None:
     await db.client.tokens.update_many(*query)
 
 
+async def get_token_idm_session(db: DBSession, token_id: ObjectId) -> Optional[str]:
+    token = await db.client.tokens.find_one({"_id": token_id})
+    return token.get("idm_session")
+
+
 async def create_user(db: DBSession, user_info: UserCreate) -> None:
     user_created = UserModel(
         _id=ObjectId(),

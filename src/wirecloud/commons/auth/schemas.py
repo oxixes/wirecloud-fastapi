@@ -84,6 +84,7 @@ class Session(BaseModel):
     real_user: Optional[str] = Field(default=None)
     real_fullname: Optional[str] = Field(default=None)
     requires_csrf: bool = Field(default=True)
+    token_data: dict = Field(default_factory=dict)
 
 
 class UserTokenType(str, Enum):
@@ -93,3 +94,7 @@ class UserTokenType(str, Enum):
 class UserToken(BaseModel):
     access_token: str = Field(description=docs.user_token_token_description)
     token_type: UserTokenType = Field(description=docs.user_token_token_type_description)
+
+
+class SwitchUserRequest(BaseModel):
+    username: str

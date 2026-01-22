@@ -1,2 +1,3 @@
 This is a list of defined user permissions:
 - ALLOW_TOKEN_TO_OTHER_USERS: Allow token to be used by other users (as a workspace owner).
+- SWITCH_USER: Allows the user to switch to another user. This will make the user gain all permissions of the switched user (and looses all permissions of the current user, except for this one).

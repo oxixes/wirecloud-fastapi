@@ -22,24 +22,28 @@ from datetime import datetime, timezone
 from pydantic import ValidationError
 import jwt
 import asyncio
+from urllib.parse import urlparse
 
 from wirecloud.commons.auth.models import Group
 from wirecloud.database import Id
-from wirecloud.commons.auth.schemas import UserLogin, UserToken, UserWithPassword, UserTokenType, User, UserCreate
+from wirecloud.commons.auth.schemas import UserLogin, UserToken, UserWithPassword, UserTokenType, User, UserCreate, \
+    SwitchUserRequest
 from wirecloud.commons.auth.crud import get_user_with_password, set_login_date_for_user, get_user_by_username, \
     create_user, update_user, create_token, invalidate_token, add_user_to_groups_by_codename, \
-    create_group_if_not_exists, remove_user_from_all_groups, set_token_expiration, remove_user_idm_data
+    create_group_if_not_exists, remove_user_from_all_groups, set_token_expiration, remove_user_idm_data, \
+    get_user_with_all_info_by_username, get_token_idm_session
 from wirecloud.commons.auth.utils import check_password, SessionDepNoCSRF, SessionDep, \
-    UserDep, UserDepNoCSRF
+    UserDep, UserDepNoCSRF, RealUserDep
 from wirecloud.database import DBDep, commit
 from wirecloud.commons.utils.http import build_error_response, build_validation_error_response, produces, consumes, \
-    get_redirect_response, get_absolute_reverse_url
+    get_redirect_response, get_absolute_reverse_url, resolve_url_name
 from src import settings
 from wirecloud import docs as root_docs
 from wirecloud.commons.auth import docs
 from wirecloud.platform.plugins import get_idm_get_token_functions, get_idm_get_user_functions, \
     get_idm_backchannel_logout_functions
 from wirecloud.platform.routes import render_wirecloud
+from wirecloud.platform.workspace.crud import get_workspace_by_username_and_name
 from wirecloud.translation import gettext as _
 
 router = APIRouter()
@@ -431,6 +435,9 @@ async def token_refresh(request: Request, db: DBDep, session: SessionDep, user: 
         "csrf_required": session.requires_csrf
     }
 
+    if "real_user" in session.token_data:
+        token_contents["real_user"] = session.token_data["real_user"]
+
     token = jwt.encode(token_contents, settings.JWT_KEY, algorithm="HS256")
 
     response = Response(status_code=200, content=UserToken(access_token=token, token_type=UserTokenType.bearer).model_dump_json())
@@ -445,6 +452,104 @@ async def token_refresh(request: Request, db: DBDep, session: SessionDep, user: 
             "sub": "csrf",
             "iss": "Wirecloud",
             "jti": str(session.id),
+            "exp": int(expiration.timestamp()),
+            "iat": int(datetime.now(timezone.utc).timestamp())
+        }
+        csrf_token = jwt.encode(csrf_token_contents, settings.JWT_KEY, algorithm="HS256")
+
+        response.set_cookie(key="csrf_token", value=csrf_token, httponly=False,
+                            secure=getattr(settings, "WIRECLOUD_HTTPS", False), samesite="strict", expires=expiration)
+
+    return response
+
+
+@base_router.post(
+    "/api/admin/switchuser",
+    summary=docs.switch_user_summary,
+    description=docs.switch_user_description,
+    response_class=Response,
+    status_code=204,
+    responses={
+        204: {"description": docs.switch_user_no_content_response_description},
+        401: root_docs.generate_error_response_openapi_description(
+            docs.switch_user_unauthorized_response_description,
+            "You are not logged in"),
+        403: root_docs.generate_error_response_openapi_description(
+            docs.switch_user_forbidden_response_description,
+            "You do not have permission to switch users"),
+        404: root_docs.generate_error_response_openapi_description(
+            docs.switch_user_not_found_response_description,
+            "Target user not found")
+    }
+)
+async def switch_user(request: Request, db: DBDep, real_user: RealUserDep, actual_user: UserDep, switch_data: SwitchUserRequest, session: SessionDep):
+    if real_user is None or actual_user is None:
+        return build_error_response(request, 401, _("You are not logged in"))
+
+    if not real_user.has_perm("SWITCH_USER") and not real_user.is_superuser:
+        return build_error_response(request, 403, _("You do not have permission to switch users"))
+
+    target_user = await get_user_with_all_info_by_username(db, switch_data.username)
+
+    if not target_user or not target_user.is_active:
+        return build_error_response(request, 404, _("Target user not found"))
+
+    if target_user.id == actual_user.id:
+        return Response(status_code=204)
+
+    location = None
+    referer = request.headers.get("Referer")
+    if referer is not None:
+        parsed_referrer = urlparse(referer)
+        if request.url.hostname == '' or parsed_referrer.hostname == request.url.hostname:
+            location = parsed_referrer.path
+
+            referer_view_info = resolve_url_name(parsed_referrer.path)
+            if referer_view_info is not None and referer_view_info[0] == "wirecloud.workspace_view":
+                workspace_info = await get_workspace_by_username_and_name(db, referer_view_info[1]['owner'], referer_view_info[1]['name'])
+                if workspace_info is not None and not await workspace_info.is_accessible_by(db, target_user):
+                    location = None
+
+    response = Response(status_code=204)
+    if location is not None:
+        response.headers["Location"] = location
+
+    duration = (hasattr(settings, 'SESSION_AGE') and settings.SESSION_AGE) or 14 * 24 * 60 * 60  # 2 weeks
+    expiration = datetime.fromtimestamp(int(datetime.now(timezone.utc).timestamp() + duration), tz=timezone.utc)
+
+    token_id = str(await create_token(db, expiration, real_user.id, await get_token_idm_session(db, session.id)))
+    await commit(db)
+
+    token_contents = {
+        "sub": str(target_user.id),
+        "iss": "Wirecloud",
+        "jti": token_id,
+        "exp": int(expiration.timestamp()),
+        "iat": int(datetime.now(timezone.utc).timestamp()),
+        "csrf_required": session.requires_csrf,
+        "real_user": {
+            "id": str(real_user.id),
+            "username": real_user.username,
+            "fullname": real_user.get_full_name()
+        }
+    }
+
+    if target_user.id == real_user.id:
+        del token_contents["real_user"]
+
+    token = jwt.encode(token_contents, settings.JWT_KEY, algorithm="HS256")
+
+    response.set_cookie(key="token", value=token, httponly=True, secure=getattr(settings, "WIRECLOUD_HTTPS", False),
+                        samesite="strict", expires=expiration)
+    response.set_cookie(key="token_expiration", value=str(int(expiration.timestamp())), httponly=False,
+                        secure=getattr(settings, "WIRECLOUD_HTTPS", False), samesite="lax", expires=expiration)
+
+    if session.requires_csrf:
+        # If CSRF is required, we need to create a CSRF token
+        csrf_token_contents = {
+            "sub": "csrf",
+            "iss": "Wirecloud",
+            "jti": token_id,
             "exp": int(expiration.timestamp()),
             "iat": int(datetime.now(timezone.utc).timestamp())
         }

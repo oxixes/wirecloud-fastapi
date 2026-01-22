@@ -38,8 +38,9 @@ SUPPORTED_HASHES = ['pbkdf2_sha256']
 
 login_scheme = OAuth2PasswordBearer(scheme_name="User authentication", tokenUrl="api/auth/login/", auto_error=False)
 
+Token = Union[dict[str, Union[str, int, bool, dict[str, Union[str, int, bool, None]], None]], None]
 
-async def get_token_contents(token: Annotated[str, Depends(login_scheme)], request: Request, db: DBDep, csrf: bool) -> Union[dict[str, Union[str, int, bool, None]], None]:
+async def get_token_contents(token: Annotated[str, Depends(login_scheme)], request: Request, db: DBDep, csrf: bool) -> Token:
     if token is None:
         token = request.query_params.get('token')
     if token is None:
@@ -83,54 +84,74 @@ async def get_token_contents(token: Annotated[str, Depends(login_scheme)], reque
     return token_contents
 
 
-async def get_token_contents_csrf(token: Annotated[str, Depends(login_scheme)], request: Request, db: DBDep) -> Union[dict[str, Union[str, int, bool, None]], None]:
+async def get_token_contents_csrf(token: Annotated[str, Depends(login_scheme)], request: Request, db: DBDep) -> Token:
     return await get_token_contents(token, request, db, csrf=True)
 
 
-async def get_token_contents_no_csrf(token: Annotated[str, Depends(login_scheme)], request: Request, db: DBDep) -> Union[dict[str, Union[str, int, bool, None]], None]:
+async def get_token_contents_no_csrf(token: Annotated[str, Depends(login_scheme)], request: Request, db: DBDep) -> Token:
     return await get_token_contents(token, request, db, csrf=False)
 
 
-async def get_user(db: DBDep, token: Union[dict[str, Union[str, int, bool, None]], None]) -> Union[UserAll, None]:
+async def get_user(db: DBDep, token: Token, real_user: bool) -> Union[UserAll, None]:
     if token is None:
         return None
 
-    user = await get_user_with_all_info(db, Id(token['sub']))
+    sub: str = token.get('sub')
+    if real_user and 'real_user' in token:
+        sub = token['real_user'].get('id')
+
+    user = await get_user_with_all_info(db, Id(sub))
     if user is None or not user.is_active:
         return None
 
     return user
 
 
-async def get_user_csrf(db: DBDep, token: Annotated[Union[dict[str, Union[str, int, bool, None]], None], Depends(get_token_contents_csrf)]) -> Union[UserAll, None]:
-    return await get_user(db, token)
+async def get_user_csrf(db: DBDep, token: Annotated[Token, Depends(get_token_contents_csrf)]) -> Union[UserAll, None]:
+    return await get_user(db, token, False)
 
 
-async def get_user_no_csrf(db: DBDep, token: Annotated[Union[dict[str, Union[str, int, bool, None]], None], Depends(get_token_contents_no_csrf)]) -> Union[UserAll, None]:
-    return await get_user(db, token)
+async def get_user_no_csrf(db: DBDep, token: Annotated[Token, Depends(get_token_contents_no_csrf)]) -> Union[UserAll, None]:
+    return await get_user(db, token, False)
+
+
+async def get_real_user_csrf(db: DBDep, token: Annotated[Token, Depends(get_token_contents_csrf)]) -> Union[UserAll, None]:
+    return await get_user(db, token, True)
+
+
+async def get_real_user_no_csrf(db: DBDep, token: Annotated[Token, Depends(get_token_contents_no_csrf)]) -> Union[UserAll, None]:
+    return await get_user(db, token, True)
 
 
 UserDep = Annotated[UserAll, Depends(get_user_csrf)]
 UserDepNoCSRF = Annotated[UserAll, Depends(get_user_no_csrf)]
+RealUserDep = Annotated[UserAll, Depends(get_real_user_csrf)]
+RealUserDepNoCSRF = Annotated[UserAll, Depends(get_real_user_no_csrf)]
 
-
-async def get_session(db: DBDep, request: Request, token: Union[dict[str, Union[str, int, bool, None]], None]) -> Union[Session, None]:
+async def get_session(db: DBDep, request: Request, token: Token) -> Union[Session, None]:
     if token is None:
         return None
 
+    real_username = None
+    real_fullname = None
+    if 'real_user' in token:
+        real_username = token['real_user'].get('username')
+        real_fullname = token['real_user'].get('fullname')
+
     return Session(
         id=Id(token.get("jti")),
-        real_user=token.get('real_user', None),
-        real_fullname=token.get('real_fullname', None),
-        requires_csrf=token.get('csrf_required', True)
+        real_user=real_username,
+        real_fullname=real_fullname,
+        requires_csrf=token.get('csrf_required', True),
+        token_data=token
     )
 
 
-async def get_session_csrf(db: DBDep, request: Request, token: Annotated[Union[dict[str, Union[str, int, bool, None]], None], Depends(get_token_contents_csrf)]) -> Union[Session, None]:
+async def get_session_csrf(db: DBDep, request: Request, token: Annotated[Token, Depends(get_token_contents_csrf)]) -> Union[Session, None]:
     return await get_session(db, request, token)
 
 
-async def get_session_no_csrf(db: DBDep, request: Request, token: Annotated[Union[dict[str, Union[str, int, bool, None]], None], Depends(get_token_contents_no_csrf)]) -> Union[Session, None]:
+async def get_session_no_csrf(db: DBDep, request: Request, token: Annotated[Token, Depends(get_token_contents_no_csrf)]) -> Union[Session, None]:
     return await get_session(db, request, token)
 
 

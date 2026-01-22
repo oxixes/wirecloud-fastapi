@@ -90,3 +90,11 @@ token_refresh_response_model_example = {
     "token_type": "bearer"
 }
 token_refresh_unauthorized_response_description = "Invalid or expired token"
+
+# POST /api/admin/switchuser
+switch_user_summary = "Switch User"
+switch_user_description = "Switches the currently logged in user to another user. Sends a new token in the form of a cookie to the client."
+switch_user_no_content_response_description = "The user was successfully switched"
+switch_user_unauthorized_response_description = "You are not logged in"
+switch_user_forbidden_response_description = "You do not have permission to switch users"
+switch_user_not_found_response_description = "Target user not found"
