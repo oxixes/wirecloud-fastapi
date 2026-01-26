@@ -69,7 +69,7 @@ async def get_workspace_list(db: DBSession, user: Optional[UserAll]) -> list[Wor
         ]}
     else:
         query = {"public": True, "searchable": True}
-    workspaces = await db.client.workspace.find(query).to_list()
+    workspaces = await db.client.workspaces.find(query).to_list()
     results = []
     for workspace in workspaces:
         results.append(Workspace.model_validate(workspace))
@@ -103,7 +103,7 @@ async def create_empty_workspace(db: DBSession, title: str, user: User, allow_re
 
 async def get_workspace_by_id(db: DBSession, workspace_id: Id) -> Optional[Workspace]:
     query = {"_id": ObjectId(workspace_id)}
-    workspace = await db.client.workspace.find_one(query)
+    workspace = await db.client.workspaces.find_one(query)
     if workspace is None:
         return None
 
@@ -186,7 +186,7 @@ async def create_workspace(db: DBSession, request: Optional[Request], owner: Use
 async def get_workspace_description(db: DBSession, workspace: Workspace) -> str:
     query = {"_id": ObjectId(workspace.id)}
     workspaces = [Workspace.model_validate(workspace) for workspace in
-                  await db.client.workspace.find(query).to_list()]
+                  await db.client.workspaces.find(query).to_list()]
 
     resources = []
     for workspace in workspaces:
@@ -203,22 +203,22 @@ async def get_workspace_description(db: DBSession, workspace: Workspace) -> str:
 
 async def clear_workspace_users(db: DBSession, workspace: Workspace) -> None:
     query = {"_id": ObjectId(workspace.id)}
-    await db.client.workspace.update_one(query, {"$set": {"users": []}})
+    await db.client.workspaces.update_one(query, {"$set": {"users": []}})
 
 
 async def clear_workspace_groups(db: DBSession, workspace: Workspace) -> None:
     query = {"_id": ObjectId(workspace.id)}
-    await db.client.workspace.update_one(query, {"$set": {"groups": []}})
+    await db.client.workspaces.update_one(query, {"$set": {"groups": []}})
 
 
 async def add_group_to_workspace(db: DBSession, workspace: Workspace, group: Group) -> None:
     query = {"_id": ObjectId(workspace.id)}
-    await db.client.workspace.update_one(query, {"$push": {"groups": ObjectId(group.id)}})
+    await db.client.workspaces.update_one(query, {"$push": {"groups": ObjectId(group.id)}})
 
 
 async def add_user_to_workspace(db: DBSession, workspace: Workspace, user: User) -> None:
     query = {"_id": ObjectId(workspace.id)}
-    await db.client.workspace.update_one(query, {"$push": {"users": ObjectId(user.id)}})
+    await db.client.workspaces.update_one(query, {"$push": {"users": ObjectId(user.id)}})
 
 
 async def insert_workspace(db: DBSession, workspace: Workspace) -> None:
@@ -226,7 +226,7 @@ async def insert_workspace(db: DBSession, workspace: Workspace) -> None:
     data = workspace.model_dump(by_alias=True)
     _sanitize_widget_layout_config(data)
 
-    await db.client.workspace.insert_one(data)
+    await db.client.workspaces.insert_one(data)
 
 
 async def change_workspace(db: DBSession, workspace: Workspace, user: Optional[User]) -> None:
@@ -240,7 +240,7 @@ async def change_workspace(db: DBSession, workspace: Workspace, user: Optional[U
     data = workspace.model_dump(by_alias=True)
     _sanitize_widget_layout_config(data)
 
-    await db.client.workspace.replace_one(query, data)
+    await db.client.workspaces.replace_one(query, data)
     await update_workspace_in_index(db, workspace)
 
 
@@ -249,7 +249,7 @@ async def get_workspace_by_username_and_name(db: DBSession, creator_username: st
     if creator is None:
         return None
     query = {"creator": ObjectId(creator.id), "name": name}
-    workspace = await db.client.workspace.find_one(query)
+    workspace = await db.client.workspaces.find_one(query)
     if workspace is None:
         return None
 
@@ -258,13 +258,13 @@ async def get_workspace_by_username_and_name(db: DBSession, creator_username: st
 
 async def is_a_workspace_with_that_name(db: DBSession, name: str) -> bool:
     query = {"name": name}
-    workspace = await db.client.workspace.find_one(query)
+    workspace = await db.client.workspaces.find_one(query)
     return workspace is not None
 
 
 async def delete_workspace(db: DBSession, workspace: Workspace) -> None:
     query = {"_id": ObjectId(workspace.id)}
-    await db.client.workspace.delete_one(query)
+    await db.client.workspaces.delete_one(query)
     await delete_workspace_from_index(workspace)
 
 
@@ -285,7 +285,7 @@ async def set_visible_tab(db: DBSession, user: User, workspace: Workspace, tab: 
 
 
 async def get_all_workspaces(db: DBSession) -> list[Workspace]:
-    workspaces = await db.client.workspace.find().to_list()
+    workspaces = await db.client.workspaces.find().to_list()
     results = []
     for workspace in workspaces:
         results.append(Workspace.model_validate(workspace))
