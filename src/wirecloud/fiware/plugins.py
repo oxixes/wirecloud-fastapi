@@ -26,6 +26,7 @@ from fastapi import FastAPI, Request
 
 from src import settings
 from wirecloud import fiware
+from wirecloud.commons.auth.crud import get_user_with_all_info_by_username
 from wirecloud.commons.auth.schemas import UserAll, Session
 from wirecloud.commons.auth.utils import make_oidc_provider_request
 from wirecloud.database import DBSession
@@ -66,10 +67,13 @@ class FIWAREBAEManager(MarketManager):
         self._options = options
 
     async def create(self, db: DBSession, request: Request, user: UserAll):
+        wirecloud_user = await get_user_with_all_info_by_username(db, "wirecloud")
+
         await create_workspace(
             db,
             request,
             user,
+            mashup_user=wirecloud_user,
             mashup="CoNWeT/bae-marketplace/0.1.1",
             new_name=self._options.name,
             preferences={'server_url': self._options.url},

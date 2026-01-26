@@ -263,7 +263,7 @@ async def create_resource(db: DBDep, user: UserDep, request: Request,
         if resource.resource_type() == 'mashup':
             resource_info = resource.get_processed_info(process_urls=False)
             for embedded_resource in resource_info.embedded:
-                resource_file = file_contents.read(embedded_resource['src'])
+                resource_file = file_contents.read(embedded_resource.src)
 
                 extra_resource_contents = WgtFile(resource_file)
                 extra_resource_added, extra_resource = await install_component(db, extra_resource_contents,

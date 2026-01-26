@@ -200,7 +200,7 @@ class TemplateParser(object):
 
 
 class TemplateValueProcessor(BaseModel):
-    context: dict[str, Union[str, dict[str, Any]]]
+    context: dict[str, Any]
 
     _RE = re.compile(r'(%+)\(([a-zA-Z][\w-]*(?:\.[a-zA-Z][\w-]*)*)\)')
 
@@ -220,10 +220,10 @@ class TemplateValueProcessor(BaseModel):
             elif current_path in current_context:
                 current_context = current_context[current_path]
             else:
-                current_context = self._context
+                current_context = self.context
                 break
 
-        if current_context != self._context:
+        if current_context != self.context:
             return current_context
         else:
             return matching.group(0)

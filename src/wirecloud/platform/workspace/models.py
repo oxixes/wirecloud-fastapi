@@ -86,7 +86,7 @@ class WorkspaceForcedValue(BaseModel):
 class DBWorkspaceForcedValues(BaseModel):
     extra_prefs: list[WorkspaceExtraPreference] = []
     operator: dict[IntegerStr, dict[str, WorkspaceForcedValue]] = {}
-    widget: dict[IntegerStr, dict[str, WorkspaceForcedValue]] = {}
+    widget: dict[str, dict[str, WorkspaceForcedValue]] = {}
     empty_params: list[str] = []
 
 

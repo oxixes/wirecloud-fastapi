@@ -105,7 +105,7 @@ class WorkspaceCreate(BaseModel):
 class WorkspaceForcedValues(BaseModel):
     extra_prefs: list[WorkspaceExtraPreference] = []
     ioperator: dict[IntegerStr, dict[str, WorkspaceForcedValue]] = {}
-    iwidget: dict[IntegerStr, dict[str, WorkspaceForcedValue]] = {}
+    iwidget: dict[str, dict[str, WorkspaceForcedValue]] = {}
     empty_params: list[str] = []
 
 

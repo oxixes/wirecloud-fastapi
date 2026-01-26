@@ -80,9 +80,9 @@ async def populate_component(db: DBSession, wirecloud_user: UserAll, vendor: Ven
     if await get_catalogue_resource(db, vendor, name, version):
         return False
 
-    logger.info(f"Installing the %s widget...", name)
+    print(f"Installing the {name} widget...", end=' ')
     await install_component(db, WgtFile(wgt_path), executor_user=wirecloud_user, users=[wirecloud_user])
-    logger.info("DONE")
+    print("DONE")
     return True
 
 

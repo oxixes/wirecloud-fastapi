@@ -368,7 +368,7 @@ async def get_widget_instance_data(db: DBSession, request: Request, iwidget: Wid
         return data_ret
 
     resource = await get_catalogue_resource_by_id(db, iwidget.resource)
-    if resource is None or not await resource.is_available_for(db, await get_user_with_all_info(db, workspace.creator)):
+    if resource is None:
         # The widget used by this iwidget is missing
         return data_ret
 

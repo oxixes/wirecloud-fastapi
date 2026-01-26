@@ -111,6 +111,7 @@ async def get_workspace_by_id(db: DBSession, workspace_id: Id) -> Optional[Works
 
 
 async def create_workspace(db: DBSession, request: Optional[Request], owner: UserAll, mashup: Union[str, WgtFile, Workspace],
+                           mashup_user: Optional[UserAll] = None,
                            new_name: str = None,
                            new_title: str = None, preferences: dict[str, Union[str, WorkspacePreference]] = {},
                            searchable: bool = True, public: bool = False,
@@ -122,7 +123,7 @@ async def create_workspace(db: DBSession, request: Optional[Request], owner: Use
 
         (mashup_vendor, mashup_name, mashup_version) = values
         resource = await get_catalogue_resource(db, mashup_vendor, mashup_name, mashup_version)
-        if resource is None or not await resource.is_available_for(db, owner) or resource.resource_type() != 'mashup':
+        if resource is None or not await resource.is_available_for(db, mashup_user if mashup_user is not None else owner) or resource.resource_type() != 'mashup':
             raise ValueError(_("Mashup not found %(mashup)s") % {'mashup': mashup})
 
         base_dir = catalogue.wgt_deployer.get_base_dir(mashup_vendor, mashup_name, mashup_version)
@@ -163,7 +164,7 @@ async def create_workspace(db: DBSession, request: Optional[Request], owner: Use
 
     from wirecloud.platform.workspace.mashupTemplateParser import check_mashup_dependencies, \
         build_workspace_from_template
-    await check_mashup_dependencies(db, template, owner)
+    await check_mashup_dependencies(db, template, mashup_user if mashup_user is not None else owner)
 
     if dry_run:
         # TODO check name conflict
@@ -171,7 +172,7 @@ async def create_workspace(db: DBSession, request: Optional[Request], owner: Use
 
     workspace = await build_workspace_from_template(db, request, template, owner, allow_renaming=allow_renaming,
                                                     new_name=new_name, new_title=new_title,
-                                                    searchable=searchable, public=public)
+                                                    searchable=searchable, public=public, resource_owner=mashup_user)
     if workspace is None:
         return None
 

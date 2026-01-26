@@ -148,7 +148,7 @@ def _remap_connection_endpoints(source_mapping: dict, target_mapping: dict,
 
 
 async def fill_workspace_using_template(db: DBSession, request: Request, user_func: User, workspace: Workspace,
-                                        template: TemplateParser) -> None:
+                                        template: TemplateParser, resource_owner: Optional[UserAll] = None) -> None:
     from wirecloud.platform.widget.utils import get_or_add_widget_from_catalogue
     user = workspace.creator
 
@@ -209,7 +209,9 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
         for resource in tab_entry.resources:
             user_all = await get_user_with_all_info(db, user)
             result = await get_or_add_widget_from_catalogue(db, resource.vendor, resource.name, resource.version,
-                                                            user_all)
+                                                            resource_owner if resource_owner is not None else user_all)
+            print(resource)
+
             widget = result[0]
             widget_resource = result[1]
 
@@ -248,8 +250,8 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
 
                 iwidget_data.layoutConfig.append(iwidget_layout_config)
 
-            iwidget = await save_widget_instance(db, workspace, iwidget_data, await get_user_with_all_info(db, user),
-                                                 tab, commit=False)
+            iwidget = await save_widget_instance(db, workspace, iwidget_data, user_all,
+                                                 tab, commit=False, resource_owner=resource_owner)
             if resource.readonly:
                 iwidget.readonly = True
 
@@ -384,7 +386,7 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
 async def build_workspace_from_template(db: DBSession, request: Request, template: TemplateParser, user: UserAll,
                                         allow_renaming: bool = False, new_name: Optional[str] = None,
                                         new_title: Optional[str] = None, searchable: bool = True,
-                                        public: bool = False) -> Optional[Workspace]:
+                                        public: bool = False, resource_owner: Optional[UserAll] = None) -> Optional[Workspace]:
     if (new_name is None or new_name.strip() == '') and (new_title is None or new_title.strip() == ''):
         processed_info = template.get_resource_processed_info(process_urls=False)
         new_name = processed_info.name
@@ -410,6 +412,6 @@ async def build_workspace_from_template(db: DBSession, request: Request, templat
             return None
         await insert_workspace(db, workspace)
 
-    await fill_workspace_using_template(db, request, user, workspace, template)
+    await fill_workspace_using_template(db, request, user, workspace, template, resource_owner=resource_owner)
 
     return workspace

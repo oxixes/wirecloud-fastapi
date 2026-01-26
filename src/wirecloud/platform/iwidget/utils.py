@@ -256,14 +256,14 @@ def first_id_widget_instance(widgets: dict[str, WidgetInstance]) -> int:
 
 async def save_widget_instance(db: DBSession, workspace: Workspace, iwidget: WidgetInstanceDataCreate, user: UserAll, tab: Tab,
                        initial_variable_values: dict[str, WidgetVariables] = None,
-                       commit: bool = True) -> WidgetInstance:
+                       commit: bool = True, resource_owner: Optional[UserAll] = None) -> WidgetInstance:
 
     new_iwidget = WidgetInstance(
         id=tab.id + '-' + str(first_id_widget_instance(tab.widgets)),
         permissions=iwidget.permissions,
         widget_uri=iwidget.widget
     )
-    resource = await update_widget_value(db, new_iwidget, iwidget, user, required=True)
+    resource = await update_widget_value(db, new_iwidget, iwidget, resource_owner if resource_owner is not None else user, required=True)
     iwidget_info = resource.get_processed_info()
     new_iwidget.title = iwidget_info.title
     new_iwidget.layout = iwidget.layout
