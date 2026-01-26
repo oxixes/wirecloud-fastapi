@@ -200,12 +200,12 @@ async def search_resources(request: Request, user: Optional[UserAll], querytext:
         filter_clauses.append({"term": {"type": scope}})
 
     should_clauses = []
-    if user is None or not user.is_staff:
-        should_clauses.append({"term": {"public": True}})
-        if user is not None:
-            should_clauses.append({"term": {"users": str(user.id)}})
-            for group in user.groups:
-                should_clauses.append({"term": {"groups": str(group)}})
+    should_clauses.append({"term": {"public": True}})
+
+    if user is not None:
+        should_clauses.append({"term": {"users": str(user.id)}})
+        for group in user.groups:
+            should_clauses.append({"term": {"groups": str(group)}})
 
     body = {
         "query": {

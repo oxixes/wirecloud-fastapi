@@ -491,7 +491,7 @@ async def get_workspace_resource_collection(db: DBDep, user: UserDepNoCSRF, requ
         for widget in tab.widgets.values():
             if not widget.id in widgets:
                 resource = await get_catalogue_resource_by_id(db, widget.resource)
-                if resource and await is_resource_available_for_user(db, resource, creator):
+                if resource:
                     options = resource.get_processed_info(request, process_urls=process_urls,
                                                           url_pattern_name="wirecloud.showcase_media")
                     result[resource.local_uri_part] = options
