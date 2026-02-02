@@ -303,6 +303,24 @@ class WirecloudCorePlugin(WirecloudPlugin):
             ),
         }
 
+    def get_platform_preferences(self) -> list[PreferenceKey]:
+        return [
+            PreferenceKey(
+                name='allow_external_token_use',
+                label=_('Allow external token use'),
+                type='boolean',
+                description=_('Allow other users to use your token to authenticate in external services. The token will not be directly exposed to these users. Necessary for features like "Use workspace owner token".'),
+                defaultValue=False
+            ),
+            PreferenceKey(
+                name='external_token_domain_whitelist',
+                label=_('External token domain whitelist'),
+                type='text',
+                description=_('List of domains separated by commas that can be used to authenticate in external services. Use * to allow any domain (DANGEROUS, since that could expose it to non-authorised services).'),
+                defaultValue='*'
+            )
+        ]
+
     def get_workspace_preferences(self) -> list[PreferenceKey]:
         return [
             PreferenceKey(

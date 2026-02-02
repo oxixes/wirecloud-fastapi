@@ -21,7 +21,7 @@ from typing import Union
 from urllib.parse import quote_plus, urlparse
 
 from src import settings
-from wirecloud.commons.auth.crud import get_user_with_all_info, update_user
+from wirecloud.commons.auth.crud import get_user_with_all_info, update_user, get_user_preferences
 from wirecloud.database import DBSession
 from wirecloud.fiware import FIWARE_LAB_CLOUD_SERVER
 from wirecloud.fiware.openstack_token_manager import OpenStackTokenManager
@@ -151,7 +151,18 @@ class IDMTokenProcessor:
                 or not user.idm_data[getattr(settings, "OID_CONNECT_PLUGIN")]['idm_token']:
             raise ValidationError(_('User has not an active FIWARE profile'))
 
-        if user is not None and source == 'workspace' and not user.has_perm("ALLOW_TOKEN_TO_OTHER_USERS"):
+        user_prefs = await get_user_preferences(db, user.id)
+        allows_use_of_token = False
+        domain_whitelist = ['*']
+        for pref in user_prefs:
+            if pref.name == 'allow_external_token_use':
+                allows_use_of_token = pref.value == 'true'
+            elif pref.name == 'external_token_domain_whitelist':
+                domain_whitelist = [domain.strip() for domain in pref.value.split(',')]
+
+        domain = urlparse(request.url).netloc
+
+        if user is not None and source == 'workspace' and (not allows_use_of_token or not (domain in domain_whitelist or '*' in domain_whitelist)):
             raise ValidationError(_('Workspace owner does not have permission to give their token to other users'))
 
         token_data_get_func = get_idm_get_token_functions()[getattr(settings, "OID_CONNECT_PLUGIN")]
