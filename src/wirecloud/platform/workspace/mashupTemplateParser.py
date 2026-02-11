@@ -408,7 +408,7 @@ async def build_workspace_from_template(db: DBSession, request: Request, templat
     if allow_renaming:
         await save_alternative(db, 'workspace', 'name', workspace)
     else:
-        if await is_a_workspace_with_that_name(db, workspace.name):
+        if await is_a_workspace_with_that_name(db, workspace.name, user.id):
             return None
         await insert_workspace(db, workspace)
 

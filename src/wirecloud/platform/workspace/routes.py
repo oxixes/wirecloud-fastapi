@@ -254,7 +254,7 @@ async def create_workspace_entry(db: DBDep, user: UserDep, request: Request, wor
 
     if workspace_entry.name != '':
         workspace.name = workspace_entry.name
-        if await is_a_workspace_with_that_name(db, workspace.name):
+        if await is_a_workspace_with_that_name(db, workspace.name, user.id):
             return build_error_response(request, 409, _("A workspace with the given name already exists"))
         change = True
 
