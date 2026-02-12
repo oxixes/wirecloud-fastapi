@@ -81,7 +81,7 @@ async def get_workspace_list(db: DBSession, user: Optional[UserAll]) -> list[Wor
 
 
 async def create_empty_workspace(db: DBSession, title: str, user: User, allow_renaming: bool = False,
-                                 name: str = None) -> Optional[Workspace]:
+                                 name: str = None, translate: bool = True) -> Optional[Workspace]:
     if name is None or name == '':
         name = URLify(title)
 
@@ -92,12 +92,12 @@ async def create_empty_workspace(db: DBSession, title: str, user: User, allow_re
         creator=ObjectId(user.id),
         users=[WorkspaceAccessPermissions(id=Id(user.id))]
     )
-    await create_tab(db, user, _('Tab'), workspace)
+    await create_tab(db, user, _('Tab') if translate else 'Tab', workspace)
 
     if allow_renaming:
         await save_alternative(db, 'workspaces', 'name', workspace)
     else:
-        if await is_a_workspace_with_that_name(db, name):
+        if await is_a_workspace_with_that_name(db, name, workspace.creator):
             return None
         await insert_workspace(db, workspace)
 
@@ -259,8 +259,8 @@ async def get_workspace_by_username_and_name(db: DBSession, creator_username: st
     return Workspace.model_validate(workspace)
 
 
-async def is_a_workspace_with_that_name(db: DBSession, name: str) -> bool:
-    query = {"name": name}
+async def is_a_workspace_with_that_name(db: DBSession, name: str, creator_id: Id) -> bool:
+    query = {"name": name, "creator": creator_id}
     workspace = await db.client.workspaces.find_one(query)
     return workspace is not None
 
