@@ -33,8 +33,8 @@ import markdown
 
 from wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACType
 from wirecloud.catalogue.schemas import (CatalogueResource, CatalogueResourceCreate, CatalogueResourceType,
-                                             CatalogueResourceDataSummaryPermissions, CatalogueResourceDataSummary,
-                                             CatalogueResourceDataSummaryGroup, CatalogueResourceDataSummaryBase)
+                                         CatalogueResourceDataSummaryPermissions, CatalogueResourceDataSummary,
+                                         CatalogueResourceDataSummaryGroup, CatalogueResourceDataSummaryBase)
 from wirecloud.catalogue.crud import (create_catalogue_resource, has_resource_user,
                                           get_all_catalogue_resource_versions, get_all_catalogue_resources,
                                           update_catalogue_resource_description, delete_catalogue_resources)

@@ -154,10 +154,10 @@ async def get_widget_file(db: DBDep, request: Request, vendor: Vendor = Path(pat
 )
 async def get_missing_widget_html(request: Request, theme: Optional[str] = Query(default=None,
                                                                                  description=docs.get_missing_widget_html_theme_description)):
-    templates = get_jinja2_templates(get_current_theme(request))
-    style = get_widget_platform_style(request, theme)
     if theme is None:
         theme = get_current_theme(request)
+    templates = get_jinja2_templates(get_current_theme(request))
+    style = get_widget_platform_style(request, theme)
     from wirecloud.platform.core.plugins import get_version_hash
     context = {
         "uri": request.url.scheme + "://" + request.url.netloc + request.url.path + "?" + request.url.query,

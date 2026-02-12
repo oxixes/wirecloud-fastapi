@@ -1,3 +1,37 @@
 This is a list of defined user permissions:
 - ALLOW_TOKEN_TO_OTHER_USERS: Allow token to be used by other users (as a workspace owner).
 - SWITCH_USER: Allows the user to switch to another user. This will make the user gain all permissions of the switched user (and looses all permissions of the current user, except for this one).
+- WORKSPACE.CREATE: Allows the user to create a workspace.
+- WORKSPACE.VIEW: Allows the user to view all workspaces.
+- WORKSPACE.EDIT: Allows the user to edit workspaces owned by other users.
+- WORKSPACE.DELETE: Allows the user to delete workspaces owned by other users.
+- WORKSPACE.CLONE: Allows the user to clone workspaces owned by other users.
+- WORKSPACE.PUBLISH: Allows the user to publish workspaces owned by other users.
+- WORKSPACE.SHARE: Allows the user to share workspaces owned by other users.
+- WORKSPACE.MERGE: Allows the user to merge workspaces owned by other users.
+- WORKSPACE.PREFERENCES.EDIT: Allows the user to edit preferences of workspaces owned by other users.
+- WORKSPACE.TAB.CREATE: Allows the user to create tabs in workspaces owned by other users.
+- WORKSPACE.TAB.EDIT: Allows the user to edit tabs in workspaces owned by other users.
+- WORKSPACE.TAB.DELETE: Allows the user to delete tabs in workspaces owned by other users.
+- WORKSPACE.TAB.PREFERENCES.EDIT: Allows the user to edit preferences of tabs in workspaces owned by other users.
+- WORKSPACE.WIDGET.CREATE: Allows the user to create widgets in workspaces owned by other users.
+- WORKSPACE.WIDGET.VIEW: Allows the user to view widgets in workspaces owned by other users.
+- WORKSPACE.WIDGET.EDIT: Allows the user to edit widgets in workspaces owned by other users.
+- WORKSPACE.WIDGET.DELETE: Allows the user to delete widgets in workspaces owned by other users.
+- WORKSPACE.WIDGET.PREFERENCES.EDIT: Allows the user to edit preferences of widgets in workspaces owned by other users.
+- WORKSPACE.WIDGET.PROPERTIES.EDIT: Allows the user to edit properties of widgets in workspaces owned by other users.
+- WORKSPACE.OPERATOR.CREATE: Allows the user to create operators in workspaces owned by other users.
+- WORKSPACE.OPERATOR.DELETE: Allows the user to delete operators in workspaces owned by other users.
+- WORKSPACE.OPERATOR.PREFERENCES.EDIT: Allows the user to edit preferences of operators in workspaces owned by other users.
+- WORKSPACE.OPERATOR.PROPERTIES.EDIT: Allows the user to edit properties of operators in workspaces owned by other users.
+- WORKSPACE.WIRING.CREATE: Allows the user to create wirings in workspaces owned by other users.
+- WORKSPACE.WIRING.EDIT: Allows the user to edit wirings in workspaces owned by other users.
+- WORKSPACE.WIRING.DELETE: Allows the user to delete wirings in workspaces owned by other users.
+- COMPONENT.INSTALL: Allows the user to install components.
+- COMPONENT.VIEW: Allows the user to view all components.
+- COMPONENT.UNINSTALL: Allows the user to uninstall one version of a component.
+- COMPONENT.DELETE: Allows the user to delete all versions of a component at once
+- MARKETPLACE.CREATE: Allows the user to create a marketplace.
+- MARKETPLACE.VIEW: Allows the user to view all marketplaces.
+- MARKETPLACE.DELETE: Allows the user to delete marketplaces owned by other users.
+- MARKETPLACE.PUBLISH: Allows the user to publish marketplaces owned by other users.

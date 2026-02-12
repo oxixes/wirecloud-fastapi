@@ -38,7 +38,7 @@ from wirecloud.platform.wiring.utils import check_wiring, check_multiuser_wiring
     generate_xhtml_operator_code, process_requirements
 from wirecloud.platform.workspace.crud import get_workspace_by_id, change_workspace
 from wirecloud.platform.workspace.models import WorkspaceWiring
-from wirecloud.platform.workspace.utils import VariableValueCacheManager
+from wirecloud.platform.workspace.utils import VariableValueCacheManager, is_owner_or_has_permission
 from wirecloud.translation import gettext as _
 
 wiring_router = APIRouter()
@@ -76,22 +76,31 @@ async def update_wiring_entry(db: DBDep, request: Request, user: UserDep,
                               workspace_id: Id = Path(description=docs.update_wiring_entry_workspace_id_description),
                               new_wiring_status: WorkspaceWiring = Body(
                                   description=docs.update_wiring_entry_wiring_description,
-                                  example=docs.update_wiring_entry_wiring_example)):
+                                  examples=docs.update_wiring_entry_wiring_example)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _('Workspace not found'))
 
     old_wiring_status = workspace.wiring_status
 
-    if workspace.is_editable_by(user):
-        result = await check_wiring(db, request, user, new_wiring_status, old_wiring_status, can_update_secure=False)
-    elif await workspace.is_accessible_by(db, user):
+    adding_connection = len(new_wiring_status.connections) > len(old_wiring_status.connections)
+    adding_operator = len(new_wiring_status.operators) > len(old_wiring_status.operators)
+    adding = adding_connection or adding_operator
+
+    if len(new_wiring_status.connections) < len(old_wiring_status.connections) and not is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.DELETE"):
+        return build_error_response(request, 403, _('You are not allowed to delete connections from this workspace'))
+    if len(new_wiring_status.operators) < len(old_wiring_status.operators) and not is_owner_or_has_permission(user, workspace, "WORKSPACE.OPERATOR.DELETE"):
+        return build_error_response(request, 403, _('You are not allowed to delete operators from this workspace'))
+
+    if await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT"):
+        result = await check_wiring(db, request, user, new_wiring_status, old_wiring_status, workspace, adding, can_update_secure=False)
+    elif await workspace.is_accessible_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT"):
         result = await check_multiuser_wiring(db, request, user, new_wiring_status, old_wiring_status,
-                                              workspace.creator, can_update_secure=False)
+                                              workspace, adding, can_update_secure=False)
     else:
         return build_error_response(request, 403, _('You are not allowed to update this workspace'))
 
-    if not result or isinstance(result, Response):
+    if isinstance(result, Response):
         return result
 
     workspace.wiring_status = new_wiring_status
@@ -128,7 +137,7 @@ async def update_wiring_entry(db: DBDep, request: Request, user: UserDep,
 async def patch_wiring_entry(db: DBDep, request: Request, user: UserDep,
                              workspace_id: Id = Path(description=docs.patch_wiring_entry_workspace_id_description),
                              req: list[WiringEntryPatch] = Body(description=docs.patch_wiring_entry_wiring_description,
-                                                                example=docs.patch_wiring_entry_wiring_example,
+                                                                examples=docs.patch_wiring_entry_wiring_example,
                                                                 media_type='application/json-patch+json')):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
@@ -137,7 +146,16 @@ async def patch_wiring_entry(db: DBDep, request: Request, user: UserDep,
 
     # Can't explicitly update missing operator preferences / properties
     # Check if it's modifying directly a preference / property
+    adding_connection = False
+    adding_operator = False
     for p in req:
+        adding_connection = adding_connection or p.op == 'add' and p.path.startswith("/connections")
+        adding_operator = adding_operator or p.op == 'add' and p.path.startswith("/operators")
+
+        if adding_connection and not is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.CREATE"):
+                return build_error_response(request, 403, _('You are not allowed to add connections to this workspace'))
+        if adding_operator and not is_owner_or_has_permission(user, workspace, "WORKSPACE.OPERATOR.CREATE"):
+                return build_error_response(request, 403, _('You are not allowed to add operators to this workspace'))
         result = OPERATOR_PATH_RE.match(p.path)
         if result is not None:
             try:
@@ -159,16 +177,16 @@ async def patch_wiring_entry(db: DBDep, request: Request, user: UserDep,
     except jsonpatch.InvalidJsonPatch:
         return build_error_response(request, 400, _('Invalid JSON patch'))
 
-    if workspace.is_editable_by(user):
-        result = await check_wiring(db, request, user, new_wiring_status, old_wiring_status, can_update_secure=True)
-    elif await workspace.is_accessible_by(db, user):
+    adding = adding_connection or adding_operator
+    if await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT"):
+        result = await check_wiring(db, request, user, new_wiring_status, old_wiring_status, workspace, adding, can_update_secure=True)
+    elif await workspace.is_accessible_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT"):
         result = await check_multiuser_wiring(db, request, user, new_wiring_status, old_wiring_status,
-                                              workspace.creator,
-                                              can_update_secure=True)
+                                              workspace, adding, can_update_secure=True)
     else:
         return build_error_response(request, 403, _('You are not allowed to update this workspace'))
 
-    if not result:
+    if isinstance(result, Response):
         return result
 
     workspace.wiring_status = new_wiring_status
@@ -267,7 +285,7 @@ async def get_operator_variables_entry(db: DBDep, request: Request, user: UserDe
 
     if resource is None:
         return data
-    elif not await resource.is_available_for(db, await get_user_with_all_info(db, workspace.creator)):
+    elif not resource.is_available_for(await get_user_with_all_info(db, workspace.creator)):
         return build_error_response(request, 404, _('Operator not found'))
 
     for preference_name, preference in operator.preferences.items():

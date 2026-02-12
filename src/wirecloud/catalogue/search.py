@@ -24,9 +24,8 @@ from pydantic import BaseModel
 from datetime import datetime
 from fastapi import Request
 
-from wirecloud.catalogue.crud import get_all_catalogue_resources_with_usersgroups, \
-    get_catalogue_resource_with_usersgroups_by_id
-from wirecloud.catalogue.schemas import CatalogueResource, get_template_url, CatalogueResourceWithUsersGroups
+from wirecloud.catalogue.crud import get_all_catalogue_resources, get_catalogue_resource_by_id
+from wirecloud.catalogue.schemas import CatalogueResource, get_template_url
 from wirecloud.commons.auth.schemas import UserAll
 from wirecloud.commons.utils.version import Version
 from wirecloud.database import DBSession
@@ -199,21 +198,23 @@ async def search_resources(request: Request, user: Optional[UserAll], querytext:
     if scope is not None:
         filter_clauses.append({"term": {"type": scope}})
 
-    should_clauses = []
-    should_clauses.append({"term": {"public": True}})
-
-    if user is not None:
-        should_clauses.append({"term": {"users": str(user.id)}})
-        for group in user.groups:
-            should_clauses.append({"term": {"groups": str(group)}})
+    has_global_view = user and user.has_perm("COMPONENT.VIEW")
+    bool_query = {
+        "must": must_clauses,
+        "filter": filter_clauses
+    }
+    if not has_global_view:
+        should_clauses = [{"term": {"public": True}}]
+        if user is not None:
+            should_clauses.append({"term": {"users": str(user.id)}})
+            for group in user.groups:
+                should_clauses.append({"term": {"groups": str(group)}})
+        bool_query["should"] = should_clauses
+        bool_query["minimum_should_match"] = 1
 
     body = {
         "query": {
-            "bool": {
-                "must": must_clauses,
-                "filter": filter_clauses,
-                "should": should_clauses
-            }
+            "bool": bool_query
         },
         "collapse": {
             "field": "vendor_name",
@@ -224,10 +225,6 @@ async def search_resources(request: Request, user: Optional[UserAll], querytext:
             }
         }
     }
-
-    body["query"]["bool"]["minimum_should_match"] = 1 if should_clauses else 0
-
-    # if order_by and order_by no
 
     if not order_by:
         order_by = ("-creation_date", )
@@ -249,7 +246,7 @@ async def search_resources(request: Request, user: Optional[UserAll], querytext:
     return await build_search_response(index=RESOURCES_INDEX, body=body, pagenum=pagenum, max_results=maxresults, clean=clean_resource_out, request=request)
 
 
-def prepare_resource_for_indexing(resource: CatalogueResourceWithUsersGroups) -> ResourceOut:
+def prepare_resource_for_indexing(resource: CatalogueResource) -> ResourceOut:
     resource_info = resource.get_processed_info(process_urls=False)
 
     endpoint_descriptions = ''
@@ -297,7 +294,7 @@ async def rebuild_resource_index(db: DBSession):
         "settings": {"index": {"max_ngram_diff": 18}, "analysis": RESOURCE_MAPPINGS["settings"]["analysis"]},
         "mappings": RESOURCE_MAPPINGS["mappings"]})
 
-    data = await get_all_catalogue_resources_with_usersgroups(db)
+    data = await get_all_catalogue_resources(db)
     actions = [{'_index': RESOURCES_INDEX, '_id': str(resource.id),
                 '_source': prepare_resource_for_indexing(resource).model_dump()} for resource in data]
 
@@ -306,7 +303,7 @@ async def rebuild_resource_index(db: DBSession):
 
 async def add_resource_to_index(db: DBSession, resource: CatalogueResource):
     from wirecloud.commons.search import es_client
-    res = await get_catalogue_resource_with_usersgroups_by_id(db, resource.id)
+    res = await get_catalogue_resource_by_id(db, resource.id)
 
     await es_client.index(index=RESOURCES_INDEX, id=str(res.id), document=prepare_resource_for_indexing(res).model_dump())
 

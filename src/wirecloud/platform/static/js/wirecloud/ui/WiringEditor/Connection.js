@@ -543,16 +543,23 @@
                 target = this.target.endpoint._endpoint;
 
             if (this.established) {
-                return this;
+                return Promise.resolve(this);
             }
-            wiringEngine.createConnection(source, target, {
+
+            return wiringEngine.createConnection(source, target, {
                 readonly: readonly
             }).then((connection) => {
                 establishConnection.call(this, connection);
                 this.refresh();
+                return this;
+            }, (error) => {
+                (new Wirecloud.ui.MessageWindowMenu(
+                    error,
+                    Wirecloud.constants.LOGGING.ERROR_MSG
+                )).show();
+                this.remove();
+                return Promise.reject(error);
             });
-
-            return this;
         }
 
         /**

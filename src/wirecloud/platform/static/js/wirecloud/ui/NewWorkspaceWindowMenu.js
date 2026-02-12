@@ -98,7 +98,8 @@
                             // Show missing dependencies
                             dialog = new Wirecloud.ui.MissingDependenciesWindowMenu(retry.bind(null, data), error.details);
                         } else {
-                            dialog = new Wirecloud.ui.MessageWindowMenu(error, Wirecloud.constants.LOGGING.ERROR_MSG);
+                            const errorMsg = typeof error === 'string' ? error : error.description;
+                            dialog = new Wirecloud.ui.MessageWindowMenu(errorMsg, Wirecloud.constants.LOGGING.ERROR_MSG);
                         }
                         dialog.show();
                     }

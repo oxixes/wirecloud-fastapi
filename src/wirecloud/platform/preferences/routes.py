@@ -35,6 +35,7 @@ from wirecloud.platform.workspace.crud import get_workspace_by_id, clear_workspa
     clear_workspace_groups, add_user_to_workspace, add_group_to_workspace, change_workspace
 from wirecloud import docs as root_docs
 from wirecloud.platform.preferences import docs
+from wirecloud.platform.workspace.utils import is_owner_or_has_permission
 from wirecloud.translation import gettext as _
 
 preferences_router = APIRouter()
@@ -94,7 +95,7 @@ async def get_platform_preferences(db: DBDep, request: Request, user: UserDepNoC
 async def create_platform_preferences(db: DBDep, user: UserDep,
                                       preferences: dict[str, Union[str, PlatformPreferenceCreateValue]] = Body(
                                           description=docs.create_platform_preference_collection_platform_preference_create_description,
-                                          example=docs.create_platform_preference_collection_platform_preference_create_example)):
+                                          examples=docs.create_platform_preference_collection_platform_preference_create_example)):
     create_obj = PlatformPreferenceCreate(preferences=preferences)
     await update_preferences(db, user, create_obj)
 
@@ -161,17 +162,21 @@ async def create_workspace_preferences(db: DBDep, request: Request, user: UserDe
     description=docs.create_workspace_preference_collection_workspace_id_description),
                                        preferences: dict[str, Union[str, WorkspacePreference]] = Body(
                                            description=docs.create_workspace_preference_collection_platform_preference_create_description,
-                                           example=docs.create_workspace_preference_collection_platform_preference_create_example)):
+                                           examples=docs.create_workspace_preference_collection_platform_preference_create_example)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
-    if not workspace.is_editable_by(user):
-        return build_error_response(request, 403, _("You are not allowed to update this workspace"))
+    editable = await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.PREFERENCES.EDIT")
+    if not editable:
+        return build_error_response(request, 403, _("You are not allowed to update workspace preferences"))
 
     save_workspace = False
     save_public = False
+    shareable = editable and is_owner_or_has_permission(user, workspace, "WORKSPACE.SHARE")
 
     if 'sharelist' in preferences:
+        if not shareable:
+            return build_error_response(request, 403, _("You do not have permission to share this workspace"))
         await clear_workspace_users(db, workspace)
         await clear_workspace_groups(db, workspace)
         if isinstance(preferences['sharelist'], WorkspacePreference):
@@ -197,6 +202,8 @@ async def create_workspace_preferences(db: DBDep, request: Request, user: UserDe
         del preferences['sharelist']
 
     if 'public' in preferences:
+        if not shareable:
+            return build_error_response(request, 403, _("You do not have permission to share this workspace"))
         save_workspace = True
         save_public = True
         if type(preferences['public']) == str:
@@ -290,7 +297,7 @@ async def create_tab_preferences(db: DBDep, request: Request, user: UserDep, wor
     description=docs.create_tab_preference_collection_tab_id_description),
                                  preferences: dict[str, Union[str, TabPreference]] = Body(
                                      description=docs.create_tab_preference_collection_platform_preference_create_description,
-                                     example=docs.create_tab_preference_collection_platform_preference_create_example)):
+                                     examples=docs.create_tab_preference_collection_platform_preference_create_example)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
@@ -300,7 +307,8 @@ async def create_tab_preferences(db: DBDep, request: Request, user: UserDep, wor
     except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
-    if not await workspace.is_accessible_by(db, user):
+    editable = await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.TAB.PREFERENCES.EDIT")
+    if not editable:
         return build_error_response(request, 403, _("You are not allowed to read this workspace"))
 
     await update_tab_preferences(db, user, workspace, tab, preferences)

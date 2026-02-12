@@ -21,8 +21,7 @@ from typing import Optional
 from bson import ObjectId
 
 from wirecloud.catalogue.schemas import (CatalogueResourceCreate, CatalogueResource, CatalogueResourceBase,
-                                             CatalogueResourceType, CatalogueResourceXHTML,
-                                             CatalogueResourceWithUsersGroups)
+                                             CatalogueResourceType, CatalogueResourceXHTML)
 from wirecloud.catalogue.models import DBCatalogueResource as CatalogueResourceModel
 from wirecloud.catalogue.models import XHTML
 from wirecloud.commons.auth.crud import get_all_user_groups
@@ -43,7 +42,9 @@ def build_schema_from_resource(resource: CatalogueResourceModel) -> CatalogueRes
         creation_date=resource.creation_date,
         template_uri=resource.template_uri,
         popularity=resource.popularity,
-        description=resource.description
+        description=resource.description,
+        users=resource.users,
+        groups=resource.groups,
     )
 
 
@@ -132,21 +133,6 @@ async def has_resource_user(db: DBSession, resource_id: Id, user_id: Id) -> bool
     return result is not None
 
 
-async def is_resource_available_for_user(db: DBSession, resource: CatalogueResourceBase, user: UserAll) -> bool:
-    # Checks if the resource is public or owned by the user
-    if resource.public:
-        return True
-
-    # Check if the resource is available for the user or any of the groups the user belongs to
-    user_query = {"_id": ObjectId(resource.id), "users": ObjectId(user.id)}
-    user_groups = await get_all_user_groups(db, user)
-    group_query = {"_id": ObjectId(resource.id), "groups": {"$in": [group.id for group in user_groups]}}
-
-    result = await db.client.catalogue_resources.find_one({"$or": [user_query, group_query]})
-
-    return result is not None
-
-
 async def get_all_catalogue_resource_versions(db: DBSession, vendor: Vendor, short_name: Name) -> list[CatalogueResource]:
     query = {"vendor": vendor, "short_name": short_name}
 
@@ -160,25 +146,21 @@ async def get_catalogue_resource_versions_for_user(db: DBSession, vendor: Option
                                                    short_name: Optional[Name] = None,
                                                    user: Optional[UserAll] = None) -> list[CatalogueResource]:
     # Gets all public resources and the resources owned by the user or the groups the user belongs to
-    public_resources_query = {"public": True}
+    base_query = {}
     if vendor is not None:
-        public_resources_query["vendor"] = vendor
+        base_query["vendor"] = vendor
     if short_name is not None:
-        public_resources_query["short_name"] = short_name
+        base_query["short_name"] = short_name
 
-    if user is None:
-        query = public_resources_query
+    has_global_view = user and user.has_perm("CATALOGUE.VIEW")
+    if has_global_view:
+        query = base_query
+    elif user is None:
+        query = {**base_query, "public": True}
     else:
-        user_resources_query = {"users": {"$in": [ObjectId(user.id)]}}
-        group_resources_query = {"groups": {"$in": user.groups}}
-
-        if vendor is not None:
-            user_resources_query["vendor"] = vendor
-            group_resources_query["vendor"] = vendor
-
-        if short_name is not None:
-            user_resources_query["short_name"] = short_name
-            group_resources_query["short_name"] = short_name
+        public_resources_query = {**base_query, "public": True}
+        user_resources_query = {**base_query, "users": {"$in": [ObjectId(user.id)]}}
+        group_resources_query = {**base_query, "groups": {"$in": user.groups}}
 
         query = {"$or": [public_resources_query, user_resources_query, group_resources_query]}
 
@@ -189,7 +171,7 @@ async def get_catalogue_resource_versions_for_user(db: DBSession, vendor: Option
 
 
 async def get_all_catalogue_resources(db: DBSession) -> list[CatalogueResource]:
-    result = await db.client.catalogue_resources.find()
+    result = await db.client.catalogue_resources.find().to_list()
     resources = [CatalogueResourceModel.model_validate(resource) for resource in result]
 
     return [build_schema_from_resource(resource) for resource in resources]
@@ -291,18 +273,3 @@ async def save_catalogue_resource_xhtml(db: DBSession, resource_id: Id, xhtml: X
     query = {"_id": ObjectId(resource_id)}
     update = {"$set": {"xhtml": xhtml.model_dump()}}
     await db.client.catalogue_resources.update_one(query, update)
-
-
-async def get_all_catalogue_resources_with_usersgroups(db: DBSession) -> list[CatalogueResourceWithUsersGroups]:
-    results = await db.client.catalogue_resources.find().to_list()
-    return [CatalogueResourceWithUsersGroups.model_validate(resource) for resource in results]
-
-
-async def get_catalogue_resource_with_usersgroups_by_id(db: DBSession, resource_id: Id) -> Optional[CatalogueResourceWithUsersGroups]:
-    query = {"_id": ObjectId(resource_id)}
-    result = await db.client.catalogue_resources.find_one(query)
-
-    if result is None:
-        return None
-
-    return CatalogueResourceWithUsersGroups.model_validate(result)

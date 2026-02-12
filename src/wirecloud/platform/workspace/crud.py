@@ -26,7 +26,7 @@ from io import BytesIO
 
 from wirecloud.settings import cache
 from wirecloud.catalogue import utils as catalogue
-from wirecloud.catalogue.crud import get_catalogue_resource, get_catalogue_resource_by_id
+from wirecloud.catalogue.crud import get_catalogue_resource
 from wirecloud.commons.auth.crud import get_user_by_username, get_all_user_groups
 from wirecloud.commons.utils.db import save_alternative
 from wirecloud.commons.utils.downloader import download_http_content
@@ -38,7 +38,7 @@ from wirecloud.database import DBSession, Id
 from wirecloud.commons.auth.schemas import User, UserAll
 from wirecloud.platform.localcatalogue.utils import install_component
 from wirecloud.platform.preferences.schemas import WorkspacePreference
-from wirecloud.commons.auth.models import Group as GroupModel, Group
+from wirecloud.commons.auth.models import Group
 from wirecloud.platform.search import delete_workspace_from_index, update_workspace_in_index
 from wirecloud.platform.workspace.models import Workspace, WorkspaceAccessPermissions, Tab
 from wirecloud.platform.workspace.utils import create_tab, _workspace_cache_key, _variable_values_cache_key
@@ -60,13 +60,16 @@ def _sanitize_widget_layout_config(workspace_data: dict) -> None:
 
 async def get_workspace_list(db: DBSession, user: Optional[UserAll]) -> list[Workspace]:
     if user is not None:
-        user_groups = await get_all_user_groups(db, user)
+        if user.has_perm("WORKSPACE.VIEW"):
+            query = {}
+        else:
+            user_groups = await get_all_user_groups(db, user)
 
-        query = { "$or": [
-            {'public': True, 'searchable': True},
-            {'users.id': ObjectId(user.id)},
-            {'groups.id': {"$in": [group.id for group in user_groups]}},
-        ]}
+            query = { "$or": [
+                {'public': True, 'searchable': True},
+                {'users.id': ObjectId(user.id)},
+                {'groups.id': {"$in": [group.id for group in user_groups]}},
+            ]}
     else:
         query = {"public": True, "searchable": True}
     workspaces = await db.client.workspaces.find(query).to_list()
@@ -92,7 +95,7 @@ async def create_empty_workspace(db: DBSession, title: str, user: User, allow_re
     await create_tab(db, user, _('Tab'), workspace)
 
     if allow_renaming:
-        await save_alternative(db, 'workspace', 'name', workspace)
+        await save_alternative(db, 'workspaces', 'name', workspace)
     else:
         if await is_a_workspace_with_that_name(db, name):
             return None
@@ -123,7 +126,7 @@ async def create_workspace(db: DBSession, request: Optional[Request], owner: Use
 
         (mashup_vendor, mashup_name, mashup_version) = values
         resource = await get_catalogue_resource(db, mashup_vendor, mashup_name, mashup_version)
-        if resource is None or not await resource.is_available_for(db, mashup_user if mashup_user is not None else owner) or resource.resource_type() != 'mashup':
+        if resource is None or not resource.is_available_for(mashup_user if mashup_user is not None else owner) or resource.resource_type() != 'mashup':
             raise ValueError(_("Mashup not found %(mashup)s") % {'mashup': mashup})
 
         base_dir = catalogue.wgt_deployer.get_base_dir(mashup_vendor, mashup_name, mashup_version)

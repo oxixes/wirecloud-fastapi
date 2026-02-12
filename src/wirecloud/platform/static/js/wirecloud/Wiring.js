@@ -639,9 +639,10 @@
                 if (response.status === 204) {
                     return Promise.resolve();
                 } else {
-                    // TODO
-                    return Promise.reject(new Error("Unexpected error response"));
+                    return Promise.reject(Wirecloud.GlobalLogManager.parseErrorResponse(response));
                 }
+            }, function (error) {
+                return Promise.reject(Wirecloud.GlobalLogManager.parseErrorResponse(error));
             });
         }
 
