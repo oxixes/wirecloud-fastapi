@@ -174,7 +174,7 @@
                         if (response.status === 201) {
                             resolve(create_widget.call(this, resource, JSON.parse(response.responseText)));
                         } else {
-                            reject(/* TODO */);
+                            reject(Wirecloud.GlobalLogManager.parseErrorResponse(response));
                         }
                     }.bind(this)
                 });

@@ -79,7 +79,7 @@ async def get_or_add_widget_from_catalogue(db: DBSession, vendor: Vendor, name: 
                                            user: UserAll) -> Optional[tuple[Widget, CatalogueResource]]:
     resource_list = await get_catalogue_resources_with_regex(db, vendor, name, version)
     for resource in resource_list:
-        if await resource.is_available_for(db, user):
+        if resource.is_available_for(user):
             return await get_widget_from_resource(db, resource.id), resource
 
     return None

@@ -269,7 +269,7 @@ class VariableValueCacheManager:
         )
 
 
-async def get_workspace_data(db: DBSession, workspace: Workspace, user: Optional[User]) -> WorkspaceData:
+async def get_workspace_data(db: DBSession, workspace: Workspace, user: Optional[UserAll]) -> WorkspaceData:
     longdescription = workspace.longdescription
     if longdescription != '':
         longdescription = clean_html(markdown.markdown(longdescription, output_format='xhtml'))
@@ -284,7 +284,7 @@ async def get_workspace_data(db: DBSession, workspace: Workspace, user: Optional
         shared=workspace.is_shared(),
         requireauth=workspace.requireauth,
         owner=await get_username_by_id(db, workspace.creator),
-        removable=workspace.is_editable_by(user) if user is not None else False,
+        removable=await workspace.is_editable_by(db, user) if user is not None else False,
         lastmodified=workspace.last_modified,
         description=workspace.description,
         longdescription=longdescription,
@@ -463,9 +463,9 @@ async def _get_global_workspace_data(db: DBSession, request: Request, workspace:
         try:
             resource = await get_catalogue_resource(db, vendor, name, version)
             operator_info = resource.get_processed_info(process_variables=True)
-            if not await resource.is_available_for(db, await get_user_with_all_info(db, workspace.creator)):
-                raise CatalogueResource.DoesNotExist
-        except CatalogueResource.DoesNotExist:
+            if not resource.is_available_for(user):
+                raise ValueError()
+        except ValueError:
             operator.preferences = {}
             operator.properties = {}
             continue
@@ -546,3 +546,7 @@ def is_there_a_tab_with_that_name(tab_name: str, tabs: dict[str, Tab]) -> bool:
             found = True
             break
     return found
+
+
+def is_owner_or_has_permission(user: UserAll, workspace: Workspace, permission: str) -> bool:
+    return workspace.creator == user.id or user.has_perm(permission)

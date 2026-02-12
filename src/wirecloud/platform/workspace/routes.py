@@ -45,7 +45,7 @@ from wirecloud.platform.workspace.schemas import WorkspaceData, WorkspaceCreate,
     WorkspaceEntry, TabCreate, TabData, TabCreateEntry, MashupMergeService
 from wirecloud.database import DBDep, Id
 from wirecloud.platform.workspace.utils import get_workspace_data, get_global_workspace_data, create_tab, \
-    get_tab_data, get_workspace_entry
+    get_tab_data, get_workspace_entry, is_owner_or_has_permission
 from wirecloud.platform.workspace import docs
 from wirecloud.translation import gettext as _
 
@@ -106,6 +106,10 @@ async def get_workspace_list_route(db: DBDep, user: UserDepNoCSRF) -> list[Works
 async def create_workspace_collection(db: DBDep, user: UserDep, request: Request, workspace: WorkspaceCreate = Body(
     description=docs.create_workspace_collection_workspace_description,
     examples=docs.create_workspace_collection_workspace_example)):
+
+    if not user.has_perm("WORKSPACE.CREATE"):
+        return build_error_response(request, 403, _("You do not have permission to create workspaces"))
+
     workspace_name = workspace.name
     workspace_title = workspace.title
     workspace_id = workspace.workspace
@@ -132,7 +136,8 @@ async def create_workspace_collection(db: DBDep, user: UserDep, request: Request
             mashup = await get_workspace_by_id(db, Id(workspace_id))
             if mashup is None:
                 return build_error_response(request, 404, _("Workspace not found"))
-            if not await mashup.is_accessible_by(db, user):
+            clonable = await mashup.is_accessible_by(db, user) and is_owner_or_has_permission(user, mashup, "WORKSPACE.CLONE")
+            if not clonable:
                 return build_error_response(request, 403, _("You are not allowed to read from workspace"))
 
         try:
@@ -249,7 +254,7 @@ async def create_workspace_entry(db: DBDep, user: UserDep, request: Request, wor
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
-    if not workspace.is_editable_by(user):
+    if not await workspace.is_editable_by(db, user):
         return build_error_response(request, 403, _("You are not allowed to update this workspace"))
 
     if workspace_entry.name != '':
@@ -303,7 +308,10 @@ async def delete_workspace_entry(db: DBDep, user: UserDep, request: Request, wor
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
-    if not workspace.is_editable_by(user):
+    editable = await workspace.is_editable_by(db, user)
+    can_delete = editable and is_owner_or_has_permission(user, workspace, "WORKSPACE.DELETE")
+
+    if not can_delete:
         return build_error_response(request, 403, _("You are not allowed to delete this workspace"))
 
     await delete_workspace(db, workspace)
@@ -359,7 +367,8 @@ async def create_tab_collection(db: DBDep, user: UserDep, request: Request, work
     if tab_name == '' and tab_title == '':
         return build_error_response(request, 422, _("Malformed tab JSON: expecting tab name or title"))
 
-    if not workspace.is_editable_by(user):
+    can_create = await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.TAB.CREATE")
+    if not can_create:
         return build_error_response(request, 403, _("You are not allowed to create new tabs for this workspace"))
 
     if tab_title == '':
@@ -444,11 +453,13 @@ async def create_tab_entry(db: DBDep, user: UserDep, request: Request,
                            tab_id: str = Path(description=docs.update_tab_entry_tab_id_description),
                            tab_entry: TabCreateEntry = Body(
                                description=docs.update_tab_entry_tab_create_entry_description,
-                               example=docs.update_tab_entry_tab_create_entry_example)):
+                               examples=docs.update_tab_entry_tab_create_entry_example)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
-    if not workspace.is_editable_by(user):
+
+    can_update = await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.TAB.EDIT")
+    if not can_update:
         return build_error_response(request, 403, _("You are not allowed to update this workspace"))
 
     try:
@@ -511,7 +522,8 @@ async def delete_tab_entry(db: DBDep, user: UserDep, request: Request,
     except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
-    if not workspace.is_editable_by(user):
+    removable = await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.TAB.DELETE")
+    if not removable:
         return build_error_response(request, 403, _("You are not allowed to remove this tab"))
 
     if len(workspace.tabs) == 1:
@@ -568,7 +580,8 @@ async def process_mashup(db: DBDep, user: UserDep, request: Request,
     if to_ws is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
-    if not to_ws.is_editable_by(user):
+    can_merge = await to_ws.is_editable_by(db, user) and is_owner_or_has_permission(user, to_ws, "WORKSPACE.TAB.MERGE")
+    if not can_merge:
         return build_error_response(request, 403, _("You are not allowed to update this workspace"))
 
     mashup_id = mashup_data.mashup
@@ -586,7 +599,7 @@ async def process_mashup(db: DBDep, user: UserDep, request: Request,
 
         (mashup_vendor, mashup_name, mashup_version) = values
         resource = await get_catalogue_resource(db, mashup_vendor, mashup_name, mashup_version)
-        if resource is None or (not await resource.is_available_for(db, user) or resource.resource_type() != 'mashup'):
+        if resource is None or (not resource.is_available_for(user) or resource.resource_type() != 'mashup'):
             return build_error_response(request, 404, _(f"Mashup not found: {mashup_id}"))
 
         base_dir = wgt_deployer.get_base_dir(mashup_vendor, mashup_name, mashup_version)
@@ -653,6 +666,9 @@ def check_json_fields(json_data, fields):
         401: root_docs.generate_auth_required_response_openapi_description(
             docs.process_publish_service_auth_required_response_description
         ),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.process_publish_service_permission_denied_response_description,
+            "You are not allowed to publish this workspace" ),
         404: root_docs.generate_not_found_response_openapi_description(
             docs.process_publish_service_not_found_response_description
         ),
@@ -667,7 +683,7 @@ def check_json_fields(json_data, fields):
 async def publish_workspace(db: DBDep, user: UserDep, request: Request,
                             workspace_id: Id = Path(description=docs.process_publish_service_workspace_id_description),
                             json_data: str = Form(alias="json", description=docs.process_publish_service_json_data_description,
-                                                  example=docs.process_publish_service_json_data_example),
+                                                  examples=[docs.process_publish_service_json_data_example]),
                             image: Optional[UploadFile] = File(None,
                                                                     description=docs.process_publish_service_image_file_description),
                             smartphoneimage: Optional[UploadFile] = File(None,
@@ -694,6 +710,10 @@ async def publish_workspace(db: DBDep, user: UserDep, request: Request,
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
+
+    can_publish = await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.PUBLISH")
+    if not can_publish:
+        return build_error_response(request, 403, _("You are not allowed to publish this workspace"))
 
     if image is not None:
         json_data.image = 'images/catalogue' + os.path.splitext(image.filename)[1]
@@ -723,4 +743,4 @@ async def publish_workspace(db: DBDep, user: UserDep, request: Request,
 
     resource = await get_local_catalogue().publish(db, None, wgt_file, user, request, json_data)
 
-    return resource.get_processed_info(request)
+    return Response(status_code=201, content=resource.get_processed_info(request).model_dump_json())

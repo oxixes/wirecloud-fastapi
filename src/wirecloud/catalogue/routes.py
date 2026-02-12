@@ -90,6 +90,9 @@ router = APIRouter()
 @consumes(["multipart/form-data", "application/octet-stream"])
 @authentication_required()
 async def create_resource(db: DBDep, request: Request, user: UserDep):
+    if not user.has_perm("COMPONENT.INSTALL"):
+        return build_error_response(request, 403, _('You do not have permission to install components'))
+
     if request.state.mimetype == 'multipart/form-data':
         # Get the file contents from the file 'file'
         form = await request.form(max_files=1000, max_fields=1000)
@@ -231,6 +234,8 @@ async def delete_resource_versions(db: DBDep,
                                                          pattern=r"^[^/]+$"),
                                    name: Name = Path(description=docs.delete_resource_entry_group_name_description,
                                                      pattern=r"^[^/]+$")):
+    if not user.has_perm("COMPONENT.DELETE"):
+        return build_error_response(request, 403, _('You do not have permission to delete components'))
     resources = await get_all_catalogue_resource_versions(db, vendor, name)
 
     if len(resources) == 0:
@@ -257,6 +262,9 @@ async def delete_resource_versions(db: DBDep,
     response_description=docs.get_resource_entry_response_description,
     responses={
         200: {"content": {"application/json": {"example": docs.get_resource_entry_response_example}}},
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.get_resource_entry_permission_denied_response_description,
+            docs.get_resource_entry_permission_denied_response_example_msg),
         404: root_docs.generate_not_found_response_openapi_description(
             docs.get_resource_entry_not_found_response_description),
         406: root_docs.generate_not_acceptable_response_openapi_description(
@@ -275,11 +283,13 @@ async def get_resource_version(db: DBDep,
                                                  pattern=r"^[^/]+$"),
                                version: Version = Path(description=docs.get_resource_entry_version_description,
                                                        pattern=r"^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)(?:(?:a|b|rc)[1-9]\d*)?(-dev.*)?$")):
-    # FIXME No access permissions are checked. The original code does not check permissions either. Check this.
     resource = await get_catalogue_resource(db, vendor, name, version)
 
     if resource is None:
         raise NotFound()
+
+    if not resource.is_available_for(user):
+        return build_error_response(request, 403, _('You do not have permission to view resource'))
 
     return await get_resource_data(db, resource, user, request)
 
@@ -316,6 +326,8 @@ async def delete_resource_version(db: DBDep,
                                                     pattern=r"^[^/]+$"),
                                   version: Version = Path(description=docs.delete_resource_entry_version_description,
                                                         pattern=r"^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)(?:(?:a|b|rc)[1-9]\d*)?(-dev.*)?$")):
+    if not user.has_perm("COMPONENT.UNINSTALL"):
+        return build_error_response(request, 403, _('You do not have permission to uninstall components'))
     resource = await get_catalogue_resource(db, vendor, name, version)
 
     if resource is None:
@@ -340,6 +352,9 @@ async def delete_resource_version(db: DBDep,
     response_class=XHTMLResponse,
     responses={
         200: {"content": {"application/xhtml+xml": {"example": docs.get_resource_changelog_response_example}}},
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.get_resource_changelog_permission_denied_response_description,
+            docs.get_resource_changelog_permission_denied_response_example_msg),
         404: root_docs.generate_not_found_response_openapi_description(
             docs.get_resource_changelog_not_found_response_description, include_schema=False),
         406: root_docs.generate_not_acceptable_response_openapi_description(
@@ -352,6 +367,7 @@ async def delete_resource_version(db: DBDep,
 @produces(["application/xhtml+xml"])
 async def get_resource_changelog(db: DBDep,
                                  request: Request,
+                                 user: UserDepNoCSRF,
                                  vendor: Vendor = Path(description=docs.get_resource_changelog_vendor_description,
                                                        pattern=r"^[^/]+$"),
                                  name: Name = Path(description=docs.get_resource_changelog_name_description,
@@ -362,11 +378,13 @@ async def get_resource_changelog(db: DBDep,
                                                                          description=docs.get_resource_changelog_from_version_description,
                                                                          pattern=r"^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)(?:(?:a|b|rc)[1-9]\d*)?(-dev.*)?$",
                                                                          alias='from')):
-    # FIXME No access permissions are checked. The original code does not check permissions either. Check this.
     resource = await get_catalogue_resource(db, vendor, name, version)
 
     if resource is None:
         raise NotFound()
+
+    if not resource.is_available_for(user):
+        return build_error_response(request, 403, _('You do not have permission to view resource'))
 
     resource_info = resource.get_processed_info(process_urls=False)
     if resource_info.changelog == "":
@@ -414,6 +432,9 @@ async def get_resource_changelog(db: DBDep,
     response_class=XHTMLResponse,
     responses={
         200: {"content": {"application/xhtml+xml": {"example": docs.get_resource_userguide_response_example}}},
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.get_resource_userguide_permission_denied_response_description,
+            docs.get_resource_userguide_permission_denied_response_example_msg),
         404: root_docs.generate_not_found_response_openapi_description(
             docs.get_resource_userguide_not_found_response_description, include_schema=False),
         406: root_docs.generate_not_acceptable_response_openapi_description(
@@ -426,17 +447,20 @@ async def get_resource_changelog(db: DBDep,
 @produces(["application/xhtml+xml"])
 async def get_resource_user_guide(db: DBDep,
                                   request: Request,
+                                  user: UserDepNoCSRF,
                                   vendor: Vendor = Path(description=docs.get_resource_userguide_vendor_description,
                                                         pattern=r"^[^/]+$"),
                                   name: Name = Path(description=docs.get_resource_userguide_name_description,
                                                     pattern=r"^[^/]+$"),
                                   version: Version = Path(description=docs.get_resource_userguide_version_description,
                                                         pattern=r"^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)(?:(?:a|b|rc)[1-9]\d*)?(-dev.*)?$")):
-    # FIXME No access permissions are checked. The original code does not check permissions either. Check this.
     resource = await get_catalogue_resource(db, vendor, name, version)
 
     if resource is None:
         raise NotFound()
+
+    if not resource.is_available_for(user):
+        return build_error_response(request, 403, _('You do not have permission to view resource'))
 
     resource_info = resource.get_processed_info(process_urls=False)
     if resource_info.doc == "":
@@ -484,6 +508,9 @@ async def get_resource_user_guide(db: DBDep,
     response_class=Response,
     responses={
         200: {"content": {"application/octet-stream": {"example": docs.get_resource_file_response_example}}},
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.get_resource_file_permission_denied_response_description,
+            docs.get_resource_file_permission_denied_response_example_msg),
         404: root_docs.generate_not_found_response_openapi_description(
             docs.get_resource_file_not_found_response_description, include_schema=False),
         406: root_docs.generate_not_acceptable_response_openapi_description(
@@ -496,6 +523,7 @@ async def get_resource_user_guide(db: DBDep,
 @produces(["application/octet-stream"])
 async def get_resource_file(db: DBDep,
                             request: Request,
+                            user: UserDepNoCSRF,
                             vendor: Vendor = Path(description=docs.get_resource_file_vendor_description,
                                                   pattern=r"^[^/]+$"),
                             name: Name = Path(description=docs.get_resource_file_name_description,
@@ -503,11 +531,13 @@ async def get_resource_file(db: DBDep,
                             version: Version = Path(description=docs.get_resource_file_version_description,
                                                     pattern=r"^(?:[1-9]\d*\.|0\.)*(?:[1-9]\d*|0)(?:(?:a|b|rc)[1-9]\d*)?(-dev.*)?$"),
                             file_path: str = Path(description=docs.get_resource_file_file_path_description)):
-    # FIXME No access permissions are checked. The original code does not check permissions either. Check this.
     resource = await get_catalogue_resource(db, vendor, name, version)
 
     if resource is None:
         raise NotFound()
+
+    if not resource.is_available_for(user):
+        return build_error_response(request, 403, _('You do not have permission to view resource'))
 
     base_dir = catalogue_utils.wgt_deployer.get_base_dir(vendor, name, version)
     response = build_downloadfile_response(request, file_path, base_dir)

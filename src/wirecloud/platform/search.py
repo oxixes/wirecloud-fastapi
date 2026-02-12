@@ -137,23 +137,26 @@ async def search_workspaces(db: DBSession, user: UserAll, querytext: str, pagenu
         else:
             must_clauses.append({"multi_match": {"query": querytext, "fields": WORKSPACE_CONTENT_FIELDS}})
 
-    should_clauses = [{"term": {"public": True}}]
+    has_global_view = user and user.has_perm("WORKSPACE.VIEW")
+    bool_query = {
+        "must": must_clauses,
+        "filter": filter_clauses
+    }
 
-    if user:
-        should_clauses.append({"term": {"users": str(user.id)}})
-        if user.groups:
-            groups = await get_all_user_groups(db, user)
-            group_ids = [str(group.id) for group in groups]
-            should_clauses.append({"terms": {"groups": group_ids}})
+    if not has_global_view:
+        should_clauses = [{"term": {"public": True}}]
+        if user:
+            should_clauses.append({"term": {"users": str(user.id)}})
+            if user.groups:
+                groups = await get_all_user_groups(db, user)
+                group_ids = [str(group.id) for group in groups]
+                should_clauses.append({"terms": {"groups": group_ids}})
+        bool_query["should"] = should_clauses
+        bool_query["minimum_should_match"] = 1
 
     body = {
         "query": {
-            "bool": {
-                "must": must_clauses,
-                "filter": filter_clauses,
-                "should": should_clauses,
-                "minimum_should_match": 1
-            }
+            "bool": bool_query
         }
     }
 

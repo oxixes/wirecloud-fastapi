@@ -129,11 +129,13 @@ _available_rebuild_engines = None
 class SearchUserOutput(BaseModel):
     fullname: str
     username: str
+    type: str = "user"
 
 
 class SearchGroupOutput(BaseModel):
     name: str
     is_organization: bool
+    type: str
 
 
 class SearchResponse(BaseModel):
@@ -237,7 +239,8 @@ def clean_user_out(hit: dict) -> SearchUserOutput:
     source = hit["_source"]
     return SearchUserOutput(
         fullname=source["fullname"],
-        username=source["username"]
+        username=source["username"],
+        type="user"
     )
 
 
@@ -264,22 +267,26 @@ async def search_users(querytext: str, pagenum: int, max_results: int, order_by:
 async def add_user_to_index(user: User):
     await es_client.index(index=USERS_INDEX, id=str(user.id), document=SearchUserOutput(
         fullname=f"{user.first_name} {user.last_name}".strip(),
-        username=user.username
+        username=user.username,
+        type="user"
     ).model_dump())
 
 
 async def add_group_to_index(group: Group):
     await es_client.index(index=GROUPS_INDEX, id=str(group.id), document=SearchGroupOutput(
         name=group.name,
-        is_organization=group.is_organization
+        is_organization=group.is_organization,
+        type="organization" if group.is_organization else "group"
     ).model_dump())
 
 
 def clean_group_out(hit: dict) -> SearchGroupOutput:
     source = hit["_source"]
+    is_org = source["is_organization"]
     return SearchGroupOutput(
         name=source["name"],
-        is_organization=source["is_organization"]
+        is_organization=is_org,
+        type="organization" if is_org else "group"
     )
 
 
@@ -306,7 +313,8 @@ async def search_groups(querytext: str, pagenum: int, max_results: int, order_by
 async def search_user_groups(querytext: str, pagenum: int, max_results: int, order_by: Optional[str] = None) -> Optional[SearchResponse]:
     body = {}
     if querytext:
-        body = {"query": {"multi_match": {"query": querytext, "fields": USER_CONTENT_FIELDS}}}
+        all_fields = USER_CONTENT_FIELDS + GROUP_CONTENT_FIELDS
+        body = {"query": {"multi_match": {"query": querytext, "fields": all_fields}}}
 
     if order_by:
         sort_list = []
@@ -335,7 +343,8 @@ async def rebuild_user_index(db: DBSession) -> None:
     data = await get_all_users(db)
     actions = [{'_index': USERS_INDEX, '_id': str(user.id), '_source': SearchUserOutput(
         fullname=f"{user.first_name} {user.last_name}".strip(),
-        username=user.username
+        username=user.username,
+        type="user"
     ).model_dump()} for user in data]
     await async_bulk(es_client, actions)
 
@@ -350,7 +359,8 @@ async def rebuild_group_index(db: DBSession):
     data = await get_all_groups(db)
     actions = [{'_index': GROUPS_INDEX, '_id': str(group.id), '_source': SearchGroupOutput(
         name=group.name,
-        is_organization=group.is_organization
+        is_organization=group.is_organization,
+        type="organization" if group.is_organization else "group"
     ).model_dump()} for group in data]
     await async_bulk(es_client, actions)
 

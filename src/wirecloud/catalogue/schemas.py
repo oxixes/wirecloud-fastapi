@@ -61,20 +61,15 @@ class CatalogueResourceBase(BaseModel):
     def local_uri_part(self) -> str:
         return self.vendor + '/' + self.short_name + '/' + self.version
 
-    # TODO Take into account user permissions too
     async def is_removable_by(self, db: DBSession, user: UserAll, vendor: bool = False) -> bool:
         from wirecloud.catalogue.utils import check_vendor_permissions
 
         if user.is_superuser:
             return True
+        elif not user.has_perm("COMPONENT.UNINSTALL"):
+            return False
         else:
             return vendor is False or await check_vendor_permissions(db, user, self.vendor)
-
-    # TODO Take into account user permissions too
-    async def is_available_for(self, db: DBSession, user: Optional[UserAll]) -> bool:
-        from wirecloud.catalogue.crud import is_resource_available_for_user
-
-        return self.public or (user is not None and await is_resource_available_for_user(db, self, user))
 
     def get_template_url(self, request: Optional[Request] = None, for_base: bool = False,
                          url_pattern_name: str = 'wirecloud_catalogue.media') -> str:
@@ -116,6 +111,29 @@ class CatalogueResourceCreate(CatalogueResourceBase):
 
 class CatalogueResource(CatalogueResourceBase, populate_by_name=True):
     id: Id = Field(alias="_id")
+    users: list[str]
+    groups: list[str]
+
+    def is_available_for(self, user: Optional[UserAll]) -> bool:
+        has_global_view = user and user.has_perm("COMPONENT.VIEW")
+        if not has_global_view:
+            allowed = False
+            if self.public:
+                allowed = True
+            elif user is not None:
+                if str(user.id) in self.users:
+                    allowed = True
+                elif any(str(group_id) in self.groups for group_id in user.groups):
+                    allowed = True
+            return allowed
+        return True
+
+    def is_installed_for(self, user: Optional[UserAll]) -> bool:
+        if user is None:
+            return False
+        if self.public or str(user.id) in self.users:
+            return True
+        return any(str(group_id) in self.groups for group_id in user.groups)
 
     @property
     def cache_version_key(self) -> str:
@@ -129,6 +147,13 @@ class CatalogueResource(CatalogueResourceBase, populate_by_name=True):
             await cache.set(self.cache_version_key, version)
 
         return version
+
+    @field_validator("users", "groups", mode="before")
+    @classmethod
+    def convert_objectid_to_str(cls, v):
+        if not v:
+            return []
+        return [str(item) for item in v]
 
 
 class CatalogueResourceXHTML(CatalogueResource):
@@ -180,18 +205,6 @@ class CatalogueResourceDataSummaryGroup(CatalogueResourceDataSummaryIdentifier):
 class CatalogueResourceDeleteResults(BaseModel):
     affectedVersions: list[Version] = Field(
         description=docs.catalogue_resource_delete_results_affected_versions_description)
-
-
-class CatalogueResourceWithUsersGroups(CatalogueResource):
-    users: list[str]
-    groups: list[str]
-
-    @field_validator("users", "groups", mode="before")
-    @classmethod
-    def convert_objectid_to_str(cls, v):
-        if not v:
-            return []
-        return [str(item) for item in v]
 
 
 def get_template_url(vendor: Vendor, name: Name, version: Version, url: str, request: Optional[Request] = None,

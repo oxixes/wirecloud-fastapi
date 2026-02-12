@@ -78,7 +78,11 @@
         propagate(value, options) {
             utils.clone(this.outputList).forEach((targetEndpoint, i) => {
                 try {
-                    targetEndpoint.propagate(value, options);
+                    let newValue = value;
+                    if (typeof value === 'object' && value !== null) {
+                        newValue = utils.clone(newValue);
+                    }
+                    targetEndpoint.propagate(newValue, options);
                 } catch (error) {
                     const errorDetails = this.formatException(error);
                     const connection = this.connections[i];

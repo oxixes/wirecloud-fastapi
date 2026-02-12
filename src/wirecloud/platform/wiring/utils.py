@@ -17,24 +17,22 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from copy import deepcopy
-from io import BytesIO
 from typing import Union, Callable, TYPE_CHECKING
 from fastapi import Request, Response
-from lxml import etree
 
 from src import settings
 from wirecloud.settings import cache
-from wirecloud.commons.auth.schemas import User
+from wirecloud.commons.auth.schemas import User, UserAll
 from wirecloud.commons.utils.http import build_error_response, get_absolute_static_url, get_current_domain
 from wirecloud.commons.utils.template.schemas.macdschemas import MACDRequirement
-from wirecloud.database import DBSession, Id
+from wirecloud.database import DBSession
 from wirecloud.platform.wiring.schemas import Wiring, WiringConnection, WiringConnectionEndpoint, WiringType, \
     WiringVisualDescriptionConnection, WiringVisualDescription, WiringBehaviour, WiringComponents, \
     WiringOperatorPreference
 from wirecloud.translation import gettext as _
 
 if TYPE_CHECKING:
-    from wirecloud.platform.workspace.models import WorkspaceWiring
+    from wirecloud.platform.workspace.models import WorkspaceWiring, Workspace
     from wirecloud.catalogue.schemas import CatalogueResource
 
 
@@ -171,8 +169,8 @@ def check_same_wiring(object1, object2) -> bool:
     return True
 
 
-async def check_multiuser_wiring(db: DBSession, request: Request, user: User, new_wiring_status: 'WorkspaceWiring',
-                                 old_wiring_status: 'WorkspaceWiring', owner: Id, can_update_secure: bool = False) -> Union[Response, bool]:
+async def check_multiuser_wiring(db: DBSession, request: Request, user: UserAll, new_wiring_status: 'WorkspaceWiring',
+                                 old_wiring_status: 'WorkspaceWiring', workspace: 'Workspace', adding: bool, can_update_secure: bool = False) -> Union[Response, bool]:
     if not check_same_wiring(new_wiring_status, old_wiring_status):
         return build_error_response(request, 403, _('You are not allowed to update this workspace'))
 
@@ -193,6 +191,12 @@ async def check_multiuser_wiring(db: DBSession, request: Request, user: User, ne
             continue
 
         # Check preferences
+        from wirecloud.platform.workspace.utils import is_owner_or_has_permission
+        if (operator.preferences
+                and not adding
+                and not is_owner_or_has_permission(user, workspace, "WORKSPACE.OPERATOR.PREFERENCES.EDIT")):
+            return build_error_response(request, 403, _('You do not have permission to edit operator preferences'))
+
         for preference_name in operator.preferences:
             old_preference = old_operator.preferences[preference_name]
             new_preference = operator.preferences[preference_name]
@@ -205,12 +209,16 @@ async def check_multiuser_wiring(db: DBSession, request: Request, user: User, ne
 
             # Only multiuser variables can be updated
             if not preference_secure or can_update_secure:
-                if old_preference != new_preference and old_preference.value.users[str(owner)] != new_preference.value:
+                if old_preference != new_preference and old_preference.value.users[str(workspace.creator)] != new_preference.value:
                     return build_error_response(request, 403, _('You are not allowed to update this workspace'))
 
             operator.preferences[preference_name] = old_preference
 
         # Check properties
+        if (operator.properties
+                and not adding
+                and not is_owner_or_has_permission(user, workspace, "WORKSPACE.OPERATOR.PROPERTIES.EDIT")):
+            return build_error_response(request, 403, _('You do not have permission to edit operator properties'))
         for property_name in operator.properties:
             old_property = old_operator.properties[property_name]
             new_property = operator.properties[property_name]
@@ -232,7 +240,7 @@ async def check_multiuser_wiring(db: DBSession, request: Request, user: User, ne
                     return build_error_response(request, 403, _('Read only properties cannot be updated'))
                 # Variables can only be updated if multiuser
                 if not property_multiuser:
-                    if old_property != new_property and old_property.value.users[str(owner)] != new_property.value:
+                    if old_property != new_property and old_property.value.users[str(workspace.creator)] != new_property.value:
                         return build_error_response(request, 403, _('You are not allowed to update this workspace'))
                     else:
                         new_property.value = old_property.value
@@ -254,8 +262,8 @@ async def check_multiuser_wiring(db: DBSession, request: Request, user: User, ne
     return True
 
 
-async def check_wiring(db: DBSession, request: Request, user: User, new_wiring_status: 'WorkspaceWiring',
-                       old_wiring_status: 'WorkspaceWiring', can_update_secure: bool = False) -> Union[Response, bool]:
+async def check_wiring(db: DBSession, request: Request, user: UserAll, new_wiring_status: 'WorkspaceWiring',
+                       old_wiring_status: 'WorkspaceWiring', workspace: 'Workspace', adding: bool, can_update_secure: bool = False) -> Union[Response, bool]:
     from wirecloud.platform.workspace.models import WiringOperatorPreferenceValue
 
     # Check read only connections
@@ -306,6 +314,12 @@ async def check_wiring(db: DBSession, request: Request, user: User, new_wiring_s
             continue
 
         # Handle preferences
+        from wirecloud.platform.workspace.utils import is_owner_or_has_permission
+        if ((added_preferences or removed_preferences or updated_preferences)
+                and not adding
+                and not is_owner_or_has_permission(user, workspace, "WORKSPACE.OPERATOR.PREFERENCES.EDIT")):
+            return build_error_response(request, 403, _('You do not have permission to edit operator preferences'))
+
         for preference_name in added_preferences:
             if operator.preferences[preference_name].readonly or operator.preferences[preference_name].hidden:
                 return build_error_response(request, 403,
@@ -358,6 +372,11 @@ async def check_wiring(db: DBSession, request: Request, user: User, new_wiring_s
             operator.preferences[preference_name] = new_preference
 
         # Handle properties
+        if ((added_properties or removed_properties or updated_properties)
+                and not adding
+                and not is_owner_or_has_permission(user, workspace, "WORKSPACE.OPERATOR.PROPERTIES.EDIT")):
+            return build_error_response(request, 403, _('You do not have permission to edit operator properties'))
+
         for property_name in added_properties:
             if operator.properties[property_name].readonly or operator.properties[property_name].hidden:
                 return build_error_response(request, 403,
