@@ -25,6 +25,7 @@ from fastapi.responses import HTMLResponse
 from wirecloud import docs as root_docs
 from wirecloud.catalogue.crud import get_catalogue_resource_with_xhtml
 import wirecloud.platform.widget.utils as showcase_utils
+from wirecloud.commons.auth.utils import UserDepNoCSRF
 from wirecloud.commons.templates.tags import get_translation, get_url_from_view, get_static_path
 from wirecloud.commons.utils.cache import check_if_modified_since, patch_cache_headers
 from wirecloud.commons.utils.http import NotFound, build_downloadfile_response, get_absolute_reverse_url, \

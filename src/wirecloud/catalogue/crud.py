@@ -152,7 +152,7 @@ async def get_catalogue_resource_versions_for_user(db: DBSession, vendor: Option
     if short_name is not None:
         base_query["short_name"] = short_name
 
-    has_global_view = user and user.has_perm("CATALOGUE.VIEW")
+    has_global_view = user and user.has_perm("COMPONENT.VIEW")
     if has_global_view:
         query = base_query
     elif user is None:

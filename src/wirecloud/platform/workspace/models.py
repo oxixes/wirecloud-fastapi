@@ -114,8 +114,15 @@ class Workspace(BaseModel, populate_by_name=True):
     async def is_editable_by(self, db: DBSession, user: UserAll) -> bool:
         if user.is_superuser or self.creator == user.id:
             return True
+        for ws_user in self.users:
+            if ws_user.id == user.id and ws_user.accesslevel == 2:
+                return True
+        user_groups = await get_all_user_groups(db, user)
+        for ws_group in self.groups:
+            if ws_group.accesslevel == 2 and any(g.id == ws_group.id for g in user_groups):
+                return True
+
         return await self.is_accessible_by(db, user) and user.has_perm("WORKSPACE.EDIT")
-        # TODO check more permissions
 
     def is_shared(self) -> bool:
         return self.public or len(self.users) > 1 or len(self.groups) > 0
@@ -123,7 +130,7 @@ class Workspace(BaseModel, populate_by_name=True):
     async def is_accessible_by(self, db: DBSession, user: Optional[UserAll]) -> bool:
         if user is None:
             return self.public and not self.requireauth
-        if user.is_superuser or user.has_perm("WORKSPACE.VIEW"):
+        if user.has_perm("WORKSPACE.VIEW"):
             return True
         if self.public and not self.requireauth:
             return True
@@ -138,4 +145,3 @@ class Workspace(BaseModel, populate_by_name=True):
         user_group_ids = {g.id for g in user_groups}
 
         return bool(workspace_group_ids & user_group_ids)
-         # TODO check more permissions

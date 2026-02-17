@@ -111,7 +111,7 @@ async def create_market_collection(db: DBDep, user: UserDep, request: Request,
         if target_user is None:
             return build_error_response(request, 422, _("invalid user option"))
 
-    if target_user.id != user.id and (not user.is_superuser or not user.has_perm("MARKETPLACE.CREATE")):
+    if target_user.id != user.id and (not user.is_superuser and not user.has_perm("MARKETPLACE.CREATE")):
         return build_error_response(request, 403, _("You don't have permissions for adding marketplaces in name of other user"))
 
     market.user = target_user.username
@@ -156,9 +156,8 @@ async def create_market_collection(db: DBDep, user: UserDep, request: Request,
 async def delete_market_entry(db: DBDep, user: UserDep, request: Request,
                               username: str = Path(alias="user", description=docs.delete_market_entry_user_description),
                               market: str = Path(description=docs.delete_market_entry_market_description)):
-    # TODO More complex user permissions
 
-    if username != user.username and (not user.is_superuser or not user.has_perm("MARKETPLACE.DELETE")):
+    if username != user.username and (not user.is_superuser and not user.has_perm("MARKETPLACE.DELETE")):
         return build_error_response(request, 403, _("You are not allowed to delete this market"))
 
     if username == user.username:

@@ -53,7 +53,7 @@
                 autocomplete: options.autocomplete,
                 lookup: searchForUserGroup,
                 build: (typeahead, data) => {
-                    // Usar username para usuarios, name para grupos/organizaciones
+                    // Use username for users, name for groups/organizations
                     const identifier = data.type === "user" ? data.username : data.name;
                     return {
                         value: identifier,

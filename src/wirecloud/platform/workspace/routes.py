@@ -580,7 +580,7 @@ async def process_mashup(db: DBDep, user: UserDep, request: Request,
     if to_ws is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
-    can_merge = await to_ws.is_editable_by(db, user) and is_owner_or_has_permission(user, to_ws, "WORKSPACE.TAB.MERGE")
+    can_merge = await to_ws.is_editable_by(db, user) and is_owner_or_has_permission(user, to_ws, "WORKSPACE.MERGE")
     if not can_merge:
         return build_error_response(request, 403, _("You are not allowed to update this workspace"))
 
@@ -711,7 +711,7 @@ async def publish_workspace(db: DBDep, user: UserDep, request: Request,
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
-    can_publish = await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.PUBLISH")
+    can_publish = await workspace.is_editable_by(db, user) and user.has_perm("WORKSPACE.PUBLISH")
     if not can_publish:
         return build_error_response(request, 403, _("You are not allowed to publish this workspace"))
 
