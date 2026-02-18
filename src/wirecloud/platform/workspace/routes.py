@@ -688,6 +688,8 @@ async def publish_workspace(db: DBDep, user: UserDep, request: Request,
                                                                     description=docs.process_publish_service_image_file_description),
                             smartphoneimage: Optional[UploadFile] = File(None,
                                                                               description=docs.process_publish_service_smartphoneimage_file_description)):  # TODO: put schema in json_data
+    if not user.has_perm("WORKSPACE.PUBLISH"):
+        return build_error_response(request, 403, _("You do not have permission to publish workspaces"))
     extra_files = []
 
     json_data = MACDMashupWithParametrization.model_validate_json(json_data)
@@ -711,8 +713,8 @@ async def publish_workspace(db: DBDep, user: UserDep, request: Request,
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
 
-    can_publish = await workspace.is_editable_by(db, user) and user.has_perm("WORKSPACE.PUBLISH")
-    if not can_publish:
+    can_publish = await workspace.is_editable_by(db, user) and user.has_perm("WORKSPACE.PUBLISH.OTHER")
+    if not workspace.creator == user.id and not can_publish:
         return build_error_response(request, 403, _("You are not allowed to publish this workspace"))
 
     if image is not None:

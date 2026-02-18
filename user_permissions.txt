@@ -5,7 +5,8 @@ This is a list of defined user permissions:
 - WORKSPACE.EDIT: Allows the user to edit workspaces owned by other users.
 - WORKSPACE.DELETE: Allows the user to delete workspaces owned by other users.
 - WORKSPACE.CLONE: Allows the user to clone workspaces owned by other users.
-- WORKSPACE.PUBLISH: Allows the user to publish workspaces owned by other users.
+- WORKSPACE.PUBLISH: Allows the user to publish your workspaces.
+- WORKSPACE.PUBLISH.OTHER: Allows the user to publish workspaces owned by other users.
 - WORKSPACE.SHARE: Allows the user to share workspaces owned by other users.
 - WORKSPACE.MERGE: Allows the user to merge workspaces owned by other users.
 - WORKSPACE.PREFERENCES.EDIT: Allows the user to edit preferences of workspaces owned by other users.
