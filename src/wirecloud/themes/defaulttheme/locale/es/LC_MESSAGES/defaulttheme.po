@@ -255,7 +255,7 @@ msgstr "Nombre"
 #: ../../../../templates/registration/login.html:42
 #: ../../../../templates/wirecloud/signin.html:2
 msgid "Sign in"
-msgstr "Iniciar sessión"
+msgstr "Iniciar sesión"
 
 #: ../../../../templates/wirecloud/catalogue/main_resource_details.html:17
 msgid "Size"

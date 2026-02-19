@@ -28,9 +28,12 @@ from wirecloud.platform.markets.schemas import Market
 
 
 async def get_markets_for_user(db: DBSession, user: Optional[User]) -> list[Market]:
-    query = {"public": True}
-    if user is not None:
-        query = {"$or": [{"public": True}, {"user_id": ObjectId(user.id)}]}
+    if user is not None and user.has_perm("MARKETPLACE.VIEW"):
+        query = {}
+    else:
+        query = {"public": True}
+        if user is not None:
+            query = {"$or": [{"public": True}, {"user_id": ObjectId(user.id)}]}
 
     resources = [MarketModel.model_validate(resource) for resource in await db.client.markets.find(query).to_list()]
     return resources

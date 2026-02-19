@@ -53,10 +53,12 @@
                 autocomplete: options.autocomplete,
                 lookup: searchForUserGroup,
                 build: (typeahead, data) => {
+                    // Use username for users, name for groups/organizations
+                    const identifier = data.type === "user" ? data.username : data.name;
                     return {
-                        value: data.name,
-                        title: data.fullname || data.name,
-                        description: data.name,
+                        value: identifier,
+                        title: data.fullname || identifier,
+                        description: identifier,
                         iconClass: "fas fa-" + ICON_MAPPING[data.type],
                         context: data
                     };

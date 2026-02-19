@@ -111,25 +111,37 @@ class Workspace(BaseModel, populate_by_name=True):
     tabs: dict[str, Tab] = {}
     preferences: list[DBWorkspacePreference] = []
 
-    def is_editable_by(self, user: User) -> bool:
-        return (
-            user.is_superuser
-            or self.creator == user.id
-            or any(ws_user.id == user.id for ws_user in self.users)
-        )
-        # TODO check more permissions
+    async def is_editable_by(self, db: DBSession, user: UserAll) -> bool:
+        if user.is_superuser or self.creator == user.id:
+            return True
+        for ws_user in self.users:
+            if ws_user.id == user.id and ws_user.accesslevel == 2:
+                return True
+        user_groups = await get_all_user_groups(db, user)
+        for ws_group in self.groups:
+            if ws_group.accesslevel == 2 and any(g.id == ws_group.id for g in user_groups):
+                return True
+
+        return await self.is_accessible_by(db, user) and user.has_perm("WORKSPACE.EDIT")
 
     def is_shared(self) -> bool:
-        return self.public or len(self.users) > 1 or len(self.groups) > 1
+        return self.public or len(self.users) > 1 or len(self.groups) > 0
 
     async def is_accessible_by(self, db: DBSession, user: Optional[UserAll]) -> bool:
         if user is None:
             return self.public and not self.requireauth
+        if user.has_perm("WORKSPACE.VIEW"):
+            return True
+        if self.public and not self.requireauth:
+            return True
+        if self.creator == user.id:
+            return True
+        if any(ws_user.id == user.id for ws_user in self.users):
+            return True
+
         user_groups = await get_all_user_groups(db, user)
-        return (user.is_superuser
-                or self.public and not self.requireauth
-                or user is not None and (
-                        self.creator == user.id
-                        or await get_user_by_id(db, user.id) is not None
-                        or len(set(g.id for g in self.groups) & set(g.id for g in user_groups)) > 0)
-                )  # TODO check more permissions
+
+        workspace_group_ids = {g.id for g in self.groups}
+        user_group_ids = {g.id for g in user_groups}
+
+        return bool(workspace_group_ids & user_group_ids)

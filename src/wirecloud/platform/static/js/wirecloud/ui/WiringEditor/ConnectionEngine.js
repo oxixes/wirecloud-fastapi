@@ -379,8 +379,16 @@
         switch (validateConnection(this.temporalInitialEndpoint, finalEndpoint)) {
         case ns.ConnectionEngine.CONNECTION_ESTABLISHED:
             this.temporalConnection
-                .stickEndpoint(finalEndpoint)
-                .createAndBind(false, this.wiringEngine);
+                .stickEndpoint(finalEndpoint);
+
+            const connectionPromise = this.temporalConnection.createAndBind(false, this.wiringEngine);
+
+            if (connectionPromise && typeof connectionPromise.catch === 'function') {
+                connectionPromise.catch((error) => {
+                    console.error('Error creating connection:', error);
+                });
+            }
+
             appendConnection.call(this, this.temporalConnection, this._connectionBackup);
 
             if (this._connectionBackup != null) {

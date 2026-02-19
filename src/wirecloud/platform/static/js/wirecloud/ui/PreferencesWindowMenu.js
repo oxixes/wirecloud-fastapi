@@ -156,6 +156,11 @@
             if (typeof callback === 'function') {
                 callback();
             }
+        }, (error) => {
+            (new Wirecloud.ui.MessageWindowMenu(
+                error,
+                Wirecloud.constants.LOGGING.ERROR_MSG
+            )).show();
         });
     };
 

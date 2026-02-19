@@ -59,9 +59,13 @@
                 });
 
                 this._closeListener();
-            }, () => {
+            }, (error) => {
                 this.btnAccept.enable().removeClassName('busy');
                 this.btnCancel.enable();
+                (new Wirecloud.ui.MessageWindowMenu(
+                    error,
+                    Wirecloud.constants.LOGGING.ERROR_MSG
+                )).show();
             }
         );
     };
@@ -86,18 +90,21 @@
     };
 
     const appendUser = function appendUser(data) {
+        // Use username for users, name for groups/organizations
+        const identifier = data.type === "user" ? data.username : data.name;
+
         if (
-            (data.type === "user" || data.type === "organization") && data.name in this.users
-            || data.type === "group" && data.name in this.groups
+            (data.type === "user" || data.type === "organization") && identifier in this.users
+            || data.type === "group" && identifier in this.groups
         ) {
             // This user is already taken.
             return this;
         }
-        this[data.type === "group" ? "groups" : "users"][data.name] = data;
+        this[data.type === "group" ? "groups" : "users"][identifier] = data;
         this.sharelist.push(data);
 
-        let fullname = data.fullname || data.name;
-        if (data.name === Wirecloud.contextManager.get('username')) {
+        let fullname = data.fullname || identifier;
+        if (data.type === "user" && data.username === Wirecloud.contextManager.get('username')) {
             fullname = utils.interpolate(utils.gettext("%(fullname)s (You)"), {fullname: fullname});
             data.accesslevel = "owner";
         } else {
@@ -112,7 +119,7 @@
                 icon.className = "fas fa-" + (data.type === "group" ? "users" : (data.type === "organization" ? "building" : "user")) + " fa-stack-1x";
                 return icon;
             },
-            username: data.name,
+            username: identifier,
             permission: () => {
                 const span = document.createElement('span');
                 span.textContent = data.accesslevel === 'owner' ? utils.gettext("Owner") : utils.gettext("Can view");
@@ -126,7 +133,7 @@
                 } else {
                     button.addEventListener('click', () => {
                         this.userGroup.removeChild(createdElement);
-                        delete this[data.type === "group" ? "groups" : "users"][data.name];
+                        delete this[data.type === "group" ? "groups" : "users"][identifier];
                         utils.removeFromArray(this.sharelist, data);
                     });
                 }

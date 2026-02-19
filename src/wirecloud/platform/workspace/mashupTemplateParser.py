@@ -20,7 +20,7 @@ from typing import Optional, Union
 from bson import ObjectId
 from fastapi import Request
 
-from wirecloud.catalogue.crud import get_catalogue_resource, is_resource_available_for_user
+from wirecloud.catalogue.crud import get_catalogue_resource
 from wirecloud.commons.auth.crud import get_user_by_id, get_user_with_all_info
 from wirecloud.commons.auth.schemas import UserAll, User
 from wirecloud.commons.utils.db import save_alternative
@@ -65,7 +65,7 @@ async def check_mashup_dependencies(db: DBSession, template: TemplateParser, use
         catalogue_resource = await get_catalogue_resource(db, vendor, name, version)
         if catalogue_resource is None:
             missing_dependencies.add(dependency)
-        elif not await is_resource_available_for_user(db, catalogue_resource, user):
+        elif not catalogue_resource.is_available_for(user):
             raise ValueError('User does not have access to the resource')
 
     if len(missing_dependencies) > 0:
@@ -210,7 +210,6 @@ async def fill_workspace_using_template(db: DBSession, request: Request, user_fu
             user_all = await get_user_with_all_info(db, user)
             result = await get_or_add_widget_from_catalogue(db, resource.vendor, resource.name, resource.version,
                                                             resource_owner if resource_owner is not None else user_all)
-            print(resource)
 
             widget = result[0]
             widget_resource = result[1]
@@ -406,7 +405,7 @@ async def build_workspace_from_template(db: DBSession, request: Request, templat
         users=[WorkspaceAccessPermissions(id=user.id)]
     )
     if allow_renaming:
-        await save_alternative(db, 'workspace', 'name', workspace)
+        await save_alternative(db, 'workspaces', 'name', workspace)
     else:
         if await is_a_workspace_with_that_name(db, workspace.name, user.id):
             return None
