@@ -160,6 +160,20 @@
             Wirecloud.UserInterfaceManager._registerPopup(this);
         }
 
+        // If refPosition is an element, add aria-describedby and aria-expanded
+        if (refPosition && 'getAttribute' in refPosition && !priv.refElements.includes(refPosition.wrapperElement || refPosition)) {
+            const element = refPosition.wrapperElement || refPosition;
+            const currentDescribedBy = element.getAttribute('aria-describedby');
+            if (currentDescribedBy && !currentDescribedBy.includes(priv.popoverId)) {
+                element.setAttribute('aria-describedby', currentDescribedBy + ' ' + priv.popoverId);
+            } else if (!currentDescribedBy) {
+                element.setAttribute('aria-describedby', priv.popoverId);
+            }
+            // Set aria-expanded
+            element.setAttribute('aria-expanded', 'true');
+            priv.expandedElement = element;
+        }
+
         if (this.visible) {
             priv.element.classList.add('in');
             return this.repaint();
@@ -169,6 +183,11 @@
             title: this.options.title,
             content: this.options.content
         }).elements[0];
+        priv.element.setAttribute('role', 'tooltip');
+        // Ensure the popover has an ID
+        if (!priv.element.getAttribute('id')) {
+            priv.element.setAttribute('id', priv.popoverId);
+        }
         priv.element.addEventListener('transitionend', _hide.bind(this));
 
         priv.baseelement = utils.getFullscreenElement() || document.body;
@@ -241,6 +260,9 @@
                 element: null,
                 disableCallback: disableCallback.bind(this),
                 refContainer: this.options.refContainer,
+                popoverId: 'se-popover-' + Math.random().toString(36).substr(2, 9),
+                refElements: [],
+                expandedElement: null,
                 on_fullscreen_change: (event) => {
                     priv.baseelement = utils.getFullscreenElement() || document.body;
                     priv.baseelement.appendChild(priv.element);
@@ -257,6 +279,23 @@
         }
 
         bind(element, mode) {
+            const priv = privates.get(this);
+            const refElement = element.wrapperElement || element;
+            priv.refElements.push(refElement);
+
+            // Set aria-describedby on the reference element
+            const currentDescribedBy = refElement.getAttribute('aria-describedby');
+            if (currentDescribedBy) {
+                refElement.setAttribute('aria-describedby', currentDescribedBy + ' ' + priv.popoverId);
+            } else {
+                refElement.setAttribute('aria-describedby', priv.popoverId);
+            }
+
+            // Initialize aria-expanded if in click mode
+            if (mode === 'click') {
+                refElement.setAttribute('aria-expanded', 'false');
+            }
+
             switch (mode) {
             case "click":
                 element.addEventListener('click', this.toggle.bind(this), true);
@@ -329,6 +368,7 @@
                     title: this.options.title,
                     content: this.options.content
                 }).elements[0];
+                priv.element.setAttribute('role', 'tooltip');
                 priv.element.addEventListener("transitionend", _hide.bind(this));
                 priv.element.classList.toggle("sticky", this.options.sticky);
                 priv.element.classList.add("in");
@@ -345,7 +385,12 @@
             }
 
             const priv = privates.get(this);
-            const force = !priv.element.classList.contains('in') || getComputedStyle(priv.element).getPropertyValue('opacity') === "0";
+            // Restore aria-expanded to false
+            if (priv.expandedElement) {
+                priv.expandedElement.setAttribute('aria-expanded', 'false');
+                priv.expandedElement = null;
+            }
+                        const force = !priv.element.classList.contains('in') || getComputedStyle(priv.element).getPropertyValue('opacity') === "0";
             priv.element.classList.remove('in');
             if (force) {
                 _hide.call(this);

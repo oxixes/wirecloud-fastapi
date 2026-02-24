@@ -49,11 +49,14 @@
             description.textContent = utils.gettext('If you prefer, you can follow some of these tutorials:');
 
             const list = document.createElement('ul');
+            list.setAttribute('aria-label', utils.gettext('Available tutorials'));
             for (let i = 0; i < tutorial_list.length; i++) {
                 const tutorial = this.get(tutorial_list[i]);
                 const item = document.createElement('li');
                 const link = document.createElement('a');
                 link.textContent = tutorial.label;
+                link.setAttribute('role', 'button');
+                link.setAttribute('aria-label', utils.interpolate(utils.gettext('Start %(tutorial)s tutorial'), {tutorial: tutorial.label}, true));
                 link.addEventListener('click', function (e) {
                     e.stopPropagation();
                     e.preventDefault();

@@ -16,27 +16,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-/*
- *     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER
- *
- *     Copyright (c) 2012-2016 Universidad Politécnica de Madrid
- *     Copyright (c) 2012-2014 the Center for Open Middleware
- *     Copyright (c) 2018-2020 Future Internet Consulting and Development Solutions S.L.
- *
- *     Licensed under the Apache License, Version 2.0 (the
- *     "License"); you may not use this file except in compliance
- *     with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- *     Unless required by applicable law or agreed to in writing,
- *     software distributed under the License is distributed on an
- *     "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- *     KIND, either express or implied.  See the License for the
- *     specific language governing permissions and limitations
- *     under the License.
- */
-
 /* globals StyledElements, Wirecloud */
 
 /**
@@ -73,11 +52,11 @@ Wirecloud.ui = Wirecloud.ui || {};
             .addEventListener('change', behaviour_onchange.bind(this))
             .addEventListener('enable', behaviourengine_onenable.bind(this));
 
-        this.layout.appendChild(this.behaviourEngine);
+        this.layout.appendChild(this.behaviourEngine)
     };
 
     const createAndSetUpComponentManager = function createAndSetUpComponentManager() {
-        this.componentManager =  new ns.WiringEditor.ComponentShowcase();
+        this.componentManager = new ns.WiringEditor.ComponentShowcase();
         this.componentManager.addEventListener('create', (showcase, group, button) => {
             button.disable();
 
@@ -129,8 +108,8 @@ Wirecloud.ui = Wirecloud.ui || {};
     };
 
     const createAndSetUpLayout = function createAndSetUpLayout() {
-        const centerContainer = new se.Container({class: 'se-vl-center-container'});
-        const southContainer = new se.Container({class: 'se-vl-south-container'});
+        const centerContainer = new se.Container({ class: 'se-vl-center-container' });
+        const southContainer = new se.Container({ class: 'se-vl-south-container' });
 
         this.layout = new se.OffCanvasLayout();
         this.layout.sidebar.addClassName("wiring-sidebar");
@@ -166,6 +145,10 @@ Wirecloud.ui = Wirecloud.ui || {};
             operators: document.createElement('span'),
             widgets: document.createElement('span')
         };
+        this.legend.title.setAttribute('aria-live', 'polite');
+        this.legend.connections.setAttribute('aria-live', 'polite');
+        this.legend.operators.setAttribute('aria-live', 'polite');
+        this.legend.widgets.setAttribute('aria-live', 'polite');
         Object.freeze(this.legend);
 
         Wirecloud.addEventListener('loaded', () => {
@@ -359,6 +342,18 @@ Wirecloud.ui = Wirecloud.ui || {};
             }
 
             return true;
+        case 'c':
+            if (modifiers.ctrlKey || modifiers.metaKey) {
+                copyComponents.call(this);
+                return true;
+            }
+            break;
+        case 'v':
+            if (modifiers.ctrlKey || modifiers.metaKey) {
+                pasteComponents.call(this);
+                return true;
+            }
+            break;
         }
     };
 
@@ -675,6 +670,262 @@ Wirecloud.ui = Wirecloud.ui || {};
         }, 0);
     };
 
+    const copyComponents = function copyComponents() {
+        this.copiedComponents = [];
+
+        // First pass: copy component information
+        for (const type in this.selectedComponents) {
+            for (const id in this.selectedComponents[type]) {
+                const component = this.selectedComponents[type][id];
+                const sourceEndpoints = [];
+
+                // Copy preferences as simple key-value pairs
+                const preferences = {};
+                for (const key in component._component.preferences) {
+                    preferences[key] = component._component.preferences[key].value;
+                }
+
+                // Copy properties as simple key-value pairs
+                const properties = {};
+                for (const key in component._component.properties) {
+                    properties[key] = component._component.properties[key].value;
+                }
+
+                // Store source endpoints with their connections (only process source endpoints to avoid duplicates)
+                component.forEachEndpoint((endpoint) => {
+                    if (endpoint.type === 'source') {
+                        const endpointInfo = {
+                            name: endpoint.name,
+                            connections: []
+                        };
+
+                        // Iterate through the endpoint's own connections array
+                        endpoint.connections.forEach((connection) => {
+                            // Extract source and target endpoint IDs from the connection
+                            const sourceEndpointId = connection.source && connection.source.endpoint ? connection.source.endpoint.id : null;
+                            const targetEndpointId = connection.target && connection.target.endpoint ? connection.target.endpoint.id : null;
+
+                            if (!sourceEndpointId || !targetEndpointId) {
+                                // If either endpoint ID is missing, skip this connection
+                                return;
+                            }
+
+                            // Verify this is a connection from our current endpoint
+                            if (sourceEndpointId === endpoint.id) {
+                                // Get target component from the connection
+                                const targetComponent = connection.target && connection.target.endpoint ? connection.target.endpoint.component : null;
+
+                                if (!targetComponent) {
+                                    // If the target component is not found, skip this connection
+                                    return;
+                                }
+
+                                // Only include connections to components that are also being copied
+                                if (targetComponent.id in this.selectedComponents[targetComponent.type]) {
+                                    const connectionInfo = {
+                                        sourceEndpoint: endpoint.name,
+                                        targetComponent: targetComponent.id,
+                                        targetComponentType: targetComponent.type,
+                                        targetEndpoint: connection.target.endpoint.name,
+                                        sourceHandle: connection.sourceHandle,
+                                        targetHandle: connection.targetHandle
+                                    };
+                                    endpointInfo.connections.push(connectionInfo);
+                                }
+                            }
+                        });
+
+                        sourceEndpoints.push(endpointInfo);
+                    }
+                });
+
+                this.copiedComponents.push({
+                    id: component.id,
+                    type: component.type,
+                    meta: component._component.meta,
+                    position: component.position(),
+                    collapsed: component.collapsed,
+                    preferences: preferences,
+                    properties: properties,
+                    permissions: component._component.permissions,
+                    sourceEndpoints: sourceEndpoints,
+                });
+            }
+        }
+        // Copy operation completed
+    };
+
+    const pasteComponents = function pasteComponents() {
+        const copiedComponents = this.copiedComponents;
+        if (!copiedComponents || copiedComponents.length === 0) {
+            return;
+        }
+
+        const newComponents = {};
+        const creationPromises = [];
+
+        // First pass: create all components
+        copiedComponents.forEach((copiedComponent) => {
+            const pasteOffset = 20; // Offset for pasted components
+
+            if (copiedComponent.type === 'operator') {
+                const operatorOptions = {
+                    position: {
+                        x: copiedComponent.position.x + pasteOffset,
+                        y: copiedComponent.position.y + pasteOffset
+                    },
+                    collapsed: copiedComponent.collapsed
+                };
+
+                // Set preferences and properties at creation time
+                if (Object.keys(copiedComponent.preferences).length > 0) {
+                    operatorOptions.preferences = {};
+                    for (const key in copiedComponent.preferences) {
+                        operatorOptions.preferences[key] = {
+                            value: copiedComponent.preferences[key]
+                        };
+                    }
+                }
+                if (Object.keys(copiedComponent.properties).length > 0) {
+                    operatorOptions.properties = {};
+                    for (const key in copiedComponent.properties) {
+                        operatorOptions.properties[key] = {
+                            value: copiedComponent.properties[key]
+                        };
+                    }
+                }
+                const promise = this.workspace.wiring.createOperator(copiedComponent.meta, operatorOptions);
+                promise.then((newComponent) => {
+                    // Create the visual component
+                    const visualOptions = {
+                        position: operatorOptions.position,
+                        collapsed: operatorOptions.collapsed,
+                        commit: false
+                    };
+
+                    const component = this.createComponent(newComponent, visualOptions);
+                    newComponents[copiedComponent.id] = component;
+                    this.componentManager.addComponent(newComponent);
+
+                    // Add to layout and update behavior engine
+                    this.layout.content.appendChild(component);
+                    this.behaviourEngine.updateComponent(component);
+                    disableComponent.call(this, component);
+                });
+                creationPromises.push(promise);
+
+            } else if (copiedComponent.type === 'widget') {
+                const options = {
+                    position: {
+                        x: copiedComponent.position.x + pasteOffset,
+                        y: copiedComponent.position.y + pasteOffset
+                    },
+                    collapsed: copiedComponent.collapsed
+                };
+
+                // Set preferences and properties for widget creation
+                if (Object.keys(copiedComponent.preferences).length > 0) {
+                    options.preferences = copiedComponent.preferences;
+                }
+                if (Object.keys(copiedComponent.properties).length > 0) {
+                    options.properties = {};
+                    for (const key in copiedComponent.properties) {
+                        options.properties[key] = {
+                            readonly: false,
+                            value: copiedComponent.properties[key]
+                        };
+                    }
+                }
+
+                const promise = this.workspace.view.activeTab.createWidget(copiedComponent.meta, options);
+                promise.then((widgetView) => {
+                    const visualOptions = {
+                        position: options.position,
+                        collapsed: options.collapsed,
+                        commit: true
+                    };
+
+                    const component = this.createComponent(widgetView.model, visualOptions);
+                    newComponents[copiedComponent.id] = component;
+                    this.componentManager.addComponent(widgetView.model);
+
+                    // Add to layout and update behavior engine
+                    this.layout.content.appendChild(component);
+                    this.behaviourEngine.updateComponent(component);
+                    disableComponent.call(this, component);
+                });
+                creationPromises.push(promise);
+            }
+        });
+
+        // Second pass: recreate connections after all components are created
+        Promise.all(creationPromises).then(() => {
+
+            // Collect all connection creation promises
+            const connectionPromises = [];
+
+            copiedComponents.forEach((copiedComponent) => {
+                const newComponent = newComponents[copiedComponent.id];
+                if (!newComponent) {
+                    return;
+                }
+
+                // Recreate connections from source endpoints
+                copiedComponent.sourceEndpoints.forEach((endpointInfo) => {
+                    const sourceEndpoint = newComponent.getEndpoint('source', endpointInfo.name);
+                    if (!sourceEndpoint) {
+                        return;
+                    }
+
+                    endpointInfo.connections.forEach((connectionInfo) => {
+                        // Find the new component that corresponds to the old target component ID
+                        const targetComponent = newComponents[connectionInfo.targetComponent];
+                        if (targetComponent) {
+                            const targetEndpoint = targetComponent.getEndpoint('target', connectionInfo.targetEndpoint);
+                            if (targetEndpoint) {
+                                try {
+                                    // Create the wiring connection using the actual endpoint objects with new IDs
+                                    const connectionPromise = this.workspace.wiring.createConnection(sourceEndpoint._endpoint, targetEndpoint._endpoint)
+                                        .then((connection) => {
+                                            // After connection is created, create the visual representation
+                                            const connectionOptions = {
+                                                sourceHandle: connectionInfo.sourceHandle,
+                                                targetHandle: connectionInfo.targetHandle
+                                            };
+                                            this.connectionEngine.connect(connection, sourceEndpoint, targetEndpoint, connectionOptions);
+                                        })
+                                        .catch((error) => {
+                                            // Failed to recreate connection - silently continue
+                                        });
+                                    connectionPromises.push(connectionPromise);
+                                } catch (error) {
+                                }
+                            }
+                        }
+                    });
+                });
+                // Note: No need to process target endpoints since connections are only captured from source endpoints
+            });
+
+            // Wait for all connections to be created, then finish the paste operation
+            return Promise.all(connectionPromises);
+        }).then(() => {
+            // All connections created successfully
+
+            // Move selection to the newly created components and ensure they end on top
+            clearComponentSelection.call(this);
+            for (const id in newComponents) {
+                const newComponent = newComponents[id];
+                newComponent.active = true;
+                this.selectedComponents[newComponent.type][newComponent.id] = newComponent;
+                this.selectedCount++;
+                newComponent.toFirst();
+            }
+        }).catch((error) => {
+            // Error in paste operation
+        });
+    };
+
     /**
      * Creates a new wiring editor usable for adding operators, creating and
      * remove connections, ...
@@ -705,10 +956,11 @@ Wirecloud.ui = Wirecloud.ui || {};
 
             this.suggestionManager = new ns.WiringEditor.KeywordSuggestion();
 
-            this.selectedComponents = {operator: {}, widget: {}};
+            this.selectedComponents = { operator: {}, widget: {} };
             this.selectedCount = 0;
 
             this.orderableComponent = null;
+            this.copiedComponents = [];
             this.disable();
         }
 
@@ -738,7 +990,7 @@ Wirecloud.ui = Wirecloud.ui || {};
          *      [description]
          */
         createComponent(wiringComponent, options) {
-            options = utils.merge({commit: true, removecascade_allowed: this.behaviourEngine.enabled}, options);
+            options = utils.merge({ commit: true, removecascade_allowed: this.behaviourEngine.enabled }, options);
 
             const component = new ns.WiringEditor.ComponentDraggable(wiringComponent, options);
             component

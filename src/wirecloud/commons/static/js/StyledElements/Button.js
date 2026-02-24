@@ -111,6 +111,8 @@
 
         if (this.badgeElement == null) {
             this.badgeElement = document.createElement("span");
+            this.badgeElement.setAttribute('role', isAlert ? 'alert' : 'status');
+            this.badgeElement.setAttribute('aria-live', isAlert ? 'assertive' : 'polite');
             this.wrapperElement.insertBefore(this.badgeElement, this.wrapperElement.firstChild);
         }
 
@@ -210,6 +212,7 @@
                 this.wrapperElement.setAttribute("type", "button");
             } else {
                 this.wrapperElement = document.createElement("div");
+                this.wrapperElement.setAttribute("role", "button");
             }
 
             this.wrapperElement.className = "se-btn";
@@ -236,6 +239,7 @@
             if (options.iconClass && options.stackedIconClass) {
                 this.stackedIcon = document.createElement("span");
                 this.stackedIcon.className = [options.stackedIconClass, "se-stacked-icon", options.stackedIconPlacement].join(" ");
+                this.stackedIcon.setAttribute('aria-hidden', 'true');
                 this.icon.appendChild(this.stackedIcon);
             }
 
@@ -363,7 +367,14 @@
          *      The instance on which the member is called.
          */
         setLabel(text) {
-            return text ? addLabel.call(this, text) : removeLabel.call(this);
+            const result = text ? addLabel.call(this, text) : removeLabel.call(this);
+            // Update aria-label if no visible text
+            if (!text && !this.wrapperElement.hasAttribute('aria-label') && this.tooltip) {
+                this.wrapperElement.setAttribute('aria-label', this.tooltip.options.content);
+            } else if (text) {
+                this.wrapperElement.removeAttribute('aria-label');
+            }
+            return result;
         }
 
         /**
@@ -397,6 +408,7 @@
             } else if (this.icon == null) {
                 this.icon = document.createElement("i");
                 this.icon.classList.add("se-icon");
+                this.icon.setAttribute('aria-hidden', 'true');
                 this.wrapperElement.appendChild(this.icon);
             }
 
@@ -446,12 +458,17 @@
                     this.tooltip.destroy();
                     this.tooltip = null;
                 }
+                this.wrapperElement.removeAttribute('aria-label');
             } else {
                 if (this.tooltip == null) {
                     this.tooltip = new this.Tooltip({content: title, placement: ["bottom", "top", "right", "left"]});
                     this.tooltip.bind(this);
                 }
                 this.tooltip.options.content = title;
+                // Set aria-label only if there's no visible text
+                if (this.label == null || this.label.textContent.trim() === '') {
+                    this.wrapperElement.setAttribute('aria-label', title);
+                }
             }
 
             return this;

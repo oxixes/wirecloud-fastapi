@@ -108,6 +108,7 @@
 
             this.wrapperElement = document.createElement('div');
             this.wrapperElement.className = "endpoint";
+            this.wrapperElement.setAttribute('role', 'button');
 
             this.titleElement = document.createElement('span');
             this.titleElement.className = "endpoint-title";
@@ -115,6 +116,7 @@
 
             this.anchorElement = document.createElement('span');
             this.anchorElement.className = "endpoint-anchor";
+            this.anchorElement.setAttribute('aria-hidden', 'true');
             this.wrapperElement.appendChild(this.anchorElement);
 
             this._endpoint = wiringEndpoint;

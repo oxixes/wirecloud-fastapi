@@ -95,6 +95,8 @@
                     const label = document.createElement('div');
                     label.textContent = resource.type;
                     label.className = 'label';
+                    label.setAttribute('role', 'status');
+                    label.setAttribute('aria-label', utils.interpolate(utils.gettext('Resource type: %(type)s'), {type: resource.type}, true));
                     switch (resource.type) {
                     case 'widget':
                         label.classList.add('label-success');
@@ -167,6 +169,7 @@
                 'image': function () {
                     const image = document.createElement('img');
                     image.className = 'wc-resource-img';
+                    image.setAttribute('alt', resource.title || resource.name);
 
                     if (resource.image) {
                         image.onerror = onImageError;
@@ -294,6 +297,8 @@
 
                 const tag_element = document.createElement('a');
                 tag_element.textContent = tag.value;
+                tag_element.setAttribute('role', 'button');
+                tag_element.setAttribute('aria-label', utils.interpolate(utils.gettext('Filter by tag: %(tag)s'), {tag: tag.value}, true));
                 fragment.appendChild(tag_element);
             }
 
@@ -351,6 +356,8 @@
 
             const stars = document.createElement('div');
             stars.className = 'rating';
+            stars.setAttribute('role', 'img');
+            stars.setAttribute('aria-label', utils.interpolate(utils.gettext('Rating: %(rating)s out of 5 stars'), {rating: popularity.toFixed(1)}, true));
 
             if (popularity === 0) {
                 stars.classList.add('disabled');
@@ -360,12 +367,14 @@
             for (let i = 0; i < on_stars; i += 1) {
                 const star = document.createElement('span');
                 star.className = 'on fas fa-star';
+                star.setAttribute('aria-hidden', 'true');
                 stars.appendChild(star);
             }
 
             if (md_star) {
                 const star = document.createElement('span');
                 star.className = 'middle fas fa-star-half-alt';
+                star.setAttribute('aria-hidden', 'true');
                 stars.appendChild(star);
             }
 
@@ -373,6 +382,7 @@
             for (let i = 0; i < Math.floor(off_stars); i += 1) {
                 const star = document.createElement('span');
                 star.className = 'off far fa-star';
+                star.setAttribute('aria-hidden', 'true');
                 stars.appendChild(star);
             }
 

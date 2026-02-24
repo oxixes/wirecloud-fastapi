@@ -69,6 +69,7 @@
             this.descriptionElement = document.createElement("p");
             this.descriptionElement.className = "behaviour-description";
             this.descriptionElement.textContent = options.description;
+            this.descriptionElement.setAttribute('role', 'note');
             this.body.appendChild(this.descriptionElement);
 
             Object.defineProperties(this, {
@@ -137,6 +138,7 @@
         setTitle(title) {
             const span = document.createElement('span');
             span.textContent = title;
+            span.setAttribute('aria-label', utils.interpolate(utils.gettext('Behaviour: %(title)s'), {title: title}, true));
             this.titletooltip.options.content = title;
             this.titletooltip.bind(span);
 

@@ -112,8 +112,11 @@
             });
 
             this.handle = document.createElement("div");
+            this.handle.setAttribute('role', 'button');
+            this.handle.setAttribute('aria-label', utils.interpolate(utils.gettext('Toggle %(position)s sidebar'), {position: this.position}, true));
             this.handleicon = document.createElement("i");
             this.handleicon.className = "fas fa-caret-" + (this.active ? ICON[this.position] : OPPOSITE[this.position]);
+            this.handleicon.setAttribute('aria-hidden', 'true');
             this.handle.appendChild(this.handleicon);
             this.handle.addEventListener("click", () => {
                 this.active = !this.active;

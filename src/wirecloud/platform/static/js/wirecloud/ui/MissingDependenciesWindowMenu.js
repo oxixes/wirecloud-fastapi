@@ -36,6 +36,7 @@
             this.msg1Element.textContent = utils.gettext('The following dependencies are missing:');
 
             const list = document.createElement('ul');
+            list.setAttribute('aria-label', utils.gettext('Missing dependencies list'));
             details.missingDependencies.forEach((missingDependency) => {
                 const item = document.createElement('li');
                 item.textContent = missingDependency;

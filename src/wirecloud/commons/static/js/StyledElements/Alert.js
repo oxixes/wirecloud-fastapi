@@ -49,6 +49,7 @@
 
             this.wrapperElement = document.createElement('div');
             this.wrapperElement.className = 'alert';
+            this.wrapperElement.setAttribute('role', 'alert');
 
             if (options.state != null && options.state.trim() !== "") {
                 this.addClassName('alert-' + options.state);
@@ -86,6 +87,7 @@
          */
         addNote(textContent) {
             const blockquote = document.createElement('blockquote');
+            blockquote.setAttribute('role', 'note');
 
             if (textContent instanceof StyledElements.StyledElement) {
                 textContent.appendTo(blockquote);

@@ -53,6 +53,9 @@
 
             const header = document.createElement('div');
             header.className = 'panel-heading';
+            header.setAttribute('role', 'button');
+            header.setAttribute('aria-expanded', 'false');
+            header.setAttribute('tabindex', '0');
             this.wrapperElement.appendChild(header);
 
             this.toggleButton = null;
@@ -72,7 +75,9 @@
             }
 
             this.contentContainer = new StyledElements.Container({'class': 'panel-body'});
+            this.contentContainer.wrapperElement.setAttribute('id', 'se-expander-content-' + Math.random().toString(36).substr(2, 9));
             this.contentContainer.insertInto(this.wrapperElement);
+            header.setAttribute('aria-controls', this.contentContainer.wrapperElement.id);
 
             // Internal event handlers
             const callback = function () {
@@ -139,6 +144,12 @@
             }
             if (this.toggleButton) {
                 this.toggleButton.active = expanded;
+            }
+
+            // Update aria-expanded on the header
+            const header = this.wrapperElement.querySelector('.panel-heading');
+            if (header) {
+                header.setAttribute('aria-expanded', expanded.toString());
             }
 
             this.dispatchEvent('expandChange', expanded);

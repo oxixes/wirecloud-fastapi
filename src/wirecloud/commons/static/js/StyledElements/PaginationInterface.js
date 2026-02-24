@@ -88,12 +88,17 @@
 
             this.currentPageLabel = document.createElement('span');
             this.currentPageLabel.classList.add('current-page');
+            this.currentPageLabel.setAttribute('role', 'status');
+            this.currentPageLabel.setAttribute('aria-live', 'polite');
+            this.currentPageLabel.setAttribute('aria-label', utils.gettext('Current page number'));
 
             this.totalPagesLabel = document.createElement('span');
             this.totalPagesLabel.classList.add('total-pages');
+            this.totalPagesLabel.setAttribute('aria-label', utils.gettext('Total pages'));
 
             this.totalCountLabel = document.createElement('span');
             this.totalCountLabel.classList.add('total-count');
+            this.totalCountLabel.setAttribute('aria-label', utils.gettext('Total items count'));
 
             this.layout = options.layout;
 

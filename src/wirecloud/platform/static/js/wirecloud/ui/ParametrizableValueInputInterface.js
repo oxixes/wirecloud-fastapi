@@ -80,10 +80,12 @@
 
             this.readOnlyIcon = document.createElement('div');
             this.readOnlyIcon.className = 'readOnlyIcon';
+            this.readOnlyIcon.setAttribute('aria-hidden', 'true');
             this.wrapperElement.appendChild(this.readOnlyIcon);
 
             this.visibilityIcon = document.createElement('div');
             this.visibilityIcon.className = 'visibilityIcon';
+            this.visibilityIcon.setAttribute('aria-hidden', 'true');
             this.wrapperElement.appendChild(this.visibilityIcon);
             if (!this.canBeHidden) {
                 this.visibilityIcon.style.visibility = 'hidden';

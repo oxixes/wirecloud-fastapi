@@ -139,6 +139,7 @@
 
             this.wrapperElement = document.createElement('div');
             this.wrapperElement.className = "se-popup-menu-item";
+            this.wrapperElement.setAttribute('role', 'menuitem');
 
             let options;
             if (handler != null && typeof handler === "object") {
@@ -228,6 +229,7 @@
 
             if (priv.iconelement == null) {
                 priv.iconelement = document.createElement('span');
+                priv.iconelement.setAttribute('aria-hidden', 'true');
                 priv.thumbnailelement.appendChild(priv.iconelement);
             }
 

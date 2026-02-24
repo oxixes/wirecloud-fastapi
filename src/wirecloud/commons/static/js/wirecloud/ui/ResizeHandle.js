@@ -131,6 +131,7 @@
             const dragboard = document.body;
             dragboardCover = document.createElement("div");
             dragboardCover.className = "cover";
+            dragboardCover.setAttribute("aria-hidden", "true");
             dragboardCover.addEventListener("mouseup", endresize, true);
             dragboardCover.addEventListener("mousemove", resize, true);
 

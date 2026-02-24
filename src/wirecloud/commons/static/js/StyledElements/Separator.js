@@ -33,6 +33,7 @@
             super([]);
 
             this.wrapperElement = document.createElement("hr");
+            this.wrapperElement.setAttribute('role', 'separator');
         };
 
     }

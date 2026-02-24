@@ -49,6 +49,8 @@
 
         this.toolbar = document.createElement('div');
         this.toolbar.className = 'btn-group wc-toolbar';
+        this.toolbar.setAttribute('role', 'toolbar');
+        this.toolbar.setAttribute('aria-label', utils.gettext('Wirecloud toolbar'));
         this.app_bar.appendChild(this.toolbar);
 
         this.currentView = null;
@@ -75,6 +77,7 @@
             const avatar = document.createElement('img');
             avatar.className = "avatar";
             avatar.src = Wirecloud.contextManager.get('avatar');
+            avatar.setAttribute('alt', utils.interpolate(utils.gettext('Avatar of %(username)s'), {username: user_name}, true));
 
             const template = Wirecloud.currentTheme.templates['wirecloud/user_menu'];
             builder.parse(template, {
@@ -92,9 +95,6 @@
                 dialog.show();
             });
             item.addIconClass('fas fa-cog');
-            if (Object.keys(Wirecloud.preferences.meta.preferences).length === 0) {
-                item.disable();
-            }
             user_menu.append(item);
 
             if (Wirecloud.contextManager.get('isstaff') === true && 'DJANGO_ADMIN' in Wirecloud.URLs) {
@@ -151,6 +151,7 @@
         const breadcrum_part = document.createElement('span');
         breadcrum_part.textContent = breadcrum_entry.label;
         breadcrum_part.className = breadcrum_levels[i];
+        breadcrum_part.setAttribute('aria-level', (i + 1).toString());
         if ('class' in breadcrum_entry) {
             breadcrum_part.classList.add(breadcrum_entry.class);
         }

@@ -35,11 +35,18 @@
         this.controlLayerRight = document.createElement("div");
         this.controlLayerCenter = document.createElement("div");
         this.controlLayer.className = "controlLayer";
+        this.controlLayer.setAttribute("role", "presentation");
+        this.controlLayer.setAttribute("aria-hidden", "false");
         this.controlLayerUp.className = "controlLayerUp";
+        this.controlLayerUp.setAttribute("aria-hidden", "true");
         this.controlLayerDown.className = "controlLayerDown";
+        this.controlLayerDown.setAttribute("aria-hidden", "true");
         this.controlLayerLeft.className = "controlLayerLeft";
+        this.controlLayerLeft.setAttribute("aria-hidden", "true");
         this.controlLayerRight.className = "controlLayerRight";
+        this.controlLayerRight.setAttribute("aria-hidden", "true");
         this.controlLayerCenter.className = "controlLayerCenter";
+        this.controlLayerCenter.setAttribute("aria-hidden", "true");
         this.controlLayer.appendChild(this.controlLayerUp);
         this.controlLayer.appendChild(this.controlLayerDown);
         this.controlLayer.appendChild(this.controlLayerLeft);
@@ -64,6 +71,9 @@
 
         this.msgLayer = document.createElement("div");
         this.msgLayer.classList.add("msgLayer");
+        this.msgLayer.setAttribute("role", "region");
+        this.msgLayer.setAttribute("aria-live", "polite");
+        this.msgLayer.setAttribute("aria-label", utils.gettext("Tutorial instructions"));
         document.body.appendChild(this.msgLayer);
 
         for (let i = 0; i < this.instructions.length; i++) {

@@ -187,6 +187,15 @@
         });
     };
 
+    const censor_secure_preferences = function censor_secure_preferences(newValues) {
+        // Censor secure preferences
+        for (const varName in newValues) {
+            if (this.preferences[varName].meta.secure) {
+                newValues[varName] = "********";
+            }
+        }
+    }
+
     // =========================================================================
     // EVENT HANDLERS
     // =========================================================================
@@ -417,6 +426,8 @@
                 this.wrapperElement = document.createElement('iframe');
                 this.wrapperElement.className = "wc-operator wc-operator-content";
                 this.wrapperElement.setAttribute('type', "application/xhtml+xml");
+                this.wrapperElement.setAttribute('role', 'region');
+                this.wrapperElement.setAttribute('aria-label', utils.interpolate(utils.gettext('Operator: %(title)s'), {title: data.title}, true));
                 this.wrapperElement.addEventListener('load', on_load.bind(this), true);
             }
 
@@ -556,6 +567,78 @@
             dialog.htmlElement.classList.add("wc-component-logs-modal");
             dialog.show();
             return this;
+        }
+
+        setPreferences(newValues) {
+            // We are going to modify the object, let's create a copy
+            newValues = Object.assign({}, newValues);
+
+            for (const prefName in newValues) {
+                if (!(prefName in this.preferences)) {
+                    delete newValues[prefName];
+                    continue;
+                }
+
+                const oldValue = this.preferences[prefName].value;
+                const newValue = newValues[prefName];
+
+                if (newValue !== oldValue) {
+                    if (this.preferences[prefName].meta.secure && newValue !== "") {
+                        this.preferences[prefName].value = "********";
+                    } else {
+                        this.preferences[prefName].value = newValue;
+                    }
+                } else {
+                    delete newValues[prefName];
+                }
+            }
+
+            const update_payload = [];
+            for (const [prefName, pref] of Object.entries(this.preferences)) {
+                update_payload.push({
+                    op: "replace",
+                    path: "/operators/" + this.id + "/preferences/" + prefName + "/value",
+                    value: pref.value
+                });
+            }
+
+            if (!this.volatile && Object.keys(newValues).length > 0) {
+                return Wirecloud.io.makeRequest(Wirecloud.URLs.WIRING_ENTRY.evaluate({
+                    workspace_id: this.wiring.workspace.id
+                }), {
+                    method: 'PATCH',
+                    contentType: 'application/json-patch+json',
+                    requestHeaders: {'Accept': 'application/json'},
+                    postBody: JSON.stringify(update_payload)
+                }).then((response) => {
+                    if (response.status !== 204) {
+                        return Promise.reject(new Error("Unexpected response from server"));
+                    }
+
+                    censor_secure_preferences.call(this, newValues);
+
+                    try {
+                        this.prefCallback(newValues);
+                    } catch (error) {
+                        const details = this.logManager.formatException(error);
+                        this.logManager.log(utils.gettext('Exception catched while processing preference changes'), {details: details});
+                    }
+
+                    return newValues;
+                });
+            } else {
+                if (Object.keys(newValues).length > 0) {
+                    try {
+                        this.prefCallback(newValues);
+                    } catch (error) {
+                        const details = this.logManager.formatException(error);
+                        this.logManager.log(utils.gettext('Exception catched while processing preference changes'), {details: details});
+                    }
+                }
+
+                censor_secure_preferences.call(this, newValues);
+                return Promise.resolve(newValues);
+            }
         }
 
         /**

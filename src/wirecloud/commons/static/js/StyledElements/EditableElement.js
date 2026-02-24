@@ -71,6 +71,8 @@
             options = utils.merge({}, defaultOptions, options);
 
             this.wrapperElement = document.createElement('span');
+            this.wrapperElement.setAttribute('role', 'textbox');
+            this.wrapperElement.setAttribute('tabindex', '0');
             this.setTextContent(options.initialContent);
 
             this._onFocus = onFocus.bind(this);

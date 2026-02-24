@@ -131,6 +131,7 @@
                 const dragboard = options.dragboard;
                 dragboardCover = document.createElement("div");
                 dragboardCover.className = "cover";
+                dragboardCover.setAttribute("aria-hidden", "true");
                 dragboardCover.addEventListener("mouseup", enddrag, true);
                 dragboardCover.addEventListener("touchend", enddrag, true);
                 dragboardCover.addEventListener("mousemove", drag, true);

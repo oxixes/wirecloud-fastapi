@@ -101,6 +101,8 @@
         }
         entry_element = document.createElement('div');
         entry_element.className = 'fade alert ' + LEVEL_CLASS[entry.level - 1];
+        entry_element.setAttribute('role', 'log');
+        entry_element.setAttribute('aria-live', 'polite');
 
         dateElement = document.createElement('strong');
         dateElement.className = "wc-log-date";

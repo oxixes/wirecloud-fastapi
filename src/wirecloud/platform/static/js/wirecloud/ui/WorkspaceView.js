@@ -39,6 +39,12 @@
         this.walletButton.enabled = editing && this.model.isAllowed('edit');
         this.wiringButton.enabled = editing && this.model.isAllowed('edit');
         this.notebook.tabWrapper.toggleClassName("hidden", !(editing || this.tabs.length > 1));
+        this.notebook.tabs.forEach((tab) => {
+            if (tab.dragboard) {
+                tab.dragboard._notifyWindowResizeEvent();
+            }
+        });
+
         if (this.addTabButton) {
             this.addTabButton.toggleClassName("hidden", !editing);
         }
@@ -559,6 +565,7 @@
                 alert_msg = document.createElement('div');
                 alert_msg.className = 'alert alert-info';
                 alert_msg.textContent = utils.gettext('The requested workspace is no longer available (it was deleted).');
+                alert_msg.setAttribute('role', 'alert');
                 this.layout.slideOut().content.clear().appendChild(alert_msg);
                 Wirecloud.dispatchEvent('viewcontextchanged');
             } else if (Wirecloud.activeWorkspace == null || (nextWorkspace.id !== Wirecloud.activeWorkspace.id)) {

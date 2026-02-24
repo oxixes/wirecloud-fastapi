@@ -43,6 +43,8 @@
 
         this.element = document.createElement("div");
         this.element.setAttribute("class", "dragboardcursor");
+        this.element.setAttribute("role", "presentation");
+        this.element.setAttribute("aria-hidden", "true");
 
         // Set width and height
         this.element.style.height = widget.wrapperElement.offsetHeight + "px";

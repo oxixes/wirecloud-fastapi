@@ -76,6 +76,7 @@
             image: function () {
                 const icon = document.createElement('span');
                 icon.className = data.iconClass;
+                icon.setAttribute('aria-hidden', 'true');
                 return icon;
             }.bind(this),
             title: data.title,
@@ -110,6 +111,7 @@
             icon: function () {
                 const icon = document.createElement('i');
                 icon.className = "fas fa-" + (data.type === "group" ? "users" : (data.type === "organization" ? "building" : "user")) + " fa-stack-1x";
+                icon.setAttribute('aria-hidden', 'true');
                 return icon;
             },
             username: data.name,
@@ -149,6 +151,7 @@
 
             const subtitle1 = document.createElement('h4');
             subtitle1.textContent = utils.gettext("Visibility options");
+            subtitle1.setAttribute('id', 'wc-sharing-visibility-label');
             this.windowContent.appendChild(subtitle1);
 
             const options = [
@@ -165,6 +168,7 @@
 
             const subtitle2 = document.createElement('h4');
             subtitle2.textContent = utils.gettext("Users and groups with access");
+            subtitle2.setAttribute('id', 'wc-sharing-users-label');
             this.windowContent.appendChild(subtitle2);
 
             this.inputSearch = new se.TextField({placeholder: utils.gettext("Add a person, a group or an organization"), class: "wc-dashboard-share-input"});

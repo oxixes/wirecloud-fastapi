@@ -67,6 +67,7 @@
 
             const div =  document.createElement("div");
             div.className = "se-select-arrow fas fa-caret-down";
+            div.setAttribute('aria-hidden', 'true');
             this.inputElement = document.createElement("select");
 
             if (options.name) {

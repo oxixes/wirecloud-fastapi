@@ -48,6 +48,18 @@
                 this.show(menuitem);
             });
             menuitem.addClassName('submenu');
+            menuitem.wrapperElement.setAttribute('aria-haspopup', 'true');
+            menuitem.wrapperElement.setAttribute('aria-expanded', 'false');
+
+            // Set aria-controls to reference the submenu
+            // Ensure the submenu has an ID
+            let submenuId = this.wrapperElement.getAttribute('id');
+            if (!submenuId) {
+                submenuId = 'se-popup-submenu-' + Math.random().toString(36).substr(2, 9);
+                this.wrapperElement.setAttribute('id', submenuId);
+            }
+            menuitem.wrapperElement.setAttribute('aria-controls', submenuId);
+
             Object.defineProperty(menuitem, "submenu", {"value": this});
 
             Object.defineProperties(this, {
@@ -129,6 +141,16 @@
         setDisabled(disabled) {
             this.menuitem.setDisabled(disabled);
             return this;
+        }
+
+        show(refPosition) {
+            this.menuitem.wrapperElement.setAttribute('aria-expanded', 'true');
+            return super.show(refPosition);
+        }
+
+        hide() {
+            this.menuitem.wrapperElement.setAttribute('aria-expanded', 'false');
+            return super.hide();
         }
 
         destroy() {

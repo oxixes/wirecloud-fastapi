@@ -296,6 +296,9 @@
 
             this.wrapperElement = document.createElement('div');
             this.wrapperElement.className = 'se-popup-menu hidden';
+            this.wrapperElement.setAttribute('role', 'menu');
+            // ID will be assigned on first use if needed, or set it now
+            this.wrapperElement.setAttribute('id', 'se-popup-menu-' + Math.random().toString(36).substr(2, 9));
             this._context = null;
             if (Array.isArray(options.placement)) {
                 this._placement = options.placement;
@@ -318,6 +321,7 @@
             this._dynamicItems = [];
             this._submenus = [];
             this._menuItemCallback = this._menuItemCallback.bind(this);
+            this._expandedElement = null;
 
             this._menuItem_onmouseenter_bound = menuItem_onmouseenter.bind(this);
             this._menuItem_onmouseleave_bound = menuItem_onmouseleave.bind(this);
@@ -394,6 +398,27 @@
 
             if (this.isVisible()) {
                 return this; // This Popup Menu is already visible => nothing to do
+            }
+
+            // If refPosition is an element, add aria-controls and aria-expanded to it
+            if (refPosition && 'getAttribute' in refPosition) {
+                const element = refPosition.wrapperElement || refPosition;
+                // Ensure the menu has an ID
+                let menuId = this.wrapperElement.getAttribute('id');
+                if (!menuId) {
+                    menuId = 'se-popup-menu-' + Math.random().toString(36).substr(2, 9);
+                    this.wrapperElement.setAttribute('id', menuId);
+                }
+                // Add aria-controls to the reference element
+                const currentControls = element.getAttribute('aria-controls');
+                if (currentControls && !currentControls.includes(menuId)) {
+                    element.setAttribute('aria-controls', currentControls + ' ' + menuId);
+                } else if (!currentControls) {
+                    element.setAttribute('aria-controls', menuId);
+                }
+                // Set aria-expanded
+                element.setAttribute('aria-expanded', 'true');
+                this._expandedElement = element;
             }
 
             this._enabledItems = [];
@@ -539,6 +564,12 @@
             this.refPosition = null;
             if (this.hidden) {
                 return this;
+            }
+
+            // Restore aria-expanded to false
+            if (this._expandedElement) {
+                this._expandedElement.setAttribute('aria-expanded', 'false');
+                this._expandedElement = null;
             }
 
             this.wrapperElement.classList.add("hidden");

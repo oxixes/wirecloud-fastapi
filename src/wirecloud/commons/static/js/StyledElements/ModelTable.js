@@ -29,6 +29,7 @@
 
         priv.header = document.createElement('div');
         priv.header.className = 'se-model-table-headrow';
+        priv.header.setAttribute('role', 'row');
 
         priv.headerCells = [];
         priv.columnTemplate = [];
@@ -39,6 +40,7 @@
 
             const cell = document.createElement('div');
             cell.className = 'se-model-table-cell';
+            cell.setAttribute('role', 'columnheader');
             if (typeof column.class === 'string') {
                 cell.classList.add(column.class);
             }
@@ -89,6 +91,7 @@
 
             row = document.createElement('div');
             row.className = 'se-model-table-row';
+            row.setAttribute('role', 'row');
             if ((i % 2) === 1) {
                 row.classList.add('odd');
             }
@@ -102,6 +105,7 @@
 
                 cell = document.createElement('div');
                 cell.className = 'se-model-table-cell';
+                cell.setAttribute('role', 'cell');
                 priv.columnsCells[j].push(cell);
 
                 if (typeof column.class === 'string') {
@@ -163,6 +167,7 @@
             row = document.createElement('div');
             row.className = 'alert alert-info se-model-table-msg';
             row.textContent = this.emptyMessage;
+            row.setAttribute('role', 'status');
 
             priv.tableBody.appendChild(row);
         }
@@ -179,6 +184,7 @@
             const message = document.createElement('div');
             message.className = "alert alert-danger se-model-table-msg";
             message.textContent = error;
+            message.setAttribute('role', 'alert');
             priv.tableBody.appendChild(message);
         }
     };
@@ -522,6 +528,7 @@
             priv.listeners = [];
             priv.tableBody = priv.layout.center;
             priv.tableBody.addClassName('se-model-table-body');
+            priv.tableBody.wrapperElement.setAttribute('role', 'table');
             buildHeader.call(this);
 
             /*

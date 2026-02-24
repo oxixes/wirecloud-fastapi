@@ -90,6 +90,9 @@
 
             this.name_preview = document.createElement('div');
             this.name_preview.className = 'se-add-on';
+            this.name_preview.setAttribute('role', 'textbox');
+            this.name_preview.setAttribute('aria-readonly', 'true');
+            this.name_preview.setAttribute('aria-label', utils.gettext('Selected component'));
             this.wrapperElement.appendChild(this.name_preview);
             this.wrapperElement.appendChild(this.inputElement);
 

@@ -35,6 +35,8 @@
 
             this.msgElement = document.createElement('div');
             this.msgElement.className = "msg";
+            this.msgElement.setAttribute("role", "status");
+            this.msgElement.setAttribute("aria-live", "polite");
             this.windowContent.appendChild(this.msgElement);
 
             // Accept button

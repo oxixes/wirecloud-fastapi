@@ -192,6 +192,11 @@
             this.currentRequest = null;
             const popupMenu = new se.PopupMenu({oneActiveAtLeast: true, useRefElementWidth: true});
             popupMenu.addEventListener('click', popupMenu_onselect.bind(this));
+            popupMenu.addEventListener('visibilityChange', () => {
+                if (this.textField) {
+                    this.textField.inputElement.setAttribute('aria-expanded', popupMenu.isVisible().toString());
+                }
+            });
 
             Object.defineProperties(this, {
                 autocomplete: {value: options.autocomplete},
@@ -226,6 +231,9 @@
             this.textField.inputElement.setAttribute('autocomplete', 'off');
             this.textField.inputElement.setAttribute('autocorrect', 'off');
             this.textField.inputElement.setAttribute('spellcheck', 'false');
+            this.textField.inputElement.setAttribute('aria-autocomplete', 'list');
+            this.textField.inputElement.setAttribute('aria-expanded', 'false');
+            this.textField.inputElement.setAttribute('aria-haspopup', 'listbox');
 
             this.textField.addEventListener('change', textField_onchange.bind(this));
             this.textField.addEventListener('keydown', textField_onkeydown.bind(this));

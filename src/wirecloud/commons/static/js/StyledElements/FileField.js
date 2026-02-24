@@ -88,11 +88,14 @@
 
             this.name_preview = document.createElement('div');
             this.name_preview.className = 'filename';
+            this.name_preview.setAttribute('aria-label', utils.gettext('Selected file name'));
             this.layout.getCenterContainer().appendChild(this.name_preview);
 
             /* Pseudo button */
             const button = document.createElement('div');
             button.className = 'se-btn';
+            button.setAttribute('role', 'button');
+            button.setAttribute('aria-label', utils.gettext('Select file'));
             const button_span = document.createElement('span');
             button_span.textContent = utils.gettext('Select');
             button.appendChild(button_span);

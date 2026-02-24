@@ -129,6 +129,7 @@
             tabWrapper.insertInto(this.wrapperElement);
 
             this.tabArea = new StyledElements.Container();
+            this.tabArea.wrapperElement.setAttribute('role', 'tablist');
             tabWrapper.center.appendChild(this.tabArea.addClassName('se-notebook-tab-area'));
 
             this.moveLeftButton = new this.Button({class: 'move_left', iconClass: 'fas fa-caret-left'});
@@ -605,6 +606,7 @@
             if (!enabled) {
                 this.disabledLayer = document.createElement('div');
                 this.disabledLayer.classList.add('se-container-disable-layer');
+                this.disabledLayer.setAttribute('aria-hidden', 'true');
                 this.wrapperElement.appendChild(this.disabledLayer);
             } else {
                 this.disabledLayer.remove();

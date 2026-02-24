@@ -353,7 +353,7 @@
                 }
             });
 
-            options.layoutConfig = layoutConfigs;
+            options.layoutConfigurations = layoutConfigs;
 
             if (!options.commit) {
                 return this.findWidget(this.model.createWidget(resource, options).id);
@@ -375,6 +375,8 @@
             }
 
             const div = document.createElement('div');
+            div.setAttribute('role', 'status');
+            div.setAttribute('aria-live', 'polite');
             const span = document.createElement('span');
             span.textContent = text;
             div.appendChild(span);
@@ -383,6 +385,8 @@
                 const a = document.createElement('a');
                 a.className = 'far fa-times-circle wc-editing-interval-close';
                 a.href = '#';
+                a.setAttribute('role', 'button');
+                a.setAttribute('aria-label', utils.gettext('Quit editing interval'));
                 a.addEventListener('click', (e) => {
                     e.preventDefault();
                     this.quitEditingInterval();

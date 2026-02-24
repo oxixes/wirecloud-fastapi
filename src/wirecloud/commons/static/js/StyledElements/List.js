@@ -61,6 +61,7 @@
             }
 
             this.content = document.createElement("div");
+            this.content.setAttribute('role', 'list');
             this.wrapperElement.appendChild(this.content);
 
             this.entries = [];
@@ -111,6 +112,7 @@
 
                 const row = document.createElement("div");
                 row.className = "row";
+                row.setAttribute('role', 'listitem');
 
                 const context = {listComponent: this, value: entryValue};
                 row.addEventListener("click", itemListener.bind(context), true);

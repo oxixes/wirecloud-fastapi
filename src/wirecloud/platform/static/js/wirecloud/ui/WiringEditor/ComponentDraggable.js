@@ -360,11 +360,14 @@
 
             this.heading.noticeTitle = document.createElement('span');
             this.heading.noticeTitle.className = "label label-danger";
+            this.heading.noticeTitle.setAttribute('role', 'status');
+            this.heading.noticeTitle.setAttribute('aria-live', 'polite');
             this.heading.noticeTitle.addEventListener('mousedown', utils.stopPropagationListener, true);
             this.heading.noticeTitle.addEventListener('click', noticetitle_onclick.bind(this));
 
             this.heading.notice = document.createElement('div');
             this.heading.notice.className = "component-notice";
+            this.heading.notice.setAttribute('role', 'alert');
             this.heading.notice.appendChild(this.heading.noticeTitle);
 
             this._endpoint_onconnectionadded_bound = endpoint_onconnectionadded.bind(this);
@@ -586,6 +589,7 @@
         setTitle(title) {
             const span = document.createElement('span');
             span.textContent = title;
+            span.setAttribute('aria-label', utils.interpolate(utils.gettext('Component: %(title)s'), {title: title}, true));
             this.titletooltip.options.content = title;
             this.titletooltip.bind(span);
 

@@ -54,6 +54,7 @@
                 var msg = document.createElement('p');
                 msg.textContent = utils.gettext('Error uploading the following components:');
                 var details = document.createElement('ul');
+                details.setAttribute('aria-label', utils.gettext('Upload errors'));
                 for (var i = 0; i < this.failures.length; i++) {
                     var item = document.createElement('li');
                     var file_name = document.createElement('b');
@@ -167,6 +168,7 @@
             // File Drag & drop borders
             var border = document.createElement("div");
             border.className = "wc-upload-mac-border";
+            border.setAttribute('aria-hidden', 'true');
             this.windowContent.appendChild(border);
 
             // Cancel button

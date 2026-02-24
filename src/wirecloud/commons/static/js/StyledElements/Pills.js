@@ -37,6 +37,7 @@
 
             this.wrapperElement = document.createElement("ul");
             this.wrapperElement.className = utils.appendWord(options.class, "se-pills");
+            this.wrapperElement.setAttribute('role', 'tablist');
 
             this.activePill = null;
             this.pills = {};
@@ -46,6 +47,9 @@
             const pill = document.createElement('li');
             pill.className = 'se-pill';
             pill.textContent = label;
+            pill.setAttribute('role', 'tab');
+            pill.setAttribute('aria-selected', 'false');
+            pill.setAttribute('tabindex', '-1');
             pill.addEventListener('click', clickCallback.bind(this, id), true);
 
             this.wrapperElement.appendChild(pill);
@@ -64,10 +68,14 @@
 
             if (this.activePill != null) {
                 this.pills[this.activePill].classList.remove('active');
+                this.pills[this.activePill].setAttribute('aria-selected', 'false');
+                this.pills[this.activePill].setAttribute('tabindex', '-1');
             }
 
             this.activePill = id;
             this.pills[this.activePill].classList.add('active');
+            this.pills[this.activePill].setAttribute('aria-selected', 'true');
+            this.pills[this.activePill].setAttribute('tabindex', '0');
 
             this.dispatchEvent('change', id);
         }

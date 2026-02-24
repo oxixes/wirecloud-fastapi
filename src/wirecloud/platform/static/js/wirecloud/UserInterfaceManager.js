@@ -93,6 +93,7 @@
         document.getElementById("loading-task-title").textContent = msg;
 
         const list = document.createElement('ul');
+        list.setAttribute('aria-label', utils.gettext('Subtasks progress'));
         task.subtasks.forEach(function (subtask) {
             if (subtask.type === "then") {
                 if (subtask.subtasks.length === 0) {
@@ -159,6 +160,7 @@
         coverLayerElement.id = 'menu_layer';
         coverLayerElement.className = 'disabled_background fade';
         coverLayerElement.style.display = 'none';
+        coverLayerElement.setAttribute('aria-hidden', 'true');
         document.body.insertBefore(coverLayerElement, document.body.firstChild);
 
         // General keydown handler

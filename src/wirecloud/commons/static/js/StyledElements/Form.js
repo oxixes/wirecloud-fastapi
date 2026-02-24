@@ -136,6 +136,7 @@
 
         if (field.required && !this.readOnly) {
             requiredMark = document.createElement('span');
+            requiredMark.setAttribute('aria-hidden', 'true');
             requiredMark.appendChild(document.createTextNode('*'));
             requiredMark.className = 'required_mark';
             labelCell.appendChild(requiredMark);
@@ -279,6 +280,8 @@
             // Mark our message div as an error msg
             this.msgElement = document.createElement('div');
             this.msgElement.className = 'alert alert-error';
+            this.msgElement.setAttribute('role', 'alert');
+            this.msgElement.setAttribute('aria-live', 'assertive');
             div.appendChild(this.msgElement);
             setMsgs.call(this, []);
 

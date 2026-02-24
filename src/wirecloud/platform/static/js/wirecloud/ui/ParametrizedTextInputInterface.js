@@ -51,6 +51,7 @@
             this.wrapperElement.appendChild(this.selectorWrapperElement);
 
             this.mainSelect = document.createElement('select');
+            this.mainSelect.setAttribute('aria-label', utils.gettext('Select parameter type'));
             for (i = 0; i < this.parameters.length; i += 1) {
                 param = this.parameters[i];
                 option = new Option(param.label, param.value);
@@ -64,6 +65,7 @@
             this.selectorWrapperElement.appendChild(this.mainSelect);
 
             this.secondSelect = document.createElement('select');
+            this.secondSelect.setAttribute('aria-label', utils.gettext('Select specific parameter'));
             this.selectorWrapperElement.appendChild(this.secondSelect);
             this.secondSelect.addEventListener('change', this._updateDescription.bind(this), true);
 
@@ -87,6 +89,8 @@
 
             this.descriptionDiv = document.createElement('div');
             this.descriptionDiv.className = 'description';
+            this.descriptionDiv.setAttribute('role', 'note');
+            this.descriptionDiv.setAttribute('aria-live', 'polite');
             this.wrapperElement.appendChild(this.descriptionDiv);
 
             this.inputElement = new se.TextArea();

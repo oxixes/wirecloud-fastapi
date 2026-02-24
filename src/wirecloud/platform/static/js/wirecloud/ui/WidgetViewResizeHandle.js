@@ -45,6 +45,9 @@
             super([]);
 
             this.wrapperElement = document.createElement('div');
+            this.wrapperElement.setAttribute('role', 'slider');
+            this.wrapperElement.setAttribute('aria-label', utils.gettext('Resize widget'));
+            this.wrapperElement.setAttribute('aria-orientation', options.resizeTopSide ? 'vertical' : 'horizontal');
 
             Wirecloud.ui.ResizeHandle.call(
                 this, widget.wrapperElement, this.wrapperElement,

@@ -264,9 +264,11 @@
             } else {
                 priv.disabledLayer = document.createElement('div');
                 priv.disabledLayer.className = 'se-container-disable-layer';
+                priv.disabledLayer.setAttribute('aria-hidden', 'true');
 
                 const icon = document.createElement('i');
                 icon.className = 'disable-icon fas fa-spin fa-spinner';
+                icon.setAttribute('aria-hidden', 'true');
                 priv.disabledLayer.appendChild(icon);
 
                 this.wrapperElement.appendChild(priv.disabledLayer);

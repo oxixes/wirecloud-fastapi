@@ -115,10 +115,16 @@
             };
             privates.set(this, priv);
             priv.tabElement.className = "se-notebook-tab";
+            priv.tabElement.setAttribute('role', 'tab');
+            priv.tabElement.setAttribute('aria-selected', 'false');
+            priv.tabElement.setAttribute('aria-controls', 'se-notebook-tabpanel-' + id);
             priv.tabElement.appendChild(priv.labelElement);
 
             this.wrapperElement.classList.add("se-notebook-tab-content");
             this.wrapperElement.classList.add("hidden");
+            this.wrapperElement.setAttribute('role', 'tabpanel');
+            this.wrapperElement.setAttribute('id', 'se-notebook-tabpanel-' + id);
+            this.wrapperElement.setAttribute('aria-labelledby', 'se-notebook-tab-' + id);
 
             priv.tabElement.addEventListener(
                 "click",
@@ -229,7 +235,9 @@
          */
         hide() {
             super.hide();
-            privates.get(this).tabElement.classList.remove("selected");
+            const priv = privates.get(this);
+            priv.tabElement.classList.remove("selected");
+            priv.tabElement.setAttribute('aria-selected', 'false');
             return this;
         }
 
@@ -239,7 +247,9 @@
          */
         show() {
             super.show();
-            privates.get(this).tabElement.classList.add("selected");
+            const priv = privates.get(this);
+            priv.tabElement.classList.add("selected");
+            priv.tabElement.setAttribute('aria-selected', 'true');
             this.repaint(false);
             return this;
         }

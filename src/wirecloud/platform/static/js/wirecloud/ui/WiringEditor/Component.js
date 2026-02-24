@@ -104,6 +104,7 @@
             this.heading.subtitle.addClassName("component-version");
 
             this.label = document.createElement('span');
+            this.label.setAttribute('aria-live', 'polite');
 
             this._component = wiringComponent;
 
@@ -146,6 +147,7 @@
         setTitle(title) {
             const span = document.createElement('span');
             span.textContent = title;
+            span.setAttribute('aria-label', utils.interpolate(utils.gettext('Component: %(title)s'), {title: title}, true));
             this.titletooltip.options.content = title;
             this.titletooltip.bind(span);
 

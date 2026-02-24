@@ -85,6 +85,7 @@
 
             this.imageElement = document.createElement('img');
             this.imageElement.onerror = image_onerror.bind(this);
+            this.imageElement.setAttribute('alt', title);
 
             const version = new se.Select({
                 initialValue: resource.version,
@@ -103,6 +104,7 @@
 
             this.descriptionElement = document.createElement('div');
             this.descriptionElement.className = "text-muted";
+            this.descriptionElement.setAttribute('role', 'note');
 
             this.wrapperElement = (new se.GUIBuilder()).parse(Wirecloud.currentTheme.templates['wirecloud/wiring/component_group'], {
                 title: this.titleElement,

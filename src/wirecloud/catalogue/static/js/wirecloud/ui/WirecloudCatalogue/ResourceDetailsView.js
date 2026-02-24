@@ -85,6 +85,8 @@
                                         var article = document.createElement('article');
                                         article.className = 'markdown-body';
                                         article.innerHTML = response.responseText;
+                                        article.setAttribute('role', 'document');
+                                        article.setAttribute('aria-label', utils.gettext('Component documentation'));
                                         documentation.clear();
                                         documentation.appendChild(article);
                                     }.bind(this),
@@ -105,6 +107,8 @@
                                         var article = document.createElement('article');
                                         article.className = 'markdown-body';
                                         article.innerHTML = response.responseText;
+                                        article.setAttribute('role', 'document');
+                                        article.setAttribute('aria-label', utils.gettext('Component changelog'));
                                         changelog.clear();
                                         changelog.appendChild(article);
                                     }.bind(this),

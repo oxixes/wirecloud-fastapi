@@ -140,7 +140,9 @@
             super([]);
 
             const priv = {
-                element: null
+                element: null,
+                refElement: null,
+                tooltipId: 'se-tooltip-' + Math.random().toString(36).substr(2, 9)
             };
             privates.set(this, priv);
             Object.defineProperties(this, {
@@ -160,6 +162,17 @@
         }
 
         bind(element) {
+            const priv = privates.get(this);
+            priv.refElement = element.wrapperElement || element;
+
+            // Set aria-describedby on the reference element
+            const currentDescribedBy = priv.refElement.getAttribute('aria-describedby');
+            if (currentDescribedBy) {
+                priv.refElement.setAttribute('aria-describedby', currentDescribedBy + ' ' + priv.tooltipId);
+            } else {
+                priv.refElement.setAttribute('aria-describedby', priv.tooltipId);
+            }
+
             element.addEventListener('focus', this.show.bind(this, element), false);
             element.addEventListener('blur', this.hide.bind(this), false);
             element.addEventListener('mouseenter', this.show.bind(this, element), false);
@@ -182,6 +195,17 @@
                 Wirecloud.UserInterfaceManager._registerTooltip(this);
             }
 
+            // If refPosition is an element, add aria-describedby
+            if (refPosition && 'getAttribute' in refPosition && refPosition !== priv.refElement) {
+                const element = refPosition.wrapperElement || refPosition;
+                const currentDescribedBy = element.getAttribute('aria-describedby');
+                if (currentDescribedBy && !currentDescribedBy.includes(priv.tooltipId)) {
+                    element.setAttribute('aria-describedby', currentDescribedBy + ' ' + priv.tooltipId);
+                } else if (!currentDescribedBy) {
+                    element.setAttribute('aria-describedby', priv.tooltipId);
+                }
+            }
+
             if (this.visible) {
                 priv.element.classList.add('in');
                 return this.repaint();
@@ -190,6 +214,10 @@
             priv.element = builder.parse(template, {
                 content: this.options.content
             }).elements[0];
+            // Ensure the tooltip has an ID
+            if (!priv.element.getAttribute('id')) {
+                priv.element.setAttribute('id', priv.tooltipId);
+            }
             priv.element.addEventListener('transitionend', _hide.bind(this));
 
             const baseelement = utils.getFullscreenElement() || document.body;

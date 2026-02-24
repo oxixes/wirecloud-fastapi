@@ -153,6 +153,8 @@
         }
         this.wrapperElement = wrapperElement;
         this.wrapperElement.className = "wc-widget-content";
+        this.wrapperElement.setAttribute('role', 'region');
+        this.wrapperElement.setAttribute('aria-label', this.meta.title);
         this.wrapperElement.addEventListener('load', on_load.bind(this), true);
         if (this.meta.missing || this.meta.macversion === 1) {
             this.wrapperElement.setAttribute('frameBorder', "0");
@@ -437,6 +439,7 @@
             if (data == null) {
                 throw new TypeError("invalid data parameter");
             }
+
             data = utils.merge({
                 title: meta.title,
                 preferences: {},
@@ -1127,6 +1130,15 @@
                     return newValues;
                 });
             } else {
+                if (Object.keys(newValues).length > 0) {
+                    try {
+                        this.prefCallback(newValues);
+                    } catch (error) {
+                        const details = this.logManager.formatException(error);
+                        this.logManager.log(utils.gettext('Exception catched while processing preference changes'), {details: details});
+                    }
+                }
+
                 censor_secure_preferences.call(this, newValues);
                 return Promise.resolve(newValues);
             }

@@ -38,6 +38,7 @@
 
             // Init status
             this.active = options.initiallyChecked;
+            this.wrapperElement.setAttribute('aria-pressed', this.active.toString());
         }
 
         get active() {
@@ -50,6 +51,7 @@
             const current = this.hasClassName('active');
             if (current !== value) {
                 this.toggleClassName('active', value);
+                this.wrapperElement.setAttribute('aria-pressed', value.toString());
                 this.dispatchEvent('active', value);
             }
         }

@@ -58,6 +58,8 @@
                 content: {value: new se.Container({class: 'se-offcanvas-content'})}
             });
 
+            this.sidebar.wrapperElement.setAttribute('aria-hidden', 'true');
+
             this.index = -1;
 
             this.sidebar.appendTo(this.wrapperElement);
@@ -108,6 +110,7 @@
             }
 
             this.toggleClassName('slipped', true);
+            this.sidebar.wrapperElement.setAttribute('aria-hidden', 'false');
 
             return this.dispatchEvent('slideIn', element);
         }
@@ -123,6 +126,7 @@
             }
 
             this.toggleClassName('slipped', false);
+            this.sidebar.wrapperElement.setAttribute('aria-hidden', 'true');
 
             return this.dispatchEvent('slideOut');
         }
