@@ -71,6 +71,12 @@ class UserAll(User):
         for permission in self.permissions:
             if permission.codename == codename:
                 return True
+
+            if permission.codename.endswith(".*"):
+                prefix = permission.codename[:-2]
+                if codename.startswith(prefix + "."):
+                    return True
+
         return False
 
 

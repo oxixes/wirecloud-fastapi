@@ -412,8 +412,8 @@ WIRECLOUD_PROXY = Proxy()
 async def proxy_request(request: Request,
                         db: DBDep,
                         user: UserDepNoCSRF,
-                        protocol: str = Path(description=docs.proxy_request_protocol_description, regex='http|https'),
-                        domain: str = Path(description=docs.proxy_request_domain_description, regex='[A-Za-z0-9-.]+'),
+                        protocol: str = Path(description=docs.proxy_request_protocol_description, pattern='http|https'),
+                        domain: str = Path(description=docs.proxy_request_domain_description, pattern='[A-Za-z0-9-.]+'),
                         path: str = Path(description=docs.proxy_request_path_description)) -> Response:
     # TODO improve proxy security
     request_method = request.method.upper()
@@ -450,8 +450,8 @@ async def proxy_request(request: Request,
 async def proxy_ws_request(ws: WebSocket,
                            db: DBDep,
                            user: UserDepNoCSRF,
-                           protocol: str = Path(description=docs.proxy_request_protocol_description, regex='ws|wss'),
-                           domain: str = Path(description=docs.proxy_request_domain_description, regex='[A-Za-z0-9-.]+'),
+                           protocol: str = Path(description=docs.proxy_request_protocol_description, pattern='ws|wss'),
+                           domain: str = Path(description=docs.proxy_request_domain_description, pattern='[A-Za-z0-9-.]+'),
                            path: str = Path(description=docs.proxy_request_path_description)):
     # TODO improve proxy security
     request_method = "WS"

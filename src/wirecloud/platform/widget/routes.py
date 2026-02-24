@@ -25,6 +25,7 @@ from fastapi.responses import HTMLResponse
 from wirecloud import docs as root_docs
 from wirecloud.catalogue.crud import get_catalogue_resource_with_xhtml
 import wirecloud.platform.widget.utils as showcase_utils
+from wirecloud.commons.auth.utils import UserDepNoCSRF
 from wirecloud.commons.templates.tags import get_translation, get_url_from_view, get_static_path
 from wirecloud.commons.utils.cache import check_if_modified_since, patch_cache_headers
 from wirecloud.commons.utils.http import NotFound, build_downloadfile_response, get_absolute_reverse_url, \
@@ -154,10 +155,10 @@ async def get_widget_file(db: DBDep, request: Request, vendor: Vendor = Path(pat
 )
 async def get_missing_widget_html(request: Request, theme: Optional[str] = Query(default=None,
                                                                                  description=docs.get_missing_widget_html_theme_description)):
-    templates = get_jinja2_templates(get_current_theme(request))
-    style = get_widget_platform_style(request, theme)
     if theme is None:
         theme = get_current_theme(request)
+    templates = get_jinja2_templates(get_current_theme(request))
+    style = get_widget_platform_style(request, theme)
     from wirecloud.platform.core.plugins import get_version_hash
     context = {
         "uri": request.url.scheme + "://" + request.url.netloc + request.url.path + "?" + request.url.query,

@@ -39,7 +39,7 @@ from wirecloud.commons.auth.utils import UserDepNoCSRF, UserDep
 from wirecloud.commons.utils.http import produces, NotFound, build_error_response, authentication_required, \
     consumes, build_downloadfile_response
 from wirecloud.catalogue.crud import get_catalogue_resource_versions_for_user, get_catalogue_resource_by_id, \
-    is_resource_available_for_user, get_catalogue_resource, get_user_catalogue_resource, get_user_catalogue_resources, \
+    get_catalogue_resource, get_user_catalogue_resource, get_user_catalogue_resources, \
     delete_catalogue_resources, uninstall_resource_to_user, delete_resource_if_not_used
 from wirecloud.commons.utils.wgt import WgtFile, InvalidContents
 from wirecloud.platform.localcatalogue import docs
@@ -141,6 +141,8 @@ async def create_resource(db: DBDep, user: UserDep, request: Request,
                           users: Union[list[str], None] = Query(None, description=docs.create_resource_users_parameter_description),
                           groups: Union[list[str], None] = Query(None, description=docs.create_resource_groups_parameter_description),
                           install_embedded_resources: bool = Query(False, description=docs.create_resource_install_embedded_resources_parameter_description)):
+    if not user.has_perm("COMPONENT.INSTALL"):
+        return build_error_response(request, 403, _('You do not have permission to install components'))
     status_code = 201
     file_contents = None
     user_list = set([user.strip() for user in users if user != ""]) if users else set()
@@ -307,8 +309,7 @@ async def get_resource_entry(db: DBDep, user: UserDepNoCSRF, request: Request,
     if not resource:
         raise NotFound("Resource not found")
 
-    # TODO Check more permissions
-    if not user.is_superuser and not await is_resource_available_for_user(db, resource, user):
+    if not resource.is_available_for(user):
         return build_error_response(request, 403, _("You are not allowed to retrieve info about this resource"))
 
     file_name = '_'.join((vendor, name, version)) + '.wgt'
@@ -320,8 +321,7 @@ async def get_resource_entry(db: DBDep, user: UserDepNoCSRF, request: Request,
 
 async def delete_resources(db: DBSession, user: UserAll, request: Request, vendor: str, name: str, version: Optional[str],
                            allusers: bool, affected: bool) -> Response:
-    # TODO Check more permissions
-    if allusers and not user.is_superuser:
+    if allusers and not user.is_superuser and not user.has_perm("COMPONENT.DELETE"):
         return build_error_response(request, 403, _('You are not allowed to delete resources'))
 
     if version is not None:
@@ -438,7 +438,7 @@ async def delete_resource_entry(db: DBDep, user: UserDep, request: Request,
             docs.get_resource_description_not_found_response_description)
     }
 )
-async def get_resource_description(db: DBDep, request: Request,
+async def get_resource_description(db: DBDep, request: Request, user: UserDepNoCSRF,
                                    vendor: str = Path(..., description=docs.get_resource_description_parameter_vendor_description),
                                    name: str = Path(..., description=docs.get_resource_description_parameter_name_description),
                                    version: str = Path(..., description=docs.get_resource_description_parameter_version_description),
@@ -447,6 +447,9 @@ async def get_resource_description(db: DBDep, request: Request,
     resource = await get_catalogue_resource(db, vendor, name, version)
     if not resource:
         raise NotFound("Resource not found")
+
+    if not resource.is_available_for(user):
+        return build_error_response(request, 403, _("You are not allowed to retrieve info about this resource"))
 
     resource_info = resource.get_processed_info(request, process_urls=process_urls)
     if include_wgt_files:
@@ -483,8 +486,6 @@ async def get_workspace_resource_collection(db: DBDep, user: UserDepNoCSRF, requ
     if not await workspace.is_accessible_by(db, user):
         return build_error_response(request, 403, _("You don't have access to this workspace"))
 
-    creator: UserAll = await get_user_with_all_info(db, workspace.creator)
-
     widgets = set()
     result = {}
     for tab in workspace.tabs.values():
@@ -501,7 +502,7 @@ async def get_workspace_resource_collection(db: DBDep, user: UserDepNoCSRF, requ
     for operator_id, operator in workspace.wiring_status.operators.items():
         vendor, name, version = operator.name.split('/')
         resource = await get_catalogue_resource(db, vendor, name, version)
-        if resource and await is_resource_available_for_user(db, resource, creator):
+        if resource and resource.is_available_for(user):
             options = resource.get_processed_info(request, process_urls=process_urls,
                                                   url_pattern_name="wirecloud.showcase_media")
             result[resource.local_uri_part] = options

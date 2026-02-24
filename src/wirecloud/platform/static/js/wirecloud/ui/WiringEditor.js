@@ -68,6 +68,10 @@ Wirecloud.ui = Wirecloud.ui || {};
                     },
                     (error) => {
                         button.enable();
+                        (new Wirecloud.ui.MessageWindowMenu(
+                            error,
+                            Wirecloud.constants.LOGGING.ERROR_MSG
+                        )).show();
                     }
                 );
             } else {
@@ -78,6 +82,10 @@ Wirecloud.ui = Wirecloud.ui || {};
                     },
                     (error) => {
                         button.enable();
+                        (new Wirecloud.ui.MessageWindowMenu(
+                            error,
+                            Wirecloud.constants.LOGGING.ERROR_MSG
+                        )).show();
                     }
                 );
             }
@@ -1097,7 +1105,12 @@ Wirecloud.ui = Wirecloud.ui || {};
          *
          */
         unload() {
-            this.workspace.wiring.load(this.toJSON()).save();
+            this.workspace.wiring.load(this.toJSON()).save().catch((error) => {
+                (new Wirecloud.ui.MessageWindowMenu(
+                    error,
+                    Wirecloud.constants.LOGGING.ERROR_MSG
+                )).show();
+            });
             readyView.call(this);
 
             Wirecloud.UserInterfaceManager.rootKeydownHandler = null;

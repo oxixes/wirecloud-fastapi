@@ -69,7 +69,7 @@ async def install_component(db: DBSession, file_contents: WgtFile, executor_user
     resource = await install_resource(db, file_contents, executor_user, restricted=restricted)
     initially_available = False
     if executor_user is not None:
-        initially_available = await resource.is_available_for(db, executor_user)
+        initially_available = resource.is_installed_for(executor_user)
     installed_to_someone = False
 
     # TODO Send signals or whatever system we will implement to notify the installation of the resource
@@ -96,8 +96,9 @@ async def install_component(db: DBSession, file_contents: WgtFile, executor_user
     await catalogue_utils.create_widget_on_resource_creation(db, resource)
     catalogue_utils.deploy_operators_on_resource_creation(resource)
 
+    resource = await get_catalogue_resource(db, resource.vendor, resource.short_name, resource.version)
     if executor_user is not None:
-        finally_available = await resource.is_available_for(db, executor_user)
+        finally_available = resource.is_installed_for(executor_user)
         return initially_available is False and finally_available is True, resource
     else:
         return installed_to_someone, resource

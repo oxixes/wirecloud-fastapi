@@ -197,7 +197,7 @@
                     this.form.acceptButton.removeClassName('busy');
                     this.form.acceptButton.enable();
                     this.form.cancelButton.enable();
-                    this.form.pSetMsgs([reason]);
+                    (new Wirecloud.ui.MessageWindowMenu(reason, Wirecloud.constants.LOGGING.ERROR_MSG)).show();
                 }
             );
         }

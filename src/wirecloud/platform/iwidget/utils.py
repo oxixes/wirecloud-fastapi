@@ -68,7 +68,7 @@ async def update_widget_value(db: DBSession, iwidget: WidgetInstance, data: Unio
         if resource is None:
             raise ValueError(_('Widget not found'))
 
-        if not await resource.is_available_for(db, user):
+        if not resource.is_available_for(user):
             raise NotFound(_('Widget not available'))
 
         if resource.resource_type() != 'widget':

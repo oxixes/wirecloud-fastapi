@@ -134,9 +134,9 @@ async def get_user_by_id(db: DBSession, user_id: Id) -> Optional[User]:
 
 
 async def get_all_user_permissions(db: DBSession, user_id: Id) -> list[Permission]:
-    permissions = set()
+    permission_codenames = set()
 
-    individual_permissions_query = {"user_id": ObjectId(user_id)}
+    individual_permissions_query = {"_id": ObjectId(user_id)}
     individual_permissions = await db.client.users.find_one(individual_permissions_query)
 
     if individual_permissions is None:
@@ -144,15 +144,15 @@ async def get_all_user_permissions(db: DBSession, user_id: Id) -> list[Permissio
 
     group_ids = individual_permissions.get("groups")
     for permission in individual_permissions.get("user_permissions"):
-        permissions.add(Permission(codename=permission.get("codename")))
+        permission_codenames.add(permission.get("codename"))
 
     group_permissions_query = {"_id": {"$in": group_ids}}
     group_permissions = await db.client.groups.find(group_permissions_query).to_list()
     for group in group_permissions:
         for permission in group.get("group_permissions"):
-            permissions.add(Permission(codename=permission.get("codename")))
+            permission_codenames.add(permission.get("codename"))
 
-    return list(permissions)
+    return [Permission(codename=codename) for codename in permission_codenames]
 
 
 async def get_user_with_all_info(db: DBSession, user_id: Id) -> Optional[UserAll]:

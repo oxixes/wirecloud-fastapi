@@ -30,7 +30,8 @@ from wirecloud.platform.iwidget.schemas import WidgetInstanceData, WidgetInstanc
     WidgetInstanceDataUpdate
 from wirecloud.platform.iwidget.utils import save_widget_instance, update_widget_instance
 from wirecloud.platform.workspace.crud import get_workspace_by_id, change_workspace
-from wirecloud.platform.workspace.utils import VariableValueCacheManager, get_widget_instance_data
+from wirecloud.platform.workspace.utils import VariableValueCacheManager, get_widget_instance_data, \
+    is_owner_or_has_permission
 from wirecloud.translation import gettext as _
 
 iwidget_router = APIRouter()
@@ -69,8 +70,9 @@ async def get_widget_instance_collection(db: DBDep, user: UserDepNoCSRF, request
     except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
-    if not await workspace.is_accessible_by(db, user):
-        return build_error_response(request, 403, _("You don't have permission to access this workspace"))
+    visible = await workspace.is_accessible_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIDGET.VIEW")
+    if not visible:
+        return build_error_response(request, 403, _("You don't have permission to view the iwidgets of this workspace"))
 
     cache_manager = VariableValueCacheManager(workspace, user)
     iwidgets = tab.widgets.values()
@@ -114,7 +116,7 @@ async def create_widget_instance_collection(db: DBDep, user: UserDep, request: R
     description=docs.create_widget_instance_collection_workspace_id_description), tab_id: str = Path(
     description=docs.create_widget_instance_collection_tab_id_description),
                                     iwidget: WidgetInstanceDataCreate = Body(
-                                        example=docs.create_widget_instance_collection_widget_instance_example,
+                                        examples=docs.create_widget_instance_collection_widget_instance_example,
                                         description=docs.create_widget_instance_collection_widget_instance_description)):
     initial_variable_values = iwidget.variable_values
     workspace = await get_workspace_by_id(db, workspace_id)
@@ -125,7 +127,8 @@ async def create_widget_instance_collection(db: DBDep, user: UserDep, request: R
     except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
-    if not workspace.is_editable_by(user):
+    can_create = await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIDGET.CREATE")
+    if not can_create:
         return build_error_response(request, 403, _("You have not enough permission for adding iwidgets to the workspace"))
     try:
         iwidget = await save_widget_instance(db, workspace, iwidget, user, tab, initial_variable_values)
@@ -177,7 +180,7 @@ async def update_widget_instance_collection(db: DBDep, user: UserDep, request: R
                                         description=docs.update_widget_instance_collection_tab_id_description),
                                     iwidgets: list[WidgetInstanceDataUpdate] = Body(
                                         description=docs.update_widget_instance_collection_widget_instance_description,
-                                        example=docs.update_widget_instance_collection_widget_instance_example)):
+                                        examples=docs.update_widget_instance_collection_widget_instance_example)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
@@ -187,7 +190,8 @@ async def update_widget_instance_collection(db: DBDep, user: UserDep, request: R
     except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
-    if not workspace.is_editable_by(user):
+    can_update = await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIDGET.EDIT")
+    if not can_update:
         return build_error_response(request, 403,
                                     _("You have not enough permission for updating the iwidgets of this workspace"))
 
@@ -218,6 +222,9 @@ async def update_widget_instance_collection(db: DBDep, user: UserDep, request: R
         401: root_docs.generate_auth_required_response_openapi_description(
             docs.get_widget_instance_entry_auth_required_response_description
         ),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.get_widget_instance_entry_permission_denied_response_description,
+            "You don't have permission to view the iwidgets of this workspace"),
         404: root_docs.generate_not_found_response_openapi_description(
             docs.get_widget_instance_entry_not_found_response_description
         ),
@@ -232,6 +239,10 @@ async def get_widget_instance_entry(db: DBDep, user: UserDepNoCSRF, request: Req
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
+
+    visible = await workspace.is_accessible_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIDGET.VIEW")
+    if not visible:
+        return build_error_response(request, 403, _("You don't have permission to view the iwidgets of this workspace"))
 
     try:
         tab = workspace.tabs[tab_id]
@@ -282,7 +293,7 @@ async def update_widget_instance_entry(db: DBDep, user: UserDep, request: Reques
                                    description=docs.update_widget_instance_entry_widget_instance_id_description),
                                iwidget_data: WidgetInstanceDataUpdate = Body(
                                    description=docs.update_widget_instance_entry_widget_instance_description,
-                                   example=docs.update_widget_instance_entry_widget_instance_example)):
+                                   examples=docs.update_widget_instance_entry_widget_instance_example)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
@@ -292,7 +303,8 @@ async def update_widget_instance_entry(db: DBDep, user: UserDep, request: Reques
     except KeyError:
         return build_error_response(request, 404, _("Tab not found"))
 
-    if not workspace.is_editable_by(user):
+    can_update = await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIDGET.EDIT")
+    if not can_update:
         return build_error_response(request, 403, _("You have not enough permission for updating the iwidget"))
 
     iwidget_data.id = iwidget_id
@@ -346,7 +358,8 @@ async def delete_widget_instance_entry(db: DBDep, user: UserDep, request: Reques
     except KeyError:
         return build_error_response(request, 404, _("IWidget not found"))
 
-    if not workspace.is_editable_by(user):
+    removable = await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIDGET.DELETE")
+    if not removable:
         return build_error_response(request, 403, _("You have not enough permission for deleting this iwidget"))
 
     if iwidget.read_only:
@@ -392,7 +405,7 @@ async def update_widget_instance_preferences(db: DBDep, user: UserDep, request: 
     description=docs.update_widget_instance_preferences_tab_id_description), iwidget_id: str = Path(
     description=docs.update_widget_instance_preferences_widget_instance_id_description), new_values: dict[str, str] = Body(
     description=docs.update_widget_instance_preferences_new_values_description,
-    example=docs.update_widget_instance_preferences_new_values_example)):
+    examples=docs.update_widget_instance_preferences_new_values_example)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
@@ -422,14 +435,16 @@ async def update_widget_instance_preferences(db: DBDep, user: UserDep, request: 
         if vardef.readonly:
             return build_error_response(request, 403, _(f"{var_name} preference is read only."))
 
-        if not vardef.multiuser:
-            # No multiuser -> User must have editing permissisons over the workspace
-            if not workspace.is_editable_by(user):
-                return build_error_response(request, 403,
-                                            _(f"You have not enough permission for updating the preferences of the iwidget"))
-        elif not await workspace.is_accessible_by(db, user):
+        perm = is_owner_or_has_permission(user, workspace, "WORKSPACE.WIDGET.PREFERENCES.EDIT")
+        if vardef.multiuser:
+            can_update = await workspace.is_accessible_by(db, user) and perm
+        else:
+            # No multiuser -> User must have editing permissions over the workspace
+            can_update = await workspace.is_editable_by(db, user) and perm
+
+        if not can_update:
             return build_error_response(request, 403,
-                                        _("You have not enough permission for updating the preferences of the iwidget"))
+                                        _(f"You have not enough permission for updating the preferences of the iwidget"))
 
         await iwidget.set_variable_value(db, var_name, new_values[var_name], user)
 
@@ -528,7 +543,7 @@ async def get_widget_instance_preferences(db: DBDep, user: UserDepNoCSRF, reques
 @consumes(["application/json"])
 async def update_widget_instance_properties(db: DBDep, user: UserDep, request: Request, workspace_id: Id = Path(description=docs.update_widget_instance_properties_workspace_id_description),
                                     tab_id: str = Path(description=docs.update_widget_instance_properties_tab_id_description), iwidget_id: str = Path(description=docs.update_widget_instance_properties_widget_instance_id_description),
-                                    new_values: dict[str, Any] = Body(description=docs.update_widget_instance_properties_new_values_description, example=docs.update_widget_instance_properties_new_values_example)):
+                                    new_values: dict[str, Any] = Body(description=docs.update_widget_instance_properties_new_values_description, examples=docs.update_widget_instance_properties_new_values_example)):
     workspace = await get_workspace_by_id(db, workspace_id)
     if workspace is None:
         return build_error_response(request, 404, _("Workspace not found"))
@@ -553,14 +568,16 @@ async def update_widget_instance_properties(db: DBDep, user: UserDep, request: R
         if var_name not in iwidget_info.variables.properties:
             return build_error_response(request, 422, _(f"Invalid persistent variable: {var_name}"))
 
-        if not iwidget_info.variables.properties[var_name].multiuser:
-            # No multiuser -> User must have editing permissisons over the workspace
-            if not workspace.is_editable_by(user):
-                return build_error_response(request, 403,
-                                            _(f"You have not enough permission for updating the persistent variables of this iwidget"))
-        elif not await workspace.is_accessible_by(db, user):
+        perm = is_owner_or_has_permission(user, workspace, "WORKSPACE.WIDGET.PROPERTIES.EDIT")
+        if iwidget_info.variables.properties[var_name].multiuser:
+            can_update = await workspace.is_accessible_by(db, user) and perm
+        else:
+            # No multiuser -> User must have editing permissions over the workspace
+            can_update = await workspace.is_editable_by(db, user) and perm
+
+        if not can_update:
             return build_error_response(request, 403,
-                                        _("You have not enough permission for updating the persistent variables of this iwidget"))
+                                        _(f"You have not enough permission for updating the persistent variables of this iwidget"))
 
         await iwidget.set_variable_value(db, var_name, new_values[var_name], user)
 
@@ -580,6 +597,9 @@ async def update_widget_instance_properties(db: DBDep, user: UserDep, request: R
         401: root_docs.generate_auth_required_response_openapi_description(
             docs.get_widget_instance_properties_auth_required_response_description
         ),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.get_widget_instance_properties_permission_denied_response_description,
+            "You don't have permission to access this workspace"),
         404: root_docs.generate_not_found_response_openapi_description(
             docs.get_widget_instance_properties_not_found_response_description
         ),

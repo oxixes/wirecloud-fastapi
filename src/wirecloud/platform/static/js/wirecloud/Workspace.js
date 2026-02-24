@@ -594,9 +594,9 @@
                 requestHeaders: {'Accept': 'application/json'},
                 postBody: content
             }).then((response) => {
-                if ([201, 401, 403, 409, 500].indexOf(response.status) === -1) {
+                if ([201, 400, 401, 403, 404, 409, 422, 500].indexOf(response.status) === -1) {
                     return Promise.reject(utils.gettext("Unexpected response from server"));
-                } else if ([401, 403, 409, 500].indexOf(response.status) !== -1) {
+                } else if ([400, 401, 403, 404, 409, 422, 500].indexOf(response.status) !== -1) {
                     return Promise.reject(Wirecloud.GlobalLogManager.parseErrorResponse(response));
                 }
 
