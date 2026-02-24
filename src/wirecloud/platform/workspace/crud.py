@@ -86,10 +86,10 @@ async def create_empty_workspace(db: DBSession, title: str, user: User, allow_re
         name = URLify(title)
 
     workspace = Workspace(
-        id=ObjectId(),
+        _id=Id(),
         title=title,
         name=name,
-        creator=ObjectId(user.id),
+        creator=Id(user.id),
         users=[WorkspaceAccessPermissions(id=Id(user.id))]
     )
     await create_tab(db, user, _('Tab') if translate else 'Tab', workspace)

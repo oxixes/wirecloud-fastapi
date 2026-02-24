@@ -31,6 +31,7 @@ from wirecloud.catalogue.utils import add_packaged_resource, create_widget_on_re
 from wirecloud.commons.auth.crud import get_user_by_username
 from wirecloud.commons.utils.template.schemas.macdschemas import MACDWidget, MACDOperator, MACDMashup
 from wirecloud.platform.markets.schemas import MarketCreate
+from wirecloud.platform.workspace.models import WorkspaceAccessPermissions, DBWorkspacePreference
 
 try:
     import aiohttp
@@ -358,9 +359,9 @@ async def _migrate_users_and_groups(db_connection, new_db_session, db_type: str)
                 email=user['email'] or '',
                 first_name=user['first_name'] or '',
                 last_name=user['last_name'] or '',
-                is_superuser=bool(user['is_superuser']),
-                is_staff=bool(user['is_staff']),
-                is_active=bool(user['is_active']),
+                is_superuser=user['is_superuser'] if type(user['is_superuser']) == bool else (str(user['is_superuser']).lower() == "true" or str(user['is_superuser']).lower() == "1"),
+                is_staff=user['is_staff'] if type(user['is_staff']) == bool else (str(user['is_staff']).lower() == "true" or str(user['is_staff']).lower() == "1"),
+                is_active=user['is_active'] if type(user['is_active']) == bool else (str(user['is_active']).lower() == "true" or str(user['is_active']).lower() == "1"),
                 idm_data={},
                 password=user['password'] or '!'
             )
@@ -515,7 +516,7 @@ async def _migrate_catalogue_resources(
                     short_name=resource['short_name'],
                     version=resource['version'],
                     type=CatalogueResourceType(resource['type']),
-                    public=bool(resource['public']),
+                    public=resource['public'] if type(resource['public']) == bool else (str(resource['public']).lower() == "true" or str(resource['public']).lower() == "1"),
                     creation_date=resource['creation_date'] or datetime.now(timezone.utc),
                     template_uri=resource['template_uri'],
                     popularity=float(resource['popularity'] or 0.0),
@@ -607,8 +608,8 @@ def _migrate_prop_users(field: dict[str, Any], user_id_mapping: dict[int, str]) 
 
         new_users = {}
         for user_id, value in prop_value['users'].items():
-            if user_id in user_id_mapping:
-                new_users[user_id_mapping[user_id]] = value
+            if int(user_id) in user_id_mapping:
+                new_users[user_id_mapping[int(user_id)]] = value
 
         prop_value['users'] = new_users
 
@@ -622,8 +623,8 @@ def _migrate_prop_value_users(field: dict[str, Any], user_id_mapping: dict[int, 
 
         new_users = {}
         for user_id, value in prop_value['value']['users'].items():
-            if user_id in user_id_mapping:
-                new_users[user_id_mapping[user_id]] = value
+            if int(user_id) in user_id_mapping:
+                new_users[user_id_mapping[int(user_id)]] = value
 
         prop_value['value']['users'] = new_users
 
@@ -682,22 +683,32 @@ async def _migrate_workspaces(
                 if workspace['creation_date'] is None:
                     workspace['creation_date'] = datetime.now(timezone.utc)
 
+                new_workspace.creation_date = workspace['creation_date']
+
                 # Parse last_modified if it is not already a datetime object
                 workspace['last_modified'] = datetime.strptime(workspace['last_modified'], '%Y-%m-%d %H:%M:%S.%f') if type(workspace['last_modified']) == str else workspace['last_modified']
                 if workspace['last_modified'] is None:
                     workspace['last_modified'] = workspace['creation_date']
 
+                new_workspace.last_modified = workspace['last_modified']
+
+                new_workspace.description = workspace['description'] or ''
+                new_workspace.longdescription = workspace['longdescription'] or ''
+                new_workspace.public = workspace['public'] if type(workspace['public']) == bool else (str(workspace['public']).lower() == "true" or str(workspace['public']).lower() == "1")
+                new_workspace.searchable = workspace['searchable'] if type(workspace['searchable']) == bool else (str(workspace['searchable']).lower() == "true" or str(workspace['searchable']).lower() == "1")
+                new_workspace.requireauth = workspace['requireauth'] if type(workspace['requireauth']) == bool else (str(workspace['requireauth']).lower() == "true" or str(workspace['requireauth']).lower() == "1")
+
                 # Update workspace metadata
                 await new_db_session.client.workspaces.update_one(
                     {"_id": ObjectId(new_workspace.id)},
                     {"$set": {
-                        "description": workspace['description'] or '',
-                        "longdescription": workspace['longdescription'] or '',
-                        "public": bool(workspace['public']),
-                        "searchable": bool(workspace['searchable']),
-                        "requireauth": bool(workspace['requireauth']),
-                        "creation_date": workspace['creation_date'],
-                        "last_modified": workspace['last_modified']
+                        "description": new_workspace.description,
+                        "longdescription": new_workspace.longdescription,
+                        "public": new_workspace.public,
+                        "searchable": new_workspace.searchable,
+                        "requireauth": new_workspace.requireauth,
+                        "creation_date": new_workspace.creation_date,
+                        "last_modified": new_workspace.last_modified
                     }}
                 )
 
@@ -710,11 +721,14 @@ async def _migrate_workspaces(
                 workspace_users = cursor.fetchall()
 
                 for wu in workspace_users:
-                    if wu['user_id'] in user_id_mapping:
+                    if int(wu['user_id']) in user_id_mapping:
                         user_perm = {
-                            "id": ObjectId(user_id_mapping[wu['user_id']]),
+                            "id": ObjectId(user_id_mapping[int(wu['user_id'])]),
                             "accesslevel": wu['accesslevel'] or 1
                         }
+
+                        new_workspace.users.append(WorkspaceAccessPermissions(**user_perm))
+
                         await new_db_session.client.workspaces.update_one(
                             {"_id": ObjectId(new_workspace.id)},
                             {"$addToSet": {"users": user_perm}}
@@ -737,6 +751,9 @@ async def _migrate_workspaces(
                             "id": ObjectId(group_id_mapping[wg['group_id']]),
                             "accesslevel": wg[column_name] or 1
                         }
+
+                        new_workspace.groups.append(WorkspaceAccessPermissions(**group_perm))
+
                         await new_db_session.client.workspaces.update_one(
                             {"_id": ObjectId(new_workspace.id)},
                             {"$addToSet": {"groups": group_perm}}
@@ -753,6 +770,10 @@ async def _migrate_workspaces(
                 if workspace_prefs:
                     pref_list = [{"name": p['name'], "value": p['value'] or "",
                                   "inherit": p['inherit'] if type(p['inherit']) == bool else (str(p['inherit']).lower() == "true" or str(p['inherit']).lower() == "1")} for p in workspace_prefs]
+
+                    for pref in pref_list:
+                        new_workspace.preferences.append(DBWorkspacePreference(**pref))
+
                     await new_db_session.client.workspaces.update_one(
                         {"_id": ObjectId(new_workspace.id)},
                         {"$set": {"preferences": pref_list}}
@@ -801,6 +822,10 @@ async def _migrate_workspaces(
                     if tab_prefs:
                         pref_list = [{"name": p['name'], "value": p['value'] or "",
                                       "inherit": p['inherit'] if type(p['inherit']) == bool else (str(p['inherit']).lower() == "true" or str(p['inherit']).lower() == "1")} for p in tab_prefs]
+
+                        for pref in pref_list:
+                            tab.preferences.append(DBWorkspacePreference(**pref))
+
                         await new_db_session.client.workspaces.update_one(
                             {"_id": ObjectId(new_workspace.id)},
                             {"$set": {f"tabs.{tab.id}.preferences": pref_list}}
