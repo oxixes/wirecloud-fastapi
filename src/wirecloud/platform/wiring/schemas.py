@@ -56,8 +56,8 @@ class WiringOperatorPreferenceValue(BaseModel):
 
 
 class WiringOperatorPreference(BaseModel):
-    readonly: bool = Field(description=docs.wiring_operator_preference_readonly_description)
-    hidden: bool = Field(description=docs.wiring_operator_preference_hidden_description)
+    readonly: bool = Field(False, description=docs.wiring_operator_preference_readonly_description)
+    hidden: bool = Field(False, description=docs.wiring_operator_preference_hidden_description)
     value: Any = Field(description=docs.wiring_operator_preference_value_description)
 
 
