@@ -128,6 +128,19 @@
         }
     };
 
+    const _create_priv = function _create_priv() {
+        if (privates.has(this)) {
+            return;
+        }
+
+        const priv = {
+            element: null,
+            refElement: null,
+            tooltipId: 'se-tooltip-' + Math.random().toString(36).substr(2, 9)
+        };
+        privates.set(this, priv);
+    }
+
     se.Tooltip = class Tooltip extends se.StyledElement {
 
         constructor(options) {
@@ -139,19 +152,14 @@
 
             super([]);
 
-            const priv = {
-                element: null,
-                refElement: null,
-                tooltipId: 'se-tooltip-' + Math.random().toString(36).substr(2, 9)
-            };
-            privates.set(this, priv);
+            _create_priv.call(this);
             Object.defineProperties(this, {
                 options: {
                     value: utils.merge(defaultOptions, options)
                 },
                 visible: {
                     get: function () {
-                        return priv.element != null;
+                        return privates.get(this).element != null;
                     }
                 }
             });
@@ -162,7 +170,9 @@
         }
 
         bind(element) {
+            _create_priv.call(this);
             const priv = privates.get(this);
+
             priv.refElement = element.wrapperElement || element;
 
             // Set aria-describedby on the reference element
@@ -235,7 +245,7 @@
             }
 
             const priv = privates.get(this);
-            const force = !priv.element.classList.contains('in') || getComputedStyle(priv.element).getPropertyValue('opacity') === "0";
+            const force = !priv.element.classList.contains('in') || getComputedStyle(priv.element).getPropertyValue('opacity') === "0";
             priv.element.classList.remove('in');
             if (force) {
                 _hide.call(this);
