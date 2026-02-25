@@ -41,7 +41,7 @@
                 this.codeurl = (new URL(Wirecloud.URLs.WIDGET_CODE_ENTRY.evaluate({
                     vendor: this.vendor,
                     name: this.name,
-                    version: this.version
+                    version: this.version.text
                 }), Wirecloud.location.base)).href;
                 this.codecontenttype = desc.contents.contenttype || "application/xhtml+xml";
                 if (this.macversion > 1) {
