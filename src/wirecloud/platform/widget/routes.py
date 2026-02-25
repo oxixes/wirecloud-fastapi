@@ -70,7 +70,7 @@ async def get_widget_html(db: DBDep, request: Request, vendor: Vendor = Path(pat
                           theme: Optional[str] = Query(default=None,
                                                        description=docs.get_widget_html_theme_description)):
     resource = await get_catalogue_resource_with_xhtml(db, vendor, name, version)
-    if resource.resource_type() != 'widget':
+    if not resource or resource.resource_type() != 'widget':
         raise NotFound()
 
     creation_date = resource.creation_date.timestamp()

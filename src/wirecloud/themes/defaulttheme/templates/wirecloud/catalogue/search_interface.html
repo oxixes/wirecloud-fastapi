@@ -14,13 +14,13 @@
 
         <t:reset_button />
         <div>
-            <label>{{ trans('Keywords:') }}</label>
-            <t:searchinput />
+            <label for="catalogue-search-input">{{ trans('Keywords:') }}</label>
+            <t:searchinput id="catalogue-search-input" aria-label="{{ trans('Search keywords') }}" />
         </div>
 
         <div>
-            <label>{{ trans('Type:') }}</label>
-            <t:scope />
+            <label for="catalogue-scope-select">{{ trans('Type:') }}</label>
+            <t:scope id="catalogue-scope-select" aria-label="{{ trans('Type') }}" />
         </div>
 
     </s:westcontainer>

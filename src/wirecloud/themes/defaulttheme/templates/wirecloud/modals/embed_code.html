@@ -1,7 +1,7 @@
 <s:styledgui xmlns:s="http://wirecloud.conwet.fi.upm.es/StyledElements" xmlns:t="http://wirecloud.conwet.fi.upm.es/Template" xmlns="http://www.w3.org/1999/xhtml">
     <div>
-        <b>{{ trans("Theme") }}</b>: <t:themeselect/>
-        <b>{{ trans("Language") }}</b>: <t:langselect/>
+        <label for="embed-theme-select"><b>{{ trans("Theme") }}</b>:</label> <t:themeselect id="embed-theme-select" aria-label="{{ trans("Theme") }}" />
+        <label for="embed-lang-select"><b>{{ trans("Language") }}</b>:</label> <t:langselect id="embed-lang-select" aria-label="{{ trans("Language") }}" />
     </div>
     <t:code/>
 </s:styledgui>
