@@ -96,6 +96,19 @@ const config: Configuration = {
     module: {
         rules: [
             {
+                test: /\.css$/,
+                include: /node_modules[\\/]monaco-editor/,
+                use: [
+                    'style-loader',
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            url: false
+                        }
+                    }
+                ]
+            },
+            {
                 test: /\.(scss|css)$/,
                 exclude: /node_modules/,
                 oneOf: cssRules

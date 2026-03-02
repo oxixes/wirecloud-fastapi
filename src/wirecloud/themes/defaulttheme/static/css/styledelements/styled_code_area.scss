@@ -3,8 +3,10 @@
 
 .se-code-area {
     @include input_mixins.input-base();
+    display: block;
     height: 25em;
     width: 100%;
+    overflow: hidden;
 }
 
 .se-code-area.focused {

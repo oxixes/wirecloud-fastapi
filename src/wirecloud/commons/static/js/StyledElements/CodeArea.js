@@ -18,6 +18,8 @@
 
 /* globals StyledElements */
 
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
+
 (function (se, utils, window) {
 
     "use strict";
@@ -52,12 +54,6 @@
             super(options.initialValue, ['blur', 'change', 'focus']);
 
             this.wrapperElement = document.createElement("div");
-            this.editor = window.monaco.editor.create(this.wrapperElement, {
-                value: options.initialValue,
-                language: options.language,
-                minimap: { enabled: false },
-                automaticLayout: true
-            });
 
             this.wrapperElement.className = "se-code-area";
             if (options.class !== "") {
@@ -71,6 +67,13 @@
             if (options.id != null) {
                 this.wrapperElement.setAttribute("id", options.id);
             }
+
+            this.editor = monaco.editor.create(this.wrapperElement, {
+                value: options.initialValue,
+                language: options.language,
+                minimap: { enabled: false },
+                automaticLayout: true
+            });
 
             /* Internal events */
             this._oninput = oninput.bind(this);
@@ -142,12 +145,6 @@
     /**
      * Styled Code Area
      */
-    if (!window.monaco) {
-        // If monaco is not available, use the TextArea class
-        se.CodeArea = se.TextArea;
-        se.__Testing__CodeArea = CodeAreaClass; // For testing purposes
-    } else {
-        se.CodeArea = CodeAreaClass;
-    }
+    se.CodeArea = CodeAreaClass;
 
 })(StyledElements, StyledElements.Utils, window);
