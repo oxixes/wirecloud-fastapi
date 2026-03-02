@@ -40,6 +40,24 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
         this.wrapperElement.classList.remove('focused');
     };
 
+    const toggleFullscreen = function toggleFullscreen() {
+        const isFullscreen = this.wrapperElement.classList.toggle('se-code-area-fullscreen');
+        this._fullscreenButton.removeIconClassName(['fa-expand', 'fa-compress']);
+        this._fullscreenButton.addIconClassName(isFullscreen ? 'fa-compress' : 'fa-expand');
+        this._fullscreenButton.setTitle(isFullscreen ? utils.gettext('Exit full screen') : utils.gettext('Full screen'));
+        if (!isFullscreen) {
+            // Clear Monaco's cached inline dimensions so CSS rules take over again
+            const monacoRoot = this.wrapperElement.querySelector('.monaco-editor');
+            if (monacoRoot) {
+                monacoRoot.style.width = '';
+                monacoRoot.style.height = '';
+            }
+            this.editor.layout({ width: 0, height: 0 });
+        }
+        // Let the browser repaint the container before Monaco measures it
+        requestAnimationFrame(() => { this.editor.layout(); });
+    };
+
     const CodeAreaClass = class CodeArea extends se.InputElement {
 
         constructor(options) {
@@ -74,6 +92,15 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
                 minimap: { enabled: false },
                 automaticLayout: true
             });
+
+            this._fullscreenButton = new se.Button({
+                'class': 'se-code-area-fullscreen-btn',
+                'iconClass': 'fas fa-expand',
+                'title': utils.gettext('Full screen'),
+                'plain': true
+            });
+            this._fullscreenButton.addEventListener('click', toggleFullscreen.bind(this));
+            this._fullscreenButton.insertInto(this.wrapperElement);
 
             /* Internal events */
             this._oninput = oninput.bind(this);
@@ -130,12 +157,14 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
         destroy() {
             this.editor.dispose();
+            this._fullscreenButton.destroy();
 
             this.wrapperElement.removeEventListener('click', utils.stopPropagationListener, true);
 
             delete this._oninput;
             delete this._onfocus;
             delete this._onblur;
+            delete this._fullscreenButton;
 
             super.destroy();
         }

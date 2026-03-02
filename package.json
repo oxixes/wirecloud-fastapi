@@ -13,7 +13,7 @@
         "@types/node": "^22.10.2",
         "@types/webpack": "^5.28.5",
         "css-loader": "^7.1.2",
-        "esbuild": "^0.24.2",
+        "esbuild": "0.25.0",
         "esbuild-loader": "^4.2.2",
         "mini-css-extract-plugin": "^2.9.2",
         "monaco-editor-webpack-plugin": "^7.1.0",
@@ -23,7 +23,7 @@
         "ts-node": "^10.9.2",
         "tsconfig-paths": "^4.2.0",
         "typescript": "^5.7.2",
-        "webpack": "^5.97.1",
+        "webpack": "5.104.1",
         "webpack-cli": "^5.1.4",
         "webpack-merge": "^6.0.1",
         "webpack-remove-empty-scripts": "^1.0.4"

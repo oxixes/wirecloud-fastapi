@@ -12,3 +12,44 @@
 .se-code-area.focused {
     @include input_mixins.input-focus();
 }
+
+.se-code-area-fullscreen-btn {
+    position: absolute;
+    top: 4px;
+    right: 20px;  /* leave room for Monaco's vertical scrollbar (~14px wide) */
+    z-index: 100; /* above Monaco's internal overlay widgets */
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: auto;
+}
+
+.se-code-area:hover .se-code-area-fullscreen-btn {
+    opacity: 0.6;
+
+    &:hover {
+        opacity: 1;
+    }
+}
+
+.se-code-area.se-code-area-fullscreen {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    z-index: 99999;
+    border: none !important;
+    box-shadow: none !important;
+
+    .se-code-area-fullscreen-btn {
+        right: 20px; /* keep away from scrollbar in fullscreen too */
+    }
+}
+
+.monaco-editor {
+    --vscode-focusBorder: rgba(0, 0, 0, 0) !important;
+}
+
