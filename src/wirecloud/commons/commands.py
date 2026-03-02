@@ -60,6 +60,75 @@ except ImportError:
 from wirecloud.database import get_session, commit, Id
 
 
+def _hash_password(password: str) -> str:
+    """Hash a password using pbkdf2_sha256, compatible with Django's password hashing."""
+    import os
+    from hashlib import pbkdf2_hmac
+    from base64 import b64encode
+
+    iterations = 600000
+    salt = b64encode(os.urandom(16)).decode('ascii').rstrip('=')[:22]
+    hashed = pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('ascii'), iterations)
+    return f"pbkdf2_sha256${iterations}${salt}${b64encode(hashed).decode('ascii')}"
+
+
+async def createsuperuser_cmd(args: argparse.Namespace) -> None:
+    import getpass
+
+    username = args.username
+    email = args.email
+    password = args.password
+
+    # Prompt for missing values interactively
+    if not username:
+        while True:
+            username = input("Username: ").strip()
+            if username:
+                break
+            print("Error: Username cannot be empty.")
+
+    if not email:
+        email = input("Email address (optional): ").strip()
+
+    if not password:
+        while True:
+            password = getpass.getpass("Password: ")
+            if not password:
+                print("Error: Password cannot be empty.")
+                continue
+            password_confirm = getpass.getpass("Password (again): ")
+            if password != password_confirm:
+                print("Error: Passwords do not match.")
+                continue
+            break
+
+    async for session in get_session():
+        from wirecloud.commons.auth.crud import get_user_by_username, create_user
+        from wirecloud.commons.auth.schemas import UserCreate
+
+        existing = await get_user_by_username(session, username)
+        if existing is not None:
+            print(f"Error: A user with username '{username}' already exists.")
+            return
+
+        user_data = UserCreate(
+            username=username,
+            email=email or '',
+            first_name='',
+            last_name='',
+            is_superuser=True,
+            is_staff=True,
+            is_active=True,
+            idm_data={},
+            password=_hash_password(password)
+        )
+
+        await create_user(session, user_data)
+        await commit(session)
+        print(f"Superuser '{username}' created successfully.")
+        break
+
+
 async def migrate_cmd(args: argparse.Namespace) -> None:
     """
     Migrate data from an old Django-based Wirecloud instance to the new FastAPI/MongoDB version.
@@ -1008,6 +1077,26 @@ async def _migrate_workspaces(
 
 
 def setup_commands(subparsers: argparse._SubParsersAction) -> dict[str, Callable]:
+    createsuperuser = subparsers.add_parser(
+        "createsuperuser",
+        help="Create a superuser account"
+    )
+    createsuperuser.add_argument(
+        "--username",
+        default=None,
+        help="Username for the superuser (prompted if not provided)"
+    )
+    createsuperuser.add_argument(
+        "--email",
+        default=None,
+        help="Email address for the superuser (optional)"
+    )
+    createsuperuser.add_argument(
+        "--password",
+        default=None,
+        help="Password for the superuser (prompted if not provided)"
+    )
+
     migrate = subparsers.add_parser(
         "migrate",
         help="Migrate data from old Wirecloud instance (Django/SQL) to new version (FastAPI/MongoDB)"
@@ -1078,5 +1167,6 @@ def setup_commands(subparsers: argparse._SubParsersAction) -> dict[str, Callable
     )
 
     return {
+        "createsuperuser": createsuperuser_cmd,
         "migrate": migrate_cmd
     }
