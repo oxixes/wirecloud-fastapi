@@ -23,7 +23,7 @@ from fastapi import FastAPI
 from wirecloud.platform.plugins import WirecloudPlugin
 from wirecloud.proxy.urls import patterns as proxy_patterns
 from wirecloud.proxy.routes import router as proxy_router
-
+from wirecloud.settings_validator import _set_default_if_missing
 
 logger = logging.getLogger(__name__)
 
@@ -54,5 +54,50 @@ class WirecloudProxyPlugin(WirecloudPlugin):
             # Warn if the size is too large (> 100MB)
             if settings.PROXY_WS_MAX_MSG_SIZE > 100 * 1024 * 1024:
                 logger.warning(f"PROXY_WS_MAX_MSG_SIZE is very large ({settings.PROXY_WS_MAX_MSG_SIZE} bytes). This may cause memory issues.")
+
+            _set_default_if_missing('PROXY_WS_MAX_MSG_SIZE', 4 * 1024 * 1024)
+            if not isinstance(settings.PROXY_WS_MAX_MSG_SIZE, int):
+                raise ValueError("PROXY_WS_MAX_MSG_SIZE must be an integer")
+
+            if settings.PROXY_WS_MAX_MSG_SIZE <= 0:
+                raise ValueError("PROXY_WS_MAX_MSG_SIZE must be a positive integer")
+
+            _set_default_if_missing('PROXY_WHITELIST_ENABLED', False)
+            if not isinstance(settings.PROXY_WHITELIST_ENABLED, bool):
+                raise ValueError("PROXY_WHITELIST_ENABLED must be a boolean")
+
+            _set_default_if_missing('PROXY_WHITELIST', [])
+            if not isinstance(settings.PROXY_WHITELIST, (list, tuple)):
+                raise ValueError("PROXY_WHITELIST must be a list or tuple")
+
+            if len(settings.PROXY_WHITELIST) == 0 and settings.PROXY_WHITELIST_ENABLED:
+                logger.warning(
+                    "PROXY_WHITELIST is empty but PROXY_WHITELIST_ENABLED is True. This will prevent the proxy from connecting to any domain.")
+
+            for ip in settings.PROXY_WHITELIST:
+                if not isinstance(ip, str):
+                    raise ValueError("Each item in PROXY_WHITELIST must be a string")
+
+                if not ip.strip():
+                    raise ValueError("PROXY_WHITELIST cannot contain empty strings")
+
+            _set_default_if_missing('PROXY_BLACKLIST_ENABLED', False)
+            if not isinstance(settings.PROXY_BLACKLIST_ENABLED, bool):
+                raise ValueError("PROXY_BLACKLIST_ENABLED must be a boolean")
+
+            _set_default_if_missing('PROXY_BLACKLIST', [])
+            if not isinstance(settings.PROXY_BLACKLIST, (list, tuple)):
+                raise ValueError("PROXY_BLACKLIST must be a list or tuple")
+
+            if len(settings.PROXY_BLACKLIST) == 0 and settings.PROXY_BLACKLIST_ENABLED:
+                logger.warning(
+                    "PROXY_BLACKLIST is empty but PROXY_BLACKLIST_ENABLED is True. This does nothing as no domain is blocked.")
+
+            for ip in settings.PROXY_BLACKLIST:
+                if not isinstance(ip, str):
+                    raise ValueError("Each item in PROXY_BLACKLIST must be a string")
+
+                if not ip.strip():
+                    raise ValueError("PROXY_BLACKLIST cannot contain empty strings")
 
         return (validate_proxy_settings,)

@@ -415,10 +415,15 @@ async def proxy_request(request: Request,
                         protocol: str = Path(description=docs.proxy_request_protocol_description, pattern='http|https'),
                         domain: str = Path(description=docs.proxy_request_domain_description, pattern='[A-Za-z0-9-.]+'),
                         path: str = Path(description=docs.proxy_request_path_description)) -> Response:
-    # TODO improve proxy security
     request_method = request.method.upper()
     if protocol not in ('http', 'https'):
         return build_error_response(request, 422, _("Invalid protocol: %s") % protocol)
+
+    if settings.PROXY_BLACKLIST_ENABLED and domain in settings.PROXY_BLACKLIST:
+        return build_error_response(request, 403, _("Invalid request"))
+
+    if settings.PROXY_WHITELIST_ENABLED and domain not in settings.PROXY_WHITELIST:
+        return build_error_response(request, 403, _("Invalid request"))
 
     try:
         context = await parse_context_from_referer(db, user, request, request_method)
@@ -453,10 +458,15 @@ async def proxy_ws_request(ws: WebSocket,
                            protocol: str = Path(description=docs.proxy_request_protocol_description, pattern='ws|wss'),
                            domain: str = Path(description=docs.proxy_request_domain_description, pattern='[A-Za-z0-9-.]+'),
                            path: str = Path(description=docs.proxy_request_path_description)):
-    # TODO improve proxy security
     request_method = "WS"
     if protocol not in ('ws', 'wss'):
         raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=_("Invalid protocol: %s") % protocol)
+
+    if settings.PROXY_BLACKLIST_ENABLED and domain in settings.PROXY_BLACKLIST:
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=_("Invalid request"))
+
+    if settings.PROXY_WHITELIST_ENABLED and domain not in settings.PROXY_WHITELIST:
+        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=_("Invalid request"))
 
     # Browsers do not allow custom headers in websocket requests, so we have to accept the connection
     try:
