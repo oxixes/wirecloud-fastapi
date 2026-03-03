@@ -1,0 +1,10 @@
+# Additional dependencies for Wirecloud migration tool
+# These are optional and only needed when migrating from old Django-based Wirecloud
+
+# Database connectors
+pymysql>=1.1.0  # For MySQL/MariaDB
+psycopg2-binary>=2.9.0  # For PostgreSQL
+# SQLite support is built into Python (sqlite3 module)
+
+# HTTP client for API calls
+aiohttp>=3.9.0

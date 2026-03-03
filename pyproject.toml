@@ -11,3 +11,15 @@ dependencies = []
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+# Discover tests anywhere in the project
+testpaths = ["src", "tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+# asyncio mode: auto → all async test functions run with pytest-asyncio automatically
+asyncio_mode = "auto"
+# Add src/ to sys.path so that imports work without installing the package
+pythonpath = ["src"]
+
