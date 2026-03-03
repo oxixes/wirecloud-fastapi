@@ -95,3 +95,8 @@ cache = caches.get('default')
 SECRET_KEY = 'NeQM1I5g)ihQ3m#u!7Q£-1Jj3LuO?O4^'
 
 WIDGET_DEPLOYMENT_DIR = path.join(BASEDIR, 'deployment', 'widgets')
+
+PROXY_WHITELIST_ENABLED = False
+PROXY_WHITELIST = []
+PROXY_BLACKLIST_ENABLED = False
+PROXY_BLACKLIST = []
