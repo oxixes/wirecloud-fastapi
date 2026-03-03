@@ -23,3 +23,41 @@ asyncio_mode = "auto"
 # Add src/ to sys.path so that imports work without installing the package
 pythonpath = ["src"]
 
+
+# Coverage is OFF by default. Enable it with:
+#   pytest --cov                        → terminal report
+#   pytest --cov --cov-report=html      → HTML report in htmlcov/
+#   pytest --cov --cov-report=xml       → XML report (for CI)
+[tool.coverage.run]
+# Measure coverage only for the application source, not for tests or migrations
+source = ["src"]
+branch = true
+omit = [
+    "src/wirecloud/commons/commands.py",  # migration CLI, not part of normal app
+    "src/generate_webpack_settings.py",
+    "src/manage.py",
+    "src/settings.py",
+    "tests/*",
+    "*/__pycache__/*",
+    "*/migrations/*",
+]
+
+[tool.coverage.report]
+# Lines matching these patterns are excluded from the report
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
+    "if __name__ == .__main__.:",
+]
+show_missing = true   # show line numbers that are not covered
+skip_covered = false  # show all files, even fully covered ones
+precision = 2
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+

@@ -7,3 +7,7 @@ node_modules/
 dist/
 deployment/
 .DS_Store
+
+.coverage
+coverage.xml
+htmlcov/
