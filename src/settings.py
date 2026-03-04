@@ -35,7 +35,7 @@ INSTALLED_APPS = (
 
 DATABASE = {
     'DRIVER': 'mongodb',
-    'NAME': 'wirecloud-fastapi',
+    'NAME': 'wirecloud-fastapi-migration',
     'HOST': 'localhost',
     'PORT': '',
     'USER': '',
@@ -72,7 +72,7 @@ OID_CONNECT_FULLY_SYNC_GROUPS = True
 OID_CONNECT_BACKCHANNEL_LOGOUT = True
 OID_CONNECT_PLUGIN = 'keycloak'
 
-CATALOGUE_MEDIA_ROOT = path.join(BASEDIR, 'catalogue', 'media')
+CATALOGUE_MEDIA_ROOT = path.join(BASEDIR, 'catalogue', 'mediaaaa')
 CACHE_DIR = path.join(BASEDIR, 'cache')
 
 WIRECLOUD_HTTPS_VERIFY = True
@@ -94,7 +94,7 @@ cache = caches.get('default')
 
 SECRET_KEY = 'NeQM1I5g)ihQ3m#u!7Q£-1Jj3LuO?O4^'
 
-WIDGET_DEPLOYMENT_DIR = path.join(BASEDIR, 'deployment', 'widgets')
+WIDGET_DEPLOYMENT_DIR = path.join(BASEDIR, 'deployment', 'widgetssss')
 
 PROXY_WHITELIST_ENABLED = False
 PROXY_WHITELIST = []

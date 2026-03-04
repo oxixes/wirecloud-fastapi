@@ -49,9 +49,17 @@ async def get_token_contents(token: Annotated[str, Depends(login_scheme)], reque
         return None
 
     try:
-        token_contents = jwt.decode(token, settings.JWT_KEY, algorithms=["HS256"],
-                                    require=["exp", "sub", "iat", "iss"], issuer="Wirecloud",
-                                    options={"verify_exp": True, "verify_iss": True})
+        token_contents = jwt.decode(
+            token,
+            settings.JWT_KEY,
+            algorithms=["HS256"],
+            issuer="Wirecloud",
+            options={
+                "require": ["exp", "sub", "iat", "iss"],
+                "verify_exp": True,
+                "verify_iss": True
+            }
+        )
     except Exception:
         return None
 
@@ -70,9 +78,17 @@ async def get_token_contents(token: Annotated[str, Depends(login_scheme)], reque
             return None
 
         try:
-            csrf_token_contents = jwt.decode(csrf_token, settings.JWT_KEY, algorithms=["HS256"],
-                                             require=["exp", "sub", "iat", "iss"], issuer="Wirecloud",
-                                             options={"verify_exp": True, "verify_iss": True})
+            csrf_token_contents = jwt.decode(
+                csrf_token,
+                settings.JWT_KEY,
+                algorithms=["HS256"],
+                issuer="Wirecloud",
+                options={
+                    "require": ["exp", "sub", "iat", "iss"],
+                    "verify_exp": True,
+                    "verify_iss": True
+                }
+            )
             if csrf_token_contents.get("sub") != "csrf":
                 return None
 

@@ -16,10 +16,26 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-# ---------------------------------------------------------------------------
-# Shim: when wirecloud.settings does `from settings import *`, Python finds
-# THIS file first (because tests/ is inserted before src/ in sys.path by
-# conftest.py).  We simply re-export everything from settings_test so that
-# the application uses lightweight test settings instead of the real ones.
-# ---------------------------------------------------------------------------
-from settings_test import *  # noqa: F401, F403
+from types import SimpleNamespace
+
+from wirecloud.keycloak import proxy
+
+
+async def test_keycloak_token_processor_delegates_to_idm_processor(monkeypatch, db_session):
+    called = {}
+
+    class _FakeIDMTokenProcessor:
+        async def process_request(self, db, request, use_real_user):
+            called["db"] = db
+            called["request"] = request
+            called["use_real_user"] = use_real_user
+
+    monkeypatch.setattr(proxy, "IDMTokenProcessor", _FakeIDMTokenProcessor)
+
+    processor = proxy.KeycloakTokenProcessor()
+    req = SimpleNamespace()
+    await processor.process_request(db_session, req)
+
+    assert called["db"] == db_session
+    assert called["request"] == req
+    assert called["use_real_user"] is False

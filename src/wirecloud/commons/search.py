@@ -32,7 +32,7 @@ from wirecloud.database import DBSession
 from wirecloud.platform.search import SearchWorkspaceOutputResponse
 
 es_client = AsyncElasticsearch(hosts=f"{'https' if settings.ELASTICSEARCH['SECURE'] else 'http'}://{settings.ELASTICSEARCH['HOST']}:{settings.ELASTICSEARCH['PORT']}",
-                               http_auth=(settings.ELASTICSEARCH['USER'], settings.ELASTICSEARCH['PASSWORD']))
+                               basic_auth=(settings.ELASTICSEARCH['USER'], settings.ELASTICSEARCH['PASSWORD']))
 
 USERS_INDEX = 'users'
 GROUPS_INDEX = 'groups'
