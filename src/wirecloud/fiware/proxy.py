@@ -102,7 +102,7 @@ async def replace_body_pattern(request: ProxyRequestData, bodies: list[str], tok
         if isinstance(request.data, bytes):
             new_body_array.extend(request.data)
         else:
-            async for chunk in request.data:
+            async for chunk in request.data: # pragma: no branch
                 new_body_array.extend(chunk)
 
         new_body = new_body_array.replace(pattern.encode('utf8'), token.encode('utf8'))

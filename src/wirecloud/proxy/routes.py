@@ -89,7 +89,7 @@ async def parse_context_from_referer(db: DBSession, user: Optional[UserAll], req
         workspace = await get_workspace_by_username_and_name(db, referer_view[1]['owner'], referer_view[1]['name'])
         if workspace is None or not await workspace.is_accessible_by(db, user):
             raise Exception()
-    elif referer_view is not None and referer_view[0] == 'wirecloud.showcase_media' or referer_view[0] == 'wirecloud|proxy':
+    elif referer_view is not None and (referer_view[0] == 'wirecloud.showcase_media' or referer_view[0] == 'wirecloud|proxy'):
         if request_method not in ('GET', 'POST', 'WS'):
             raise Exception()
 
@@ -277,7 +277,7 @@ class Proxy:
                             headers_dict['sec-websocket-accept'] = generate_ws_accept_header_from_key(request.headers['sec-websocket-key'])
 
                     for processor in get_response_proxy_processors():
-                        if inspect.iscoroutine(processor.sponse):
+                        if inspect.iscoroutinefunction(processor.process_response):
                             headers_dict = await processor.process_response(db, request_data, headers_dict)
                         else:
                             headers_dict = processor.process_response(db, request_data, headers_dict)
@@ -334,7 +334,7 @@ class Proxy:
                                     break
                         else: # no break, allows to break the outer loop from the inner loop
                             continue
-                        break
+                        break  # pragma: no cover
 
                 logger.info("Disconnected from %s" % request_data.url)
         except aiohttp.ServerTimeoutError as e:
@@ -396,7 +396,7 @@ class Proxy:
 
         # Pass proxy processors to the response
         for processor in get_response_proxy_processors():
-            if inspect.iscoroutine(processor.process_response):
+            if inspect.iscoroutinefunction(processor.process_response):
                 response = await processor.process_response(db, request_data, response)
             else:
                 response = processor.process_response(db, request_data, response)
