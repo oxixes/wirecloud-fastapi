@@ -98,7 +98,7 @@ def test_get_js_catalogue_route(monkeypatch):
     assert response.body == b"es:defaulttheme"
 
 
-async def test_search_resources_branches(monkeypatch):
+async def test_search_resources_branches(db_session, monkeypatch):
     captured = _capture_error_builder(monkeypatch)
     request = Request(
         {
@@ -110,13 +110,12 @@ async def test_search_resources_branches(monkeypatch):
             "headers": [(b"accept", b"application/json")],
         }
     )
-    db = SimpleNamespace()
     user = SimpleNamespace(id="u1")
 
     monkeypatch.setattr(routes, "is_available_search_engine", lambda namespace: namespace != "invalid")
     monkeypatch.setattr(routes, "get_search_engine", lambda _namespace: None)
     invalid = await routes.search_resources(
-        db=db, user=user, request=request, namespace="invalid", q="q", pagenum=1, maxresults=10, orderby=""
+        db=db_session, user=user, request=request, namespace="invalid", q="q", pagenum=1, maxresults=10, orderby=""
     )
     assert invalid["status"] == 422
 
@@ -136,23 +135,23 @@ async def test_search_resources_branches(monkeypatch):
     )
 
     workspace = await routes.search_resources(
-        db=db, user=user, request=request, namespace="workspace", q="q", pagenum=2, maxresults=5, orderby="-name"
+        db=db_session, user=user, request=request, namespace="workspace", q="q", pagenum=2, maxresults=5, orderby="-name"
     )
     assert workspace == {"scope": "workspace"}
 
     resource = await routes.search_resources(
-        db=db, user=user, request=request, namespace="resource", q="q", pagenum=2, maxresults=5, orderby="-name, title"
+        db=db_session, user=user, request=request, namespace="resource", q="q", pagenum=2, maxresults=5, orderby="-name, title"
     )
     assert resource["scope"] == "resource"
     assert resource["order"] == ("-name", "title")
 
     generic = await routes.search_resources(
-        db=db, user=user, request=request, namespace="user", q="q", pagenum=2, maxresults=5, orderby=""
+        db=db_session, user=user, request=request, namespace="user", q="q", pagenum=2, maxresults=5, orderby=""
     )
     assert generic == {"scope": "generic"}
 
     unauthorized = await routes.search_resources(
-        db=db, user=None, request=request, namespace="group", q="q", pagenum=2, maxresults=5, orderby=""
+        db=db_session, user=None, request=request, namespace="group", q="q", pagenum=2, maxresults=5, orderby=""
     )
     assert unauthorized["status"] == 401
 
@@ -161,7 +160,7 @@ async def test_search_resources_branches(monkeypatch):
 
     monkeypatch.setattr(routes, "get_search_engine", lambda _namespace: _none)
     invalid_order = await routes.search_resources(
-        db=db, user=user, request=request, namespace="user", q="q", pagenum=2, maxresults=5, orderby=""
+        db=db_session, user=user, request=request, namespace="user", q="q", pagenum=2, maxresults=5, orderby=""
     )
     assert invalid_order["status"] == 422
     assert captured["msg"] == "Invalid orderby value"
