@@ -9,4 +9,11 @@ aiocache
 aiofiles
 httpx
 elasticsearch
+orjson
+lxml
+markdown
+user_agents
+PyJWT
+aiohttp
+jinja2
 Babel>=2.12.0
