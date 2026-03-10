@@ -19,4 +19,5 @@ jinja2
 rdflib
 pycryptodome
 requests
+jsonpatch
 Babel>=2.12.0
