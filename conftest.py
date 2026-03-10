@@ -16,37 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Root conftest.py — fixtures shared across the whole test suite.
-
-Key fixtures
-------------
-mock_mongo_client  (session-scoped)
-    In-memory mongomock-motor client.  The module-level ``client`` and
-    ``database`` singletons in ``wirecloud.database`` are replaced before
-    any test runs.
-
-db_session  (function-scoped)
-    A :class:`~wirecloud.database.PyMongoSession` backed by the mock client.
-    Transactions are disabled because mongomock does not support them.
-
-app_client  (function-scoped)
-    Async HTTPX client for the FastAPI app.  The ``get_session`` dependency
-    is overridden to inject ``db_session``.
-
-Usage in a test file
---------------------
-    async def test_something(app_client):
-        response = await app_client.get("/api/...")
-        assert response.status_code == 200
-
-    async def test_db(db_session):
-        db = db_session.client
-        await db.users.insert_one({"name": "alice"})
-        doc = await db.users.find_one({"name": "alice"})
-        assert doc is not None
-"""
-
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, AsyncMock, patch
@@ -95,19 +64,6 @@ import pytest
 # ---------------------------------------------------------------------------
 
 class _FakeClientSession:
-    """
-    Minimal stand-in for ``AsyncClientSession`` consumed by
-    :class:`~wirecloud.database.PyMongoSession`.
-
-    ``self.client`` must expose the *database* object (not the raw client)
-    because ``PyMongoSession.__getattr__("client")`` does::
-
-        db = self._session.client[DATABASE['NAME']]
-
-    So we return the mock client here; PyMongoSession will then subscript it
-    with the database name to get the database object.
-    """
-
     def __init__(self, mongo_client):
         self._mongo_client = mongo_client
         self._in_transaction = False
@@ -146,16 +102,11 @@ class _FakeClientSession:
 
 @pytest.fixture(scope="session")
 def mock_mongo_client():
-    """Session-scoped mongomock-motor client (already patched at import time)."""
     return _mock_mongo_client_instance
 
 
 @pytest.fixture()
 async def db_session(mock_mongo_client):
-    """
-    Function-scoped PyMongoSession backed by the mock client.
-    Transactions are disabled (mongomock does not support them).
-    """
     fake_session = _FakeClientSession(mock_mongo_client)
     session = PyMongoSession(fake_session, use_transactions=False)  # type: ignore[arg-type]
     yield session
@@ -163,12 +114,6 @@ async def db_session(mock_mongo_client):
 
 @pytest.fixture()
 async def app_client(mock_mongo_client, db_session):
-    """
-    Async HTTPX test client for the FastAPI application.
-
-    * No real server is started (uses ``asgi-lifespan`` + ASGI transport).
-    * The ``get_session`` DB dependency is overridden to return ``db_session``.
-    """
     from asgi_lifespan import LifespanManager
     from httpx import AsyncClient, ASGITransport
     from wirecloud.main import app

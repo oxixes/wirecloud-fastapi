@@ -424,7 +424,7 @@ async def rebuildsearchindexes_cmd(_args: argparse.Namespace) -> None:
     from wirecloud.database import get_session
 
     # get_session provides an async iterator
-    async for session in get_session():
+    async for session in get_session():  # pragma: no branch
         await rebuild_all_indexes(session)
 
     print("Search indexes rebuilt successfully.")
@@ -433,7 +433,7 @@ async def rebuildsearchindexes_cmd(_args: argparse.Namespace) -> None:
 async def populate_cmd(_args: argparse.Namespace) -> None:
     from wirecloud.database import get_session
 
-    async for session in get_session():
+    async for session in get_session():  # pragma: no branch
         # Get the wirecloud user
         from wirecloud.commons.auth.crud import get_user_with_all_info_by_username
 
