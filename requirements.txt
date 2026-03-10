@@ -16,4 +16,6 @@ user_agents
 PyJWT
 aiohttp
 jinja2
+rdflib
+pycryptodome
 Babel>=2.12.0
