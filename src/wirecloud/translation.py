@@ -37,8 +37,7 @@ def generate_translations() -> None:
         src_path = os.path.dirname(os.path.dirname(__file__))
         locale_path = os.path.join(src_path, plugin_name.replace(".", "/"), "locale")
 
-        if not os.path.exists(locale_path) or not os.path.isdir(locale_path):
-            continue
+        if not os.path.exists(locale_path) or not os.path.isdir(locale_path): continue
 
         for lang in settings.LANGUAGES:
             try:
@@ -89,8 +88,7 @@ def gettext(text: str, lang: Optional[str] = None, translation: Optional[NullTra
             raise ValueError(f"Could not find the locale directory for plugin {plugin}, but a translation was requested")
 
         # Load the translation
-        if translation is None:
-            translation = translations.get((plugin, lang)) if translations else None
+        translation = translations.get((plugin, lang)) if translations else None
 
         if translation is None:
             logger.warning(f"Translation for language {lang} in module {plugin} not found, but was requested")

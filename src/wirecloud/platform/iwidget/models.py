@@ -136,7 +136,10 @@ class WidgetInstance(BaseModel):
         elif vardef.type == 'number':
             value = float(value)
 
-        if "users" in self.variables.get(var_name, ""):
-            self.variables[var_name].users = {"%s" % user.id: value}
+        current_value = self.variables.get(var_name)
+        if isinstance(current_value, WidgetVariables):
+            current_value.users = {str(user.id): value}
+        elif isinstance(current_value, dict) and "users" in current_value:
+            current_value["users"] = {str(user.id): value}
         else:
             self.variables[var_name] = WidgetVariables(users={str(user.id): value})

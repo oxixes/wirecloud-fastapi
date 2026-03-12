@@ -138,7 +138,8 @@ async def create_widget_instance_collection(db: DBDep, user: UserDep, request: R
         return Response(content=iwidget_data.model_dump_json(), media_type="application/json", status_code=201)
 
     except NotFound:
-        return build_error_response(request, 422, _(f"Referred widget {iwidget.resource} does not exist."))
+        widget_ref = getattr(iwidget, "resource", None) or getattr(iwidget, "widget", None)
+        return build_error_response(request, 422, _(f"Referred widget {widget_ref} does not exist."))
     except TypeError as e:
         return build_error_response(request, 400, str(e))
     except ValueError as e:

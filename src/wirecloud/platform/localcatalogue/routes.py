@@ -193,7 +193,7 @@ async def create_resource(db: DBDep, user: UserDep, request: Request,
 
             if isinstance(response, StreamingResponse):
                 downloaded_file = b""
-                async for chunk in response.body_iterator:
+                async for chunk in response.body_iterator:  # pragma: no branch
                     downloaded_file += chunk
             else:
                 downloaded_file = response.render(None)

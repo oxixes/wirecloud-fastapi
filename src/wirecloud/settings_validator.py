@@ -211,12 +211,6 @@ def _validate_and_set_defaults():
     if not isinstance(settings.CACHE_DIR, str):
         raise ValueError("CACHE_DIR must be a string")
 
-    # Validate cache configuration if present
-    if hasattr(settings, 'cache'):
-        # Cache configuration is validated by aiocache library itself
-        pass
-
-
 async def validate_settings(offline: bool = False):
     # Validate core settings and set defaults
     _validate_and_set_defaults()
