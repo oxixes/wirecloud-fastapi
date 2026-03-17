@@ -242,7 +242,7 @@ async def test_rebuildsearchindexes_and_populate(monkeypatch):
     async def _get_session():
         yield session
 
-    called = {"rebuild": 0, "populate": 0, "create_user": 0, "commit": 0}
+    called = {"rebuild": 0, "populate": 0, "create_user_db": 0, "commit": 0}
 
     async def _rebuild_all_indexes(db):
         called["rebuild"] += 1
@@ -269,17 +269,17 @@ async def test_rebuildsearchindexes_and_populate(monkeypatch):
             return None
         return SimpleNamespace(username="wirecloud")
 
-    async def _create_user(_db, _data):
-        called["create_user"] += 1
+    async def _create_user_db(_db, _data):
+        called["create_user_db"] += 1
 
     async def _commit(_db):
         called["commit"] += 1
 
     monkeypatch.setattr("wirecloud.commons.auth.crud.get_user_with_all_info_by_username", _user_lookup)
-    monkeypatch.setattr("wirecloud.commons.auth.crud.create_user", _create_user)
+    monkeypatch.setattr("wirecloud.commons.auth.crud.create_user_db", _create_user_db)
     monkeypatch.setattr("wirecloud.database.commit", _commit)
     await commands.populate_cmd(SimpleNamespace())
-    assert called["create_user"] == 1
+    assert called["create_user_db"] == 1
     assert called["commit"] == 1
 
     await commands.populate_cmd(SimpleNamespace())

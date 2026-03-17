@@ -30,7 +30,6 @@ from wirecloud.catalogue.utils import add_packaged_resource, create_widget_on_re
     deploy_operators_on_resource_creation
 from wirecloud.commons.auth.crud import get_user_by_username
 from wirecloud.commons.utils.template.schemas.macdschemas import MACDWidget, MACDOperator, MACDMashup
-from wirecloud.platform.markets.schemas import MarketCreate
 from wirecloud.platform.workspace.models import WorkspaceAccessPermissions, DBWorkspacePreference
 
 try:
@@ -382,7 +381,7 @@ async def _migrate_constants(db_connection, new_db_session, db_type: str) -> int
 # TODO Migrate permissions
 # TODO Migrate organizations
 async def _migrate_users_and_groups(db_connection, new_db_session, db_type: str) -> tuple[dict[int, str], dict[int, str]]:
-    from wirecloud.commons.auth.crud import create_user, create_group_if_not_exists
+    from wirecloud.commons.auth.crud import create_user_db, create_group_if_not_exists
     from wirecloud.commons.auth.schemas import UserCreate
     from wirecloud.commons.auth.models import Group
 
@@ -435,7 +434,7 @@ async def _migrate_users_and_groups(db_connection, new_db_session, db_type: str)
                 password=user['password'] or '!'
             )
 
-            await create_user(new_db_session, user_data)
+            await create_user_db(new_db_session, user_data)
             new_user = await get_user_by_username(new_db_session, user['username'])
             if new_user is None:
                 print(f"  ✗ Failed to migrate user {user['username']}")

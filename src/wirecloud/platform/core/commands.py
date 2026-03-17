@@ -440,7 +440,7 @@ async def populate_cmd(_args: argparse.Namespace) -> None:
         wirecloud_user = await get_user_with_all_info_by_username(session, "wirecloud")
         if not wirecloud_user:
             # Create the wirecloud user if it doesn't exist
-            from wirecloud.commons.auth.crud import create_user
+            from wirecloud.commons.auth.crud import create_user_db
             from wirecloud.commons.auth.schemas import UserCreate
             from wirecloud.database import commit
 
@@ -456,7 +456,7 @@ async def populate_cmd(_args: argparse.Namespace) -> None:
                 password="!"
             )
 
-            await create_user(session, wirecloud_user_data)
+            await create_user_db(session, wirecloud_user_data)
             await commit(session)
 
             wirecloud_user = await get_user_with_all_info_by_username(session, "wirecloud")

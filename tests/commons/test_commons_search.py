@@ -27,6 +27,7 @@ class _FakeES:
         self.search_payload = search_payload or {"hits": {"hits": [], "total": {"value": 0}}}
         self.indices = _FakeIndices(exists_value=exists_value)
         self.index_calls = []
+        self.delete_calls = []
 
     async def count(self, index, body):
         return {"count": self.count_value}
@@ -36,6 +37,9 @@ class _FakeES:
 
     async def index(self, index, id, document):
         self.index_calls.append((index, id, document))
+
+    async def delete(self, index, id):
+        self.delete_calls.append((index, id))
 
 
 async def test_available_engines_and_getters(monkeypatch):
@@ -94,7 +98,7 @@ async def test_calculate_pagination_and_build_search_response(monkeypatch):
         _FakeES(
             search_payload={
                 "hits": {
-                    "hits": [{"_source": {"fullname": "A", "username": "u1"}}],
+                    "hits": [{"_id": "73", "_source": {"fullname": "A", "username": "u1"}}],
                     "total": {"value": 7},
                 }
             }
@@ -148,7 +152,7 @@ async def test_clean_and_search_functions(monkeypatch):
 
     monkeypatch.setattr(search, "build_search_response", _build)
 
-    out_user = search.clean_user_out({"_source": {"fullname": "Alice", "username": "alice"}})
+    out_user = search.clean_user_out({"_id": "42", "_source": {"fullname": "Alice", "username": "alice"}})
     assert out_user.fullname == "Alice"
     assert out_user.type == "user"
 
@@ -203,12 +207,19 @@ async def test_add_and_rebuild_indexes(monkeypatch):
     monkeypatch.setattr(search, "es_client", es)
 
     user = SimpleNamespace(id="u1", first_name="Alice", last_name="A", username="alice")
-    group = SimpleNamespace(id="g1", name="Dev", is_organization=False)
+    group = SimpleNamespace(id="g1", name="Dev", is_organization=False, path=["g1"])
     await search.add_user_to_index(user)
     await search.add_group_to_index(group)
     assert es.index_calls[0][0] == search.USERS_INDEX
     assert es.index_calls[1][0] == search.GROUPS_INDEX
     assert es.index_calls[1][2]["type"] == "group"
+
+    await search.delete_user_from_index(user)
+    await search.delete_group_from_index(group)
+    assert es.delete_calls == [
+        (search.USERS_INDEX, "u1"),
+        (search.GROUPS_INDEX, "g1"),
+    ]
 
     bulk_calls = {"n": 0, "last": None}
 

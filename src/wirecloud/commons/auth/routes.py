@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from fastapi import APIRouter, Request, Query
+from fastapi import APIRouter, Request, Query, Body, Path
 from fastapi.responses import HTMLResponse, Response
 from datetime import datetime, timezone
 from pydantic import ValidationError
@@ -25,18 +25,22 @@ import asyncio
 from urllib.parse import urlparse
 
 from wirecloud.commons.auth.models import Group
+from wirecloud.commons.search import add_user_to_index, add_group_to_index
 from wirecloud.database import Id
 from wirecloud.commons.auth.schemas import UserLogin, UserToken, UserWithPassword, UserTokenType, User, UserCreate, \
-    SwitchUserRequest
+    SwitchUserRequest, UserUpdate, Permission, GroupCreate, GroupUpdate, OrganizationCreate, OrganizationGroupData, \
+    OrganizationGroupUpdate
 from wirecloud.commons.auth.crud import get_user_with_password, set_login_date_for_user, get_user_by_username, \
-    create_user, update_user, create_token, invalidate_token, add_user_to_groups_by_codename, \
+    create_user_db, update_user, create_token, invalidate_token, add_user_to_groups_by_codename, \
     create_group_if_not_exists, remove_user_from_all_groups, set_token_expiration, remove_user_idm_data, \
-    get_user_with_all_info_by_username, get_token_idm_session
+    get_user_with_all_info_by_username, get_token_idm_session, update_user_with_all_info, delete_user, \
+    get_group_by_name, get_user_by_id, create_group_db, add_group_to_users, remove_group_to_users, update_group, \
+    delete_group, create_organization_db, get_all_organization_groups, update_path_for_descendants, delete_organization
 from wirecloud.commons.auth.utils import check_password, SessionDepNoCSRF, SessionDep, \
-    UserDep, UserDepNoCSRF, RealUserDep
+    UserDep, UserDepNoCSRF, RealUserDep, hash_password
 from wirecloud.database import DBDep, commit
 from wirecloud.commons.utils.http import build_error_response, build_validation_error_response, produces, consumes, \
-    get_redirect_response, get_absolute_reverse_url, resolve_url_name
+    get_redirect_response, get_absolute_reverse_url, resolve_url_name, authentication_required
 from src import settings
 from wirecloud import docs as root_docs
 from wirecloud.commons.auth import docs
@@ -48,6 +52,8 @@ from wirecloud.translation import gettext as _
 
 router = APIRouter()
 base_router = APIRouter()
+# TODO: add translation to error messages
+admin_router = APIRouter()
 
 
 @base_router.get(
@@ -113,7 +119,7 @@ async def oidc_login(request: Request, db: DBDep, code: str = Query(description=
 
     if user is None:
         # Register user
-        await create_user(db, UserCreate(
+        await create_user_db(db, UserCreate(
             username=username,
             password="x",
             first_name=user_data.get("given_name", ""),
@@ -143,7 +149,7 @@ async def oidc_login(request: Request, db: DBDep, code: str = Query(description=
         # Check that groups are a list of strings
         if isinstance(user_data['wirecloud']['groups'], list) and all(isinstance(group, str) for group in user_data['wirecloud']['groups']):
             for group in user_data['wirecloud']['groups']:
-                await create_group_if_not_exists(db, Group(_id=Id(), name=group, codename=group))
+                await create_group_if_not_exists(db, Group(_id=Id(), name=group, codename=group, path=[]))
             await add_user_to_groups_by_codename(db, user.id, user_data['wirecloud']['groups'])
 
     await set_login_date_for_user(db, user.id)
@@ -559,3 +565,590 @@ async def switch_user(request: Request, db: DBDep, real_user: RealUserDep, actua
                             secure=getattr(settings, "WIRECLOUD_HTTPS", False), samesite="strict", expires=expiration)
 
     return response
+
+
+@admin_router.post(
+    "/users",
+    summary=docs.create_user_collection_summary,
+    description=docs.create_user_collection_description,
+    status_code=201,
+    response_class=Response,
+    response_description=docs.create_user_collection_response_description,
+    responses={
+        400: root_docs.generate_error_response_openapi_description(
+            docs.create_user_collection_bad_request_response_description,
+            "Malformed JSON data"
+        ),
+        401: root_docs.generate_auth_required_response_openapi_description(
+            docs.create_user_collection_auth_required_response_description
+        ),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.create_user_collection_permission_denied_response_description,
+            "You don't have permissions to create users"
+        ),
+        406: root_docs.generate_not_acceptable_response_openapi_description(
+            docs.create_user_collection_not_acceptable_response_description, ["application/json"]
+        ),
+        409: root_docs.generate_error_response_openapi_description(
+            docs.create_user_collection_conflict_response_description,
+            "A user with the given username already exists"
+        )
+    }
+)
+@authentication_required()
+@consumes(["application/json"])
+async def create_user(db: DBDep, request: Request, user: UserDep,
+                      user_data: UserCreate = Body(description=docs.create_user_collection_user_data_description,
+                                                   examples=docs.create_user_collection_user_data_example)):
+    if not user.is_superuser and not user.has_perm("USER.CREATE"):
+        return build_error_response(request, 403, "You don't have permissions to create users")
+
+    if user_data.username == "" or user_data.username is None:
+        return build_error_response(request, 400, "Username cannot be empty")
+
+    if await get_user_by_username(db, user_data.username) is not None:
+        return build_error_response(request, 409, "A user with that username already exists")
+
+    user_data.password = hash_password(user_data.password)
+    user = await create_user_db(db, user_data)
+    await add_user_to_index(User(**user.model_dump(by_alias=False)))
+
+    return Response(status_code=201)
+
+
+@admin_router.get(
+    "/users/{user_username}",
+    summary=docs.get_user_entry_summary,
+    description=docs.get_user_entry_description,
+    response_model=UserUpdate,
+    response_description=docs.get_user_entry_response_description,
+    responses={
+        200: {"content": {"application/json": {"example": docs.get_user_entry_response_example}}},
+        401: root_docs.generate_auth_required_response_openapi_description(
+            docs.get_user_entry_auth_required_response_description
+        ),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.get_user_entry_permission_denied_response_description,
+            "You don't have permissions to view users"
+        ),
+        404: root_docs.generate_not_found_response_openapi_description(
+            docs.get_user_entry_not_found_response_description
+        )
+    }
+)
+@authentication_required()
+async def get_user_entry(db: DBDep, request: Request, user: UserDep,
+                         user_username: str = Path(description=docs.get_user_entry_user_username_description)):
+    if not user.is_superuser and not user.has_perm("USER.VIEW"):
+        return build_error_response(request, 403, "You don't have permissions to view users")
+
+    user_db = await get_user_with_all_info_by_username(db, user_username)
+    if user_db is None:
+        return build_error_response(request, 404, "User not found")
+
+    return UserUpdate(
+        username=user_db.username,
+        email=user_db.email,
+        first_name=user_db.first_name,
+        last_name=user_db.last_name,
+        is_staff=user_db.is_staff,
+        is_active=user_db.is_active,
+        is_superuser=user_db.is_superuser,
+        permissions=[perm.codename for perm in user_db.permissions]
+    )
+
+
+@admin_router.put(
+    "/users/{user_username}",
+    summary=docs.update_user_entry_summary,
+    description=docs.update_user_entry_description,
+    status_code=204,
+    response_class=Response,
+    response_description=docs.update_user_entry_response_description,
+    responses={
+        400: root_docs.generate_error_response_openapi_description(
+            docs.update_user_entry_bad_request_response_description,
+            "Malformed JSON data"
+        ),
+        401: root_docs.generate_auth_required_response_openapi_description(
+            docs.update_user_entry_auth_required_response_description
+        ),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.update_user_entry_permission_denied_response_description,
+            "You don't have permissions to edit users"
+        ),
+        404: root_docs.generate_not_found_response_openapi_description(
+            docs.update_user_entry_not_found_response_description
+        ),
+        406: root_docs.generate_not_acceptable_response_openapi_description(
+            docs.update_user_entry_not_acceptable_response_description, ["application/json"]
+        ),
+        409: root_docs.generate_error_response_openapi_description(
+            docs.update_user_entry_conflict_response_description,
+            "A user with the given username already exists"
+        )
+    }
+)
+@authentication_required()
+@consumes(["application/json"])
+async def update_user_entry(db: DBDep, request: Request, user: UserDep,
+                            user_username: str = Path(description=docs.update_user_entry_user_username_description),
+                            user_data: UserUpdate = Body(description=docs.update_user_entry_user_data_description,
+                                                         examples=docs.update_user_entry_user_data_example)):
+    if not user.is_superuser and not user.has_perm("USER.EDIT"):
+        return build_error_response(request, 403, "You don't have permissions to edit users")
+
+    user_db = await get_user_with_all_info_by_username(db, user_username)
+    if user_db is None:
+        return build_error_response(request, 404, "User not found")
+
+    if user_data.username == "" or user_data.username is None:
+        return build_error_response(request, 400, "Username cannot be empty")
+
+    if user_data.username != user_db.username:
+        if await get_user_by_username(db, user_data.username) is not None:
+            return build_error_response(request, 409, "A user with that username already exists")
+        user_db.username = user_data.username
+
+    if user_data.permissions is not None:
+        user_db.permissions = [Permission(codename=perm) for perm in user_data.permissions]
+
+    user_db.email = user_data.email
+    user_db.first_name = user_data.first_name
+    user_db.last_name = user_data.last_name
+    user_db.is_staff = user_data.is_staff
+    user_db.is_active = user_data.is_active
+    user_db.is_superuser = user_data.is_superuser
+
+    await update_user_with_all_info(db, user_db)
+
+    return Response(status_code=204)
+
+
+@admin_router.delete(
+    "/users/{user_username}",
+    summary=docs.delete_user_entry_summary,
+    description=docs.delete_user_entry_description,
+    status_code=204,
+    response_class=Response,
+    response_description=docs.delete_user_entry_response_description,
+    responses={
+        401: root_docs.generate_auth_required_response_openapi_description(
+            docs.delete_user_entry_auth_required_response_description
+        ),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.delete_user_entry_permission_denied_response_description,
+            "You don't have permissions to delete users"
+        ),
+        404: root_docs.generate_not_found_response_openapi_description(
+            docs.delete_user_entry_not_found_response_description
+        )
+    }
+)
+@authentication_required()
+async def delete_user_entry(db: DBDep, request: Request, user: UserDep,
+                            user_username: str = Path(description=docs.delete_user_entry_user_username_description)):
+    if not user.is_superuser and not user.has_perm("USER.DELETE"):
+        return build_error_response(request, 403, "You don't have permissions to delete users")
+
+    user_db = await get_user_by_username(db, user_username)
+    if user_db is None:
+        return build_error_response(request, 404, "User not found")
+
+    await delete_user(db, user_db)
+
+    return Response(status_code=204)
+
+
+@admin_router.post(
+    "/groups",
+    summary=docs.create_group_collection_summary,
+    description=docs.create_group_collection_description,
+    status_code=201,
+    response_class=Response,
+    response_description=docs.create_group_collection_response_description,
+    responses={
+        400: root_docs.generate_error_response_openapi_description(
+            docs.create_group_collection_bad_request_response_description,
+            "Malformed JSON data"
+        ),
+        401: root_docs.generate_auth_required_response_openapi_description(
+            docs.create_group_collection_auth_required_response_description
+        ),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.create_group_collection_permission_denied_response_description,
+            "You don't have permissions to create groups"
+        ),
+        406: root_docs.generate_not_acceptable_response_openapi_description(
+            docs.create_group_collection_not_acceptable_response_description, ["application/json"]
+        ),
+        409: root_docs.generate_error_response_openapi_description(
+            docs.create_group_collection_conflict_response_description,
+            "A group with the given name already exists"
+        )
+     }
+)
+@authentication_required()
+@consumes(["application/json"])
+async def create_group(db: DBDep, request: Request, user: UserDep,
+                       group_data: GroupCreate = Body(description=docs.create_group_collection_group_data_description,
+                                                      examples=docs.create_group_collection_group_data_example)):
+    if not user.is_superuser and not user.has_perm("GROUP.CREATE"):
+        return build_error_response(request, 403, "You don't have permissions to create groups")
+
+    if group_data.name == "" or group_data.codename == "":
+        return build_error_response(request, 400, "Group name and codename cannot be empty")
+
+    if await get_group_by_name(db, group_data.name) is not None:
+        return build_error_response(request, 409, "A group with that name already exists")
+
+    for user_id in group_data.users:
+        if await get_user_by_id(db, user_id) is None:
+            return build_error_response(request, 404, f"User with id {user_id} does not exist")
+
+    group = await create_group_db(db, group_data)
+
+    if len(group_data.users) > 0:
+        await add_group_to_users(db, group.id, group_data.users)
+
+    await add_group_to_index(group)
+
+    return Response(status_code=201)
+
+
+@admin_router.get(
+    "/groups/{group_name}",
+    summary=docs.get_group_entry_summary,
+    description=docs.get_group_entry_description,
+    response_model=GroupUpdate,
+    response_description=docs.get_group_entry_response_description,
+    responses={
+        200: {"content": {"application/json": {"example": docs.get_group_entry_response_example}}},
+        401: root_docs.generate_auth_required_response_openapi_description(
+            docs.get_group_entry_auth_required_response_description
+        ),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.get_group_entry_permission_denied_response_description,
+            "You don't have permissions to view groups"
+        ),
+        404: root_docs.generate_not_found_response_openapi_description(
+            docs.get_group_entry_not_found_response_description
+        )
+     }
+)
+@authentication_required()
+async def get_group_entry(db: DBDep, request: Request, user: UserDep,
+                          group_name: str = Path(description=docs.get_group_entry_group_name_description)):
+    if not user.is_superuser and not user.has_perm("GROUP.VIEW"):
+        return build_error_response(request, 403, "You don't have permissions to view groups")
+
+    group_db = await get_group_by_name(db, group_name)
+    if group_db is None:
+        return build_error_response(request, 404, "Group not found")
+
+    data = GroupUpdate(
+        name=group_db.name,
+        codename=group_db.codename,
+        permissions=[perm.codename for perm in group_db.group_permissions],
+        users=group_db.users,
+    )
+
+    return data.model_dump()
+
+
+@admin_router.put(
+    "/groups/{group_name}",
+    summary=docs.update_group_entry_summary,
+    description=docs.update_group_entry_description,
+    status_code=204,
+    response_class=Response,
+    response_description=docs.update_group_entry_response_description,
+    responses={
+        400: root_docs.generate_error_response_openapi_description(
+            docs.update_group_entry_bad_request_response_description,
+            "Malformed JSON data"
+        ),
+        401: root_docs.generate_auth_required_response_openapi_description(
+            docs.update_group_entry_auth_required_response_description
+        ),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.update_group_entry_permission_denied_response_description,
+            "You don't have permissions to edit groups"
+        ),
+        404: root_docs.generate_not_found_response_openapi_description(
+            docs.update_group_entry_not_found_response_description
+        ),
+        406: root_docs.generate_not_acceptable_response_openapi_description(
+            docs.update_group_entry_not_acceptable_response_description, ["application/json"]
+        ),
+        409: root_docs.generate_error_response_openapi_description(
+            docs.update_group_entry_conflict_response_description,
+            "A group with the given name already exists"
+        )
+     }
+)
+@authentication_required()
+@consumes(["application/json"])
+async def update_group_entry(db: DBDep, request: Request, user: UserDep,
+                             group_name: str = Path(description=docs.update_group_entry_group_name_description),
+                             group_data: GroupUpdate = Body(description=docs.update_group_entry_group_data_description,
+                                                            examples=docs.update_group_entry_group_data_example)):
+    if not user.is_superuser and not user.has_perm("GROUP.EDIT"):
+        return build_error_response(request, 403, "You don't have permissions to edit groups")
+
+    if group_data.name == "" or group_data.codename == "":
+        return build_error_response(request, 400, "Group name and codename cannot be empty")
+
+    group_db = await get_group_by_name(db, group_name)
+    if group_db is None:
+        return build_error_response(request, 404, "Group not found")
+
+    if group_db.name != group_data.name:
+        if await get_group_by_name(db, group_data.name) is not None:
+            return build_error_response(request, 409, "A group with that name already exists")
+        group_db.name = group_data.name
+
+    if group_data.permissions is not None:
+        group_db.group_permissions = [Permission(codename=perm) for perm in group_data.permissions]
+
+    users_to_add = set(group_data.users) - set(group_db.users)
+    users_to_remove = set(group_db.users) - set(group_data.users)
+
+    if len(users_to_add) > 0:
+        await add_group_to_users(db, group_db.id, list(users_to_add))
+    if len(users_to_remove) > 0:
+        await remove_group_to_users(db, group_db.id, list(users_to_remove))
+
+    group_db.users = group_data.users
+    group_db.codename = group_data.codename
+
+    await update_group(db, group_db)
+    return Response(status_code=204)
+
+
+@admin_router.delete(
+    "/groups/{group_name}",
+    summary=docs.delete_group_entry_summary,
+    description=docs.delete_group_entry_description,
+    status_code=204,
+    response_class=Response,
+    response_description=docs.delete_group_entry_response_description,
+    responses={
+        401: root_docs.generate_auth_required_response_openapi_description(
+            docs.delete_group_entry_auth_required_response_description
+        ),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.delete_group_entry_permission_denied_response_description,
+            "You don't have permissions to delete groups"
+        ),
+        404: root_docs.generate_not_found_response_openapi_description(
+            docs.delete_group_entry_not_found_response_description
+        )
+    }
+)
+@authentication_required()
+async def delete_group_entry(db: DBDep, request: Request, user: UserDep,
+                             group_name: str = Path(description=docs.delete_group_entry_group_name_description)):
+    if not user.is_superuser and not user.has_perm("GROUP.DELETE"):
+        return build_error_response(request, 403, "You don't have permissions to delete groups")
+
+    group_db = await get_group_by_name(db, group_name)
+    if group_db is None:
+        return build_error_response(request, 404, "Group not found")
+
+    if group_db.is_organization and group_db.parent is None:
+        return build_error_response(request, 400, "You cannot delete the root group of an organization")
+
+    await delete_group(db, group_db)
+
+    return Response(status_code=204)
+
+
+@admin_router.post(
+    "/organizations",
+    summary=docs.create_organization_collection_summary,
+    description=docs.create_organization_collection_description,
+    status_code=201,
+    response_class=Response,
+    response_description=docs.create_organization_collection_response_description,
+    responses={
+        400: root_docs.generate_error_response_openapi_description(
+            docs.create_organization_collection_bad_request_response_description,
+            "Malformed JSON data"
+        ),
+        401: root_docs.generate_auth_required_response_openapi_description(
+            docs.create_organization_collection_auth_required_response_description
+        ),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.create_organization_collection_permission_denied_response_description,
+            "You don't have permissions to create organizations"
+        ),
+        406: root_docs.generate_not_acceptable_response_openapi_description(
+            docs.create_organization_collection_not_acceptable_response_description, ["application/json"]
+        ),
+        409: root_docs.generate_error_response_openapi_description(
+            docs.create_organization_collection_conflict_response_description,
+            "A group with the given name already exists"
+        )
+    }
+)
+@authentication_required()
+@consumes(["application/json"])
+async def create_organization(db: DBDep, request: Request, user: UserDep,
+                              org_data: OrganizationCreate = Body(description=docs.create_organization_collection_organization_data_description,
+                                                                  examples=docs.create_organization_collection_organization_data_example)):
+    if not user.is_superuser and not user.has_perm("ORGANIZATION.CREATE"):
+        return build_error_response(request, 403, "You don't have permissions to create organizations")
+
+    if org_data.name == "" or org_data.codename == "":
+        return build_error_response(request, 400, "Organization name and codename cannot be empty")
+
+    if await get_group_by_name(db, org_data.name) is not None:
+        return build_error_response(request, 409, "A group with that name already exists")
+
+    org = await create_organization_db(db, org_data)
+
+    if len(org_data.users) > 0:
+        await add_group_to_users(db, org.id, org_data.users)
+    await add_group_to_index(org)
+
+    return Response(status_code=201)
+
+
+@admin_router.get(
+    "/organizations/{org_name}",
+    summary=docs.get_organization_entry_summary,
+    description=docs.get_organization_entry_description,
+    response_model=list[OrganizationGroupData],
+    response_description=docs.get_organization_entry_response_description,
+    responses={
+        200: {"content": {"application/json": {"example": docs.get_organization_entry_response_example}}},
+        401: root_docs.generate_auth_required_response_openapi_description(
+            docs.get_organization_entry_auth_required_response_description
+        ),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.get_organization_entry_permission_denied_response_description,
+            "You don't have permissions to view organizations"
+        ),
+        404: root_docs.generate_not_found_response_openapi_description(
+            docs.get_organization_entry_not_found_response_description
+        )
+     }
+)
+@authentication_required()
+async def get_organization_entry(db: DBDep, request: Request, user: UserDep,
+                                 org_name: str = Path(description=docs.get_organization_entry_organization_name_description)):
+    if not user.is_superuser and not user.has_perm("ORGANIZATION.VIEW"):
+        return build_error_response(request, 403, "You don't have permissions to view organizations")
+
+    org_db = await get_group_by_name(db, org_name)
+    if org_db is None or not org_db.is_organization or org_db.parent is not None:
+        return build_error_response(request, 404, "Organization not found")
+
+    groups = await get_all_organization_groups(db, org_db)
+    data = [OrganizationGroupData(name=group.name,
+                        codename=group.codename,
+                        users=group.users,
+                        path=group.path) for group in groups]
+
+    return data
+
+
+@admin_router.put(
+    "/organizations/groups/{group_name}",
+    summary=docs.update_organization_group_entry_summary,
+    description=docs.update_organization_group_entry_description,
+    status_code=204,
+    response_class=Response,
+    response_description=docs.update_organization_group_entry_response_description,
+    responses={
+        400: root_docs.generate_error_response_openapi_description(
+            docs.update_organization_group_entry_bad_request_response_description,
+            "Malformed JSON data"
+        ),
+        401: root_docs.generate_auth_required_response_openapi_description(
+            docs.update_organization_group_entry_auth_required_response_description
+        ),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.update_organization_group_entry_permission_denied_response_description,
+            "You don't have permissions to edit organizations"
+        ),
+        404: root_docs.generate_not_found_response_openapi_description(
+            docs.update_organization_group_entry_not_found_response_description
+        ),
+        406: root_docs.generate_not_acceptable_response_openapi_description(
+            docs.update_organization_group_entry_not_acceptable_response_description, ["application/json"]
+        )
+    }
+)
+@authentication_required()
+@consumes(["application/json"])
+async def update_organization_group_entry(db: DBDep, request: Request, user: UserDep,
+                                          group_name: str = Path(description=docs.update_organization_group_entry_group_name_description),
+                                          new_parent: OrganizationGroupUpdate = Body(description=docs.update_organization_group_entry_new_parent_description,
+                                                                                     examples=docs.update_organization_group_entry_new_parent_example)):
+    if not user.is_superuser and not user.has_perm("ORGANIZATION.EDIT"):
+        return build_error_response(request, 403, "You don't have permissions to update organizations")
+
+    child_group = await get_group_by_name(db, group_name)
+    if child_group is None:
+        return build_error_response(request, 404, "Group not found")
+
+    if new_parent.parent_name == "":
+        await update_path_for_descendants(db, child_group)
+        child_group.path = [child_group.id]
+        child_group.is_organization = False
+    else:
+        parent_group = await get_group_by_name(db, new_parent.parent_name)
+        if parent_group is None:
+            return build_error_response(request, 404, "Parent group not found")
+
+        if not parent_group.is_organization:
+            return build_error_response(request, 400, "The specified parent group is not an organization")
+
+        # Check there is not a cycle in the group hierarchy
+        if child_group.id in parent_group.path:
+            return build_error_response(request, 400, "Cannot set this parent: it would create a circular reference")
+
+        child_group.path = parent_group.path + [child_group.id]
+        child_group.is_organization = True
+
+    await update_group(db, child_group)
+    return Response(status_code=204)
+
+
+@admin_router.delete(
+    "/organizations/{org_name}",
+    summary=docs.delete_organization_entry_summary,
+    description=docs.delete_organization_entry_description,
+    status_code=204,
+    response_class=Response,
+    response_description=docs.delete_organization_entry_response_description,
+    responses={
+        401: root_docs.generate_auth_required_response_openapi_description(
+            docs.delete_organization_entry_auth_required_response_description
+        ),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.delete_organization_entry_permission_denied_response_description,
+            "You don't have permissions to delete organizations"
+        ),
+        404: root_docs.generate_not_found_response_openapi_description(
+            docs.delete_organization_entry_not_found_response_description
+        )
+    }
+)
+@authentication_required()
+async def delete_organization_entry(db: DBDep, request: Request, user: UserDep,
+                                    org_name: str = Path(description=docs.delete_organization_entry_organization_name_description)):
+    if not user.is_superuser and not user.has_perm("ORGANIZATION.DELETE"):
+        return build_error_response(request, 403, "You don't have permissions to delete organizations")
+
+    org_db = await get_group_by_name(db, org_name)
+    if org_db is None:
+        return build_error_response(request, 404, "Organization not found")
+    if org_db.parent is not None or not org_db.is_organization:
+        return build_error_response(request, 400, "The specified group is not the root group of an organization")
+
+    await delete_organization(db, org_db)
+
+    return Response(status_code=204)

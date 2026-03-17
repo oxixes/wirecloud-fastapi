@@ -21,7 +21,8 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 
-from wirecloud.commons.auth.schemas import User, UserWithPassword, Permission, UserAll, UserCreate
+from wirecloud.commons.auth.schemas import User, UserWithPassword, Permission, UserAll, UserCreate, GroupCreate, \
+    OrganizationCreate
 from wirecloud.commons.auth.models import DBUser as UserModel
 from wirecloud.commons.auth.models import Group as GroupModel, Group
 from wirecloud.commons.auth.models import DBPlatformPreference as PlatformPreferenceModel
@@ -82,7 +83,8 @@ async def get_token_idm_session(db: DBSession, token_id: ObjectId) -> Optional[s
     return token.get("idm_session")
 
 
-async def create_user(db: DBSession, user_info: UserCreate) -> None:
+async def create_user_db(db: DBSession, user_info: UserCreate) -> UserModel:
+    default_permissions = ["WORKSPACE.CREATE", "COMPONENT.INSTALL", "COMPONENT.UNINSTALL", "COMPONENT.DELETE", "MARKETPLACE.CREATE"]
     user_created = UserModel(
         _id=ObjectId(),
         username=user_info.username,
@@ -95,18 +97,42 @@ async def create_user(db: DBSession, user_info: UserCreate) -> None:
         is_active=user_info.is_active,
         idm_data=user_info.idm_data,
         date_joined=datetime.now(timezone.utc),
-        last_login=None
+        last_login=None,
+        user_permissions=[Permission(codename=perm) for perm in default_permissions]
     )
 
     await db.client.users.insert_one(user_created.model_dump(by_alias=True))
+    return user_created
 
 
 async def update_user(db: DBSession, user_info: User) -> None:
     # Make sure the user_info is a User and not UserAll or similar
+    from wirecloud.commons.search import add_user_to_index
     user_info = User(**user_info.model_dump(include=User.model_fields.keys()))
 
     query = {"_id": ObjectId(user_info.id)}, {"$set": user_info.model_dump(by_alias=True, exclude={"id"})}
     await db.client.users.update_one(*query)
+    await add_user_to_index(user_info)
+
+
+async def update_user_with_all_info(db: DBSession, user: UserAll) -> None:
+    from wirecloud.commons.search import add_user_to_index
+    query = {"_id": ObjectId(user.id)}
+
+    data = user.model_dump(exclude={"id"}, by_alias=True)
+    await db.client.users.update_one(query, {"$set": data})
+    await add_user_to_index(user)
+
+
+async def delete_user(db: DBSession, user: User) -> None:
+    from wirecloud.commons.search import delete_user_from_index
+    await invalidate_all_user_tokens(db, user.id)
+    await remove_user_from_all_groups(db, user.id)
+
+    query = {"_id": ObjectId(user.id)}
+
+    await db.client.users.delete_one(query)
+    await delete_user_from_index(user)
 
 
 async def get_user_by_id(db: DBSession, user_id: Id) -> Optional[User]:
@@ -142,6 +168,9 @@ async def get_all_user_permissions(db: DBSession, user_id: Id) -> list[Permissio
     if individual_permissions is None:
         return []
 
+    for permission in individual_permissions.get("user_permissions"):
+        permission_codenames.add(permission.get("codename"))
+
     group_ids = individual_permissions.get("groups")
     for permission in individual_permissions.get("user_permissions"):
         permission_codenames.add(permission.get("codename"))
@@ -176,7 +205,7 @@ async def get_user_with_all_info(db: DBSession, user_id: Id) -> Optional[UserAll
         last_login=user.last_login,
         idm_data=user.idm_data,
         groups=user.groups,
-        permissions=await get_all_user_permissions(db, user.id)
+        permissions=user.user_permissions
     )
 
 
@@ -201,7 +230,7 @@ async def get_user_with_all_info_by_username(db: DBSession, username: str) -> Op
         last_login=user.last_login,
         idm_data=user.idm_data,
         groups=user.groups,
-        permissions=await get_all_user_permissions(db, user.id)
+        permissions=user.user_permissions
     )
 
 
@@ -306,6 +335,7 @@ async def remove_user_from_all_groups(db: DBSession, user_id: Id) -> None:
 
     await db.client.users.update_one(query, {"$set": {"groups": []}})
 
+
 async def set_login_date_for_user(db: DBSession, user_id: Id) -> None:
     query = {"_id": ObjectId(user_id)}, {"$set": {"last_login": datetime.now(timezone.utc)}}
     await db.client.users.update_one(*query)
@@ -375,34 +405,19 @@ async def get_all_users(db: DBSession):
     return [UserModel.model_validate(user) for user in users]
 
 
-async def get_all_parent_groups_from_child(db: DBSession, child_group_id: Id):
-    pipeline = [
-        {"$match": {"_id": ObjectId(child_group_id)}},
-        {
-            "$graphLookup": {
-                "from": "groups",
-                "startWith": "$parent",
-                "connectFromField": "parent",
-                "connectToField": "_id",
-                "as": "parents",
-                "depthField": "depth"
-            }
-        }
-    ]
-
-    cursor = await db.client.groups.aggregate(pipeline)
-    result = await cursor.to_list(length=1)
-
-    if not result:
+async def get_all_parent_groups_from_child(db: DBSession, child_group_id: Id) -> list[Group]:
+    child = await db.client.groups.find_one({"_id": child_group_id}, {"path": 1})
+    if not child or "path" not in child:
         return []
 
-    root = result[0]
+    parent_ids = child["path"][:-1]
+    if not parent_ids:
+        return []
 
-    groups = [GroupModel.model_validate(root)]
-    for parent in root.get("parents", []):
-        groups.append(GroupModel.model_validate(parent))
+    cursor = await db.client.groups.find({"_id": {"$in": parent_ids}})
+    parents = await cursor.to_list(None)
 
-    return groups
+    return [GroupModel.model_validate(parent) for parent in parents]
 
 
 async def get_all_user_groups(db: DBSession, user: UserAll) -> list[Group]:
@@ -413,32 +428,126 @@ async def get_all_user_groups(db: DBSession, user: UserAll) -> list[Group]:
     return groups
 
 
-async def get_top_group_organization(db: DBSession, group: Group) -> Group:
-    pipeline = [
-        {"$match": {"_id": ObjectId(group.id)}},
-        {
-            "$graphLookup": {
-                "from": "groups",
-                "startWith": "$parent",
-                "connectFromField": "parent",
-                "connectToField": "_id",
-                "as": "parents",
-                "depthField": "depth"
-            }
-        }
-    ]
+async def get_top_group_organization(db: DBSession, group: Group) -> Optional[Group]:
+    if not group.is_organization:
+        return None
 
-    cursor = await db.client.groups.aggregate(pipeline)
-    result = await cursor.to_list(length=1)
+    org_id = group.path[0]
 
-    if not result:
+    if org_id == group.id:
         return group
 
-    root = result[0]
+    return await get_group_by_id(db, org_id)
 
-    if not root.get("parents"):
-        return GroupModel.model_validate(root)
 
-    top_parent = max(root["parents"], key=lambda x: x.get("depth", 0))
+async def create_group_db(db: DBSession, group_info: GroupCreate) -> GroupModel:
+    # TODO: We should probably add some default permissions to groups as well
+    default_permissions = []
+    group_id = ObjectId()
+    group_created = GroupModel(
+        _id=group_id,
+        name=group_info.name,
+        codename=group_info.codename,
+        users=group_info.users,
+        group_permissions=[Permission(codename=perm) for perm in default_permissions],
+        is_organization=False,
+        path=[group_id]
+    )
 
-    return GroupModel.model_validate(top_parent)
+    await db.client.groups.insert_one(group_created.model_dump(by_alias=True))
+    return group_created
+
+
+async def add_group_to_users(db: DBSession, group_id: Id, users: list[Id]) -> None:
+    await db.client.users.update_many(
+        {"_id": {"$in": users}},
+        {"$addToSet": {"groups": group_id}}
+    )
+
+
+async def remove_group_to_users(db: DBSession, group_id: Id, users: list[Id]) -> None:
+    await db.client.users.update_many(
+        {"_id": {"$in": users}},
+        {"$pull": {"groups": group_id}}
+    )
+
+
+async def update_group(db: DBSession, group: Group) -> None:
+    from wirecloud.commons.search import add_group_to_index
+    query = {"_id": ObjectId(group.id)}
+
+    data = group.model_dump(by_alias=True)
+    await db.client.groups.update_one(query, {"$set": data})
+    await add_group_to_index(group)
+
+
+async def update_path_for_descendants(db: DBSession, group: Group) -> None:
+    group_id = ObjectId(group.id)
+    await db.client.groups.update_many(
+        {
+            "path": group_id,
+            "_id": {"$ne": group_id},
+        },
+        [
+            {
+                "$set": {
+                    "path": {
+                        "$filter": {
+                            "input": "$path",
+                            "as": "p",
+                            "cond": {"$ne": ["$$p", group_id]}
+                        }
+                    }
+                }
+            }
+        ]
+    )
+
+
+async def delete_group(db: DBSession, group: Group, skip_descendants: bool = False) -> None:
+    from wirecloud.commons.search import delete_group_from_index
+    await remove_group_to_users(db, group.id, group.users)
+
+    if not skip_descendants:
+        await update_path_for_descendants(db, group)
+
+    query_delete = {"_id": ObjectId(group.id)}
+    await db.client.groups.delete_one(query_delete)
+    await delete_group_from_index(group)
+
+
+async def create_organization_db(db: DBSession, org_info: OrganizationCreate) -> GroupModel:
+    # TODO: We should probably add some default permissions to organizations as well
+    default_permissions = []
+    org_id = ObjectId()
+    org_created = GroupModel(
+        _id=org_id,
+        name=org_info.name,
+        codename=org_info.codename,
+        users=org_info.users,
+        group_permissions=[Permission(codename=perm) for perm in default_permissions],
+        is_organization=True,
+        path=[org_id]
+    )
+
+    await db.client.groups.insert_one(org_created.model_dump(by_alias=True))
+    return org_created
+
+
+async def delete_organization(db: DBSession, organization: Group) -> None:
+    from wirecloud.commons.search import delete_group_from_index
+    groups = await db.client.groups.find({"path": organization.id}).to_list(None)
+
+    if not groups:
+        return
+
+    groups_ids = [group["_id"] for group in groups]
+    await db.client.groups.delete_many({"_id": {"$in": groups_ids}})
+    for group in groups:
+        await remove_group_to_users(db, group["_id"], group["users"])
+        await delete_group_from_index(GroupModel.model_validate(group))
+
+
+async def get_all_organization_groups(db: DBSession, organization_group: Group) -> list[Group]:
+    groups = await db.client.groups.find({"path": organization_group.id}).to_list(None)
+    return [GroupModel.model_validate(group) for group in groups]

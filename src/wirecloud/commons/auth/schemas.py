@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 from typing import Optional, Any
 from enum import Enum
 from datetime import datetime
@@ -65,7 +65,7 @@ class UserWithPassword(User, UserLogin):
 
 class UserAll(User):
     groups: list[Id] = Field(default=[])
-    permissions: list[Permission] = Field(default=[])
+    permissions: list[Permission] = Field(default=[], serialization_alias="user_permissions")
 
     def has_perm(self, codename: str) -> bool:
         for permission in self.permissions:
@@ -104,3 +104,53 @@ class UserToken(BaseModel):
 
 class SwitchUserRequest(BaseModel):
     username: str
+
+
+class UserUpdate(BaseModel):
+    username: str
+    email: str
+    first_name: str
+    last_name: str
+    is_staff: bool
+    is_active: bool
+    is_superuser: bool
+    permissions: Optional[list[str]] = None
+
+
+class GroupCreate(BaseModel):
+    name: str
+    codename: str
+    users: list[Id] = []
+
+
+class GroupUpdate(BaseModel):
+    name: str
+    codename: str
+    permissions: Optional[list[str]] = None
+    users: list[Id]
+
+    @field_serializer('users')
+    def serialize_users(self, users: list[Id]):
+        return [str(user_id) for user_id in users]
+
+
+OrganizationCreate = GroupCreate
+
+
+class OrganizationGroupData(BaseModel):
+    name: str
+    codename: str
+    users: list[Id]
+    path: list[Id]
+
+    @field_serializer('path')
+    def serialize_path(self, path: list[Id]):
+        return [str(group_id) for group_id in path]
+
+    @field_serializer('users')
+    def serialize_users(self, users: list[Id]):
+        return [str(user_id) for user_id in users]
+
+
+class OrganizationGroupUpdate(BaseModel):
+    parent_name: str

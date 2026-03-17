@@ -254,6 +254,8 @@ const get_scripts: (view: string) => string[] = (view: string): string[] => {
                 'js/wirecloud/ui/NewWorkspaceWindowMenu.js',
                 'js/wirecloud/ui/ParametrizeWindowMenu.js',
                 'js/wirecloud/ui/PreferencesWindowMenu.js',
+                'js/wirecloud/ui/AdminPanelWindowMenu.js',
+                'js/wirecloud/ui/UserManagementWindowMenu.js',
                 'js/wirecloud/ui/OperatorPreferencesWindowMenu.js',
                 'js/wirecloud/ui/PublishWorkspaceWindowMenu.js',
                 'js/wirecloud/ui/PublishResourceWindowMenu.js',

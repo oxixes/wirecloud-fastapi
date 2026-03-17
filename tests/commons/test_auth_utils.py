@@ -17,7 +17,6 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime, timedelta, timezone
-from types import SimpleNamespace
 
 import jwt
 from bson import ObjectId
@@ -226,6 +225,18 @@ async def test_get_user_and_session_wrappers(db_session, monkeypatch):
 async def test_check_password_fallback_branch(monkeypatch):
     monkeypatch.setattr(utils, "SUPPORTED_HASHES", ["unsupported_hash"])
     assert utils.check_password("x", "unsupported_hash$1$salt$abcd") is False
+
+
+async def test_hash_password_generates_checkable_pbkdf2_hash():
+    raw = "my-secret-password"
+    hashed = utils.hash_password(raw)
+
+    assert hashed.startswith("pbkdf2_sha256$")
+    parts = hashed.split("$")
+    assert len(parts) == 4
+    assert parts[2] == settings.PASSWORD_HASH_SALT
+    assert utils.check_password(raw, hashed) is True
+    assert utils.check_password("wrong-password", hashed) is False
 
 
 class _FakeAiohttpResponse:

@@ -1,5 +1,13 @@
 This is a list of defined user permissions:
+
+###############################
+    GENERAL PERMISSIONS
+###############################
 - SWITCH_USER: Allows the user to switch to another user. This will make the user gain all permissions of the switched user (and looses all permissions of the current user, except for this one).
+
+##############################
+    WORKSPACE PERMISSIONS
+##############################
 - WORKSPACE.CREATE: Allows the user to create a workspace.
 - WORKSPACE.VIEW: Allows the user to view all workspaces.
 - WORKSPACE.EDIT: Allows the user to edit workspaces owned by other users.
@@ -27,11 +35,35 @@ This is a list of defined user permissions:
 - WORKSPACE.WIRING.CREATE: Allows the user to create wirings in workspaces owned by other users.
 - WORKSPACE.WIRING.EDIT: Allows the user to edit wirings in workspaces owned by other users.
 - WORKSPACE.WIRING.DELETE: Allows the user to delete wirings in workspaces owned by other users.
+
+###############################
+    COMPONENT PERMISSIONS
+###############################
 - COMPONENT.INSTALL: Allows the user to install components.
 - COMPONENT.VIEW: Allows the user to view all components.
 - COMPONENT.UNINSTALL: Allows the user to uninstall one version of a component.
 - COMPONENT.DELETE: Allows the user to delete all versions of a component at once
+
+################################
+    MARKETPLACE PERMISSIONS
+################################
 - MARKETPLACE.CREATE: Allows the user to create a marketplace.
 - MARKETPLACE.VIEW: Allows the user to view all marketplaces.
 - MARKETPLACE.DELETE: Allows the user to delete marketplaces owned by other users.
 - MARKETPLACE.PUBLISH: Allows the user to publish marketplaces owned by other users.
+
+################################
+       AUTH PERMISSIONS
+################################
+- USER.CREATE: Allows the user to create a user.
+- USER.VIEW: Allows the user to view all users.
+- USER.EDIT: Allows the user to edit users.
+- USER.DELETE: Allows the user to delete users.
+- GROUP.CREATE: Allows the user to create a group.
+- GROUP.VIEW: Allows the user to view all groups.
+- GROUP.EDIT: Allows the user to edit groups.
+- GROUP.DELETE: Allows the user to delete groups.
+- ORGANIZATION.CREATE: Allows the user to create an organization.
+- ORGANIZATION.VIEW: Allows the user to view all organizations.
+- ORGANIZATION.EDIT: Allows the user to edit organizations.
+- ORGANIZATION.DELETE: Allows the user to delete organizations.

@@ -1,3 +1,5 @@
+@use "sass:meta";
+
 @font-face {
   font-family: 'Comfortaa';
   font-style: normal;
@@ -125,3 +127,6 @@ body {
     background: url("../images/logos/wc1-mini.png");
     background-size: 33px 20px;
 }
+
+@include meta.load-css("admin_panel");
+@include meta.load-css("user_management");
