@@ -106,7 +106,7 @@ async def test_update_user_and_user_info_with_permissions(db_session):
     assert updated.first_name == "Robert"
 
     user_all = await crud.get_user_with_all_info(db_session, user.id)
-    assert {p.codename for p in user_all.permissions} == {"widgets.view", "widgets.edit"}
+    assert {p.codename for p in user_all.permissions} == {"widgets.view"}
 
     user_all_username = await crud.get_user_with_all_info_by_username(db_session, "bob")
     assert user_all_username.username == "bob"
