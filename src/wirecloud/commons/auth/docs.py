@@ -120,14 +120,14 @@ create_user_collection_user_data_example = {
     "password": "strong_password_123"
 }
 
-# GET /api/admin/users/{user_username}
+# GET /api/admin/users/{username}
 get_user_entry_summary = "Get user details"
 get_user_entry_description = "Retrieve the details of a user by their username."
 get_user_entry_response_description = "User details retrieved"
 get_user_entry_auth_required_response_description = "Authentication required"
 get_user_entry_permission_denied_response_description = "Permission denied"
 get_user_entry_not_found_response_description = "User not found"
-get_user_entry_user_username_description = "The username of the user to retrieve"
+get_user_entry_username_description = "The username of the user to retrieve"
 get_user_entry_response_example = {
     "username": "john_doe",
     "email": "john@example.com",
@@ -139,7 +139,7 @@ get_user_entry_response_example = {
     "permissions": ["WORKSPACE.CREATE", "COMPONENT.INSTALL"]
 }
 
-# PUT /api/admin/users/{user_username}
+# PUT /api/admin/users/{username}
 update_user_entry_summary = "Update user details"
 update_user_entry_description = "Update the details of a user by their username."
 update_user_entry_response_description = "User details updated"
@@ -149,7 +149,7 @@ update_user_entry_not_found_response_description = "User not found"
 update_user_entry_not_acceptable_response_description = "Invalid request content type"
 update_user_entry_conflict_response_description = "A user with the given username already exists"
 update_user_entry_bad_request_response_description = "Missing or invalid data was provided"
-update_user_entry_user_username_description = "The username of the user to update"
+update_user_entry_username_description = "The username of the user to update"
 update_user_entry_user_data_description = "User update data"
 update_user_entry_user_data_example = {
     "username": "john_doe",
@@ -162,14 +162,14 @@ update_user_entry_user_data_example = {
     "permissions": ["WORKSPACE.CREATE", "COMPONENT.INSTALL"]
 }
 
-# DELETE /api/admin/users/{user_username}
+# DELETE /api/admin/users/{username}
 delete_user_entry_summary = "Delete a user"
 delete_user_entry_description = "Delete a user by their username."
 delete_user_entry_response_description = "User deleted"
 delete_user_entry_auth_required_response_description = "Authentication required"
 delete_user_entry_permission_denied_response_description = "Permission denied"
 delete_user_entry_not_found_response_description = "User not found"
-delete_user_entry_user_username_description = "The username of the user to delete"
+delete_user_entry_username_description = "The username of the user to delete"
 
 # POST /api/admin/groups
 create_group_collection_summary = "Create a new group"
@@ -187,14 +187,14 @@ create_group_collection_group_data_example = {
     "users": ["507f1f77bcf86cd799439012", "507f1f77bcf86cd799439013"]
 }
 
-# GET /api/admin/groups/{group_name}
+# GET /api/admin/groups/{name}
 get_group_entry_summary = "Get group details"
 get_group_entry_description = "Retrieve the details of a group by its name."
 get_group_entry_response_description = "Group details retrieved"
 get_group_entry_auth_required_response_description = "Authentication required"
 get_group_entry_permission_denied_response_description = "Permission denied"
 get_group_entry_not_found_response_description = "Group not found"
-get_group_entry_group_name_description = "The name of the group to retrieve"
+get_group_entry_name_description = "The name of the group to retrieve"
 get_group_entry_response_example = {
     "name": "Editors",
     "codename": "editors",
@@ -202,7 +202,7 @@ get_group_entry_response_example = {
     "users": ["507f1f77bcf86cd799439012", "507f1f77bcf86cd799439013"]
 }
 
-# PUT /api/admin/groups/{group_name}
+# PUT /api/admin/groups/{name}
 update_group_entry_summary = "Update group details"
 update_group_entry_description = "Update the details of a group by its name."
 update_group_entry_response_description = "Group details updated"
@@ -212,7 +212,7 @@ update_group_entry_not_found_response_description = "Group not found"
 update_group_entry_not_acceptable_response_description = "Invalid request content type"
 update_group_entry_conflict_response_description = "A group with the given name already exists"
 update_group_entry_bad_request_response_description = "Missing or invalid data was provided"
-update_group_entry_group_name_description = "The name of the group to update"
+update_group_entry_name_description = "The name of the group to update"
 update_group_entry_group_data_description = "Group update data"
 update_group_entry_group_data_example = {
     "name": "Editors",
@@ -221,14 +221,14 @@ update_group_entry_group_data_example = {
     "users": ["507f1f77bcf86cd799439012", "507f1f77bcf86cd799439013"]
 }
 
-# DELETE /api/admin/groups/{group_name}
+# DELETE /api/admin/groups/{name}
 delete_group_entry_summary = "Delete a group"
 delete_group_entry_description = "Delete a group by its name."
 delete_group_entry_response_description = "Group deleted"
 delete_group_entry_auth_required_response_description = "Authentication required"
 delete_group_entry_permission_denied_response_description = "Permission denied"
 delete_group_entry_not_found_response_description = "Group not found"
-delete_group_entry_group_name_description = "The name of the group to delete"
+delete_group_entry_name_description = "The name of the group to delete"
 
 # POST /api/admin/organizations
 create_organization_collection_summary = "Create a new organization"
@@ -246,14 +246,14 @@ create_organization_collection_organization_data_example = {
     "users": ["507f1f77bcf86cd799439012", "507f1f77bcf86cd799439013"]
 }
 
-# GET /api/admin/organizations/{organization_name}
+# GET /api/admin/organizations/{name}
 get_organization_entry_summary = "Get organization details"
 get_organization_entry_description = "Retrieve the details of an organization by its name."
 get_organization_entry_response_description = "Organization details retrieved"
 get_organization_entry_auth_required_response_description = "Authentication required"
 get_organization_entry_permission_denied_response_description = "Permission denied"
 get_organization_entry_not_found_response_description = "Organization not found"
-get_organization_entry_organization_name_description = "The name of the organization to retrieve"
+get_organization_entry_name_description = "The name of the organization to retrieve"
 get_organization_entry_response_example = [
     {
          "name": "Best Company",
@@ -269,16 +269,16 @@ get_organization_entry_response_example = [
     }
 ]
 
-# DELETE /api/admin/organizations/{organization_name}
+# DELETE /api/admin/organizations/{name}
 delete_organization_entry_summary = "Delete an organization"
 delete_organization_entry_description = "Delete an organization by its name."
 delete_organization_entry_response_description = "Organization deleted"
 delete_organization_entry_auth_required_response_description = "Authentication required"
 delete_organization_entry_permission_denied_response_description = "Permission denied"
 delete_organization_entry_not_found_response_description = "Organization not found"
-delete_organization_entry_organization_name_description = "The name of the organization to delete"
+delete_organization_entry_name_description = "The name of the organization to delete"
 
-# PUT /api/admin/organizations/groups/{group_name}
+# PUT /api/admin/organizations/groups/{name}
 update_organization_group_entry_summary = "Update organization group details"
 update_organization_group_entry_description = "Update the parent of a group by its name."
 update_organization_group_entry_response_description = "Organization group parent updated"
@@ -287,7 +287,7 @@ update_organization_group_entry_permission_denied_response_description = "Permis
 update_organization_group_entry_not_found_response_description = "Group not found"
 update_organization_group_entry_not_acceptable_response_description = "Invalid request content type"
 update_organization_group_entry_bad_request_response_description = "Missing or invalid data was provided"
-update_organization_group_entry_group_name_description = "The name of the group to update"
+update_organization_group_entry_name_description = "The name of the group to update"
 update_organization_group_entry_new_parent_description = "Organization group update data"
 update_organization_group_entry_new_parent_example = {
     "parent_name": "Editors"

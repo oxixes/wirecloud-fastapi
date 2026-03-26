@@ -234,7 +234,6 @@ async def test_hash_password_generates_checkable_pbkdf2_hash():
     assert hashed.startswith("pbkdf2_sha256$")
     parts = hashed.split("$")
     assert len(parts) == 4
-    assert parts[2] == settings.PASSWORD_HASH_SALT
     assert utils.check_password(raw, hashed) is True
     assert utils.check_password("wrong-password", hashed) is False
 

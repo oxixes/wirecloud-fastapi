@@ -18,6 +18,7 @@
 
 from datetime import datetime, timezone
 from types import SimpleNamespace
+import sys
 
 import pytest
 from bson import ObjectId
@@ -25,6 +26,22 @@ from fastapi.responses import Response
 from httpx import ASGITransport, AsyncClient
 
 from src import settings
+
+
+async def _search_noop(*_args, **_kwargs):
+    return None
+
+
+sys.modules.setdefault(
+    "wirecloud.commons.search",
+    SimpleNamespace(
+        add_user_to_index=_search_noop,
+        add_group_to_index=_search_noop,
+        delete_user_from_index=_search_noop,
+        delete_group_from_index=_search_noop,
+    ),
+)
+
 from wirecloud.commons.auth import routes, utils
 from wirecloud.commons.auth.models import Group
 from wirecloud.commons.auth.schemas import Permission, Session, UserAll, UserTokenType, UserWithPassword
@@ -563,7 +580,7 @@ async def test_admin_user_group_organization_crud_endpoints_http(app_http_client
 
     existing_user = _user_all("existing-user", perms=[Permission(codename="USER.VIEW")])
 
-    async def _get_user_with_all_info_by_username(_db, _username):
+    async def _get_user_with_all_info_by_username(_db, _username, **_kwargs):
         return existing_user
 
     monkeypatch.setattr(routes, "get_user_with_all_info_by_username", _get_user_with_all_info_by_username)
@@ -574,7 +591,7 @@ async def test_admin_user_group_organization_crud_endpoints_http(app_http_client
     updated_user = _user_all("existing-user")
     update_user_calls = _CallRecorder()
 
-    async def _get_user_for_update(_db, _username):
+    async def _get_user_for_update(_db, _username, **_kwargs):
         return updated_user
 
     monkeypatch.setattr(routes, "get_user_with_all_info_by_username", _get_user_for_update)
@@ -837,7 +854,7 @@ async def test_admin_user_endpoints_all_if_branches_http(app_http_client, monkey
     # create_user: success
     index_calls = _CallRecorder()
 
-    async def _none_user(_db, _username):
+    async def _none_user(_db, _username, **_kwargs):
         return None
 
     async def _create_user_db(_db, _user_data):
@@ -873,7 +890,7 @@ async def test_admin_user_endpoints_all_if_branches_http(app_http_client, monkey
     assert response.status_code == 404
 
     # get_user_entry: success
-    async def _user_for_get(_db, _username):
+    async def _user_for_get(_db, _username, **_kwargs):
         return _user_all("target", perms=[Permission(codename="USER.VIEW")])
 
     monkeypatch.setattr(routes, "get_user_with_all_info_by_username", _user_for_get)
@@ -914,7 +931,7 @@ async def test_admin_user_endpoints_all_if_branches_http(app_http_client, monkey
     # update_user_entry: empty username
     editable = _user_all("target")
 
-    async def _editable_user(_db, _username):
+    async def _editable_user(_db, _username, **_kwargs):
         return editable
 
     monkeypatch.setattr(routes, "get_user_with_all_info_by_username", _editable_user)

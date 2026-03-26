@@ -106,7 +106,7 @@ async def test_update_user_and_user_info_with_permissions(db_session):
     assert updated.first_name == "Robert"
 
     user_all = await crud.get_user_with_all_info(db_session, user.id)
-    assert {p.codename for p in user_all.permissions} == {"widgets.view"}
+    assert {p.codename for p in user_all.permissions} == {"widgets.view", "widgets.edit"}
 
     user_all_username = await crud.get_user_with_all_info_by_username(db_session, "bob")
     assert user_all_username.username == "bob"
@@ -196,13 +196,15 @@ async def test_get_all_groups_and_users(db_session):
     assert any(user.username == "eve" for user in users)
 
 
-def _make_groups(find_one_return, find_list):
-    cursor = MagicMock()
-    cursor.to_list = AsyncMock(return_value=find_list)
-    groups = MagicMock()
-    groups.find_one = AsyncMock(return_value=find_one_return)
-    groups.find = AsyncMock(return_value=cursor)
-    return groups
+def _make_groups(find_one_return=None, find_list=None):
+    mock_cursor = MagicMock()
+    mock_cursor.to_list = AsyncMock(return_value=find_list or [])
+
+    mock_groups = SimpleNamespace()
+    mock_groups.find_one = AsyncMock(return_value=find_one_return)
+    mock_groups.find = MagicMock(return_value=mock_cursor)
+
+    return mock_groups
 
 
 async def test_graph_lookup_helpers(monkeypatch, db_session):
@@ -273,6 +275,41 @@ async def test_get_all_user_groups(monkeypatch, db_session):
 
     groups = await crud.get_all_user_groups(db_session, user)
     assert len(groups) == 2
+
+
+async def test_get_all_user_groups_with_parent_child_groups_and_two_users(db_session):
+    await db_session.client.users.delete_many({})
+    await db_session.client.groups.delete_many({})
+
+    user_g1 = await _seed_user(db_session, "user_g1")
+    user_g2 = await _seed_user(db_session, "user_g2")
+
+    g1 = ObjectId()
+    g2 = ObjectId()
+
+    await db_session.client.groups.insert_many([
+        {"_id": g1, "name": "G1", "codename": "g1", "users": [ObjectId(user_g1.id)], "path": [g1], "group_permissions": []},
+        {"_id": g2, "name": "G2", "codename": "g2", "users": [ObjectId(user_g2.id)], "path": [g1, g2], "group_permissions": []},
+    ])
+
+    await db_session.client.users.update_one(
+        {"_id": ObjectId(user_g1.id)},
+        {"$set": {"groups": [g1]}}
+    )
+    await db_session.client.users.update_one(
+        {"_id": ObjectId(user_g2.id)},
+        {"$set": {"groups": [g2]}}
+    )
+
+    user_g1_all = await crud.get_user_with_all_info(db_session, user_g1.id)
+    user_g2_all = await crud.get_user_with_all_info(db_session, user_g2.id)
+
+    groups_user_g1 = await crud.get_all_user_groups(db_session, user_g1_all)
+    groups_user_g2 = await crud.get_all_user_groups(db_session, user_g2_all)
+
+    assert {str(group.id) for group in groups_user_g1} == {str(g1)}
+    assert {str(group.id) for group in groups_user_g2} == {str(g1), str(g2)}
+    assert len(groups_user_g2) == 2
 
 
 async def test_update_user_with_all_info_updates_db_and_index(monkeypatch, db_session):

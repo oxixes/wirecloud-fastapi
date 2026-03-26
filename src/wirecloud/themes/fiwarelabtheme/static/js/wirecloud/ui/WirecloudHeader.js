@@ -129,7 +129,8 @@
                 user_menu.append(item.addIconClass('fas fa-exchange-alt'));
 
                 item = new StyledElements.MenuItem(utils.gettext('Admin Panel'), function () {
-                    alert('Admin Panel clicked!');
+                    var dialog = new Wirecloud.ui.AdminPanelWindowMenu();
+                    dialog.show();
                 });
                 user_menu.append(item.addIconClass('fas fa-cogs'));
 

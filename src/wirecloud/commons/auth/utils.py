@@ -18,6 +18,7 @@
 
 import aiohttp
 import jwt
+import secrets
 from urllib.parse import urlencode
 from bson import ObjectId
 from typing import Union, Optional
@@ -194,10 +195,11 @@ def check_password(password: str, password_hash: str) -> bool:
 
 
 def hash_password(password: str) -> str:
-    salt = settings.PASSWORD_HASH_SALT
+    algorithm = 'pbkdf2_sha256'
+    salt = secrets.token_hex(16)
     iterations = 150000
     hashed_password = pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('ascii'), iterations)
-    return f'pbkdf2_sha256${iterations}${salt}${b64encode(hashed_password).decode("ascii")}'
+    return f'{algorithm}${iterations}${salt}${b64encode(hashed_password).decode("ascii")}'
 
 
 async def make_oidc_provider_request(endpoint: str, data: Optional[dict] = None, auth: Optional[str] = None,

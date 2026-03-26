@@ -84,7 +84,7 @@ async def get_token_idm_session(db: DBSession, token_id: ObjectId) -> Optional[s
 
 
 async def create_user_db(db: DBSession, user_info: UserCreate) -> UserModel:
-    default_permissions = ["WORKSPACE.CREATE", "COMPONENT.INSTALL", "COMPONENT.UNINSTALL", "COMPONENT.DELETE", "MARKETPLACE.CREATE"]
+    default_permissions = ["WORKSPACE.CREATE", "COMPONENT.INSTALL", "COMPONENT.UNINSTALL", "MARKETPLACE.CREATE"]
     user_created = UserModel(
         _id=ObjectId(),
         username=user_info.username,
@@ -184,7 +184,7 @@ async def get_all_user_permissions(db: DBSession, user_id: Id) -> list[Permissio
     return [Permission(codename=codename) for codename in permission_codenames]
 
 
-async def get_user_with_all_info(db: DBSession, user_id: Id) -> Optional[UserAll]:
+async def get_user_with_all_info(db: DBSession, user_id: Id, only_user_permissions: bool = False) -> Optional[UserAll]:
     query = {"_id": ObjectId(user_id)}
     user_data = await db.client.users.find_one(query)
 
@@ -205,11 +205,11 @@ async def get_user_with_all_info(db: DBSession, user_id: Id) -> Optional[UserAll
         last_login=user.last_login,
         idm_data=user.idm_data,
         groups=user.groups,
-        permissions=user.user_permissions
+        permissions=user.user_permissions if only_user_permissions else await get_all_user_permissions(db, user.id)
     )
 
 
-async def get_user_with_all_info_by_username(db: DBSession, username: str) -> Optional[UserAll]:
+async def get_user_with_all_info_by_username(db: DBSession, username: str, only_user_permissions: bool = False) -> Optional[UserAll]:
     query = {"username": username}
     user_data = await db.client.users.find_one(query)
 
@@ -230,7 +230,7 @@ async def get_user_with_all_info_by_username(db: DBSession, username: str) -> Op
         last_login=user.last_login,
         idm_data=user.idm_data,
         groups=user.groups,
-        permissions=user.user_permissions
+        permissions=user.user_permissions if only_user_permissions else await get_all_user_permissions(db, user.id)
     )
 
 
@@ -410,11 +410,9 @@ async def get_all_parent_groups_from_child(db: DBSession, child_group_id: Id) ->
     if not child or "path" not in child:
         return []
 
-    parent_ids = child["path"][:-1]
-    if not parent_ids:
-        return []
+    parent_ids = child["path"]
 
-    cursor = await db.client.groups.find({"_id": {"$in": parent_ids}})
+    cursor = db.client.groups.find({"_id": {"$in": parent_ids}})
     parents = await cursor.to_list(None)
 
     return [GroupModel.model_validate(parent) for parent in parents]
@@ -441,15 +439,13 @@ async def get_top_group_organization(db: DBSession, group: Group) -> Optional[Gr
 
 
 async def create_group_db(db: DBSession, group_info: GroupCreate) -> GroupModel:
-    # TODO: We should probably add some default permissions to groups as well
-    default_permissions = []
     group_id = ObjectId()
     group_created = GroupModel(
         _id=group_id,
         name=group_info.name,
         codename=group_info.codename,
         users=group_info.users,
-        group_permissions=[Permission(codename=perm) for perm in default_permissions],
+        group_permissions=[],
         is_organization=False,
         path=[group_id]
     )
@@ -517,15 +513,13 @@ async def delete_group(db: DBSession, group: Group, skip_descendants: bool = Fal
 
 
 async def create_organization_db(db: DBSession, org_info: OrganizationCreate) -> GroupModel:
-    # TODO: We should probably add some default permissions to organizations as well
-    default_permissions = []
     org_id = ObjectId()
     org_created = GroupModel(
         _id=org_id,
         name=org_info.name,
         codename=org_info.codename,
         users=org_info.users,
-        group_permissions=[Permission(codename=perm) for perm in default_permissions],
+        group_permissions=[],
         is_organization=True,
         path=[org_id]
     )
