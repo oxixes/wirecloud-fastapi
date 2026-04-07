@@ -23,7 +23,7 @@ from elasticsearch import AsyncElasticsearch
 from elasticsearch.helpers import async_bulk
 from pydantic import BaseModel
 
-from src import settings
+from wirecloud import settings
 from wirecloud.catalogue.search import ResourceOutResponse, RESOURCES_INDEX
 from wirecloud.commons.auth.crud import get_all_users, get_all_groups
 from wirecloud.commons.auth.models import Group

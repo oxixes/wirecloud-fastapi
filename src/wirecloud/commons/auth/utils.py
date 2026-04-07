@@ -27,7 +27,7 @@ from base64 import b64decode
 from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
-from src import settings
+from wirecloud import settings
 from wirecloud.database import DBDep, Id
 from wirecloud.commons.auth.schemas import Session, UserAll
 from wirecloud.commons.auth.crud import is_token_valid, get_user_with_all_info

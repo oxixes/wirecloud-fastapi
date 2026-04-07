@@ -1,16 +1,85 @@
-# TODO
-
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "wirecloud"
 version = "2.0.0"
-dependencies = []
+description = "Wirecloud server backend implemented with FastAPI."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "AGPL-3.0-or-later"}
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pymongo",
+    "python-jose[cryptography]",
+    "passlib[bcrypt]",
+    "python-multipart",
+    "aiocache",
+    "aiofiles",
+    "httpx",
+    "elasticsearch",
+    "orjson",
+    "lxml",
+    "markdown",
+    "user-agents",
+    "PyJWT",
+    "aiohttp",
+    "jinja2",
+    "rdflib",
+    "pycryptodome",
+    "requests",
+    "jsonpatch",
+    "Babel>=2.12.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-mock",
+    "pytest-cov",
+    "mongomock-motor",
+    "httpx",
+    "asgi-lifespan",
+]
+migration = [
+    "pymysql>=1.1.0",
+    "psycopg2-binary>=2.9.0",
+    "aiohttp>=3.9.0",
+]
+
+[tool.setuptools]
+include-package-data = true
+py-modules = ["settings", "manage", "generate_webpack_settings"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+wirecloud = [
+    "dist/**/*",
+    "static/**/*",
+    "templates/**/*",
+    "locale/**/*",
+    "themes/**/*",
+    "webpack/**/*",
+    "**/*.json",
+    "**/*.yaml",
+    "**/*.yml",
+    "**/*.xml",
+    "**/*.xsd",
+    "**/*.html",
+    "**/*.css",
+    "**/*.scss",
+    "**/*.js",
+    "**/*.ts",
+    "**/*.txt",
+    "**/*.po",
+    "**/*.mo",
+    "**/*.wgt",
+]
 
 [tool.pytest.ini_options]
 # Discover tests anywhere in the project
@@ -61,4 +130,3 @@ directory = "htmlcov"
 
 [tool.coverage.xml]
 output = "coverage.xml"
-

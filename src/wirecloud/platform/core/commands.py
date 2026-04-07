@@ -177,7 +177,7 @@ def _process_po_file(po_file_path: Path, extracted_messages: dict, lang_code: st
 
 
 def gentranslations_cmd(args: argparse.Namespace) -> None:
-    from src import settings
+    import settings
 
     # Get the base source directory
     src_path = Path(__file__).parent.parent.parent.parent
@@ -325,7 +325,7 @@ def gentranslations_cmd(args: argparse.Namespace) -> None:
 def compiletranslations_cmd(args: argparse.Namespace) -> None:
     from babel.messages.mofile import write_mo
     from babel.messages.pofile import read_po
-    from src import settings
+    import settings
 
     # Get the base source directory
     src_path = Path(__file__).parent.parent.parent.parent

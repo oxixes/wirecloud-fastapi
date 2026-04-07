@@ -536,7 +536,7 @@ async def _migrate_catalogue_resources(
     from wirecloud.catalogue.crud import create_catalogue_resource
     from wirecloud.catalogue.schemas import CatalogueResourceCreate, CatalogueResourceType
     from wirecloud.commons.auth.crud import get_user_by_id
-    from src import settings
+    import settings
 
     resource_id_mapping = {}  # old_id -> new_id
 

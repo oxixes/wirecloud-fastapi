@@ -24,7 +24,7 @@ from starlette.datastructures import Headers, QueryParams
 from starlette.requests import cookie_parser
 
 from typing import Optional
-from src import settings
+from wirecloud import settings
 
 DEFAULT_LANGUAGE = getattr(settings, "DEFAULT_LANGUAGE", "en")
 AVAILABLE_LANGUAGES = [lang[0] for lang in settings.LANGUAGES]

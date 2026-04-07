@@ -23,7 +23,7 @@ from urllib.parse import quote_plus
 import os
 import jinja2
 
-from src import settings
+from wirecloud import settings
 from wirecloud.commons.auth.schemas import UserAll
 from wirecloud.commons.auth.utils import UserDepNoCSRF
 from wirecloud.commons.templates.tags import get_wirecloud_bootstrap, get_translation, get_static_path, \

@@ -32,7 +32,7 @@ import os
 
 from lxml.etree import _ElementTree, _Element
 
-from src import settings
+from wirecloud import settings
 from wirecloud.settings import cache
 from wirecloud.catalogue.crud import get_catalogue_resources_with_regex, get_catalogue_resource_with_xhtml, \
     save_catalogue_resource_xhtml

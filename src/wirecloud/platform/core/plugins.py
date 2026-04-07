@@ -26,7 +26,7 @@ from typing import Any, Optional, Callable
 from fastapi import FastAPI, Request
 
 import wirecloud.platform as platform
-from src import settings
+from wirecloud import settings
 from wirecloud.catalogue.crud import get_catalogue_resource
 from wirecloud.commons.auth.crud import get_user_groups
 from wirecloud.commons.utils.http import get_absolute_reverse_url
@@ -574,7 +574,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
         return extensions
 
     def get_proxy_processors(self) -> tuple[str, ...]:
-        return ('src.wirecloud.proxy.processors.SecureDataProcessor',)
+        return ('wirecloud.proxy.processors.SecureDataProcessor',)
 
     def get_openapi_extra_schemas(self) -> dict[str, dict[str, Any]]:
         return {

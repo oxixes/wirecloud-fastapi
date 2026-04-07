@@ -1,0 +1,44 @@
+services:
+  wirecloud:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: wirecloud-fastapi:latest
+    container_name: wirecloud
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      WIRECLOUD_DB_HOST: mongodb
+      WIRECLOUD_ES_HOST: elasticsearch
+      WIRECLOUD_BASEDIR: /var/lib/wirecloud
+    depends_on:
+      - mongodb
+      - elasticsearch
+    ports:
+      - "${WIRECLOUD_PORT:-8000}:8000"
+    volumes:
+      - wirecloud_data:/var/lib/wirecloud
+
+  mongodb:
+    image: mongo:7
+    container_name: wirecloud-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: ${WIRECLOUD_DB_NAME:-wirecloud}
+    volumes:
+      - mongo_data:/data/db
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: wirecloud-elasticsearch
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+volumes:
+  wirecloud_data:
+  mongo_data:
+  es_data:

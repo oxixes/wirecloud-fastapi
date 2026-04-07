@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from src import settings
+from wirecloud import settings
 from wirecloud.platform.plugins import URLTemplate, get_idm_get_authorization_url_functions
 
 patterns: dict[str, URLTemplate] = {
