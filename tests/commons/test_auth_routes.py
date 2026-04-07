@@ -24,7 +24,7 @@ from bson import ObjectId
 from fastapi.responses import Response
 from httpx import ASGITransport, AsyncClient
 
-from src import settings
+from wirecloud import settings
 from wirecloud.commons.auth import routes, utils
 from wirecloud.commons.auth.schemas import Permission, Session, UserAll, UserTokenType, UserWithPassword
 from wirecloud.database import Id

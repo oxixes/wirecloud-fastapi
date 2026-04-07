@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from bson import ObjectId
 
-from src import settings
+from wirecloud import settings
 from wirecloud.commons.auth.schemas import UserAll
 from wirecloud.database import Id
 from wirecloud.fiware import plugins
@@ -146,7 +146,7 @@ async def test_plugin_accessors_and_context_paths(monkeypatch):
     assert constants2["FIWARE_OFFICIAL_PORTAL"] is True
     assert constants2["FIWARE_IDM_SERVER"] == "https://idm.example.org"
 
-    assert plugin.get_proxy_processors() == ("src.wirecloud.fiware.proxy.IDMTokenProcessor",)
+    assert plugin.get_proxy_processors() == ("wirecloud.fiware.proxy.IDMTokenProcessor",)
     ctx2 = plugin.get_template_context_processors(SimpleNamespace())
     assert ctx2["FIWARE_IDM_SERVER"] == "https://idm.example.org"
 

@@ -22,6 +22,16 @@ class _FakeTemplates:
     def TemplateResponse(self, template_name, context):
         return _FakeTemplateResponse(template_name, context)
 
+    def get_template(self, template_name):
+        class _Template:
+            def __init__(self, name):
+                self._name = name
+
+            def render(self, context):
+                return _FakeTemplateResponse(self._name, context).body.decode("utf-8")
+
+        return _Template(template_name)
+
 
 class _FakeTranslations:
     def __init__(self, catalog):
@@ -86,9 +96,9 @@ def test_get_javascript_catalogue_with_translations(monkeypatch):
     base = SimpleNamespace(__file__="/tmp/theme/base.py", parent=None)
 
     def _import_module(name):
-        if name == "src.wirecloud.themes.defaulttheme":
+        if name == "wirecloud.themes.defaulttheme":
             return child
-        if name == "src.wirecloud.themes.base":
+        if name == "wirecloud.themes.base":
             return base
         raise ModuleNotFoundError(name)
 
@@ -129,7 +139,7 @@ def test_get_javascript_catalogue_theme_parent_and_plugin_errors(monkeypatch):
     child = SimpleNamespace(__file__="/tmp/theme/child.py", parent="brokenparent")
 
     def _import_module(name):
-        if name == "src.wirecloud.themes.defaulttheme":
+        if name == "wirecloud.themes.defaulttheme":
             return child
         raise ModuleNotFoundError(name)
 
@@ -168,9 +178,9 @@ def test_get_javascript_catalogue_theme_parent_continue_branch(monkeypatch):
     base = SimpleNamespace(__file__="/tmp/themebase/base.py", parent=None)
 
     def _import_module(name):
-        if name == "src.wirecloud.themes.defaulttheme":
+        if name == "wirecloud.themes.defaulttheme":
             return child
-        if name == "src.wirecloud.themes.base":
+        if name == "wirecloud.themes.base":
             return base
         raise ModuleNotFoundError(name)
 

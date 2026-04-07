@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import pytest
 from bson import ObjectId
 
-from src import settings
+from wirecloud import settings
 from wirecloud.commons.auth.schemas import UserAll
 from wirecloud.database import Id
 from wirecloud.fiware import openstack_token_manager as otm

@@ -112,7 +112,7 @@ async def test_plugin_init_and_simple_accessors(monkeypatch):
     plugins.IDM_SUPPORT_ENABLED = True
     monkeypatch.setattr(plugins.settings, "OID_CONNECT_PLUGIN", "keycloak")
     monkeypatch.setattr(plugins.settings, "OID_CONNECT_DATA", {"check_session_iframe": "https://kc/iframe"}, raising=False)
-    assert plugin.get_proxy_processors() == ("src.wirecloud.keycloak.proxy.KeycloakTokenProcessor",)
+    assert plugin.get_proxy_processors() == ("wirecloud.keycloak.proxy.KeycloakTokenProcessor",)
     endpoints = plugin.get_ajax_endpoints("classic", None)
     assert len(endpoints) == 1
     assert endpoints[0].id == "KEYCLOAK_LOGIN_STATUS_IFRAME"
