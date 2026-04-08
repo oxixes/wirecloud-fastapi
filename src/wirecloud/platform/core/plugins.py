@@ -28,7 +28,7 @@ from fastapi import FastAPI, Request
 import wirecloud.platform as platform
 from wirecloud import settings
 from wirecloud.catalogue.crud import get_catalogue_resource
-from wirecloud.commons.auth.crud import get_user_groups
+from wirecloud.commons.auth.crud import get_user_groups, get_all_user_permissions
 from wirecloud.commons.utils.http import get_absolute_reverse_url
 from wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version
 from wirecloud.commons.utils.wgt import WgtFile
@@ -209,6 +209,10 @@ class WirecloudCorePlugin(WirecloudPlugin):
                 label=_('Groups'),
                 description=_('List of groups the user belongs to'),
             ),
+            'permissions': BaseContextKey(
+                label=_('Permissions'),
+                description=_('List of permissions the user has'),
+            ),
             'mode': BaseContextKey(
                 label=_('Mode'),
                 description=_('Rendering mode used by the platform (available modes: classic, smartphone and embedded)'),
@@ -247,11 +251,13 @@ class WirecloudCorePlugin(WirecloudPlugin):
             avatar = 'https://www.gravatar.com/avatar/' + md5(
                 user.email.strip().lower().encode('utf8')).hexdigest() + '?s=25'
             groups = tuple([group.name for group in await get_user_groups(db, user.id)])
+            permissions = [p.codename for p in await get_all_user_permissions(db, user.id)]
         else:
             username = 'anonymous'
             fullname = 'Anonymous'
             avatar = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?s=25'
             groups = ()
+            permissions = () # TODO Maybe specify anonymous user permissions?
 
         return {
             'language': request.state.lang if request else None,
@@ -263,7 +269,8 @@ class WirecloudCorePlugin(WirecloudPlugin):
             'isstaff': user.is_staff if user else False,
             'issuperuser': user.is_superuser if user else False,
             'groups': groups,
-            # 'organizations': tuple(user.groups.filter(organization__isnull=False).values_list('name', flat=True)),
+            'permissions': permissions,
+            # 'organizations': tuple(user.groups.filter(organization__isnull=False).values_list('name', flat=True)), # TODO
             'mode': get_current_view(request) if request else None,
             'realuser': session.real_user if session else None,
             'theme': get_current_theme(request) if request else None,
