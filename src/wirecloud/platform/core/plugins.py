@@ -21,6 +21,7 @@ import logging
 from argparse import _SubParsersAction
 from urllib.parse import quote_plus
 import orjson as json
+from bson.errors import InvalidId
 from hashlib import sha1, md5
 from typing import Any, Optional, Callable
 from fastapi import FastAPI, Request
@@ -251,7 +252,10 @@ class WirecloudCorePlugin(WirecloudPlugin):
             avatar = 'https://www.gravatar.com/avatar/' + md5(
                 user.email.strip().lower().encode('utf8')).hexdigest() + '?s=25'
             groups = tuple([group.name for group in await get_user_groups(db, user.id)])
-            permissions = [p.codename for p in await get_all_user_permissions(db, user.id)]
+            try:
+                permissions = [p.codename for p in await get_all_user_permissions(db, user.id)]
+            except InvalidId:
+                permissions = []
         else:
             username = 'anonymous'
             fullname = 'Anonymous'
