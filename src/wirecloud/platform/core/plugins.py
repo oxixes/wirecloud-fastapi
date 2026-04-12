@@ -30,6 +30,7 @@ import wirecloud.platform as platform
 from wirecloud import settings
 from wirecloud.catalogue.crud import get_catalogue_resource
 from wirecloud.commons.auth.crud import get_user_groups, get_all_user_permissions
+from wirecloud.commons.auth.routes import admin_router
 from wirecloud.commons.utils.http import get_absolute_reverse_url
 from wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version
 from wirecloud.commons.utils.wgt import WgtFile

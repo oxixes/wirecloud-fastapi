@@ -80,7 +80,7 @@ async def test_get_user_none_branches(db_session):
     assert await crud.get_all_user_permissions(db_session, unknown_id) == []
 
 
-async def test_update_user_and_user_info_with_permissions(db_session):
+async def test_update_user_and_user_info_with_permissions(monkeypatch, db_session):
     user = await _seed_user(db_session, "bob")
 
     gid = ObjectId()
@@ -98,6 +98,9 @@ async def test_update_user_and_user_info_with_permissions(db_session):
         {"_id": ObjectId(user.id)},
         {"$set": {"groups": [gid], "user_permissions": [{"codename": "widgets.view"}]}}
     )
+
+    add_user_to_index = AsyncMock()
+    monkeypatch.setitem(sys.modules, "wirecloud.commons.search", SimpleNamespace(add_user_to_index=add_user_to_index))
 
     user.first_name = "Robert"
     await crud.update_user(db_session, user)
