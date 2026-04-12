@@ -20,7 +20,7 @@ import asyncio
 from typing import Union
 from urllib.parse import quote_plus, urlparse
 
-from src import settings
+from wirecloud import settings
 from wirecloud.commons.auth.crud import get_user_with_all_info, update_user, get_user_preferences
 from wirecloud.database import DBSession
 from wirecloud.fiware import FIWARE_LAB_CLOUD_SERVER

@@ -32,7 +32,6 @@ except ImportError:
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from fastapi.responses import ORJSONResponse
 from fastapi.openapi.utils import get_openapi
 
 from wirecloud.settings_validator import validate_settings
@@ -49,8 +48,7 @@ async def lifespan(_: FastAPI):
     await close()
 
 
-app = FastAPI(lifespan=lifespan,
-              default_response_class=ORJSONResponse)
+app = FastAPI(lifespan=lifespan)
 
 install_all_middlewares(app)
 get_plugins(app)

@@ -26,7 +26,7 @@ from wirecloud.database import DBDep
 from wirecloud.keycloak.crud import get_user_by_idm_user_id
 from wirecloud.keycloak import docs
 from wirecloud import docs as root_docs
-from src import settings
+from wirecloud import settings
 
 keycloak_router = APIRouter()
 

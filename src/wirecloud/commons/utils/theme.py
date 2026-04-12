@@ -36,7 +36,7 @@ THEME_TRANSLATIONS = {}
 def _generate_jinja2_templates() -> None:
     for theme in AVAILABLE_THEMES:
         try:
-            theme_module = import_module(f"src.wirecloud.themes.{theme}")
+            theme_module = import_module(f"wirecloud.themes.{theme}")
         except ModuleNotFoundError:
             continue
 
@@ -50,7 +50,7 @@ def _generate_jinja2_templates() -> None:
 
             if theme_module.parent is not None:
                 try:
-                    theme_module = import_module(f"src.wirecloud.themes.{theme_module.parent}")
+                    theme_module = import_module(f"wirecloud.themes.{theme_module.parent}")
                 except ModuleNotFoundError:
                     theme_module = None
             else:
@@ -66,7 +66,7 @@ def _generate_jinja2_templates() -> None:
 def _generate_theme_translations() -> None:
     for theme in AVAILABLE_THEMES:
         try:
-            theme_module = import_module(f"src.wirecloud.themes.{theme}")
+            theme_module = import_module(f"wirecloud.themes.{theme}")
         except ModuleNotFoundError:
             continue
 
@@ -88,7 +88,7 @@ def _generate_theme_translations() -> None:
 
                 if theme_module.parent is not None:
                     try:
-                        theme_module = import_module(f"src.wirecloud.themes.{theme_module.parent}")
+                        theme_module = import_module(f"wirecloud.themes.{theme_module.parent}")
                     except ModuleNotFoundError:
                         theme_module = None
                 else:
@@ -119,7 +119,7 @@ def get_available_themes(lang: str) -> list[dict[str, str]]:
     for theme in AVAILABLE_THEMES:
         # Find the translations for the theme
         try:
-            theme_module = import_module(f"src.wirecloud.themes.{theme}")
+            theme_module = import_module(f"wirecloud.themes.{theme}")
         except ModuleNotFoundError:
             continue
 
@@ -163,7 +163,7 @@ def get_theme_static_path(theme: str, path: str) -> str:
         raise NotFound("Theme not found")
 
     try:
-        theme_module = import_module(f"src.wirecloud.themes.{theme}")
+        theme_module = import_module(f"wirecloud.themes.{theme}")
     except ModuleNotFoundError:
         raise NotFound(f"Theme not found: {theme}")
     if not hasattr(theme_module, "parent"):
@@ -172,7 +172,7 @@ def get_theme_static_path(theme: str, path: str) -> str:
     found_path = None
     while theme_module is not None:
         if not os.path.exists(os.path.join(os.path.dirname(theme_module.__file__), 'static')):
-            theme_module = import_module(f"src.wirecloud.themes.{theme_module.parent}")
+            theme_module = import_module(f"wirecloud.themes.{theme_module.parent}")
             continue
 
         if os.path.exists(os.path.join(os.path.dirname(theme_module.__file__), 'static', path)):
@@ -183,7 +183,7 @@ def get_theme_static_path(theme: str, path: str) -> str:
             theme_module = None
         else:
             try:
-                theme_module = import_module(f"src.wirecloud.themes.{theme_module.parent}")
+                theme_module = import_module(f"wirecloud.themes.{theme_module.parent}")
             except ModuleNotFoundError:
                 theme_module = None
 

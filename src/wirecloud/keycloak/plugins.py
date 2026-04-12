@@ -58,7 +58,7 @@ class WirecloudKeycloakPlugin(WirecloudPlugin):
         if not IDM_SUPPORT_ENABLED:
             return ()
 
-        return ('src.wirecloud.keycloak.proxy.KeycloakTokenProcessor',)
+        return ('wirecloud.keycloak.proxy.KeycloakTokenProcessor',)
 
     def get_platform_context_definitions(self):
         if getattr(settings, "OID_CONNECT_PLUGIN", "") != "keycloak" or not IDM_SUPPORT_ENABLED:

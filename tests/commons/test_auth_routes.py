@@ -25,23 +25,7 @@ from bson import ObjectId
 from fastapi.responses import Response
 from httpx import ASGITransport, AsyncClient
 
-from src import settings
-
-
-async def _search_noop(*_args, **_kwargs):
-    return None
-
-
-sys.modules.setdefault(
-    "wirecloud.commons.search",
-    SimpleNamespace(
-        add_user_to_index=_search_noop,
-        add_group_to_index=_search_noop,
-        delete_user_from_index=_search_noop,
-        delete_group_from_index=_search_noop,
-    ),
-)
-
+from wirecloud import settings
 from wirecloud.commons.auth import routes, utils
 from wirecloud.commons.auth.models import Group
 from wirecloud.commons.auth.schemas import Permission, Session, UserAll, UserTokenType, UserWithPassword

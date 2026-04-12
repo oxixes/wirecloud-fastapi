@@ -20,7 +20,7 @@ import aiohttp
 import asyncio
 from typing import Optional
 
-from src import settings
+from wirecloud import settings
 from wirecloud.commons.auth.crud import update_user
 from wirecloud.commons.auth.schemas import UserAll
 from wirecloud.database import DBSession

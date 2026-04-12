@@ -38,7 +38,7 @@ from wirecloud.commons.utils.http import (build_error_response, resolve_url_name
                                               get_relative_reverse_url)
 from wirecloud.commons.auth.schemas import UserAll
 from wirecloud.platform.plugins import get_request_proxy_processors, get_response_proxy_processors
-from src import settings
+from wirecloud import settings
 from wirecloud import docs as root_docs
 from wirecloud.translation import gettext as _
 

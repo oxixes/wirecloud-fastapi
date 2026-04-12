@@ -24,7 +24,7 @@ import jwt
 from bson import ObjectId
 from starlette.requests import Request
 
-from src import settings
+from wirecloud import settings
 from wirecloud.commons.auth import crud, utils
 from wirecloud.commons.auth.schemas import UserAll, UserCreate
 from wirecloud.database import Id

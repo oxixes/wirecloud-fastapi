@@ -20,7 +20,7 @@ from copy import deepcopy
 from typing import Union, Callable, TYPE_CHECKING
 from fastapi import Request, Response
 
-from src import settings
+from wirecloud import settings
 from wirecloud.settings import cache
 from wirecloud.commons.auth.schemas import User, UserAll
 from wirecloud.commons.utils.http import build_error_response, get_absolute_static_url, get_current_domain

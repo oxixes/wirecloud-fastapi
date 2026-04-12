@@ -30,7 +30,7 @@ from wirecloud.commons.utils.http import get_absolute_reverse_url
 from wirecloud.commons.utils.theme import get_theme_translation
 from wirecloud.platform.plugins import get_constants, get_wirecloud_ajax_endpoints
 from wirecloud.translation import gettext as _trans
-from src import settings
+from wirecloud import settings
 
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), './templatefiles'))
 
@@ -100,8 +100,8 @@ def get_wirecloud_bootstrap(context: dict, available_themes: list[dict[str, str]
         'THEME': context['THEME']
     }
 
-    # Render the template
-    return templates.TemplateResponse('bootstrap.html', template_context).body.decode('utf-8')
+    # Render directly to avoid Starlette TemplateResponse signature differences across versions
+    return templates.get_template('bootstrap.html').render(template_context)
 
 def get_javascript_catalogue(lang: str, theme: str) -> str:
     template_context = {
@@ -110,7 +110,7 @@ def get_javascript_catalogue(lang: str, theme: str) -> str:
 
     translations: list[GNUTranslations] = []
     try:
-        theme_module = import_module(f"src.wirecloud.themes.{theme}")
+        theme_module = import_module(f"wirecloud.themes.{theme}")
     except ModuleNotFoundError:
         theme_module = None
 
@@ -120,14 +120,14 @@ def get_javascript_catalogue(lang: str, theme: str) -> str:
                 if theme_module.parent is None:
                     theme_module = None
                 else:
-                    theme_module = import_module(f"src.wirecloud.themes.{theme_module.parent}")
+                    theme_module = import_module(f"wirecloud.themes.{theme_module.parent}")
                 continue
 
             translations.append(gt.translation(f'{theme}.js', os.path.join(os.path.dirname(theme_module.__file__), 'locale'), languages=[lang]))
             if theme_module.parent is None:
                 theme_module = None
             else:
-                theme_module = import_module(f"src.wirecloud.themes.{theme_module.parent}")
+                theme_module = import_module(f"wirecloud.themes.{theme_module.parent}")
     except ModuleNotFoundError:
         pass
 
@@ -166,5 +166,5 @@ def get_javascript_catalogue(lang: str, theme: str) -> str:
     if len(translations_dict) > 0:
         template_context['js_catalogue'] = f"catalog = {orjson.dumps(translations_dict).decode('utf-8')};"
 
-    # Render the template
-    return templates.TemplateResponse('js_catalogue.js', template_context).body.decode('utf-8')
+    # Render directly to avoid Starlette TemplateResponse signature differences across versions
+    return templates.get_template('js_catalogue.js').render(template_context)

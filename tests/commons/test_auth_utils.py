@@ -21,7 +21,7 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from bson import ObjectId
 
-from src import settings
+from wirecloud import settings
 from wirecloud.commons.auth import utils
 from wirecloud.commons.auth.schemas import UserAll
 from wirecloud.database import Id

@@ -40,8 +40,8 @@ from wirecloud.commons.auth.utils import check_password, SessionDepNoCSRF, Sessi
     UserDep, UserDepNoCSRF, RealUserDep, hash_password
 from wirecloud.database import DBDep, commit
 from wirecloud.commons.utils.http import build_error_response, build_validation_error_response, produces, consumes, \
-    get_redirect_response, get_absolute_reverse_url, resolve_url_name, authentication_required
-from src import settings
+    get_redirect_response, get_absolute_reverse_url, resolve_url_name
+from wirecloud import settings
 from wirecloud import docs as root_docs
 from wirecloud.commons.auth import docs
 from wirecloud.platform.plugins import get_idm_get_token_functions, get_idm_get_user_functions, \

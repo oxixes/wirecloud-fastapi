@@ -24,7 +24,7 @@ from gettext import NullTranslations
 from typing import Optional, Callable
 from fastapi import Request, WebSocket
 
-from src import settings
+from wirecloud import settings
 
 
 translations = {}

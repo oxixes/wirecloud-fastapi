@@ -18,9 +18,9 @@ def test_generate_jinja2_templates(monkeypatch, tmp_path):
     (tmp_path / "a" / "templates").mkdir(parents=True)
 
     def _import(name):
-        if name == "src.wirecloud.themes.a":
+        if name == "wirecloud.themes.a":
             return mod_a
-        if name == "src.wirecloud.themes.broken":
+        if name == "wirecloud.themes.broken":
             return mod_broken
         raise ModuleNotFoundError(name)
 
@@ -40,7 +40,7 @@ def test_generate_jinja2_templates(monkeypatch, tmp_path):
     # Continue branch when templates path does not exist
     monkeypatch.setattr(theme, "AVAILABLE_THEMES", ["no_templates"])
     mod_no_templates = SimpleNamespace(__file__=str(tmp_path / "nt" / "__init__.py"), parent=None)
-    monkeypatch.setattr(theme, "import_module", lambda name: mod_no_templates if name == "src.wirecloud.themes.no_templates" else (_ for _ in ()).throw(ModuleNotFoundError(name)))
+    monkeypatch.setattr(theme, "import_module", lambda name: mod_no_templates if name == "wirecloud.themes.no_templates" else (_ for _ in ()).throw(ModuleNotFoundError(name)))
     monkeypatch.setattr(theme.os.path, "exists", lambda _p: False)
     monkeypatch.setattr(theme.os.path, "isdir", lambda _p: False)
     theme.JINJA2_TEMPLATES.clear()
@@ -58,7 +58,7 @@ def test_generate_jinja2_templates(monkeypatch, tmp_path):
     mod_child = SimpleNamespace(__file__=str(tmp_path / "child" / "__init__.py"), parent="parent")
 
     def _import_parent_fail(name):
-        if name == "src.wirecloud.themes.child":
+        if name == "wirecloud.themes.child":
             return mod_child
         raise ModuleNotFoundError(name)
 
@@ -77,9 +77,9 @@ def test_generate_theme_translations(monkeypatch, tmp_path):
     mod_broken = SimpleNamespace(__file__=str(tmp_path / "broken" / "__init__.py"))
 
     def _import(name):
-        if name == "src.wirecloud.themes.a":
+        if name == "wirecloud.themes.a":
             return mod_a
-        if name == "src.wirecloud.themes.broken":
+        if name == "wirecloud.themes.broken":
             return mod_broken
         raise ModuleNotFoundError(name)
 
@@ -103,7 +103,7 @@ def test_generate_theme_translations(monkeypatch, tmp_path):
     mod_child = SimpleNamespace(__file__=str(tmp_path / "child" / "__init__.py"), parent="parent")
 
     def _import_parent_fail(name):
-        if name == "src.wirecloud.themes.child":
+        if name == "wirecloud.themes.child":
             return mod_child
         raise ModuleNotFoundError(name)
 
@@ -126,9 +126,9 @@ def test_generate_theme_translations(monkeypatch, tmp_path):
     parent = SimpleNamespace(__file__=str(tmp_path / "chain" / "base.py"), parent=None)
 
     def _import_chain(name):
-        if name == "src.wirecloud.themes.chain":
+        if name == "wirecloud.themes.chain":
             return child
-        if name == "src.wirecloud.themes.base":
+        if name == "wirecloud.themes.base":
             return parent
         raise ModuleNotFoundError(name)
 
@@ -171,9 +171,9 @@ def test_get_available_themes(monkeypatch, tmp_path):
     mod_nolabel = SimpleNamespace(__file__=str(tmp_path / "n" / "__init__.py"))
 
     def _import(name):
-        if name == "src.wirecloud.themes.a":
+        if name == "wirecloud.themes.a":
             return mod_a
-        if name == "src.wirecloud.themes.nolabel":
+        if name == "wirecloud.themes.nolabel":
             return mod_nolabel
         raise ModuleNotFoundError(name)
 
@@ -228,7 +228,7 @@ def test_get_theme_static_path(monkeypatch, tmp_path):
     mod_a = SimpleNamespace(__file__=str(themes_dir / "a" / "__init__.py"), parent=None)
 
     def _import(name):
-        if name == "src.wirecloud.themes.a":
+        if name == "wirecloud.themes.a":
             return mod_a
         raise ModuleNotFoundError(name)
 
@@ -239,13 +239,13 @@ def test_get_theme_static_path(monkeypatch, tmp_path):
 
     # Missing parent attribute after import
     mod_bad = SimpleNamespace(__file__=str(themes_dir / "a" / "__init__.py"))
-    monkeypatch.setattr(theme, "import_module", lambda name: mod_bad if name == "src.wirecloud.themes.a" else (_ for _ in ()).throw(ModuleNotFoundError(name)))
+    monkeypatch.setattr(theme, "import_module", lambda name: mod_bad if name == "wirecloud.themes.a" else (_ for _ in ()).throw(ModuleNotFoundError(name)))
     with pytest.raises(ValueError):
         theme.get_theme_static_path("a", "asset.js")
 
     # Branch where static dir missing triggers parent import in loop
     mod_child = SimpleNamespace(__file__=str(themes_dir / "a" / "__init__.py"), parent="missingparent")
-    monkeypatch.setattr(theme, "import_module", lambda name: mod_child if name == "src.wirecloud.themes.a" else (_ for _ in ()).throw(ModuleNotFoundError(name)))
+    monkeypatch.setattr(theme, "import_module", lambda name: mod_child if name == "wirecloud.themes.a" else (_ for _ in ()).throw(ModuleNotFoundError(name)))
     monkeypatch.setattr(theme.os.path, "exists", lambda p: str(p).endswith("/a"))
     with pytest.raises(ModuleNotFoundError):
         theme.get_theme_static_path("a", "asset.js")
@@ -256,9 +256,9 @@ def test_get_theme_static_path(monkeypatch, tmp_path):
     (themes_dir / "parent" / "static" / "from-parent.js").write_text("x")
 
     def _import_parent_ok(name):
-        if name == "src.wirecloud.themes.a":
+        if name == "wirecloud.themes.a":
             return SimpleNamespace(__file__=str(themes_dir / "a" / "__init__.py"), parent="parent")
-        if name == "src.wirecloud.themes.parent":
+        if name == "wirecloud.themes.parent":
             return parent_theme
         raise ModuleNotFoundError(name)
 
@@ -267,7 +267,7 @@ def test_get_theme_static_path(monkeypatch, tmp_path):
     assert theme.get_theme_static_path("a", "from-parent.js").endswith("from-parent.js")
 
     # Branch where parent is None and file is not found in static (line 183)
-    monkeypatch.setattr(theme, "import_module", lambda name: parent_theme if name == "src.wirecloud.themes.a" else (_ for _ in ()).throw(ModuleNotFoundError(name)))
+    monkeypatch.setattr(theme, "import_module", lambda name: parent_theme if name == "wirecloud.themes.a" else (_ for _ in ()).throw(ModuleNotFoundError(name)))
     monkeypatch.setattr(theme.os.path, "exists", lambda p: Path(p).exists() and "from-parent.js" not in str(p))
     with pytest.raises(NotFound):
         theme.get_theme_static_path("a", "from-parent.js")
@@ -311,7 +311,7 @@ def test_get_theme_static_path(monkeypatch, tmp_path):
     monkeypatch.setattr(
         theme,
         "import_module",
-        lambda name: mod_parent_missing if name == "src.wirecloud.themes.a" else (_ for _ in ()).throw(ModuleNotFoundError(name)),
+        lambda name: mod_parent_missing if name == "wirecloud.themes.a" else (_ for _ in ()).throw(ModuleNotFoundError(name)),
     )
     monkeypatch.setattr(theme.os.path, "exists", lambda p: Path(p).exists() and "static/asset.js" not in str(p))
     assert theme.get_theme_static_path("a", "p.js").endswith("p.js")

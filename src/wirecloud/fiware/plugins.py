@@ -24,7 +24,7 @@ from urllib.parse import quote, urlparse, urljoin
 
 from fastapi import FastAPI, Request
 
-from src import settings
+from wirecloud import settings
 from wirecloud import fiware
 from wirecloud.commons.auth.crud import get_user_with_all_info_by_username
 from wirecloud.commons.auth.schemas import UserAll, Session
@@ -174,7 +174,7 @@ class FiWareWirecloudPlugin(WirecloudPlugin):
         if not IDM_SUPPORT_ENABLED:
             return ()
 
-        return ('src.wirecloud.fiware.proxy.IDMTokenProcessor',)
+        return ('wirecloud.fiware.proxy.IDMTokenProcessor',)
 
     def get_template_context_processors(self, request: Request) -> dict[str, Any]:
         context = {

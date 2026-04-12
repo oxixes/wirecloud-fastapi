@@ -19,7 +19,7 @@
 from fastapi import Request
 import user_agents
 
-from src import settings
+from wirecloud import settings
 
 
 def get_current_theme(request: Request) -> str:

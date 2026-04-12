@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from wirecloud.platform import plugins
-from src import settings as project_settings
+from wirecloud import settings as project_settings
 
 
 @pytest.fixture(autouse=True)

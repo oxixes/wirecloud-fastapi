@@ -180,29 +180,30 @@ async def test_http_wrappers_and_content_type(monkeypatch):
 
 def test_url_helpers_and_download_response(monkeypatch, tmp_path):
     original_build_error_response = http.build_error_response
+    from wirecloud import settings
     req = _request(path="/x", root_path="/mount/")
-    monkeypatch.setattr(http.settings, "FORCE_PROTO", None, raising=False)
-    monkeypatch.setattr(http.settings, "FORCE_DOMAIN", None, raising=False)
-    monkeypatch.setattr(http.settings, "FORCE_PORT", None, raising=False)
+    monkeypatch.setattr(settings, "FORCE_PROTO", None, raising=False)
+    monkeypatch.setattr(settings, "FORCE_DOMAIN", None, raising=False)
+    monkeypatch.setattr(settings, "FORCE_PORT", None, raising=False)
     assert http.get_current_scheme(req) == "http"
 
     secure_req = _request(path="/x")
     secure_req.scope["scheme"] = "https"
     assert http.get_current_scheme(secure_req) == "https"
 
-    monkeypatch.setattr(http.settings, "FORCE_PROTO", "https", raising=False)
+    monkeypatch.setattr(settings, "FORCE_PROTO", "https", raising=False)
     assert http.get_current_scheme(req) == "https"
-    monkeypatch.setattr(http.settings, "FORCE_PROTO", None, raising=False)
+    monkeypatch.setattr(settings, "FORCE_PROTO", None, raising=False)
 
     assert http.force_trailing_slash("/a") == "/a/"
     assert http.force_trailing_slash("/a/") == "/a/"
     assert http.get_current_domain(req) == "example.org"
-    monkeypatch.setattr(http.settings, "FORCE_PORT", 8080, raising=False)
+    monkeypatch.setattr(settings, "FORCE_PORT", 8080, raising=False)
     assert http.get_current_domain(req).endswith(":8080")
-    monkeypatch.setattr(http.settings, "FORCE_PORT", None, raising=False)
-    monkeypatch.setattr(http.settings, "FORCE_DOMAIN", "forced.example", raising=False)
+    monkeypatch.setattr(settings, "FORCE_PORT", None, raising=False)
+    monkeypatch.setattr(settings, "FORCE_DOMAIN", "forced.example", raising=False)
     assert http.get_current_domain(req).startswith("forced.example")
-    monkeypatch.setattr(http.settings, "FORCE_DOMAIN", None, raising=False)
+    monkeypatch.setattr(settings, "FORCE_DOMAIN", None, raising=False)
     monkeypatch.setattr(http, "_servername", None)
     monkeypatch.setattr(http.socket, "getfqdn", lambda: "fqdn.example")
     assert http.get_current_domain(None) == "fqdn.example"
@@ -272,7 +273,7 @@ def test_url_helpers_and_download_response(monkeypatch, tmp_path):
     not_found = http.build_downloadfile_response(req, "missing.txt", str(base_dir))
     assert not_found.status_code == 404
 
-    monkeypatch.setattr(http.settings, "USE_XSENDFILE", False, raising=False)
+    monkeypatch.setattr(settings, "USE_XSENDFILE", False, raising=False)
     monkeypatch.setattr(http.mimetypes, "guess_type", lambda _p: (None, None))
     file_resp = http.build_downloadfile_response(req, "f.txt", str(base_dir))
     assert file_resp.status_code == 200
@@ -280,7 +281,7 @@ def test_url_helpers_and_download_response(monkeypatch, tmp_path):
     file_resp2 = http.build_downloadfile_response(req, "f.txt", str(base_dir))
     assert file_resp2.status_code == 200
 
-    monkeypatch.setattr(http.settings, "USE_XSENDFILE", True, raising=False)
+    monkeypatch.setattr(settings, "USE_XSENDFILE", True, raising=False)
     xsend = http.build_downloadfile_response(req, "f.txt", str(base_dir))
     assert xsend.headers["x-sendfile"].endswith("f.txt")
 

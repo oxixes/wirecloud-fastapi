@@ -39,9 +39,7 @@ from typing import Optional, Union, Any
 from collections.abc import Callable
 from urllib.parse import urljoin, unquote, urlparse, quote
 
-from src import settings
 from wirecloud.commons.auth.utils import UserDepNoCSRF
-from wirecloud.commons.exceptions import ErrorResponse
 from wirecloud.commons.utils import mimeparser
 from wirecloud.translation import gettext as _
 
@@ -338,7 +336,7 @@ _servername = None
 
 
 def get_current_scheme(request: Optional[Request] = None) -> str:
-    from src import settings
+    from wirecloud import settings
 
     if getattr(settings, 'FORCE_PROTO', None) is not None:
         return settings.FORCE_PROTO
@@ -353,7 +351,7 @@ def force_trailing_slash(url):
 
 
 def get_current_domain(request: Optional[Request] = None) -> str:
-    from src import settings
+    from wirecloud import settings
 
     # Server name
     if getattr(settings, 'FORCE_DOMAIN', None) is not None:
@@ -452,7 +450,7 @@ def validate_url_param(name: str, value: str, force_absolute: bool = True, requi
 
 
 def build_downloadfile_response(request: Request, file_path: str, base_dir: str) -> Response:
-    from src import settings
+    from wirecloud import settings
 
     path = posixpath.normpath(unquote(file_path))
     path = path.lstrip('/')

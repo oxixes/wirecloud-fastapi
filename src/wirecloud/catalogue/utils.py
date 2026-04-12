@@ -28,7 +28,7 @@ from typing import Union, IO, Optional
 from datetime import datetime, timezone
 from fastapi import Request
 
-from src import settings
+from wirecloud import settings
 import markdown
 
 from wirecloud.commons.utils.template.schemas.macdschemas import MACD, MACType

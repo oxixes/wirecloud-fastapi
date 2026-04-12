@@ -22,7 +22,7 @@ import pytest
 from bson import ObjectId
 from httpx import ASGITransport, AsyncClient
 
-from src import settings
+from wirecloud import settings
 from wirecloud.commons.auth.schemas import User
 from wirecloud.database import Id
 from wirecloud.keycloak import routes

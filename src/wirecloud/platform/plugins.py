@@ -153,7 +153,7 @@ _wirecloud_idm_backchannel_logout_functions: Optional[dict[str, Callable]] = Non
 
 
 def find_wirecloud_plugins() -> list[WirecloudPlugin]:
-    from src import settings
+    from wirecloud import settings
 
     modules = []
 
@@ -183,7 +183,7 @@ def find_wirecloud_plugins() -> list[WirecloudPlugin]:
 
 
 def get_plugins(app: Optional[FastAPI] = None) -> tuple[WirecloudPlugin, ...]:
-    from src import settings
+    from wirecloud import settings
     global _wirecloud_plugins
     global _wirecloud_features
     global _wirecloud_plugins_had_app
@@ -212,7 +212,7 @@ def get_plugins(app: Optional[FastAPI] = None) -> tuple[WirecloudPlugin, ...]:
 
         if 'wirecloud.platform' in getattr(settings, 'INSTALLED_APPS', []):
             from wirecloud.platform.core.plugins import WirecloudCorePlugin
-            add_plugin('src.wirecloud.platform.WirecloudCorePlugin', WirecloudCorePlugin(app))
+            add_plugin('wirecloud.platform.WirecloudCorePlugin', WirecloudCorePlugin(app))
 
         for entry in modules:
             if isinstance(entry, str):

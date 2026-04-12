@@ -299,7 +299,7 @@ def test_workspace_preferences_templates_extensions_and_openapi(monkeypatch):
         "js/WirecloudAPI/DashboardManagementAPI.js",
         "js/WirecloudAPI/ComponentManagementAPI.js",
     ]
-    assert plugin.get_proxy_processors() == ("src.wirecloud.proxy.processors.SecureDataProcessor",)
+    assert plugin.get_proxy_processors() == ("wirecloud.proxy.processors.SecureDataProcessor",)
 
     monkeypatch.setattr(core_plugins.ResourceCreateData, "model_json_schema", classmethod(lambda cls: {"a": 1}))
     monkeypatch.setattr(core_plugins.ResourceCreateFormData, "model_json_schema", classmethod(lambda cls: {"b": 2}))

@@ -29,7 +29,6 @@ import json
 import os
 import sys
 import tempfile
-import asyncio
 import logging
 from os import path
 
@@ -40,10 +39,15 @@ ROOT = path.abspath(path.join(path.dirname(path.abspath(__file__)), '..'))
 # Use slice assignment to avoid potential type warnings from some linters
 sys.path[0:0] = [ROOT]
 
-from wirecloud.settings_validator import validate_settings
-
-# Run settings validation to ensure settings are correct as async
-asyncio.run(validate_settings(True))
+try:
+    import asyncio
+    from wirecloud.settings_validator import validate_settings
+    # Validate configuration when runtime dependencies are available.
+    asyncio.run(validate_settings(True))
+except Exception:
+    # Keep frontend build working in isolated wheel builds where runtime
+    # dependencies are not installed yet.
+    pass
 
 out_path = os.environ.get('WEBPACK_SETTINGS_JSON') or path.join(tempfile.gettempdir(), 'wirecloud_settings_js.json')
 
@@ -58,6 +62,15 @@ except Exception:
 installed_apps_raw = []
 if srv_settings is not None:
     installed_apps_raw = getattr(srv_settings, 'INSTALLED_APPS', None) or getattr(srv_settings, 'installed_apps', None) or []
+else:
+    installed_apps_raw = [
+        "wirecloud.commons",
+        "wirecloud.platform",
+        "wirecloud.catalogue",
+        "wirecloud.proxy",
+        "wirecloud.fiware",
+        "wirecloud.keycloak",
+    ]
 
 # Resolve Python modules to filesystem paths
 import importlib
@@ -95,6 +108,10 @@ for app in installed_apps_raw:
             module_path = path.abspath(str(module_path))
         except Exception:
             pass
+    else:
+        guessed_path = path.join(ROOT, 'src', *dotted.split('.'))
+        if path.isdir(guessed_path):
+            module_path = guessed_path
 
     installed_apps.append({
         'name': short,
