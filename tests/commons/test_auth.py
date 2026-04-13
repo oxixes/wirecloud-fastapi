@@ -215,7 +215,7 @@ async def test_create_user_and_lookup_functions(db_session):
         idm_data={},
     )
 
-    await crud.create_user(db_session, user_info)
+    await crud.create_user_db(db_session, user_info)
 
     user = await crud.get_user_by_username(db_session, "alice")
     assert user is not None

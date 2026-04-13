@@ -82,6 +82,14 @@ patterns = {
     'wirecloud.workspace_publish': URLTemplate(urlpattern='/api/workspace/{workspace_id}/publish', defaults={}),
     'wirecloud.workspace_entry_owner_name': URLTemplate(urlpattern='/api/workspace/{owner}/{name}', defaults={}),
     'wirecloud.switch_user_service': URLTemplate(urlpattern='/api/admin/switchuser', defaults={}),
+    'wirecloud.admin_user_collection': URLTemplate(urlpattern='/api/admin/users', defaults={}),
+    'wirecloud.admin_user_entry': URLTemplate(urlpattern='/api/admin/users/{user_username}', defaults={}),
+    'wirecloud.admin_group_collection': URLTemplate(urlpattern='/api/admin/groups', defaults={}),
+    'wirecloud.admin_group_entry': URLTemplate(urlpattern='/api/admin/groups/{group_name}', defaults={}),
+    'wirecloud.admin_organization_collection': URLTemplate(urlpattern='/api/admin/organizations', defaults={}),
+    'wirecloud.admin_organization_entry': URLTemplate(urlpattern='/api/admin/organizations/{org_name}', defaults={}),
+    'wirecloud.admin_organization_group_entry': URLTemplate(
+        urlpattern='/api/admin/organizations/groups/{group_name}', defaults={}),
 
     'wirecloud.workspace_view': URLTemplate(urlpattern='/workspace/{owner}/{name}', defaults={}),
 }

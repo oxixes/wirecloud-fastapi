@@ -20,11 +20,8 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional, Any
 
+from wirecloud.commons.auth.schemas import Permission
 from wirecloud.database import Id
-
-
-class DBPermission(BaseModel):
-    codename: str
 
 
 class DBPlatformPreference(BaseModel):
@@ -38,10 +35,16 @@ class Group(BaseModel, populate_by_name=True):
     codename: str
 
     is_organization: bool = False
-    parent: Optional[Id] = None
+    path: list[Id]
 
-    group_permissions: list[DBPermission] = []
+    group_permissions: list[Permission] = []
     users: list[Id] = []
+
+    @property
+    def parent(self) -> Optional[Id]:
+        if len(self.path) < 2:
+            return None
+        return self.path[-2]
 
 
 class DBUser(BaseModel, populate_by_name=True):
@@ -58,6 +61,6 @@ class DBUser(BaseModel, populate_by_name=True):
     date_joined: datetime
     idm_data: dict[str, dict[str, Optional[Any]]] = {}
 
-    user_permissions: list[DBPermission] = []
+    user_permissions: list[Permission] = []
     groups: list[Id] = []
     preferences: list[DBPlatformPreference] = []

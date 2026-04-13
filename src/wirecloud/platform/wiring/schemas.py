@@ -83,7 +83,7 @@ class WiringComponent(BaseModel):
     endpoints: Optional[WiringComponentEndpoints] = Field(description=docs.wiring_component_endpoints_description,
                                                           default=None)
     position: Optional[WiringPosition] = Field(description=docs.wiring_component_position_description,
-                                               default=None),
+                                               default=None)
     name: Optional[ResourceName] = Field(default=None)
 
 

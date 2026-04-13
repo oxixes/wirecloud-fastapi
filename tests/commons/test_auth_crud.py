@@ -18,13 +18,15 @@
 
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
+import sys
 
 from bson import ObjectId
 
 from wirecloud.commons.auth import crud
 from wirecloud.commons.auth.models import Group, DBPlatformPreference
-from wirecloud.commons.auth.schemas import Permission, UserAll, UserCreate
+from wirecloud.commons.auth.schemas import Permission, UserAll, UserCreate, GroupCreate, OrganizationCreate
 from wirecloud.database import Id
+from unittest.mock import AsyncMock, MagicMock
 
 
 async def _seed_user(db_session, username="alice"):
@@ -39,7 +41,7 @@ async def _seed_user(db_session, username="alice"):
         is_active=True,
         idm_data={"keycloak": {"idm_token": "tok"}},
     )
-    await crud.create_user(db_session, user_info)
+    await crud.create_user_db(db_session, user_info)
     return await crud.get_user_by_username(db_session, username)
 
 
@@ -78,7 +80,7 @@ async def test_get_user_none_branches(db_session):
     assert await crud.get_all_user_permissions(db_session, unknown_id) == []
 
 
-async def test_update_user_and_user_info_with_permissions(db_session):
+async def test_update_user_and_user_info_with_permissions(monkeypatch, db_session):
     user = await _seed_user(db_session, "bob")
 
     gid = ObjectId()
@@ -89,12 +91,16 @@ async def test_update_user_and_user_info_with_permissions(db_session):
             "codename": "editors",
             "group_permissions": [{"codename": "widgets.edit"}],
             "users": [ObjectId(user.id)],
+            "path": [gid],
         }
     )
     await db_session.client.users.update_one(
         {"_id": ObjectId(user.id)},
         {"$set": {"groups": [gid], "user_permissions": [{"codename": "widgets.view"}]}}
     )
+
+    add_user_to_index = AsyncMock()
+    monkeypatch.setitem(sys.modules, "wirecloud.commons.search", SimpleNamespace(add_user_to_index=add_user_to_index))
 
     user.first_name = "Robert"
     await crud.update_user(db_session, user)
@@ -118,12 +124,12 @@ async def test_group_assignment_and_removal(db_session):
     g2 = ObjectId()
 
     await db_session.client.groups.insert_many([
-        {"_id": g1, "name": "G1", "codename": "g1", "users": []},
-        {"_id": g2, "name": "G2", "codename": "g2", "users": []},
+        {"_id": g1, "name": "G1", "codename": "g1", "users": [], "path": [g1]},
+        {"_id": g2, "name": "G2", "codename": "g2", "users": [], "path": [g2]},
     ])
 
     await crud.add_user_to_groups_by_codename(db_session, user.id, ["g1", "g2"])
-    await crud.add_user_to_groups_by_codename(db_session, user.id, ["g1"])  # no duplicates path
+    await crud.add_user_to_groups_by_codename(db_session, user.id, ["g1"])
 
     user_doc = await db_session.client.users.find_one({"_id": ObjectId(user.id)})
     assert set(user_doc["groups"]) == {g1, g2}
@@ -137,7 +143,8 @@ async def test_group_assignment_and_removal(db_session):
 
 
 async def test_group_creation_lookup_and_preferences(db_session):
-    group = Group(_id=Id(str(ObjectId())), name="Team", codename="team")
+    group_id = Id(str(ObjectId()))
+    group = Group(_id=group_id, name="Team", codename="team", path=[group_id])
     await crud.create_group_if_not_exists(db_session, group)
     await crud.create_group_if_not_exists(db_session, group)
 
@@ -182,7 +189,8 @@ async def test_get_all_groups_and_users(db_session):
     await db_session.client.groups.delete_many({})
 
     await _seed_user(db_session, "eve")
-    await db_session.client.groups.insert_one({"_id": ObjectId(), "name": "Ops", "codename": "ops"})
+    ops_id = ObjectId()
+    await db_session.client.groups.insert_one({"_id": ops_id, "name": "Ops", "codename": "ops", "path": [ops_id]})
 
     groups = await crud.get_all_groups(db_session)
     users = await crud.get_all_users(db_session)
@@ -191,56 +199,56 @@ async def test_get_all_groups_and_users(db_session):
     assert any(user.username == "eve" for user in users)
 
 
-class _FakeCursor:
-    def __init__(self, result):
-        self.result = result
+def _make_groups(find_one_return=None, find_list=None):
+    mock_cursor = MagicMock()
+    mock_cursor.to_list = AsyncMock(return_value=find_list or [])
 
-    async def to_list(self, length=None):
-        return self.result
+    mock_groups = SimpleNamespace()
+    mock_groups.find_one = AsyncMock(return_value=find_one_return)
+    mock_groups.find = MagicMock(return_value=mock_cursor)
+
+    return mock_groups
 
 
 async def test_graph_lookup_helpers(monkeypatch, db_session):
     child_id = ObjectId()
-    parent1 = ObjectId()
-    parent2 = ObjectId()
+    parent1_id = ObjectId()
+    parent2_id = ObjectId()
 
-    class _FakeGroups:
-        def __init__(self, result):
-            self.result = result
+    child_doc = {"_id": child_id, "path": [parent2_id, parent1_id, child_id]}
+    parent1_doc = {"_id": parent1_id, "name": "P1", "codename": "p1", "path": [parent2_id, parent1_id], "is_organization": False}
+    parent2_doc = {"_id": parent2_id, "name": "P2", "codename": "p2", "path": [parent2_id], "is_organization": True}
 
-        async def aggregate(self, _pipeline):
-            return _FakeCursor(self.result)
-
-    fake_db = SimpleNamespace(client=SimpleNamespace(groups=_FakeGroups([
-        {
-            "_id": child_id,
-            "name": "Child",
-            "codename": "child",
-            "parents": [
-                {"_id": parent1, "name": "P1", "codename": "p1", "depth": 0},
-                {"_id": parent2, "name": "P2", "codename": "p2", "depth": 2},
-            ],
-        }
-    ])))
+    fake_db = SimpleNamespace(client=SimpleNamespace(
+        groups=_make_groups(find_one_return=child_doc, find_list=[parent1_doc, parent2_doc])
+    ))
 
     parent_chain = await crud.get_all_parent_groups_from_child(fake_db, Id(str(child_id)))
-    assert len(parent_chain) == 3
+    assert len(parent_chain) == 2
+    assert {g.codename for g in parent_chain} == {"p1", "p2"}
 
-    root_group = Group(_id=Id(str(child_id)), name="Child", codename="child")
-    top = await crud.get_top_group_organization(fake_db, root_group)
-    assert str(top.id) == str(parent2)
+    id_child = Id(str(child_id))
+    id_parent2 = Id(str(parent2_id))
+    child_org_group = Group(_id=id_child, name="Child", codename="child", path=[id_parent2, id_child], is_organization=True)
 
-    fake_db.client.groups = _FakeGroups([])
-    assert await crud.get_all_parent_groups_from_child(fake_db, Id(str(child_id))) == []
+    fake_db.client.groups = _make_groups(find_one_return=parent2_doc, find_list=[])
+    top = await crud.get_top_group_organization(fake_db, child_org_group)
+    assert str(top.id) == str(parent2_id)
 
-    original = Group(_id=Id(str(ObjectId())), name="Original", codename="original")
-    assert await crud.get_top_group_organization(fake_db, original) == original
+    id_original = Id(str(ObjectId()))
+    original = Group(_id=id_original, name="Original", codename="original", path=[id_original], is_organization=False)
+    assert await crud.get_top_group_organization(fake_db, original) is None
 
-    fake_db.client.groups = _FakeGroups([
-        {"_id": child_id, "name": "Child", "codename": "child", "parents": []}
-    ])
+    id_root = Id(str(ObjectId()))
+    root_group = Group(_id=id_root, name="Root", codename="root", path=[id_root], is_organization=True)
     top_self = await crud.get_top_group_organization(fake_db, root_group)
-    assert str(top_self.id) == str(child_id)
+    assert str(top_self.id) == str(id_root)
+
+    fake_db.client.groups = _make_groups(
+        find_one_return={"_id": child_id, "path": [child_id]},
+        find_list=[],
+    )
+    assert await crud.get_all_parent_groups_from_child(fake_db, Id(str(child_id))) == []
 
 
 async def test_get_all_user_groups(monkeypatch, db_session):
@@ -248,7 +256,7 @@ async def test_get_all_user_groups(monkeypatch, db_session):
     g2 = Id(str(ObjectId()))
 
     async def _parents(_db, gid):
-        return [Group(_id=gid, name=str(gid), codename=str(gid))]
+        return [Group(_id=gid, name=str(gid), codename=str(gid), path=[gid])]
 
     monkeypatch.setattr(crud, "get_all_parent_groups_from_child", _parents)
 
@@ -270,3 +278,205 @@ async def test_get_all_user_groups(monkeypatch, db_session):
 
     groups = await crud.get_all_user_groups(db_session, user)
     assert len(groups) == 2
+
+
+async def test_get_all_user_groups_with_parent_child_groups_and_two_users(db_session):
+    await db_session.client.users.delete_many({})
+    await db_session.client.groups.delete_many({})
+
+    user_g1 = await _seed_user(db_session, "user_g1")
+    user_g2 = await _seed_user(db_session, "user_g2")
+
+    g1 = ObjectId()
+    g2 = ObjectId()
+
+    await db_session.client.groups.insert_many([
+        {"_id": g1, "name": "G1", "codename": "g1", "users": [ObjectId(user_g1.id)], "path": [g1], "group_permissions": []},
+        {"_id": g2, "name": "G2", "codename": "g2", "users": [ObjectId(user_g2.id)], "path": [g1, g2], "group_permissions": []},
+    ])
+
+    await db_session.client.users.update_one(
+        {"_id": ObjectId(user_g1.id)},
+        {"$set": {"groups": [g1]}}
+    )
+    await db_session.client.users.update_one(
+        {"_id": ObjectId(user_g2.id)},
+        {"$set": {"groups": [g2]}}
+    )
+
+    user_g1_all = await crud.get_user_with_all_info(db_session, user_g1.id)
+    user_g2_all = await crud.get_user_with_all_info(db_session, user_g2.id)
+
+    groups_user_g1 = await crud.get_all_user_groups(db_session, user_g1_all)
+    groups_user_g2 = await crud.get_all_user_groups(db_session, user_g2_all)
+
+    assert {str(group.id) for group in groups_user_g1} == {str(g1)}
+    assert {str(group.id) for group in groups_user_g2} == {str(g1), str(g2)}
+    assert len(groups_user_g2) == 2
+
+
+async def test_update_user_with_all_info_updates_db_and_index(monkeypatch, db_session):
+    user = await _seed_user(db_session, "frank")
+    user_all = await crud.get_user_with_all_info(db_session, user.id)
+    user_all.first_name = "Franklin"
+    user_all.permissions = [Permission(codename="USER.EDIT")]
+
+    add_user_to_index = AsyncMock()
+    monkeypatch.setitem(sys.modules, "wirecloud.commons.search", SimpleNamespace(add_user_to_index=add_user_to_index))
+
+    await crud.update_user_with_all_info(db_session, user_all)
+    updated = await db_session.client.users.find_one({"_id": ObjectId(user.id)})
+    assert updated["first_name"] == "Franklin"
+    add_user_to_index.assert_awaited_once()
+
+
+async def test_group_crud_helpers_and_organization_queries(monkeypatch, db_session):
+    await db_session.client.users.delete_many({})
+    await db_session.client.groups.delete_many({})
+
+    u1 = await _seed_user(db_session, "guser1")
+    u2 = await _seed_user(db_session, "guser2")
+
+    group_info = GroupCreate(name="Dev", codename="dev", users=[u1.id])
+    created_group = await crud.create_group_db(db_session, group_info)
+    assert created_group.name == "Dev"
+    assert created_group.is_organization is False
+    assert len(created_group.path) == 1
+    assert str(created_group.path[0]) == str(created_group.id)
+
+    await crud.add_group_to_users(db_session, created_group.id, [u1.id, u2.id])
+    u1_doc = await db_session.client.users.find_one({"_id": ObjectId(u1.id)})
+    u2_doc = await db_session.client.users.find_one({"_id": ObjectId(u2.id)})
+    assert created_group.id in u1_doc["groups"]
+    assert created_group.id in u2_doc["groups"]
+
+    await crud.remove_group_to_users(db_session, created_group.id, [u1.id])
+    u1_doc = await db_session.client.users.find_one({"_id": ObjectId(u1.id)})
+    u2_doc = await db_session.client.users.find_one({"_id": ObjectId(u2.id)})
+    assert created_group.id not in u1_doc["groups"]
+    assert created_group.id in u2_doc["groups"]
+
+    add_group_to_index = AsyncMock()
+    monkeypatch.setitem(sys.modules, "wirecloud.commons.search", SimpleNamespace(add_group_to_index=add_group_to_index))
+    created_group.codename = "dev-updated"
+    await crud.update_group(db_session, created_group)
+    group_doc = await db_session.client.groups.find_one({"_id": ObjectId(created_group.id)})
+    assert group_doc["codename"] == "dev-updated"
+    add_group_to_index.assert_awaited_once()
+
+    org_info = OrganizationCreate(name="Org", codename="org", users=[u2.id])
+    created_org = await crud.create_organization_db(db_session, org_info)
+    assert created_org.is_organization is True
+    assert len(created_org.path) == 1
+    assert str(created_org.path[0]) == str(created_org.id)
+
+    child_id = ObjectId()
+    grandchild_id = ObjectId()
+    await db_session.client.groups.insert_many([
+        {"_id": child_id, "name": "Child", "codename": "child", "users": [ObjectId(u2.id)], "is_organization": True, "path": [ObjectId(created_org.id), child_id]},
+        {"_id": grandchild_id, "name": "Grand", "codename": "grand", "users": [], "is_organization": True, "path": [ObjectId(created_org.id), child_id, grandchild_id]},
+    ])
+
+    groups = await crud.get_all_organization_groups(db_session, created_org)
+    assert len(groups) == 3
+
+
+async def test_update_path_for_descendants_and_delete_group(monkeypatch, db_session):
+    await db_session.client.groups.delete_many({})
+
+    root_id = ObjectId()
+    child_id = ObjectId()
+    sibling_id = ObjectId()
+    await db_session.client.groups.insert_many([
+        {"_id": root_id, "name": "Root", "codename": "root", "users": [], "is_organization": True, "path": [root_id]},
+        {"_id": child_id, "name": "Child", "codename": "child", "users": [], "is_organization": True, "path": [root_id, child_id]},
+        {"_id": sibling_id, "name": "Sibling", "codename": "sibling", "users": [], "is_organization": True, "path": [sibling_id]},
+    ])
+
+    root_group = Group(_id=Id(str(root_id)), name="Root", codename="root", users=[], is_organization=True, path=[Id(str(root_id))])
+    await crud.update_path_for_descendants(db_session, root_group)
+
+    child_doc = await db_session.client.groups.find_one({"_id": child_id})
+    sibling_doc = await db_session.client.groups.find_one({"_id": sibling_id})
+    assert child_doc["path"] == [child_id]
+    assert sibling_doc["path"] == [sibling_id]
+
+    to_delete_id = ObjectId()
+    await db_session.client.groups.insert_one({"_id": to_delete_id, "name": "Del", "codename": "del", "users": [], "is_organization": False, "path": [to_delete_id]})
+    to_delete = Group(_id=Id(str(to_delete_id)), name="Del", codename="del", users=[], is_organization=False, path=[Id(str(to_delete_id))])
+
+    remove_users = AsyncMock()
+    update_desc = AsyncMock()
+    delete_group_from_index = AsyncMock()
+    monkeypatch.setattr(crud, "remove_group_to_users", remove_users)
+    monkeypatch.setattr(crud, "update_path_for_descendants", update_desc)
+    monkeypatch.setitem(sys.modules, "wirecloud.commons.search", SimpleNamespace(delete_group_from_index=delete_group_from_index))
+
+    await crud.delete_group(db_session, to_delete)
+    assert await db_session.client.groups.find_one({"_id": to_delete_id}) is None
+    remove_users.assert_awaited_once()
+    update_desc.assert_awaited_once()
+    delete_group_from_index.assert_awaited_once()
+
+    to_delete2_id = ObjectId()
+    await db_session.client.groups.insert_one({"_id": to_delete2_id, "name": "Del2", "codename": "del2", "users": [], "is_organization": False, "path": [to_delete2_id]})
+    to_delete2 = Group(_id=Id(str(to_delete2_id)), name="Del2", codename="del2", users=[], is_organization=False, path=[Id(str(to_delete2_id))])
+    update_desc.reset_mock()
+    await crud.delete_group(db_session, to_delete2, skip_descendants=True)
+    update_desc.assert_not_called()
+
+
+async def test_delete_organization_branches(monkeypatch, db_session):
+    await db_session.client.groups.delete_many({})
+
+    org_id = ObjectId()
+    org = Group(_id=Id(str(org_id)), name="Org", codename="org", users=[], is_organization=True, path=[Id(str(org_id))])
+    remove_users = AsyncMock()
+    delete_group_from_index = AsyncMock()
+    monkeypatch.setattr(crud, "remove_group_to_users", remove_users)
+    monkeypatch.setitem(sys.modules, "wirecloud.commons.search", SimpleNamespace(delete_group_from_index=delete_group_from_index))
+
+    await crud.delete_organization(db_session, org)
+    remove_users.assert_not_called()
+    delete_group_from_index.assert_not_called()
+
+    child_id = ObjectId()
+    await db_session.client.groups.insert_many([
+        {"_id": org_id, "name": "Org", "codename": "org", "users": [], "is_organization": True, "path": [org_id]},
+        {"_id": child_id, "name": "Child", "codename": "child", "users": [ObjectId()], "is_organization": True, "path": [org_id, child_id]},
+    ])
+
+    await crud.delete_organization(db_session, org)
+    assert await db_session.client.groups.find_one({"_id": org_id}) is None
+    assert await db_session.client.groups.find_one({"_id": child_id}) is None
+    assert remove_users.await_count == 2
+    assert delete_group_from_index.await_count == 2
+
+
+async def test_delete_user_removes_db_tokens_groups_and_index(monkeypatch, db_session):
+    user = await _seed_user(db_session, "zara")
+    gid = ObjectId()
+    await db_session.client.groups.insert_one({"_id": gid, "name": "Team", "codename": "team", "users": [ObjectId(user.id)], "path": [gid]})
+    await db_session.client.users.update_one({"_id": ObjectId(user.id)}, {"$set": {"groups": [gid]}})
+    await crud.create_token(db_session, datetime.now(timezone.utc) + timedelta(minutes=30), user.id)
+
+    delete_user_from_index = AsyncMock()
+    monkeypatch.setitem(sys.modules, "wirecloud.commons.search", SimpleNamespace(delete_user_from_index=delete_user_from_index))
+
+    await crud.delete_user(db_session, user)
+
+    assert await db_session.client.users.find_one({"_id": ObjectId(user.id)}) is None
+    group_doc = await db_session.client.groups.find_one({"_id": gid})
+    assert ObjectId(user.id) not in group_doc.get("users", [])
+    token_doc = await db_session.client.tokens.find_one({"user_id": user.id})
+    assert token_doc is not None
+    assert token_doc["valid"] is False
+    delete_user_from_index.assert_awaited_once()
+
+
+async def test_get_all_parent_groups_from_child_returns_empty_when_child_missing_or_without_path(monkeypatch):
+    missing_db = SimpleNamespace(client=SimpleNamespace(groups=SimpleNamespace(find_one=AsyncMock(return_value=None))))
+    assert await crud.get_all_parent_groups_from_child(missing_db, Id(str(ObjectId()))) == []
+
+    no_path_db = SimpleNamespace(client=SimpleNamespace(groups=SimpleNamespace(find_one=AsyncMock(return_value={"_id": ObjectId()}))))
+    assert await crud.get_all_parent_groups_from_child(no_path_db, Id(str(ObjectId()))) == []

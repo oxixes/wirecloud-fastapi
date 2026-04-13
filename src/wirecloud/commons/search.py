@@ -117,7 +117,8 @@ GROUP_MAPPINGS = {
                     "keyword": {"type": "keyword"}
                 }
             },
-            "is_organization": {"type": "boolean"}
+            "is_organization": {"type": "boolean"},
+            "is_root": {"type": "boolean"}
         }
     }
 }
@@ -127,6 +128,7 @@ _available_rebuild_engines = None
 
 
 class SearchUserOutput(BaseModel):
+    id: str = ""
     fullname: str
     username: str
     type: str = "user"
@@ -135,6 +137,7 @@ class SearchUserOutput(BaseModel):
 class SearchGroupOutput(BaseModel):
     name: str
     is_organization: bool
+    is_root: bool
     type: str
 
 
@@ -238,6 +241,7 @@ async def build_search_response(index: Union[str, list[str]], body: dict, pagenu
 def clean_user_out(hit: dict) -> SearchUserOutput:
     source = hit["_source"]
     return SearchUserOutput(
+        id=hit["_id"],
         fullname=source["fullname"],
         username=source["username"],
         type="user"
@@ -272,12 +276,21 @@ async def add_user_to_index(user: User):
     ).model_dump())
 
 
+async def delete_user_from_index(user: User):
+    await es_client.delete(index=USERS_INDEX, id=str(user.id))
+
+
 async def add_group_to_index(group: Group):
     await es_client.index(index=GROUPS_INDEX, id=str(group.id), document=SearchGroupOutput(
         name=group.name,
         is_organization=group.is_organization,
+        is_root=len(group.path) == 1,
         type="organization" if group.is_organization else "group"
     ).model_dump())
+
+
+async def delete_group_from_index(group: Group):
+    await es_client.delete(index=GROUPS_INDEX, id=str(group.id))
 
 
 def clean_group_out(hit: dict) -> SearchGroupOutput:
@@ -286,6 +299,7 @@ def clean_group_out(hit: dict) -> SearchGroupOutput:
     return SearchGroupOutput(
         name=source["name"],
         is_organization=is_org,
+        is_root=source.get("is_root", True),
         type="organization" if is_org else "group"
     )
 
@@ -360,6 +374,7 @@ async def rebuild_group_index(db: DBSession):
     actions = [{'_index': GROUPS_INDEX, '_id': str(group.id), '_source': SearchGroupOutput(
         name=group.name,
         is_organization=group.is_organization,
+        is_root=len(group.path) == 1,
         type="organization" if group.is_organization else "group"
     ).model_dump()} for group in data]
     await async_bulk(es_client, actions)

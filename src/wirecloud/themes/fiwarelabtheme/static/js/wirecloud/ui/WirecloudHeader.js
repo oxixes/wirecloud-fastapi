@@ -127,6 +127,13 @@
                     dialog.show();
                 });
                 user_menu.append(item.addIconClass('fas fa-exchange-alt'));
+
+                item = new StyledElements.MenuItem(utils.gettext('Admin Panel'), function () {
+                    var dialog = new Wirecloud.ui.AdminPanelWindowMenu();
+                    dialog.show();
+                });
+                user_menu.append(item.addIconClass('fas fa-cogs'));
+
             }
 
             const realuser = Wirecloud.contextManager.get('realuser');

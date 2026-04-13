@@ -30,6 +30,7 @@ import wirecloud.platform as platform
 from wirecloud import settings
 from wirecloud.catalogue.crud import get_catalogue_resource
 from wirecloud.commons.auth.crud import get_user_groups, get_all_user_permissions
+from wirecloud.commons.auth.routes import admin_router
 from wirecloud.commons.utils.http import get_absolute_reverse_url
 from wirecloud.commons.utils.template.schemas.macdschemas import Vendor, Name, Version
 from wirecloud.commons.utils.wgt import WgtFile
@@ -114,6 +115,7 @@ class WirecloudCorePlugin(WirecloudPlugin):
         app.include_router(preferences_router, prefix="/api", tags=["Preferences"])
         app.include_router(workspace_router, prefix="/api/workspace", tags=["Workspace"])
         app.include_router(workspaces_router, prefix="/api/workspaces", tags=["Workspace"])
+        app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
         app.include_router(iwidget_router, prefix="/api/workspace", tags=["Widget instances"])
         app.include_router(widget_router, prefix="/api/widget", tags=["Widget"])
         app.include_router(showcase_router, prefix="/showcase/media", tags=["Widget"])
@@ -524,6 +526,20 @@ class WirecloudCorePlugin(WirecloudPlugin):
                          url=build_url_template(url_patterns['wirecloud.search_service'], [], prefix)),
             AjaxEndpoint(id='SWITCH_USER_SERVICE',
                          url=build_url_template(url_patterns['wirecloud.switch_user_service'], [], prefix)),
+            AjaxEndpoint(id='ADMIN_USER_COLLECTION',
+                         url=build_url_template(url_patterns['wirecloud.admin_user_collection'], [], prefix)),
+            AjaxEndpoint(id='ADMIN_USER_ENTRY',
+                         url=build_url_template(url_patterns['wirecloud.admin_user_entry'], ['user_username'], prefix)),
+            AjaxEndpoint(id='ADMIN_GROUP_COLLECTION',
+                         url=build_url_template(url_patterns['wirecloud.admin_group_collection'], [], prefix)),
+            AjaxEndpoint(id='ADMIN_GROUP_ENTRY',
+                         url=build_url_template(url_patterns['wirecloud.admin_group_entry'], ['group_name'], prefix)),
+            AjaxEndpoint(id='ADMIN_ORGANIZATION_COLLECTION',
+                         url=build_url_template(url_patterns['wirecloud.admin_organization_collection'], [], prefix)),
+            AjaxEndpoint(id='ADMIN_ORGANIZATION_ENTRY',
+                         url=build_url_template(url_patterns['wirecloud.admin_organization_entry'], ['org_name'], prefix)),
+            AjaxEndpoint(id='ADMIN_ORGANIZATION_GROUP_ENTRY',
+                         url=build_url_template(url_patterns['wirecloud.admin_organization_group_entry'], ['group_name'], prefix)),
             AjaxEndpoint(id='TAB_COLLECTION',
                          url=build_url_template(url_patterns['wirecloud.tab_collection'], ['workspace_id'], prefix)),
             AjaxEndpoint(id='TAB_ENTRY',

@@ -30,7 +30,7 @@ class MultipleResourcesInstalledResponse(BaseModel):
 
 class ResourceCreateData(BaseModel):
     install_embedded_resources: bool = Field(False, description=docs.resource_create_data_install_embedded_resources_description)
-    force_create: bool = Field(False, description=docs.resource_create_data_force_create_description),
+    force_create: bool = Field(False, description=docs.resource_create_data_force_create_description)
     url: str = Field(..., description=docs.resource_create_data_url_description)
     headers: dict[str, str] = Field(default_factory=dict, description=docs.resource_create_data_headers_description)
 

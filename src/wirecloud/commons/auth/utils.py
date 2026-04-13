@@ -18,12 +18,13 @@
 
 import aiohttp
 import jwt
+import secrets
 from urllib.parse import urlencode
 from bson import ObjectId
 from typing import Union, Optional
 from secrets import compare_digest
 from hashlib import pbkdf2_hmac
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
@@ -191,6 +192,14 @@ def check_password(password: str, password_hash: str) -> bool:
         return compare_digest(hashed_password, b64decode(expected_password_hash))
 
     return False
+
+
+def hash_password(password: str) -> str:
+    algorithm = 'pbkdf2_sha256'
+    salt = secrets.token_hex(16)
+    iterations = 150000
+    hashed_password = pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('ascii'), iterations)
+    return f'{algorithm}${iterations}${salt}${b64encode(hashed_password).decode("ascii")}'
 
 
 async def make_oidc_provider_request(endpoint: str, data: Optional[dict] = None, auth: Optional[str] = None,

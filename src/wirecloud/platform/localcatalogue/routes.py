@@ -30,7 +30,7 @@ import os
 from wirecloud.catalogue import utils as catalogue_utils
 from wirecloud.catalogue.schemas import CatalogueResourceDeleteResults
 from wirecloud.catalogue.search import add_resource_to_index, delete_resource_from_index
-from wirecloud.commons.auth.crud import get_user_with_all_info, get_user_by_username, get_group_by_name, \
+from wirecloud.commons.auth.crud import get_user_by_username, get_group_by_name, \
     get_top_group_organization
 from wirecloud.commons.auth.schemas import UserAll
 from wirecloud.commons.utils.template import TemplateParseException, UnsupportedFeature
