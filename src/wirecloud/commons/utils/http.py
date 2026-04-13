@@ -474,7 +474,7 @@ def build_downloadfile_response(request: Request, file_path: str, base_dir: str)
         mime_type, _ = mimetypes.guess_type(fullpath)
         if mime_type is None:
             mime_type = 'application/octet-stream'
-        return FileResponse(fullpath, media_type='mime_type')
+        return FileResponse(fullpath, media_type=mime_type)
     else:
         return Response(headers={'X-Sendfile': fullpath})
 

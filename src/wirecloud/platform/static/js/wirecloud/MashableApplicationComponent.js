@@ -96,7 +96,8 @@
                         name: name,
                         version: version.text,
                         file_path: ""
-                    })
+                    }),
+                    configurable: true
                 }
             });
 

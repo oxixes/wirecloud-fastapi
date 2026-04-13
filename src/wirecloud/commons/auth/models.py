@@ -35,7 +35,7 @@ class Group(BaseModel, populate_by_name=True):
     codename: str
 
     is_organization: bool = False
-    path: list[Id]
+    path: list[Id] = []
 
     group_permissions: list[Permission] = []
     users: list[Id] = []

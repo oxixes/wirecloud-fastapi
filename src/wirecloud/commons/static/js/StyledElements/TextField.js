@@ -97,6 +97,10 @@
                 this.wrapperElement.setAttribute("id", options.id);
             }
 
+            if (options.ariaLabel) {
+                this.wrapperElement.setAttribute("aria-label", options.ariaLabel);
+            }
+
             this.inputElement.setAttribute("value", options.initialValue);
 
             /* Internal events */
