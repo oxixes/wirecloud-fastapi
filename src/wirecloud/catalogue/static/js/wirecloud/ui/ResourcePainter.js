@@ -43,7 +43,7 @@
             }
         }
 
-        paintError(message, context) {
+        paintInfo(message, context) {
             if (context != null) {
                 message = this.builder.parse(this.builder.DEFAULT_OPENING + message + this.builder.DEFAULT_CLOSING, context);
             }

@@ -174,8 +174,8 @@
     const requestFunc = function requestFunc(page, options, onSuccess, onError) {
         const priv = privates.get(this);
 
-        if (page > priv.totalPages) {
-            page = priv.totalPages;
+        if (page > this.totalPages) {
+            page = this.totalPages;
         } else if (page < 0) {
             page = 0;
         }

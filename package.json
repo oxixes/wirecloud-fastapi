@@ -7,11 +7,14 @@
         "prebuild:js": "npm run prebuild",
         "build:css": "ts-node -r tsconfig-paths/register --project src/wirecloud/webpack/webpack-tsconfig.json ./node_modules/webpack/bin/webpack --config src/wirecloud/webpack/webpack.sass.ts",
         "build:js": "ts-node -r tsconfig-paths/register --project src/wirecloud/webpack/webpack-tsconfig.json ./node_modules/webpack/bin/webpack --config src/wirecloud/webpack/webpack.js.ts --progress",
-        "build": "ts-node -r tsconfig-paths/register --project src/wirecloud/webpack/webpack-tsconfig.json ./node_modules/webpack/bin/webpack --config src/wirecloud/webpack/webpack.all.ts --progress"
+        "build": "ts-node -r tsconfig-paths/register --project src/wirecloud/webpack/webpack-tsconfig.json ./node_modules/webpack/bin/webpack --config src/wirecloud/webpack/webpack.all.ts --progress",
+        "test:js": "node ./scripts/run-js-tests.mjs",
+        "test:js:cov": "node ./scripts/run-js-coverage.mjs"
     },
     "devDependencies": {
         "@types/node": "^22.10.2",
         "@types/webpack": "^5.28.5",
+        "c8": "^11.0.0",
         "css-loader": "^7.1.2",
         "esbuild": "0.25.0",
         "esbuild-loader": "^4.2.2",
