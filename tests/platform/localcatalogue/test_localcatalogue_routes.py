@@ -1047,3 +1047,45 @@ async def test_delete_resources_helper(db_session, monkeypatch):
     assert one.status_code == 204
     assert called["uninstall"] == 1
     assert called["delete_if_unused"] == 1
+
+
+async def test_massive_resource_update_branches(monkeypatch):
+    req = _request("/api/resource/acme/widget/1.0.0")
+    monkeypatch.setattr(routes, "build_error_response", lambda _request, status, _msg, details=None: Response(status_code=status))
+    handler = routes.massive_resource_update.__wrapped__
+
+    user_no_perm = SimpleNamespace(is_superuser=False, has_perm=lambda _perm: False)
+    denied = await handler(SimpleNamespace(), req, user_no_perm, "acme", "widget", "1.0")
+    assert denied.status_code == 403
+
+    user_perm = SimpleNamespace(is_superuser=False, has_perm=lambda perm: perm == "COMPONENT.MASSIVE_UPDATE")
+
+    async def _none(*_args, **_kwargs):
+        return None
+
+    monkeypatch.setattr(routes, "get_catalogue_resource", _none)
+    missing = await handler(SimpleNamespace(), req, user_perm, "acme", "widget", "1.0")
+    assert missing.status_code == 404
+
+    async def _unsupported(*_args, **_kwargs):
+        return SimpleNamespace(type="other")
+
+    monkeypatch.setattr(routes, "get_catalogue_resource", _unsupported)
+    unsupported = await handler(SimpleNamespace(), req, user_perm, "acme", "widget", "1.0")
+    assert unsupported.status_code == 422
+
+    async def _supported(*_args, **_kwargs):
+        return SimpleNamespace(type=routes.CatalogueResourceType.widget)
+
+    async def _update(*_args, **_kwargs):
+        return routes.MassiveUpdateResponse(
+            resource_type="widget",
+            total_workspaces_updated=2,
+            total_resources_updated=3
+        )
+
+    monkeypatch.setattr(routes, "get_catalogue_resource", _supported)
+    monkeypatch.setattr(routes, "update_all_workspaces_with_resource", _update)
+    ok = await handler(SimpleNamespace(), req, user_perm, "acme", "widget", "1.0")
+    assert isinstance(ok, routes.MassiveUpdateResponse)
+    assert ok.total_resources_updated == 3

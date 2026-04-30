@@ -22,8 +22,14 @@ from urllib.request import Request
 from bson import ObjectId
 from typing import Optional, Union
 import os
+from copy import deepcopy
 from io import BytesIO
 
+from fastapi import Response
+
+from wirecloud.catalogue.schemas import CatalogueResource, CatalogueResourceType
+from wirecloud.platform.localcatalogue.schemas import MassiveUpdateResponse
+from wirecloud.platform.wiring.utils import check_wiring
 from wirecloud.settings import cache
 from wirecloud.catalogue import utils as catalogue
 from wirecloud.catalogue.crud import get_catalogue_resource
@@ -113,7 +119,8 @@ async def get_workspace_by_id(db: DBSession, workspace_id: Id) -> Optional[Works
     return Workspace.model_validate(workspace)
 
 
-async def create_workspace(db: DBSession, request: Optional[Request], owner: UserAll, mashup: Union[str, WgtFile, Workspace],
+async def create_workspace(db: DBSession, request: Optional[Request], owner: UserAll,
+                           mashup: Union[str, WgtFile, Workspace],
                            mashup_user: Optional[UserAll] = None,
                            new_name: str = None,
                            new_title: str = None, preferences: dict[str, Union[str, WorkspacePreference]] = {},
@@ -126,7 +133,8 @@ async def create_workspace(db: DBSession, request: Optional[Request], owner: Use
 
         (mashup_vendor, mashup_name, mashup_version) = values
         resource = await get_catalogue_resource(db, mashup_vendor, mashup_name, mashup_version)
-        if resource is None or not resource.is_available_for(mashup_user if mashup_user is not None else owner) or resource.resource_type() != 'mashup':
+        if resource is None or not resource.is_available_for(
+                mashup_user if mashup_user is not None else owner) or resource.resource_type() != 'mashup':
             raise ValueError(_("Mashup not found %(mashup)s") % {'mashup': mashup})
 
         base_dir = catalogue.wgt_deployer.get_base_dir(mashup_vendor, mashup_name, mashup_version)
@@ -294,3 +302,82 @@ async def get_all_workspaces(db: DBSession) -> list[Workspace]:
         results.append(Workspace.model_validate(workspace))
 
     return results
+
+
+async def update_all_workspace_with_widgets(db: DBSession, user: UserAll, vendor: str, name: str, new_version: str,
+                                            new_id: Id) -> MassiveUpdateResponse:
+    workspaces = await get_all_workspaces(db)
+    new_widget_uri = f"{vendor}/{name}/{new_version}"
+    updated_widgets = 0
+    updated_workspaces = 0
+
+    for workspace in workspaces:
+        changed = False
+        if await workspace.is_editable_by(db, user):
+            for tab in workspace.tabs.values():
+                for widget in tab.widgets.values():
+                    if widget.widget_uri.startswith(f"{vendor}/{name}/") and widget.widget_uri != new_widget_uri:
+                        widget.widget_uri = new_widget_uri
+                        widget.resource = new_id
+                        updated_widgets += 1
+                        changed = True
+        if changed:
+            await change_workspace(db, workspace, user)
+            updated_workspaces += 1
+
+    return MassiveUpdateResponse(
+        resource_type="widget",
+        total_workspaces_updated=updated_workspaces,
+        total_resources_updated=updated_widgets
+    )
+
+
+async def update_all_workspaces_with_operators(db: DBSession, user: UserAll, request: Request, vendor: str, name: str,
+                                               new_version: str) -> Union[Response, MassiveUpdateResponse]:
+    workspaces = await get_all_workspaces(db)
+    new_operator_uri = f"{vendor}/{name}/{new_version}"
+    updated_operators = 0
+    updated_workspaces = 0
+
+    for workspace in workspaces:
+        old_wiring = workspace.wiring_status
+        new_wiring = deepcopy(old_wiring)
+        changed = False
+        if await workspace.is_editable_by(db, user):
+            for op in new_wiring.operators.values():
+                if op.name.startswith(f"{vendor}/{name}/") and op.name != new_operator_uri:
+                    op.name = new_operator_uri
+                    changed = True
+                    updated_operators += 1
+
+        if not changed:
+            continue
+
+        result = await check_wiring(db, request, user, new_wiring, old_wiring, workspace)
+
+        if not type(result) == bool:
+            return result
+
+        workspace.wiring_status = new_wiring
+        await change_workspace(db, workspace, user)
+        updated_workspaces += 1
+
+    return MassiveUpdateResponse(
+        resource_type="operator",
+        total_workspaces_updated=updated_workspaces,
+        total_resources_updated=updated_operators
+    )
+
+
+async def update_all_workspaces_with_resource(db: DBSession, user: UserAll, request: Request,
+                                              resource: CatalogueResource) -> Union[Response, MassiveUpdateResponse]:
+    vendor = resource.vendor
+    name = resource.short_name
+    new_version = resource.version
+
+    if resource.type == CatalogueResourceType.widget:
+        return await update_all_workspace_with_widgets(db, user, vendor, name, new_version, resource.id)
+    elif resource.type == CatalogueResourceType.operator:
+        return await update_all_workspaces_with_operators(db, user, request, vendor, name, new_version)
+    else:
+        raise ValueError(_('This resource type is not supported for massive updates'))

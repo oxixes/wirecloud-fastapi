@@ -247,6 +247,12 @@
             description: utils.gettext('Allows the user to delete all versions of a component at once'),
             category: 'Component'
         },
+        {
+            key: 'COMPONENT.MASSIVE_UPDATE',
+            label: utils.gettext('Massive Update Components'),
+            description: utils.gettext('Allows the user to update all versions of a component at once'),
+            category: 'Component'
+        },
 
         {
             key: 'MARKETPLACE.CREATE',

@@ -402,4 +402,41 @@
         }.bind(this);
     };
 
+    ns.MyResourcesView.prototype.ui_commands.massiveUpdate = function massiveUpdate(resource) {
+        const doRequest = function () {
+            const url = Wirecloud.URLs.LOCAL_RESOURCE_MASSIVE_UPDATE_ENTRY.evaluate({
+                vendor: resource.vendor,
+                name: resource.name,
+                version: resource.version.text
+            });
+            const task_title = utils.interpolate(
+                utils.gettext('Updating %(title)s (%(uri)s) in editable workspaces'),
+                resource
+            );
+
+            Wirecloud.UserInterfaceManager.monitorTask(
+                Wirecloud.io.makeRequest(url, {
+                    method: 'POST',
+                    requestHeaders: {'Accept': 'application/json'}
+                }).then((response) => {
+                    if (response.status !== 200) {
+                        return Promise.reject(Wirecloud.GlobalLogManager.parseErrorResponse(response));
+                    }
+
+                    return Promise.resolve(response);
+                }).toTask(task_title)
+            );
+        };
+
+        const msg = utils.interpolate(
+            utils.gettext('Do you really want to update "%(name)s" (vendor: "%(vendor)s", version: "%(version)s") in all editable workspaces?'),
+            resource,
+            true
+        );
+        return function () {
+            const dialog = new Wirecloud.ui.AlertWindowMenu(msg);
+            dialog.setHandler(doRequest.bind(this)).show();
+        }.bind(this);
+    };
+
 })(Wirecloud.ui, StyledElements, Wirecloud.Utils);

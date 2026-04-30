@@ -161,7 +161,7 @@ def test_check_same_wiring_additional_branches():
 
 async def test_check_multiuser_wiring_paths(monkeypatch):
     request = SimpleNamespace(headers={"Accept": "*/*"})
-    user = SimpleNamespace(id="u1")
+    user = SimpleNamespace(id="u1", is_superuser=False)
     workspace = SimpleNamespace(creator="owner")
 
     old = _wiring()
@@ -344,7 +344,7 @@ async def test_check_multiuser_wiring_paths(monkeypatch):
 
 async def test_check_wiring_paths(monkeypatch):
     request = SimpleNamespace(headers={"Accept": "*/*"})
-    user = SimpleNamespace(id="u1")
+    user = SimpleNamespace(id="u1", is_superuser=False)
     workspace = SimpleNamespace(creator="owner")
 
     old = _wiring(connections=[_connection(readonly=True)])

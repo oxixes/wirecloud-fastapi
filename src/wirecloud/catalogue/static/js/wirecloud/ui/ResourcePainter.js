@@ -278,6 +278,23 @@
                 fragment.appendChild(button);
             }
 
+            const user_permissions = Wirecloud.contextManager.get('permissions') || [];
+            const can_massive_update = (
+                this.catalogue_view.catalogue === Wirecloud.LocalCatalogue &&
+                ['widget', 'operator'].indexOf(resource.type) !== -1 &&
+                (Wirecloud.contextManager.get('issuperuser') || user_permissions.indexOf('COMPONENT.MASSIVE_UPDATE') !== -1)
+            );
+            if (can_massive_update) {
+                const local_catalogue_view = Wirecloud.UserInterfaceManager.views.myresources;
+                button = new se.Button({
+                    'class': 'btn-warning',
+                    'text': utils.gettext('Update all resource versions')
+                });
+                button.addEventListener('click', local_catalogue_view.createUserCommand('massiveUpdate', resource));
+                fragment.appendChild(button);
+            }
+
+
             return fragment;
         }
 

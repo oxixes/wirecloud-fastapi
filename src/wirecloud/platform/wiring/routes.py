@@ -87,14 +87,14 @@ async def update_wiring_entry(db: DBDep, request: Request, user: UserDep,
     adding_operator = len(new_wiring_status.operators) > len(old_wiring_status.operators)
     adding = adding_connection or adding_operator
 
-    if len(new_wiring_status.connections) < len(old_wiring_status.connections) and not is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.DELETE"):
+    if len(new_wiring_status.connections) < len(old_wiring_status.connections) and not is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.DELETE") and not user.is_superuser:
         return build_error_response(request, 403, _('You are not allowed to delete connections from this workspace'))
-    if len(new_wiring_status.operators) < len(old_wiring_status.operators) and not is_owner_or_has_permission(user, workspace, "WORKSPACE.OPERATOR.DELETE"):
+    if len(new_wiring_status.operators) < len(old_wiring_status.operators) and not is_owner_or_has_permission(user, workspace, "WORKSPACE.OPERATOR.DELETE") and not user.is_superuser:
         return build_error_response(request, 403, _('You are not allowed to delete operators from this workspace'))
 
-    if await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT"):
+    if await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT") or user.is_superuser:
         result = await check_wiring(db, request, user, new_wiring_status, old_wiring_status, workspace, adding, can_update_secure=False)
-    elif await workspace.is_accessible_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT"):
+    elif await workspace.is_accessible_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT") or user.is_superuser:
         result = await check_multiuser_wiring(db, request, user, new_wiring_status, old_wiring_status,
                                               workspace, adding, can_update_secure=False)
     else:
@@ -152,9 +152,9 @@ async def patch_wiring_entry(db: DBDep, request: Request, user: UserDep,
         adding_connection = adding_connection or p.op == 'add' and p.path.startswith("/connections")
         adding_operator = adding_operator or p.op == 'add' and p.path.startswith("/operators")
 
-        if adding_connection and not is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.CREATE"):
+        if adding_connection and not is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.CREATE") and not user.is_superuser:
                 return build_error_response(request, 403, _('You are not allowed to add connections to this workspace'))
-        if adding_operator and not is_owner_or_has_permission(user, workspace, "WORKSPACE.OPERATOR.CREATE"):
+        if adding_operator and not is_owner_or_has_permission(user, workspace, "WORKSPACE.OPERATOR.CREATE") and not user.is_superuser:
                 return build_error_response(request, 403, _('You are not allowed to add operators to this workspace'))
         result = OPERATOR_PATH_RE.match(p.path)
         if result is not None:
@@ -178,9 +178,9 @@ async def patch_wiring_entry(db: DBDep, request: Request, user: UserDep,
         return build_error_response(request, 400, _('Invalid JSON patch'))
 
     adding = adding_connection or adding_operator
-    if await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT"):
+    if await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT") or user.is_superuser:
         result = await check_wiring(db, request, user, new_wiring_status, old_wiring_status, workspace, adding, can_update_secure=True)
-    elif await workspace.is_accessible_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT"):
+    elif await workspace.is_accessible_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT") or user.is_superuser:
         result = await check_multiuser_wiring(db, request, user, new_wiring_status, old_wiring_status,
                                               workspace, adding, can_update_secure=True)
     else:

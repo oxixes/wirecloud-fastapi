@@ -75,6 +75,7 @@ async def update_widget_value(db: DBSession, iwidget: WidgetInstance, data: Unio
             raise ValueError(_('%(uri)s is not a widget') % {"uri": data.widget})
 
         iwidget.resource = resource.id
+        iwidget.widget_uri = f"{widget_vendor}/{widget_name}/{widget_version}"
         return resource
 
     elif required:

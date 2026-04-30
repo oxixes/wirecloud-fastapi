@@ -128,7 +128,7 @@ async def create_widget_instance_collection(db: DBDep, user: UserDep, request: R
         return build_error_response(request, 404, _("Tab not found"))
 
     can_create = await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIDGET.CREATE")
-    if not can_create:
+    if not can_create and not user.is_superuser:
         return build_error_response(request, 403, _("You have not enough permission for adding iwidgets to the workspace"))
     try:
         iwidget = await save_widget_instance(db, workspace, iwidget, user, tab, initial_variable_values)
