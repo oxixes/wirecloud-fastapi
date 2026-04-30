@@ -161,6 +161,7 @@ test('StyledElements.Container repaint delegates to child repaint methods', () =
     container.appendChild(child);
 
     container.repaint(true);
+    container.repaint();
 
     assert.equal(child.repaintCalls, 1);
 });

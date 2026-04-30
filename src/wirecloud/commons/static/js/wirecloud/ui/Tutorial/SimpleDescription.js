@@ -81,7 +81,7 @@
         if (this.currentElement != null) {
             const ref_pos = this.currentElement.getBoundingClientRect();
             const weights = [];
-            const positions = ['down', 'left', 'top', 'right'];
+            const positions = ['down', 'left', 'up', 'right'];
             let i = 0;
             do {
                 setDialogPosition.call(this, ref_pos, positions[i]);
