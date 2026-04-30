@@ -304,7 +304,7 @@ async def get_all_workspaces(db: DBSession) -> list[Workspace]:
     return results
 
 
-async def update_all_workspace_with_widgets(db: DBSession, user: UserAll, vendor: str, name: str, new_version: str,
+async def update_all_workspaces_with_widgets(db: DBSession, user: UserAll, vendor: str, name: str, new_version: str,
                                             new_id: Id) -> MassiveUpdateResponse:
     workspaces = await get_all_workspaces(db)
     new_widget_uri = f"{vendor}/{name}/{new_version}"
@@ -355,7 +355,7 @@ async def update_all_workspaces_with_operators(db: DBSession, user: UserAll, req
 
         result = await check_wiring(db, request, user, new_wiring, old_wiring, workspace)
 
-        if not type(result) == bool:
+        if isinstance(result, Response):
             return result
 
         workspace.wiring_status = new_wiring
@@ -369,14 +369,14 @@ async def update_all_workspaces_with_operators(db: DBSession, user: UserAll, req
     )
 
 
-async def update_all_workspaces_with_resource(db: DBSession, user: UserAll, request: Request,
+async def update_all_workspaces_with_resources(db: DBSession, user: UserAll, request: Request,
                                               resource: CatalogueResource) -> Union[Response, MassiveUpdateResponse]:
     vendor = resource.vendor
     name = resource.short_name
     new_version = resource.version
 
     if resource.type == CatalogueResourceType.widget:
-        return await update_all_workspace_with_widgets(db, user, vendor, name, new_version, resource.id)
+        return await update_all_workspaces_with_widgets(db, user, vendor, name, new_version, resource.id)
     elif resource.type == CatalogueResourceType.operator:
         return await update_all_workspaces_with_operators(db, user, request, vendor, name, new_version)
     else:

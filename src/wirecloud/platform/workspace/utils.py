@@ -475,8 +475,6 @@ async def _get_global_workspace_data(db: DBSession, request: Request, workspace:
             vardef = operator_info.variables.preferences.get(preference_name)
             value = preference.value
 
-            print("Preference: ", preference)
-
             variable_user = user if vardef is not None and vardef.multiuser else await get_user_with_all_info(db, workspace.creator)
 
             if preference_name in operator_forced_values:

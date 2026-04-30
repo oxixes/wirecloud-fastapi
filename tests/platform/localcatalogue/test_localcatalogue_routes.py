@@ -1085,7 +1085,7 @@ async def test_massive_resource_update_branches(monkeypatch):
         )
 
     monkeypatch.setattr(routes, "get_catalogue_resource", _supported)
-    monkeypatch.setattr(routes, "update_all_workspaces_with_resource", _update)
+    monkeypatch.setattr(routes, "update_all_workspaces_with_resources", _update)
     ok = await handler(SimpleNamespace(), req, user_perm, "acme", "widget", "1.0")
     assert isinstance(ok, routes.MassiveUpdateResponse)
     assert ok.total_resources_updated == 3

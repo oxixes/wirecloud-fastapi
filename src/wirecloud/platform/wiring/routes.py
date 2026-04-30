@@ -92,9 +92,9 @@ async def update_wiring_entry(db: DBDep, request: Request, user: UserDep,
     if len(new_wiring_status.operators) < len(old_wiring_status.operators) and not is_owner_or_has_permission(user, workspace, "WORKSPACE.OPERATOR.DELETE") and not user.is_superuser:
         return build_error_response(request, 403, _('You are not allowed to delete operators from this workspace'))
 
-    if await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT") or user.is_superuser:
+    if user.is_superuser or (await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT")):
         result = await check_wiring(db, request, user, new_wiring_status, old_wiring_status, workspace, adding, can_update_secure=False)
-    elif await workspace.is_accessible_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT") or user.is_superuser:
+    elif await workspace.is_accessible_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT"):
         result = await check_multiuser_wiring(db, request, user, new_wiring_status, old_wiring_status,
                                               workspace, adding, can_update_secure=False)
     else:
@@ -178,9 +178,9 @@ async def patch_wiring_entry(db: DBDep, request: Request, user: UserDep,
         return build_error_response(request, 400, _('Invalid JSON patch'))
 
     adding = adding_connection or adding_operator
-    if await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT") or user.is_superuser:
+    if user.is_superuser or (await workspace.is_editable_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT")):
         result = await check_wiring(db, request, user, new_wiring_status, old_wiring_status, workspace, adding, can_update_secure=True)
-    elif await workspace.is_accessible_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT") or user.is_superuser:
+    elif await workspace.is_accessible_by(db, user) and is_owner_or_has_permission(user, workspace, "WORKSPACE.WIRING.EDIT"):
         result = await check_multiuser_wiring(db, request, user, new_wiring_status, old_wiring_status,
                                               workspace, adding, can_update_secure=True)
     else:

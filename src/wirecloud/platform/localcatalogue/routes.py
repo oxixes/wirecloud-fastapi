@@ -47,7 +47,7 @@ from wirecloud.database import DBDep, Id, DBSession
 from wirecloud.platform.localcatalogue.schemas import MultipleResourcesInstalledResponse, ResourceCreateData, \
     MassiveUpdateResponse
 from wirecloud.platform.localcatalogue.utils import fix_dev_version, install_component
-from wirecloud.platform.workspace.crud import get_workspace_by_id, update_all_workspaces_with_resource
+from wirecloud.platform.workspace.crud import get_workspace_by_id, update_all_workspaces_with_resources
 from wirecloud.platform.workspace.models import Workspace
 from wirecloud.proxy.routes import parse_context_from_referer, WIRECLOUD_PROXY
 from wirecloud.proxy.schemas import ProxyRequestData
@@ -546,4 +546,4 @@ async def massive_resource_update(db: DBDep, request: Request, user: UserDep, ve
     if resource.type != CatalogueResourceType.widget and resource.type != CatalogueResourceType.operator:
         return build_error_response(request, 422, _('The resource type is not supported for massive updates'))
 
-    return await update_all_workspaces_with_resource(db, user, request, resource)
+    return await update_all_workspaces_with_resources(db, user, request, resource)

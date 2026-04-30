@@ -320,7 +320,7 @@ async def test_create_workspace_mashup_string_and_misc_helpers(db_session, monke
             pass
 
 
-async def test_update_all_workspace_with_widgets(monkeypatch):
+async def test_update_all_workspaces_with_widgets(monkeypatch):
     user = SimpleNamespace(id=ObjectId())
     w1 = SimpleNamespace(widget_uri="acme/weather/1.0", resource=ObjectId())
     w2 = SimpleNamespace(widget_uri="acme/weather/2.0", resource=ObjectId())
@@ -355,7 +355,7 @@ async def test_update_all_workspace_with_widgets(monkeypatch):
     async def _workspaces(items):
         return items
 
-    result = await crud.update_all_workspace_with_widgets(SimpleNamespace(), user, "acme", "weather", "3.0", ObjectId())
+    result = await crud.update_all_workspaces_with_widgets(SimpleNamespace(), user, "acme", "weather", "3.0", ObjectId())
     assert result.total_resources_updated == 2
     assert result.total_workspaces_updated == 1
     assert changed["n"] == 1
@@ -429,7 +429,7 @@ async def test_update_all_workspaces_with_operators_and_resource(db_session, mon
     async def _operators(*_args, **_kwargs):
         return "operators-updated"
 
-    monkeypatch.setattr(crud, "update_all_workspace_with_widgets", _widgets)
+    monkeypatch.setattr(crud, "update_all_workspaces_with_widgets", _widgets)
     monkeypatch.setattr(crud, "update_all_workspaces_with_operators", _operators)
 
     widget_resource = SimpleNamespace(
@@ -454,10 +454,10 @@ async def test_update_all_workspaces_with_operators_and_resource(db_session, mon
         type="other",
     )
 
-    assert await crud.update_all_workspaces_with_resource(SimpleNamespace(), user, request, widget_resource) == "widgets-updated"
-    assert await crud.update_all_workspaces_with_resource(SimpleNamespace(), user, request, operator_resource) == "operators-updated"
+    assert await crud.update_all_workspaces_with_resources(SimpleNamespace(), user, request, widget_resource) == "widgets-updated"
+    assert await crud.update_all_workspaces_with_resources(SimpleNamespace(), user, request, operator_resource) == "operators-updated"
     with pytest.raises(ValueError, match="not supported"):
-        await crud.update_all_workspaces_with_resource(SimpleNamespace(), user, request, invalid_resource)
+        await crud.update_all_workspaces_with_resources(SimpleNamespace(), user, request, invalid_resource)
 
     async def _resource(*_args, **_kwargs):
         return SimpleNamespace(
