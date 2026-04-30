@@ -43,6 +43,7 @@ This is a list of defined user permissions:
 - COMPONENT.VIEW: Allows the user to view all components.
 - COMPONENT.UNINSTALL: Allows the user to uninstall one version of a component.
 - COMPONENT.DELETE: Allows the user to delete all versions of a component at once
+- COMPONENT.MASSIVE_UPDATE: Allows the user to update all versions of a component at once.
 
 ################################
     MARKETPLACE PERMISSIONS

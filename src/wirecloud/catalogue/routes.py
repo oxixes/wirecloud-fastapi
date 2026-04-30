@@ -90,7 +90,7 @@ router = APIRouter()
 @consumes(["multipart/form-data", "application/octet-stream"])
 @authentication_required()
 async def create_resource(db: DBDep, request: Request, user: UserDep):
-    if not user.has_perm("COMPONENT.INSTALL"):
+    if not user.has_perm("COMPONENT.INSTALL") and not user.is_superuser:
         return build_error_response(request, 403, _('You do not have permission to install components'))
 
     if request.state.mimetype == 'multipart/form-data':

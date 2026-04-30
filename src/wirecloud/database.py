@@ -23,6 +23,8 @@ from pymongo.errors import OperationFailure
 from typing import AsyncIterator, Annotated, Any, Optional
 
 import logging
+import inspect
+import asyncio
 
 from pydantic_core import core_schema
 
@@ -38,10 +40,36 @@ class CollectionWrapper:
     def __getattr__(self, item):
         attr = getattr(self._collection, item)
         if callable(attr):
+            async def _retry_awaitable(op_result, op_args, op_kwargs):
+                max_attempts = 5
+                attempt = 1
+                current_result = op_result
+
+                while True:
+                    try:
+                        return await current_result
+                    except OperationFailure as e:
+                        can_retry = (
+                            _is_transient_transaction_error(e)
+                            and self._session.in_transaction
+                            and attempt < max_attempts
+                        )
+                        if not can_retry:
+                            raise
+
+                        delay = 0.02 * (2 ** (attempt - 1))
+                        await _restart_transaction(self._session)
+                        await asyncio.sleep(delay)
+                        current_result = attr(*op_args, **op_kwargs)
+                        attempt += 1
+
             def wrapper(*args, **kwargs):
                 if 'session' not in kwargs:
                     kwargs['session'] = self._session
-                return attr(*args, **kwargs)
+                result = attr(*args, **kwargs)
+                if inspect.isawaitable(result):
+                    return _retry_awaitable(result, args, kwargs)
+                return result
             return wrapper
         return attr
 
@@ -148,6 +176,22 @@ async def close() -> None:
 
 _transactions_supported: Optional[bool] = None
 
+
+def _is_transient_transaction_error(error: OperationFailure) -> bool:
+    labels = error.details.get("errorLabels", []) if error.details else []
+    return error.code == 251 or "TransientTransactionError" in labels
+
+
+async def _restart_transaction(session: AsyncClientSession) -> None:
+    if session.in_transaction:
+        try:
+            await session.abort_transaction()
+        except OperationFailure as e:
+            if not _is_transient_transaction_error(e):
+                raise
+    await session.start_transaction()
+
+
 async def check_transactions_supported() -> bool:
     global _transactions_supported
 
@@ -185,7 +229,11 @@ async def get_session() -> AsyncIterator[PyMongoSession]:
 
         except Exception:
             if pymongo_session.in_transaction:
-                await pymongo_session._session.abort_transaction()
+                try:
+                    await pymongo_session._session.abort_transaction()
+                except OperationFailure as e:
+                    if not _is_transient_transaction_error(e):
+                        raise
             raise
 
 

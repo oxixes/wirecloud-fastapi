@@ -263,3 +263,201 @@ async def test_commit_and_start_transaction_error_paths(monkeypatch):
 
     with pytest.raises(OperationFailure):
         await failing_other.start_transaction()
+
+
+async def test_collection_wrapper_retry_awaitable_and_helpers(monkeypatch):
+    def _opfail(msg, code, labels=None):
+        return OperationFailure(msg, code=code, details={"errorLabels": labels or []})
+
+    class _Session:
+        def __init__(self):
+            self.in_transaction = True
+            self.aborts = 0
+            self.starts = 0
+
+        async def abort_transaction(self):
+            self.aborts += 1
+            self.in_transaction = False
+
+        async def start_transaction(self):
+            self.starts += 1
+            self.in_transaction = True
+
+    class _Collection:
+        def __init__(self):
+            self.calls = 0
+            self.mode = "ok"
+
+        async def op(self, **_kwargs):
+            self.calls += 1
+            if self.mode == "ok":
+                return "ok"
+            if self.mode == "transient-once" and self.calls == 1:
+                raise _opfail("retry", 112, ["TransientTransactionError"])
+            if self.mode == "transient-always":
+                raise _opfail("retry", 112, ["TransientTransactionError"])
+            if self.mode == "non-transient":
+                raise _opfail("no-retry", 99, [])
+            return "ok"
+
+    async def _no_sleep(_seconds):
+        return None
+
+    monkeypatch.setattr(database.asyncio, "sleep", _no_sleep)
+
+    # Retry succeeds on second attempt
+    session = _Session()
+    collection = _Collection()
+    collection.mode = "transient-once"
+    wrapped = database.CollectionWrapper(collection, session)
+    assert await wrapped.op() == "ok"
+    assert collection.calls == 2
+    assert session.aborts == 1
+    assert session.starts == 1
+
+    # Retry exhausts max attempts
+    session2 = _Session()
+    collection2 = _Collection()
+    collection2.mode = "transient-always"
+    wrapped2 = database.CollectionWrapper(collection2, session2)
+    with pytest.raises(OperationFailure):
+        await wrapped2.op()
+    assert collection2.calls == 5
+
+    # Non-transient error does not retry
+    session3 = _Session()
+    collection3 = _Collection()
+    collection3.mode = "non-transient"
+    wrapped3 = database.CollectionWrapper(collection3, session3)
+    with pytest.raises(OperationFailure):
+        await wrapped3.op()
+    assert collection3.calls == 1
+
+    # Helper branches
+    assert database._is_transient_transaction_error(_opfail("x", 251, [])) is True
+    assert database._is_transient_transaction_error(_opfail("x", 99, ["TransientTransactionError"])) is True
+    assert database._is_transient_transaction_error(_opfail("x", 99, [])) is False
+
+
+async def test_restart_transaction_branches():
+    class _Session:
+        def __init__(self, in_tx=True, abort_error=None):
+            self.in_transaction = in_tx
+            self.abort_error = abort_error
+            self.aborted = 0
+            self.started = 0
+
+        async def abort_transaction(self):
+            self.aborted += 1
+            if self.abort_error is not None:
+                raise self.abort_error
+            self.in_transaction = False
+
+        async def start_transaction(self):
+            self.started += 1
+            self.in_transaction = True
+
+    # in_transaction=False: only start_transaction
+    s1 = _Session(in_tx=False)
+    await database._restart_transaction(s1)
+    assert s1.aborted == 0
+    assert s1.started == 1
+
+    # in_transaction=True with transient abort error: swallowed
+    transient = OperationFailure("x", code=112, details={"errorLabels": ["TransientTransactionError"]})
+    s2 = _Session(in_tx=True, abort_error=transient)
+    await database._restart_transaction(s2)
+    assert s2.aborted == 1
+    assert s2.started == 1
+
+    # in_transaction=True with non-transient abort error: raised
+    non_transient = OperationFailure("x", code=99, details={"errorLabels": []})
+    s3 = _Session(in_tx=True, abort_error=non_transient)
+    with pytest.raises(OperationFailure):
+        await database._restart_transaction(s3)
+
+
+async def test_get_session_abort_non_transient_error(monkeypatch):
+    async def _true():
+        return True
+
+    class _Session:
+        def __init__(self):
+            self.in_transaction = False
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def commit_transaction(self):
+            raise RuntimeError("commit-failed")
+
+        async def abort_transaction(self):
+            raise OperationFailure("abort-failed", code=99, details={"errorLabels": []})
+
+    class _Client:
+        def __init__(self, session):
+            self._session = session
+
+        def start_session(self):
+            return self._session
+
+    class _PySession(database.PyMongoSession):
+        async def start_transaction(self):
+            self._session.in_transaction = True
+
+    monkeypatch.setattr(database, "USE_TRANSACTIONS", True)
+    database._transactions_supported = True
+    monkeypatch.setattr(database, "check_transactions_supported", _true)
+    monkeypatch.setattr(database, "client", _Client(_Session()))
+    monkeypatch.setattr(database, "PyMongoSession", _PySession)
+
+    gen = database.get_session()
+    _ = await gen.__anext__()
+    with pytest.raises(OperationFailure):
+        await gen.__anext__()
+
+
+async def test_get_session_abort_transient_error_is_swallowed(monkeypatch):
+    async def _true():
+        return True
+
+    class _Session:
+        def __init__(self):
+            self.in_transaction = False
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def commit_transaction(self):
+            raise RuntimeError("commit-failed")
+
+        async def abort_transaction(self):
+            raise OperationFailure("abort-failed", code=112, details={"errorLabels": ["TransientTransactionError"]})
+
+    class _Client:
+        def __init__(self, session):
+            self._session = session
+
+        def start_session(self):
+            return self._session
+
+    class _PySession(database.PyMongoSession):
+        async def start_transaction(self):
+            self._session.in_transaction = True
+
+    monkeypatch.setattr(database, "USE_TRANSACTIONS", True)
+    database._transactions_supported = True
+    monkeypatch.setattr(database, "check_transactions_supported", _true)
+    monkeypatch.setattr(database, "client", _Client(_Session()))
+    monkeypatch.setattr(database, "PyMongoSession", _PySession)
+
+    gen = database.get_session()
+    _ = await gen.__anext__()
+    with pytest.raises(RuntimeError, match="commit-failed"):
+        await gen.__anext__()

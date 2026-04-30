@@ -35,6 +35,8 @@ patterns = {
     'wirecloud.resource_collection': URLTemplate(urlpattern='/api/resources', defaults={}),
     'wirecloud.resource_entry': URLTemplate(urlpattern='/api/resource/{vendor}/{name}/{version}', defaults={}),
     'wirecloud.unversioned_resource_entry': URLTemplate(urlpattern='/api/resource/{vendor}/{name}', defaults={}),
+    'wirecloud.massive_resource_update_entry': URLTemplate(
+        urlpattern='/api/resource/{vendor}/{name}/{version}/mass-update', defaults={}),
     'wirecloud.resource_description_entry': URLTemplate(
         urlpattern='/api/resource/{vendor}/{name}/{version}/description', defaults={}),
     'wirecloud.missing_widget_code_entry': URLTemplate(urlpattern='/api/widget/missing_widget', defaults={}),

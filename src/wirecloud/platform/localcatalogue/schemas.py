@@ -41,3 +41,9 @@ class ResourceCreateFormData(BaseModel):
     groups: Optional[list[str]] = Field(None, description=docs.resource_create_form_data_groups_description)
     install_embedded_resources: bool = Field(False, description=docs.resource_create_form_data_install_embedded_resources_description)
     file: bytes = Field(None, description=docs.resource_create_form_data_file_description)
+
+
+class MassiveUpdateResponse(BaseModel):
+    resource_type: str
+    total_workspaces_updated: int
+    total_resources_updated: int

@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 from bson import ObjectId
+from fastapi import Response
 
 from wirecloud.platform.iwidget.models import WidgetConfig, WidgetInstance, WidgetPositions, WidgetPositionsConfig
 from wirecloud.platform.workspace import crud
@@ -317,6 +318,146 @@ async def test_create_workspace_mashup_string_and_misc_helpers(db_session, monke
     class _Template:
         def __init__(self, *_args, **_kwargs):
             pass
+
+
+async def test_update_all_workspaces_with_widgets(monkeypatch):
+    user = SimpleNamespace(id=ObjectId())
+    w1 = SimpleNamespace(widget_uri="acme/weather/1.0", resource=ObjectId())
+    w2 = SimpleNamespace(widget_uri="acme/weather/2.0", resource=ObjectId())
+    w3 = SimpleNamespace(widget_uri="other/component/1.0", resource=ObjectId())
+    ws1 = SimpleNamespace(
+        tabs={"t": SimpleNamespace(widgets={"a": w1, "b": w2})},
+        is_editable_by=lambda _db, _user: _true(),
+    )
+    ws2 = SimpleNamespace(
+        tabs={"t": SimpleNamespace(widgets={"c": w3})},
+        is_editable_by=lambda _db, _user: _true(),
+    )
+    ws3 = SimpleNamespace(
+        tabs={"t": SimpleNamespace(widgets={"d": SimpleNamespace(widget_uri="acme/weather/1.5", resource=ObjectId())})},
+        is_editable_by=lambda _db, _user: _false(),
+    )
+
+    async def _true():
+        return True
+
+    async def _false():
+        return False
+
+    changed = {"n": 0}
+
+    async def _change_workspace(_db, _workspace, _user):
+        changed["n"] += 1
+
+    monkeypatch.setattr(crud, "get_all_workspaces", lambda _db: _workspaces([ws1, ws2, ws3]))
+    monkeypatch.setattr(crud, "change_workspace", _change_workspace)
+
+    async def _workspaces(items):
+        return items
+
+    result = await crud.update_all_workspaces_with_widgets(SimpleNamespace(), user, "acme", "weather", "3.0", ObjectId())
+    assert result.total_resources_updated == 2
+    assert result.total_workspaces_updated == 1
+    assert changed["n"] == 1
+    assert w1.widget_uri == "acme/weather/3.0"
+    assert w2.widget_uri == "acme/weather/3.0"
+
+
+async def test_update_all_workspaces_with_operators_and_resource(db_session, monkeypatch):
+    monkeypatch.setattr(crud, "_", lambda text: text)
+    user = SimpleNamespace(id=ObjectId())
+    request = SimpleNamespace()
+    owner = SimpleNamespace(id=ObjectId())
+
+    class _Template:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+    op = SimpleNamespace(name="acme/op/1.0")
+    wiring = SimpleNamespace(operators={"1": op})
+    ws = SimpleNamespace(
+        wiring_status=wiring,
+        is_editable_by=lambda _db, _user: _true(),
+    )
+    ws_no_change = SimpleNamespace(
+        wiring_status=SimpleNamespace(operators={"2": SimpleNamespace(name="other/op/1.0")}),
+        is_editable_by=lambda _db, _user: _true(),
+    )
+    ws_not_editable = SimpleNamespace(
+        wiring_status=SimpleNamespace(operators={"3": SimpleNamespace(name="acme/op/1.1")}),
+        is_editable_by=lambda _db, _user: _false(),
+    )
+
+    async def _true():
+        return True
+
+    async def _false():
+        return False
+
+    async def _workspaces(_db):
+        return [ws, ws_no_change, ws_not_editable]
+
+    changed = {"n": 0}
+
+    async def _change_workspace(_db, _workspace, _user):
+        changed["n"] += 1
+
+    async def _check_wiring(*_args, **_kwargs):
+        return True
+
+    monkeypatch.setattr(crud, "get_all_workspaces", _workspaces)
+    monkeypatch.setattr(crud, "change_workspace", _change_workspace)
+    monkeypatch.setattr(crud, "check_wiring", _check_wiring)
+
+    result = await crud.update_all_workspaces_with_operators(SimpleNamespace(), user, request, "acme", "op", "2.0")
+    assert result.total_resources_updated == 1
+    assert result.total_workspaces_updated == 1
+    assert changed["n"] == 1
+    assert ws.wiring_status.operators["1"].name == "acme/op/2.0"
+
+    async def _check_wiring_response(*_args, **_kwargs):
+        return Response(status_code=422)
+
+    monkeypatch.setattr(crud, "check_wiring", _check_wiring_response)
+    result2 = await crud.update_all_workspaces_with_operators(SimpleNamespace(), user, request, "acme", "op", "3.0")
+    assert isinstance(result2, Response)
+    assert result2.status_code == 422
+
+    async def _widgets(*_args, **_kwargs):
+        return "widgets-updated"
+
+    async def _operators(*_args, **_kwargs):
+        return "operators-updated"
+
+    monkeypatch.setattr(crud, "update_all_workspaces_with_widgets", _widgets)
+    monkeypatch.setattr(crud, "update_all_workspaces_with_operators", _operators)
+
+    widget_resource = SimpleNamespace(
+        vendor="acme",
+        short_name="w",
+        version="1.0",
+        id=ObjectId(),
+        type=crud.CatalogueResourceType.widget,
+    )
+    operator_resource = SimpleNamespace(
+        vendor="acme",
+        short_name="o",
+        version="1.0",
+        id=ObjectId(),
+        type=crud.CatalogueResourceType.operator,
+    )
+    invalid_resource = SimpleNamespace(
+        vendor="acme",
+        short_name="x",
+        version="1.0",
+        id=ObjectId(),
+        type="other",
+    )
+
+    assert await crud.update_all_workspaces_with_resources(SimpleNamespace(), user, request, widget_resource) == "widgets-updated"
+    assert await crud.update_all_workspaces_with_resources(SimpleNamespace(), user, request, operator_resource) == "operators-updated"
+    with pytest.raises(ValueError, match="not supported"):
+        await crud.update_all_workspaces_with_resources(SimpleNamespace(), user, request, invalid_resource)
 
     async def _resource(*_args, **_kwargs):
         return SimpleNamespace(

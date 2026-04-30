@@ -28,13 +28,13 @@ import errno
 import os
 
 from wirecloud.catalogue import utils as catalogue_utils
-from wirecloud.catalogue.schemas import CatalogueResourceDeleteResults
+from wirecloud.catalogue.schemas import CatalogueResourceDeleteResults, CatalogueResourceType
 from wirecloud.catalogue.search import add_resource_to_index, delete_resource_from_index
 from wirecloud.commons.auth.crud import get_user_by_username, get_group_by_name, \
     get_top_group_organization
 from wirecloud.commons.auth.schemas import UserAll
 from wirecloud.commons.utils.template import TemplateParseException, UnsupportedFeature
-from wirecloud.commons.utils.template.schemas.macdschemas import MACD
+from wirecloud.commons.utils.template.schemas.macdschemas import MACD, Vendor, Name, Version
 from wirecloud.commons.auth.utils import UserDepNoCSRF, UserDep
 from wirecloud.commons.utils.http import produces, NotFound, build_error_response, authentication_required, \
     consumes, build_downloadfile_response
@@ -44,9 +44,10 @@ from wirecloud.catalogue.crud import get_catalogue_resource_versions_for_user, g
 from wirecloud.commons.utils.wgt import WgtFile, InvalidContents
 from wirecloud.platform.localcatalogue import docs
 from wirecloud.database import DBDep, Id, DBSession
-from wirecloud.platform.localcatalogue.schemas import MultipleResourcesInstalledResponse, ResourceCreateData
+from wirecloud.platform.localcatalogue.schemas import MultipleResourcesInstalledResponse, ResourceCreateData, \
+    MassiveUpdateResponse
 from wirecloud.platform.localcatalogue.utils import fix_dev_version, install_component
-from wirecloud.platform.workspace.crud import get_workspace_by_id
+from wirecloud.platform.workspace.crud import get_workspace_by_id, update_all_workspaces_with_resources
 from wirecloud.platform.workspace.models import Workspace
 from wirecloud.proxy.routes import parse_context_from_referer, WIRECLOUD_PROXY
 from wirecloud.proxy.schemas import ProxyRequestData
@@ -141,7 +142,7 @@ async def create_resource(db: DBDep, user: UserDep, request: Request,
                           users: Union[list[str], None] = Query(None, description=docs.create_resource_users_parameter_description),
                           groups: Union[list[str], None] = Query(None, description=docs.create_resource_groups_parameter_description),
                           install_embedded_resources: bool = Query(False, description=docs.create_resource_install_embedded_resources_parameter_description)):
-    if not user.has_perm("COMPONENT.INSTALL"):
+    if not user.has_perm("COMPONENT.INSTALL") and not user.is_superuser:
         return build_error_response(request, 403, _('You do not have permission to install components'))
     status_code = 201
     file_contents = None
@@ -508,3 +509,41 @@ async def get_workspace_resource_collection(db: DBDep, user: UserDepNoCSRF, requ
             result[resource.local_uri_part] = options
 
     return result
+
+
+@router.post(
+    "/{vendor}/{name}/{version}/mass-update",
+    summary=docs.mass_update_resource_summary,
+    description=docs.mass_update_resource_description,
+    response_description=docs.mass_update_resource_response_description,
+    response_model=MassiveUpdateResponse,
+    responses={
+        200: {"content": {"application/json": {"example": docs.mass_update_resource_response_example}}},
+        401: root_docs.generate_auth_required_response_openapi_description(
+            docs.mass_update_resource_auth_required_response_description
+        ),
+        403: root_docs.generate_permission_denied_response_openapi_description(
+            docs.mass_update_resource_permission_denied_response_description,
+            "You do not have permission to perform massive updates on components"
+        ),
+        404: root_docs.generate_not_found_response_openapi_description(
+            docs.mass_update_resource_not_found_response_description
+        ),
+        422: root_docs.generate_validation_error_response_openapi_description(
+            docs.mass_update_resource_validation_error_response_description
+        )
+    }
+)
+@authentication_required()
+async def massive_resource_update(db: DBDep, request: Request, user: UserDep, vendor: Vendor = Path(), name: Name = Path(), version: Version = Path()):
+    if not user.has_perm("COMPONENT.MASSIVE_UPDATE") and not user.is_superuser:
+        return build_error_response(request, 403, _('You do not have permission to perform massive updates on components'))
+
+    resource = await get_catalogue_resource(db, vendor, name, version)
+    if resource is None:
+        return build_error_response(request, 404, _('Resource not found'))
+
+    if resource.type != CatalogueResourceType.widget and resource.type != CatalogueResourceType.operator:
+        return build_error_response(request, 422, _('The resource type is not supported for massive updates'))
+
+    return await update_all_workspaces_with_resources(db, user, request, resource)

@@ -400,3 +400,17 @@ get_workspace_resource_collection_response_example = {
 }
 get_workspace_resource_collection_parameter_workspace_id_description = "The ID of the workspace for which to retrieve the resources"
 get_workspace_resource_collection_parameter_process_urls_description = "Process URLs in the response"
+
+# POST /api/resource/{vendor}/{name}/{version}/mass-update
+mass_update_resource_summary = "Massive resource update"
+mass_update_resource_description = "Bulk update of resources in workspaces editable by the user. This endpoint updates multiple resources at once."
+mass_update_resource_response_description = "The total number of workspaces and resources updated successfully"
+mass_update_resource_not_found_response_description = "Resource not found"
+mass_update_resource_validation_error_response_description = "The resource type is not supported for massive updates"
+mass_update_resource_auth_required_response_description = "Authentication is required to update resources"
+mass_update_resource_permission_denied_response_description = "The user does not have permission to update resources"
+mass_update_resource_response_example = {
+    "resource_type": "widget",
+    "total_workspaces_updated": 10,
+    "total_resources_updated": 32
+}
