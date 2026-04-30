@@ -132,7 +132,7 @@ async def test_get_widget_api_files(monkeypatch):
 async def test_fix_widget_code_non_markup_passthrough(content_type):
     request = _request()
     raw = b'{"a":1}'
-    processed = await utils.fix_widget_code(raw, content_type, request, "utf-8", False, {}, "classic", "defaulttheme", 1, "acme", "test", "1.0")
+    processed = await utils.fix_widget_code(raw, content_type, request, "utf-8", False, "", {}, "classic", "defaulttheme", 1, "acme", "test", "1.0")
     assert processed == raw
 
 
@@ -159,6 +159,7 @@ async def test_fix_widget_code_html_and_xhtml_branches(monkeypatch):
         request,
         "utf-8",
         True,
+        "index.html",
         {"feature": {}},
         "classic",
         "defaulttheme",
@@ -171,6 +172,9 @@ async def test_fix_widget_code_html_and_xhtml_branches(monkeypatch):
     assert "WirecloudAPIClosure.js" in decoded
     assert "widget.css" in decoded
     assert "showcase/media/acme/test/1.0" in decoded
+    assert "href=\"x\"" not in decoded
+    assert "href=\"y\"" not in decoded
+    assert decoded.count("<base ") == 1
 
     xhtml = b'<html xmlns="http://www.w3.org/1999/xhtml"><body/></html>'
     fixed_xhtml = await utils.fix_widget_code(
@@ -179,6 +183,7 @@ async def test_fix_widget_code_html_and_xhtml_branches(monkeypatch):
         request,
         "utf-8",
         False,
+        "",
         {},
         "classic",
         "defaulttheme",
@@ -195,6 +200,7 @@ async def test_fix_widget_code_html_and_xhtml_branches(monkeypatch):
         request,
         "utf-8",
         False,
+        "",
         {},
         "classic",
         "defaulttheme",
@@ -249,7 +255,7 @@ async def test_process_widget_code_error_paths(monkeypatch, db_session):
 
     resource = SimpleNamespace(
         id="rid",
-        get_processed_info=lambda: SimpleNamespace(macversion=1, vendor="acme", name="test", version="1.0"),
+        get_processed_info=lambda **_kwargs: SimpleNamespace(macversion=1, vendor="acme", name="test", version="1.0", contents=SimpleNamespace(src="index.html")),
         description=SimpleNamespace(contents=SimpleNamespace(cacheable=True, contenttype="text/html", charset="utf-8"), requirements=[]),
         xhtml=SimpleNamespace(
             get_cache_key=lambda *_args: "key",
@@ -293,7 +299,7 @@ async def test_process_widget_code_error_paths(monkeypatch, db_session):
 
     non_cacheable = SimpleNamespace(
         id="rid-non-cache",
-        get_processed_info=lambda: SimpleNamespace(macversion=1, vendor="acme", name="test", version="1.0"),
+        get_processed_info=lambda **_kwargs: SimpleNamespace(macversion=1, vendor="acme", name="test", version="1.0", contents=SimpleNamespace(src="index.html")),
         description=SimpleNamespace(contents=SimpleNamespace(cacheable=False, contenttype="text/html", charset="utf-8"), requirements=[]),
         xhtml=SimpleNamespace(
             get_cache_key=lambda *_args: "unused",
@@ -342,7 +348,7 @@ async def test_process_widget_code_success_paths(monkeypatch, db_session):
 
     resource = SimpleNamespace(
         id="rid",
-        get_processed_info=lambda: SimpleNamespace(macversion=1, vendor="acme", name="test", version="1.0"),
+        get_processed_info=lambda **_kwargs: SimpleNamespace(macversion=1, vendor="acme", name="test", version="1.0", contents=SimpleNamespace(src="index.html")),
         description=SimpleNamespace(contents=SimpleNamespace(cacheable=True, contenttype="text/html", charset="utf-8"), requirements=[]),
         xhtml=SimpleNamespace(
             get_cache_key=lambda *_args: "cache-key",
@@ -360,7 +366,7 @@ async def test_process_widget_code_success_paths(monkeypatch, db_session):
 
     non_cacheable = SimpleNamespace(
         id="rid2",
-        get_processed_info=lambda: SimpleNamespace(macversion=1, vendor="acme", name="test", version="1.0"),
+        get_processed_info=lambda **_kwargs: SimpleNamespace(macversion=1, vendor="acme", name="test", version="1.0", contents=SimpleNamespace(src="index.html")),
         description=SimpleNamespace(contents=SimpleNamespace(cacheable=False, contenttype="text/html", charset="utf-8"), requirements=[]),
         xhtml=SimpleNamespace(
             get_cache_key=lambda *_args: "unused",

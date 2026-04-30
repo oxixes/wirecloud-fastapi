@@ -11,3 +11,4 @@ deployment/
 .coverage
 coverage.xml
 htmlcov/
+coverage/

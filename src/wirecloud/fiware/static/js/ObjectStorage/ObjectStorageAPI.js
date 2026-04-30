@@ -62,6 +62,19 @@
             }
         };
 
+        var get_auth_project_data = function get_auth_project_data(options) {
+            if (typeof options === 'string') {
+                return {
+                    project: options.project
+                };
+            } else if (typeof options.tenantId === 'string') {
+                return {
+                    tenantId: options.tenantId
+                };
+            }
+            throw new TypeError();
+        };
+
         var KeystoneAPI = function KeystoneAPI(url, options) {
             if (typeof url !== 'string') {
                 throw new TypeError('url must be a string');
@@ -191,13 +204,7 @@
                 "auth": {}
             };
 
-            if (typeof options === 'string') {
-                postBody.auth.project = options.project;
-            } else if (typeof options.tenantId === 'string') {
-                postBody.auth.tenantId = options.tenantId;
-            } else {
-                throw new TypeError();
-            }
+            merge(postBody.auth, get_auth_project_data(options));
 
             if (options.passwordCredentials != null) {
                 postBody.auth.passwordCredentials = {
@@ -524,6 +531,10 @@
 
         parent.KeystoneAPI = KeystoneAPI;
         parent.ObjectStorageAPI = ObjectStorageAPI;
+        parent.__OpenStorageAPIInternals = {
+            initHeaders: initHeaders,
+            get_auth_project_data: get_auth_project_data
+        };
     };
     
     // Detects if this is inside an iframe (will use version v1, which defines the MashupPlatform in the window)

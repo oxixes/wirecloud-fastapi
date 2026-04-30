@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
-
+import urllib
 # This file is part of Wirecloud.
 
 # Wirecloud is free software: you can redistribute it and/or modify
@@ -135,7 +135,7 @@ async def get_widget_api_files(request: Request, theme: str) -> list[str]:
 
 
 async def fix_widget_code(widget_code: Union[str, bytes], content_type: str, request: Request, encoding: str,
-                          use_platform_style: bool, requirements, mode: str, theme: str, macversion: int,
+                          use_platform_style: bool, index_url: str, requirements, mode: str, theme: str, macversion: int,
                           vendor: Vendor, name: Name, version: Version) -> Optional[bytes]:
     # This line is here for raising UnicodeDecodeError in case the widget_code is not encoded using the specified encoding
     widget_code.decode(encoding)
@@ -172,13 +172,14 @@ async def fix_widget_code(widget_code: Union[str, bytes], content_type: str, req
     if macversion == 1:
         # Fix base element
         base_elements = xpath(xmltree, '/xhtml:html/xhtml:head/xhtml:base', xmlns)
-        for base_element in base_elements[1:]:
+        for base_element in base_elements:
             base_element.getparent().remove(base_element)
 
         # Add new base element
-        base_element = etree.Element('base', href=get_absolute_reverse_url('wirecloud.showcase_media', request=request,
+        base_url = urllib.parse.urljoin(get_absolute_reverse_url('wirecloud.showcase_media', request=request,
                                                                            vendor=vendor, name=name, version=version,
-                                                                           path=''))
+                                                                           path=''), index_url)
+        base_element = etree.Element('base', href=base_url)
         head_element.insert(0, base_element)
 
         # Fix scripts
@@ -249,8 +250,8 @@ async def process_widget_code(db: DBSession, request: Request, resource: Catalog
         await save_catalogue_resource_xhtml(db, resource.id, xhtml)
 
     try:
-        processed_info = resource.get_processed_info()
-        code = await fix_widget_code(code, content_type, request, charset, xhtml.use_platform_style,
+        processed_info = resource.get_processed_info(process_urls=False)
+        code = await fix_widget_code(code, content_type, request, charset, xhtml.use_platform_style, processed_info.contents.src,
                                      process_requirements(widget_info.requirements), mode, theme,
                                      processed_info.macversion, processed_info.vendor, processed_info.name,
                                      processed_info.version)

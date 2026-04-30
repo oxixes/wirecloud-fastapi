@@ -59,6 +59,9 @@
                 this.codeurl += '&';
             }
             this.codeurl += "v=" + Wirecloud.contextManager.get('version_hash') + "&theme=" + Wirecloud.contextManager.get('theme');
+            if (desc.contents) {
+                Object.defineProperty(this, 'base_url', {value: desc.contents.src});
+            }
 
             // Properties
             this.properties = {};
