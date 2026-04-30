@@ -17,6 +17,8 @@ const coverageExcludes = listFromEnv('JS_TEST_COVERAGE_EXCLUDE');
 const excludes = coverageExcludes.length > 0 ? coverageExcludes : [
     '**/*.min.js',
     '**/themes/**',
+    '**/commons/static/js/lib/urlify.js',
+    '**/fiware/static/js/NGSI/NGSI.js',
 ];
 
 rmSync(coverageRoot, { recursive: true, force: true });
