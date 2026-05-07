@@ -1,0 +1,98 @@
+name: Comment PR coverage delta
+
+on:
+  workflow_run:
+    workflows: ["WireCloud CI"]
+    types: [completed]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  comment-coverage:
+    if: ${{ github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      # Keep this workflow safe for forked PRs: only read artifacts and call APIs.
+      # Do not check out or execute code from the pull request.
+      - name: Download coverage summary artifact from triggering run
+        id: download
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          ARTIFACT_DIR="$RUNNER_TEMP/coverage-summary"
+          mkdir -p "$ARTIFACT_DIR"
+
+          if ! gh run download "$RUN_ID" --repo "$REPO" --name coverage-summary --dir "$ARTIFACT_DIR"; then
+            echo "Coverage summary artifact was not found for run $RUN_ID. Skipping comment update."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          summary_file="$(find "$ARTIFACT_DIR" -type f -name 'coverage-summary.json' | head -n 1)"
+          if [ -z "$summary_file" ]; then
+            echo "Downloaded artifact does not include coverage-summary.json. Skipping comment update."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "found=true" >> "$GITHUB_OUTPUT"
+          echo "summary_file=$summary_file" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update PR coverage comment
+        if: steps.download.outputs.found == 'true'
+        uses: actions/github-script@v7
+        env:
+          SUMMARY_FILE: ${{ steps.download.outputs.summary_file }}
+        with:
+          script: |
+            const fs = require("node:fs");
+            const summary = JSON.parse(fs.readFileSync(process.env.SUMMARY_FILE, "utf8"));
+
+            const marker = "<!-- coverage-delta-comment -->";
+            const body = `${marker}
+            ### Coverage Delta
+            - Base: **${summary.base}%**
+            - Head: **${summary.head}%**
+            - Delta: **${summary.delta} pp** (${summary.trend})
+            `;
+
+            const { owner, repo } = context.repo;
+            const issue_number = Number(summary.pr);
+            if (!issue_number) {
+              core.info("Invalid PR number in coverage summary. Skipping comment update.");
+              return;
+            }
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const previous = comments.find(
+              (c) => c.user.type === "Bot" && c.body && c.body.includes(marker)
+            );
+
+            if (previous) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: previous.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }

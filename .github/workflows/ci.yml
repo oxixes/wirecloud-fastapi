@@ -10,11 +10,9 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   test-and-coverage:
-    permissions: write-all
     runs-on: ubuntu-latest
 
     steps:
@@ -117,48 +115,28 @@ jobs:
             echo "- Delta: ${{ steps.cov_diff.outputs.delta }} pp (${{ steps.cov_diff.outputs.trend }})"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Comment PR with coverage delta
+      # Coverage comments are published from a separate workflow_run workflow with
+      # pull-requests: write permissions. This keeps pull_request CI safe for forks.
+      - name: Write coverage summary artifact
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        run: |
+          cat > coverage-summary.json <<EOF
+          {
+            "pr": ${{ github.event.pull_request.number }},
+            "base": "${{ steps.cov_diff.outputs.base }}",
+            "head": "${{ steps.cov_diff.outputs.head }}",
+            "delta": "${{ steps.cov_diff.outputs.delta }}",
+            "trend": "${{ steps.cov_diff.outputs.trend }}"
+          }
+          EOF
+
+      - name: Upload coverage summary artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
         with:
-          script: |
-            const marker = "<!-- coverage-delta-comment -->";
-            const body = `${marker}
-            ### Coverage Delta
-            - Base: **${{ steps.cov_diff.outputs.base }}%**
-            - Head: **${{ steps.cov_diff.outputs.head }}%**
-            - Delta: **${{ steps.cov_diff.outputs.delta }} pp** (${{ steps.cov_diff.outputs.trend }})
-            `;
-
-            const { owner, repo } = context.repo;
-            const issue_number = context.issue.number;
-
-            const comments = await github.paginate(github.rest.issues.listComments, {
-              owner,
-              repo,
-              issue_number,
-              per_page: 100,
-            });
-
-            const previous = comments.find(
-              (c) => c.user.type === "Bot" && c.body && c.body.includes(marker)
-            );
-
-            if (previous) {
-              await github.rest.issues.updateComment({
-                owner,
-                repo,
-                comment_id: previous.id,
-                body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner,
-                repo,
-                issue_number,
-                body,
-              });
-            }
+          name: coverage-summary
+          path: coverage-summary.json
+          if-no-files-found: error
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
