@@ -35,8 +35,8 @@ jobs:
             exit 0
           fi
 
-          summary_file="$(find "$ARTIFACT_DIR" -type f -name 'coverage-summary.json' | head -n 1)"
-          if [ -z "$summary_file" ]; then
+          summary_file="$ARTIFACT_DIR/coverage-summary.json"
+          if [ ! -f "$summary_file" ]; then
             echo "Downloaded artifact does not include coverage-summary.json. Skipping comment update."
             echo "found=false" >> "$GITHUB_OUTPUT"
             exit 0
@@ -56,12 +56,13 @@ jobs:
             const summary = JSON.parse(fs.readFileSync(process.env.SUMMARY_FILE, "utf8"));
 
             const marker = "<!-- coverage-delta-comment -->";
-            const body = `${marker}
-            ### Coverage Delta
-            - Base: **${summary.base}%**
-            - Head: **${summary.head}%**
-            - Delta: **${summary.delta} pp** (${summary.trend})
-            `;
+            const body = [
+              marker,
+              "### Coverage Delta",
+              `- Base: **${summary.base}%**`,
+              `- Head: **${summary.head}%**`,
+              `- Delta: **${summary.delta} pp** (${summary.trend})`,
+            ].join("\n");
 
             const { owner, repo } = context.repo;
             const issue_number = Number(summary.pr);
