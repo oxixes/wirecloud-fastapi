@@ -49,20 +49,31 @@
             this.wrapperElement.setAttribute('aria-label', utils.gettext('Resize widget'));
             this.wrapperElement.setAttribute('aria-orientation', options.resizeTopSide ? 'vertical' : 'horizontal');
 
-            Wirecloud.ui.ResizeHandle.call(
-                this, widget.wrapperElement, this.wrapperElement,
-                options,
-                WidgetViewResizeHandle.prototype.onresizestart,
-                WidgetViewResizeHandle.prototype.onresize,
-                WidgetViewResizeHandle.prototype.onresizeend,
-                WidgetViewResizeHandle.prototype.canDrag
-            );
+            // If Gridstack is available we disable the native ResizeHandle
+            // so Gridstack provides all resize behavior.
+            if (!(typeof Wirecloud !== 'undefined' && Wirecloud.ui && Wirecloud.ui.GridstackLayout)) {
+                Wirecloud.ui.ResizeHandle.call(
+                    this, widget.wrapperElement, this.wrapperElement,
+                    options,
+                    WidgetViewResizeHandle.prototype.onresizestart,
+                    WidgetViewResizeHandle.prototype.onresize,
+                    WidgetViewResizeHandle.prototype.onresizeend,
+                    WidgetViewResizeHandle.prototype.canDrag
+                );
+            } else {
+                // Debug log for visibility
+                console.log('Native ResizeHandle skipped: Gridstack will handle resizing');
+            }
         }
 
         canDrag(resizableElement, data, role) {
             const editing = data.widget.tab.workspace.editing;
             if (role == null) {
                 role = editing ? "editor" : "viewer";
+            }
+            // If GridstackLayout is active, let Gridstack handle resizing
+            if (data.widget.layout && typeof Wirecloud !== 'undefined' && Wirecloud.ui && Wirecloud.ui.GridstackLayout && data.widget.layout instanceof Wirecloud.ui.GridstackLayout) {
+                return false;
             }
             return (
                 data.widget.model.volatile

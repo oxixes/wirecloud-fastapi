@@ -19,6 +19,8 @@
 /* globals Wirecloud */
 
 
+import './GridstackLayout';
+
 (function (ns, utils) {
 
     "use strict";
@@ -217,6 +219,60 @@
             this.rightLayout = new Wirecloud.ui.SidebarLayout(this, {position: "right", active: (this.rightLayout) ? this.rightLayout.isActive() : false});
             this.bottomLayout = new Wirecloud.ui.SidebarLayout(this, {position: "bottom", active: (this.bottomLayout) ? this.bottomLayout.isActive() : false});
             this.topLayout = new Wirecloud.ui.SidebarLayout(this, {position: "top", active: (this.topLayout) ? this.topLayout.isActive() : false});
+        }
+
+        setGridstackActive(active) {
+            // Switch base layout to GridstackLayout when editing is active
+            if (active && this._usingGridstack) {
+                return this;
+            }
+            if (!active && !this._usingGridstack) {
+                return this;
+            }
+
+            if (active) {
+                const layoutInfo = this.tab.model.preferences.get('baselayout') || {};
+                const cols = layoutInfo.columns || 20;
+                const cellHeight = layoutInfo.cellheight || layoutInfo.cellHeight || 12;
+                const vmargin = layoutInfo.verticalmargin || 3;
+                const hmargin = layoutInfo.horizontalmargin || 4;
+                const maxRow = layoutInfo.maxRow || 0;
+
+                if (typeof Wirecloud !== 'undefined' && Wirecloud.ui && typeof Wirecloud.ui.GridstackLayout === 'function') {
+                    console.log('Enabling GridstackLayout');
+                    const newBaseLayout = new Wirecloud.ui.GridstackLayout(this, cols, cellHeight, vmargin, hmargin, maxRow);
+                    newBaseLayout.initialize();
+
+                    const oldBaseLayout = this.baseLayout;
+                    try {
+                        oldBaseLayout.moveTo(newBaseLayout);
+                    } catch (e) {
+                        // fallback: just set baseLayout
+                    }
+                    this.baseLayout = newBaseLayout;
+                    this._usingGridstack = true;
+                } else {
+                    console.warn('GridstackLayout not available yet; falling back to base layout.');
+                    // fallback to normal base layout
+                    const newBaseLayout = this._buildLayoutFromPreferences();
+                    newBaseLayout.initialize();
+                    this.baseLayout = newBaseLayout;
+                    this._usingGridstack = false;
+                }
+            } else {
+                // restore layout from preferences
+                const newBaseLayout = this._buildLayoutFromPreferences();
+                newBaseLayout.initialize();
+                try {
+                    this.baseLayout.moveTo(newBaseLayout);
+                } catch (e) {
+                    // ignore
+                }
+                this.baseLayout = newBaseLayout;
+                this._usingGridstack = false;
+            }
+
+            return this;
         }
 
         updateWidgetScreenSize(screenSize) {

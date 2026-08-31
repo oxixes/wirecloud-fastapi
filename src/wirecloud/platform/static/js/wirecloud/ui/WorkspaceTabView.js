@@ -108,6 +108,9 @@
 
     const update_pref_button = function update_pref_button() {
         this.prefbutton.enabled = this.workspace.editing;
+        if (this.dragboard && typeof this.dragboard.setGridstackActive === 'function') {
+            this.dragboard.setGridstackActive(this.workspace.editing);
+        }
     };
 
     const get_editing_interval_name = function get_editing_interval_name(width) {
@@ -246,6 +249,10 @@
             }
 
             this.dragboard = new ns.WorkspaceTabViewDragboard(this);
+            // Ensure dragboard uses Gridstack when workspace is already in editing mode
+            if (typeof this.dragboard.setGridstackActive === 'function') {
+                this.dragboard.setGridstackActive(this.workspace.editing);
+            }
             this.updateEditingIntervalName();
 
             this.initialMessage = (new se.GUIBuilder()).parse(Wirecloud.currentTheme.templates['wirecloud/workspace/empty_tab_message'], {

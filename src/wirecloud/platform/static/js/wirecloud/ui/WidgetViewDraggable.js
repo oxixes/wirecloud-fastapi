@@ -73,6 +73,10 @@
             if (role == null) {
                 role = context.widget.tab.workspace.editing ? "editor" : "viewer";
             }
+            // If GridstackLayout is active, let Gridstack handle dragging
+            if (context.widget.layout && typeof Wirecloud !== 'undefined' && Wirecloud.ui && Wirecloud.ui.GridstackLayout && context.widget.layout instanceof Wirecloud.ui.GridstackLayout) {
+                return false;
+            }
             return (
                 context.widget.model.volatile
                 || context.widget.layout instanceof Wirecloud.ui.FreeLayout
