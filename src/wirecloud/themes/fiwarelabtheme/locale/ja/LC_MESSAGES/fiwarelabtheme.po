@@ -26,3 +26,29 @@ msgstr "FIWARE ラボ"
 #: ../../../../templates/wirecloud/views/base_plain.html:4
 msgid "WireCloud Platform"
 msgstr "WireCloud プラットフォーム"
+
+#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:136
+#, python-format
+msgid "Become %(user)s again"
+msgstr "再び%(user)sになります"
+
+#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:105
+msgid "Django Admin panel"
+msgstr "Django 管理パネル"
+
+#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:97
+msgid "Settings"
+msgstr "設定"
+
+#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:142
+msgid "Sign out"
+msgstr "サインアウト"
+
+#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:118
+#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:119
+msgid "Switch User"
+msgstr "ユーザの切り替え"
+
+#: ../../../../static/js/wirecloud/ui/WirecloudHeader.js:119
+msgid "User"
+msgstr "ユーザ"

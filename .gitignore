@@ -1,6 +1,7 @@
 venv/
 __pycache__/
 catalogue/
+!src/wirecloud/catalogue/
 .idea/
 src/wirecloud/dist/
 node_modules/
@@ -15,3 +16,4 @@ coverage/
 site/
 build/
 *.egg-info/
+*.mo

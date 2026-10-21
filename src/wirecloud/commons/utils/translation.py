@@ -17,7 +17,28 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 import re
+from pathlib import Path
 from typing import Optional
+
+
+def compile_catalog(po_file: Path, mo_file: Path) -> None:
+    """Validate and compile a catalog for management commands and package builds."""
+    from babel.messages.mofile import write_mo
+    from babel.messages.pofile import read_po
+
+    with po_file.open("rb") as stream:
+        catalog = read_po(stream, locale=po_file.parent.parent.name, abort_invalid=True)
+    errors = [
+        f"{message.id!r}: {error}"
+        for message, problems in catalog.check()
+        for error in problems
+    ]
+    if errors:
+        raise ValueError(f"Invalid catalog {po_file}:\n" + "\n".join(errors))
+
+    mo_file.parent.mkdir(parents=True, exist_ok=True)
+    with mo_file.open("wb") as stream:
+        write_mo(stream, catalog)
 
 
 def get_trans_index(value: Optional[str]) -> Optional[str]:

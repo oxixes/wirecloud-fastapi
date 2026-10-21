@@ -42,8 +42,8 @@ configuration is supplied through the same environment variables documented in
 
 Published GitHub releases contain a pre-built `.whl` file. The same wheel is
 available as the `wirecloud-wheel` artifact on push and pull-request workflow
-runs. A wheel already contains the compiled frontend, so a machine consuming it
-needs Python but does not need Node.js or npm.
+runs. A wheel already contains the compiled frontend and translation catalogs,
+so a machine consuming it needs Python but does not need Node.js or npm.
 
 ### Install from PyPI (planned)
 
@@ -216,8 +216,8 @@ python -m pip install --upgrade pip
 npm ci
 ```
 
-Install WireCloud. The package build automatically compiles the frontend after
-`npm ci` has installed its toolchain:
+Install WireCloud. The package build automatically compiles translations and
+the frontend after `npm ci` has installed its toolchain:
 
 ```bash
 python -m pip install .
@@ -227,6 +227,18 @@ Set `WIRECLOUD_SKIP_NPM_BUILD=1` only when the frontend artifacts were already
 built and are present in the source tree.
 
 Create a settings module named `settings.py` on the Python import path. The repository's `docker/settings.py` is the environment-driven production example; `src/settings.py` is intended for local development. Ensure that all configured storage directories exist and are writable.
+
+Compiled translation catalogs (`.mo`) are generated during wheel builds,
+including the wheel built by Docker. Source distributions contain the editable
+`.po` catalogs. To compile translations in a source checkout, use the existing
+management command:
+
+```bash
+python src/manage.py compiletranslations
+```
+
+Use `--language es` or `--language ja` to compile a single language. Recompile
+after editing a `.po` file. Generated `.mo` files are ignored by Git.
 
 Then initialize and run the instance:
 

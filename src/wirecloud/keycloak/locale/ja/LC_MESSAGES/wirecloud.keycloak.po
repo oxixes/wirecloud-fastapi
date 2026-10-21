@@ -58,3 +58,11 @@ msgstr "OIDC プロバイダーが有効な応答を返しませんでした:pre
 #: ../../../plugins.py:79
 msgid "Session id"
 msgstr "セッションID"
+
+#: ../../../static/js/keycloak/sso.js:83
+msgid "Browser will be reloaded to accomodate to the new session info"
+msgstr "新しいセッション情報に対応するためにブラウザがリロードされます"
+
+#: ../../../static/js/keycloak/sso.js:84
+msgid "User Session Updated"
+msgstr "ユーザーセッションが更新されました"

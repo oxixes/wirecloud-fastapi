@@ -215,8 +215,10 @@ def test_compiletranslations_language_specific_verbose_and_errors(monkeypatch, t
         ],
     )
 
-    def _read_po(_f, locale):
-        return object()
+    from babel.messages.catalog import Catalog
+
+    def _read_po(_f, locale, abort_invalid):
+        return Catalog(locale=locale)
 
     def _write_mo(f, catalog):
         if f.name.endswith("bad.mo"):

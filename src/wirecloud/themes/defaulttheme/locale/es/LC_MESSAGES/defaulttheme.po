@@ -335,20 +335,6 @@ msgstr ""
 "credenciales incorrectos (por ejemplo, una contraseña incorrecta), o tu "
 "navegador/aplicación no sabe como proporcionar los credenciales requeridos."
 
-#: ../../../../templates/401.html:5
-#, python-format
-msgid ""
-"This server could not verify that you are authorized to access the document "
-"you requested (%(request_path)s). Either you supplied the wrong credentials "
-"(e.g., bad password), or your browser/application does not understand how to "
-"supply the credentials required.{% endblocktrans"
-msgstr ""
-"Este servidor no pudo verificar que usted está autorizado a acceder al "
-"documento que solicitó (%(request_path)s). O proporcionó las credenciales "
-"incorrectas (por ejemplo, una contraseña incorrecta) o su "
-"navegador/aplicación no sabe cómo proporcionar las credenciales requeridas.{%"
-" endblocktrans"
-
 #: ../../../../templates/wirecloud/workspace/missing_widget.html:12
 msgid ""
 "This widget is currently not available. Probably you or an administrator "
@@ -465,4 +451,3 @@ msgstr "error400"
 #: ../../../../templates/401.html:2
 msgid "error401"
 msgstr "error401"
-

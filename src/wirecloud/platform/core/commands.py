@@ -323,8 +323,7 @@ def gentranslations_cmd(args: argparse.Namespace) -> None:
 
 
 def compiletranslations_cmd(args: argparse.Namespace) -> None:
-    from babel.messages.mofile import write_mo
-    from babel.messages.pofile import read_po
+    from wirecloud.commons.utils.translation import compile_catalog
     import settings
 
     # Get the base source directory
@@ -390,13 +389,7 @@ def compiletranslations_cmd(args: argparse.Namespace) -> None:
                 mo_file = po_file.with_suffix('.mo')
 
                 try:
-                    # Read the .po file
-                    with open(po_file, 'rb') as f:
-                        catalog = read_po(f, locale=lang_code)
-
-                    # Write the .mo file
-                    with open(mo_file, 'wb') as f:
-                        write_mo(f, catalog)
+                    compile_catalog(po_file, mo_file)
 
                     module_compiled += 1
                     total_compiled += 1
