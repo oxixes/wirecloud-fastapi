@@ -160,6 +160,15 @@ This hook runs when an administrator executes `python -m manage populate`, not a
 
 ## Other extension hooks
 
+`lifespan()` may return an async context manager for runtime resources. WireCloud
+enters enabled plugin contexts after settings validation and closes them in
+reverse order before closing the database. Build and offline discovery do not
+enter these contexts. Keep identity-provider handling in WireCloud's auth hooks;
+resource plugins can register their audiences and scopes with
+[`wirecloud.oauth2provider`](oauth2.md). That module provides authorization,
+themeable consent and connection management, and scoped bearer verification.
+The [MCP plugin](mcp.md) uses this public API; other plugins need no MCP dependency.
+
 Override only the hooks the plugin needs:
 
 | Hook | Contribution |

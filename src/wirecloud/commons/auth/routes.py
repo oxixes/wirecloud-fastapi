@@ -49,6 +49,7 @@ from wirecloud.platform.plugins import get_idm_get_token_functions, get_idm_get_
 from wirecloud.platform.routes import render_wirecloud
 from wirecloud.platform.workspace.crud import get_workspace_by_username_and_name
 from wirecloud.translation import gettext as _
+from wirecloud.commons.auth.login_flow import consume_login_attempt, prepare_local_login, accepts_context
 
 router = APIRouter()
 base_router = APIRouter()
@@ -79,15 +80,19 @@ async def oidc_login(request: Request, db: DBDep, code: str = Query(description=
     token_data_get_func = get_idm_get_token_functions()[getattr(settings, "OID_CONNECT_PLUGIN", "")]
     user_get_func = get_idm_get_user_functions()[getattr(settings, "OID_CONNECT_PLUGIN", "")]
 
+    login_context = await consume_login_attempt(request, db)
+
     redirect_uri = get_absolute_reverse_url('oidc_login_callback', request)
 
     try:
         if asyncio.iscoroutinefunction(token_data_get_func):
             # If the function is a coroutine, we need to await it
-            token_data = await token_data_get_func(code=code, refresh_token=None, redirect_uri=redirect_uri)
+            token_data = await token_data_get_func(code=code, refresh_token=None, redirect_uri=redirect_uri,
+                **({"login_context": login_context} if accepts_context(token_data_get_func) else {}))
         else:
             # If the function is a regular function, we can call it directly
-            token_data = token_data_get_func(code=code, refresh_token=None, redirect_uri=redirect_uri)
+            token_data = token_data_get_func(code=code, refresh_token=None, redirect_uri=redirect_uri,
+                **({"login_context": login_context} if accepts_context(token_data_get_func) else {}))
 
         if asyncio.iscoroutinefunction(user_get_func):
             # If the function is a coroutine, we need to await it
@@ -299,6 +304,7 @@ async def login_page(request: Request):
 )
 @consumes(["application/json", "application/x-www-form-urlencoded", "multipart/form-data"])
 async def login(request: Request, db: DBDep):
+    await prepare_local_login(request, db)
     try:
         if request.state.mimetype == "application/x-www-form-urlencoded" or request.state.mimetype == "multipart/form-data":
             login_data = UserLogin.model_validate(await request.form(max_files=0, max_fields=50))
@@ -342,6 +348,8 @@ async def login(request: Request, db: DBDep):
 
     csrf_token = jwt.encode(csrf_token_contents, settings.JWT_KEY, algorithm="HS256")
 
+    if request.query_params.get("continue"):
+        await consume_login_attempt(request, db, request.query_params["continue"])
     response = get_redirect_response(request)
     response.set_cookie(key="token", value=token, httponly=True, secure=getattr(settings, "WIRECLOUD_HTTPS", False), samesite="strict", expires=expiration)
     response.set_cookie(key="csrf_token", value=csrf_token, httponly=False, secure=getattr(settings, "WIRECLOUD_HTTPS", False), samesite="strict", expires=expiration)

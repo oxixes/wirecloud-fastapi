@@ -17,6 +17,7 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from argparse import _SubParsersAction
+from contextlib import asynccontextmanager
 from typing import Any, Callable, Optional
 
 from fastapi import FastAPI
@@ -25,6 +26,7 @@ from fastapi.exceptions import RequestValidationError
 from wirecloud.commons.auth.routes import router as auth_router
 from wirecloud.commons.auth.routes import base_router as auth_base_router
 from wirecloud.commons.auth.schemas import UserLogin
+from wirecloud.commons.auth.login_flow import router as login_flow_router
 from wirecloud.commons.commands import setup_commands
 from wirecloud.commons.exceptions import ErrorResponse
 from wirecloud.commons.routes import router as commons_router
@@ -50,6 +52,7 @@ class WirecloudCommonsPlugin(WirecloudPlugin):
 
         app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
         app.include_router(auth_base_router, prefix="", tags=["Auth"])
+        app.include_router(login_flow_router, tags=["Auth"])
         app.include_router(commons_router, prefix="", tags=["Other"])
 
         # Register exception handlers
@@ -71,3 +74,11 @@ class WirecloudCommonsPlugin(WirecloudPlugin):
     def get_management_commands(self, subparsers: _SubParsersAction) -> dict[str, Callable]:
         return setup_commands(subparsers)
 
+    @asynccontextmanager
+    async def lifespan(self):
+        from wirecloud.database import get_session, commit
+        provider = self.app.dependency_overrides.get(get_session, get_session) if self.app is not None else get_session
+        async for db in provider():
+            await db.client.oauth_logins.create_index("expires_at", expireAfterSeconds=0)
+            await commit(db)
+        yield

@@ -74,8 +74,8 @@ async def process_widget_instance(db: DBSession, request: Optional[Request], iwi
         status = MACDParametrizationOptionsStatus.normal
         if pref.name in iwidget_params:
             iwidget_param_desc = iwidget_params[pref.name]
-            status = iwidget_param_desc.status
-            source = iwidget_param_desc.source
+            status = MACDParametrizationOptionsStatus(iwidget_param_desc.status)
+            source = MACDParametrizationOptionsSource(iwidget_param_desc.source)
             if source == MACDParametrizationOptionsSource.default:
                 if status == MACDParametrizationOptionsStatus.normal:
                     continue
@@ -108,8 +108,8 @@ async def process_widget_instance(db: DBSession, request: Optional[Request], iwi
         status = MACDParametrizationOptionsStatus.normal
         if prop.name in iwidget_params:
             iwidget_param_desc = iwidget_params[prop.name]
-            status = iwidget_param_desc.status
-            source = iwidget_param_desc.source
+            status = MACDParametrizationOptionsStatus(iwidget_param_desc.status)
+            source = MACDParametrizationOptionsSource(iwidget_param_desc.source)
             if source == MACDParametrizationOptionsSource.default:
                 if status == MACDParametrizationOptionsStatus.normal:
                     continue
@@ -222,8 +222,8 @@ async def build_json_template_from_workspace(db: DBSession, request: Optional[Re
             status = MACDParametrizationOptionsStatus.normal
             if preference.name in operator_params:
                 ioperator_param_desc = operator_params[preference.name]
-                status = ioperator_param_desc.status
-                source = ioperator_param_desc.source
+                status = MACDParametrizationOptionsStatus(ioperator_param_desc.status)
+                source = MACDParametrizationOptionsSource(ioperator_param_desc.source)
                 if source == MACDParametrizationOptionsSource.default:
                     if status == MACDParametrizationOptionsStatus.normal:
                         continue

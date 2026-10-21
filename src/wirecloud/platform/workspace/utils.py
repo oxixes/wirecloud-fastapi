@@ -203,12 +203,14 @@ async def _populate_variables_values_cache(db: DBSession, workspace: Workspace, 
             continue
         operator_info = resource.get_processed_info()
         for vardef in operator_info.preferences:
-            value = operator.preferences[vardef.name].value
+            stored = operator.preferences.get(vardef.name)
+            value = stored.value if stored is not None else None
             _process_variable("ioperator", operator_id, vardef, value, forced_values, values_by_varname, user,
                               await get_user_by_id(db, workspace.creator))
 
         for vardef in operator_info.properties:
-            value = operator.properties[vardef.name].value
+            stored = operator.properties.get(vardef.name)
+            value = stored.value if stored is not None else None
             _process_variable("ioperator", operator_id, vardef, value, forced_values, values_by_varname, user,
                               await get_user_by_id(db, workspace.creator))
 

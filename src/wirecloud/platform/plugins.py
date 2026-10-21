@@ -17,6 +17,7 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from importlib import import_module
+from contextlib import asynccontextmanager
 from typing import Optional, Any
 from collections.abc import Callable
 from pydantic import BaseModel
@@ -54,6 +55,11 @@ class WirecloudPlugin:
 
     def __init__(self, app: Optional[FastAPI]):
         self.app = app
+
+    @asynccontextmanager
+    async def lifespan(self):
+        """Runtime resources owned by this plugin (never entered during builds)."""
+        yield
 
     def get_market_classes(self) -> dict[str, type]:
         return {}

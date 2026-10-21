@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from types import SimpleNamespace
+from contextlib import asynccontextmanager
 
 import pytest
 
@@ -18,12 +19,23 @@ async def test_wirecloud_main_lifespan_calls_validate_and_close(monkeypatch):
 
     monkeypatch.setattr(main, "validate_settings", _validate)
     monkeypatch.setattr(main, "close", _close)
+    events = []
+    @asynccontextmanager
+    async def plugin_lifespan():
+        events.append("start")
+        try:
+            yield
+        finally:
+            events.append("stop")
+    monkeypatch.setattr(main.app.state, "wirecloud_plugins", [SimpleNamespace(lifespan=plugin_lifespan)])
 
     async with main.lifespan(main.app):
         assert calls["validate"] == 1
         assert calls["close"] == 0
+        assert events == ["start"]
 
     assert calls["close"] == 1
+    assert events == ["start", "stop"]
 
 
 def test_wirecloud_main_custom_openapi(monkeypatch):

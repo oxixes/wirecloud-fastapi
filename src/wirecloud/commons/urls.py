@@ -35,7 +35,4 @@ patterns: dict[str, URLTemplate] = {
 }
 
 def get_urlpatterns() -> dict[str, URLTemplate]:
-    if getattr(settings, 'OID_CONNECT_ENABLED', False) and getattr(settings, 'OID_CONNECT_PLUGIN', "") in get_idm_get_authorization_url_functions():
-        patterns['login'] = get_idm_get_authorization_url_functions()[getattr(settings, 'OID_CONNECT_PLUGIN', "")]()
-
-    return patterns
+    return {**patterns, 'login': URLTemplate(urlpattern='/auth/login', defaults={})}
