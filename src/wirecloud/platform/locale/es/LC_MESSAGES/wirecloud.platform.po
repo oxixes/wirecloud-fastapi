@@ -780,3 +780,45 @@ msgstr "No tienes suficientes permisos para actualizar las preferencias del widg
 msgid "invalid user option"
 msgstr "opción user inválida"
 
+
+#: core/plugins.py:398
+msgid "Cell height"
+msgstr "Altura de celda"
+
+#: core/plugins.py:399
+msgid ""
+"Height in pixels of a grid row when the active screen size has no fixed row "
+"count."
+msgstr ""
+"Altura en píxeles de una fila de la cuadrícula cuando el tamaño de pantalla "
+"activo no tiene un número fijo de filas."
+
+#: core/plugins.py:390
+msgid ""
+"Responsive breakpoints of the dashboard. Each screen size covers a range of "
+"widths in pixels and defines the number of grid columns used when the "
+"dashboard is displayed at that width. An optional positive row count creates "
+"a fixed grid that fills the available height and preserves empty rows; zero "
+"keeps the vertical layout unbounded and compacted. Widgets can have a "
+"different layout for each screen size."
+msgstr ""
+"Puntos de adaptación del panel. Cada tamaño de pantalla abarca un intervalo "
+"de anchuras en píxeles y define el número de columnas de la cuadrícula "
+"utilizadas cuando el panel se muestra con esa anchura. Un número positivo de "
+"filas opcional crea una cuadrícula fija que ocupa toda la altura disponible y"
+" conserva las filas vacías; el valor cero mantiene una distribución sin "
+"límite vertical y con las filas compactadas. Los widgets pueden tener una "
+"distribución diferente para cada tamaño de pantalla."
+
+#: core/plugins.py:404
+msgid "Space in pixels between widgets."
+msgstr "Espacio en píxeles entre los widgets."
+
+#: core/catalogue_manager.py:54
+#, python-format
+msgid "Unsupported WireCloud catalogue: %(catalogue)s"
+msgstr "Catálogo de WireCloud no compatible: %(catalogue)s"
+
+#: core/plugins.py:403
+msgid "Widget margin"
+msgstr "Margen de los widgets"

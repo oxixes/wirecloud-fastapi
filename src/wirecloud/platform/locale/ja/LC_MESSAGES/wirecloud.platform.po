@@ -746,3 +746,36 @@ msgstr "ウィジェットの設定を更新する権限がありません"
 #: ../../../markets/routes.py:112
 msgid "invalid user option"
 msgstr "無効なユーザ・オプション"
+
+#: core/plugins.py:398
+msgid "Cell height"
+msgstr "セルの高さ"
+
+#: core/plugins.py:399
+msgid ""
+"Height in pixels of a grid row when the active screen size has no fixed row "
+"count."
+msgstr "現在の画面サイズで行数が固定されていない場合の、グリッドの1行の高さ（ピクセル単位）。"
+
+#: core/plugins.py:390
+msgid ""
+"Responsive breakpoints of the dashboard. Each screen size covers a range of "
+"widths in pixels and defines the number of grid columns used when the "
+"dashboard is displayed at that width. An optional positive row count creates "
+"a fixed grid that fills the available height and preserves empty rows; zero "
+"keeps the vertical layout unbounded and compacted. Widgets can have a "
+"different layout for each screen size."
+msgstr "ダッシュボードのレスポンシブ表示のブレークポイント。各画面サイズはピクセル単位の幅の範囲に対応し、その幅でダッシュボードを表示するときのグリッドの列数を定義します。任意で正の行数を指定すると、利用可能な高さ全体を使い、空の行を保持する固定グリッドになります。0を指定すると、縦方向の制限がなくなり、行を詰めて配置します。ウィジェットの配置は画面サイズごとに変更できます。"
+
+#: core/plugins.py:404
+msgid "Space in pixels between widgets."
+msgstr "ウィジェット間の余白（ピクセル単位）。"
+
+#: core/catalogue_manager.py:54
+#, python-format
+msgid "Unsupported WireCloud catalogue: %(catalogue)s"
+msgstr "サポートされていない WireCloud カタログ: %(catalogue)s"
+
+#: core/plugins.py:403
+msgid "Widget margin"
+msgstr "ウィジェットの余白"

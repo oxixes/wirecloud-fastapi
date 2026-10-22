@@ -14,6 +14,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
+# The wheel build compiles frontend assets and all translation catalogs.
 RUN python -m pip install --upgrade pip \
     && python -m pip wheel . -w /wheels --no-deps
 

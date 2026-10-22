@@ -3229,3 +3229,85 @@ msgstr "← 管理パネル"
 #: ../../../static/js/wirecloud/ui/UserManagementWindowMenu.js:1077
 msgid "← Back"
 msgstr "← 戻る"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:149
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:198
+msgid "Bottom sidebar"
+msgstr "下側のサイドバー"
+
+#: static/js/wirecloud/ui/ScreenSizesInputInterface.js:280
+msgid "Columns:"
+msgstr "列数:"
+
+#: ../../../static/js/wirecloud/PreferenceManager.js:38
+msgid "Default setting"
+msgstr "デフォルト設定"
+
+#: ../../../static/js/wirecloud/PreferenceManager.js:39
+msgid "Detect browser language"
+msgstr "ブラウザの言語を検出"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:183
+msgid "Dock to sidebar"
+msgstr "サイドバーに配置"
+
+#: static/js/wirecloud/ui/WorkspaceTabViewMenuItems.js:79
+msgid "Hidden widgets"
+msgstr "非表示のウィジェット"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:111
+msgid "Hide for this screen size"
+msgstr "この画面サイズでは非表示"
+
+#: ../../../static/js/wirecloud/PreferenceManager.js:35
+msgid "Language"
+msgstr "言語"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:146
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:186
+msgid "Left sidebar"
+msgstr "左側のサイドバー"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:142
+msgid "Move to sidebar"
+msgstr "サイドバーに移動"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:118
+msgid "Move to tab"
+msgstr "タブに移動"
+
+#: static/js/wirecloud/ui/ScreenSizesInputInterface.js:281
+msgid "Number of grid columns used at this screen size."
+msgstr "この画面サイズで使用するグリッドの列数。"
+
+#: static/js/wirecloud/ui/ScreenSizesInputInterface.js:310
+msgid ""
+"Number of grid rows. Positive values fill the available height and preserve "
+"empty rows; use 0 for an unbounded, vertically compacted layout."
+msgstr "グリッドの行数。正の値を指定すると、利用可能な高さ全体を使い、空の行を保持します。縦方向の制限をなくして行を詰めるには、0を指定してください。"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:172
+msgid "Push main content"
+msgstr "メインコンテンツを押し出す"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:147
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:190
+msgid "Right sidebar"
+msgstr "右側のサイドバー"
+
+#: static/js/wirecloud/ui/ScreenSizesInputInterface.js:309
+msgid "Rows:"
+msgstr "行数:"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:164
+msgid "Show on top of content (overlay)"
+msgstr "コンテンツに重ねて表示（オーバーレイ）"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:161
+msgid "Sidebar display mode"
+msgstr "サイドバーの表示モード"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:148
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:194
+msgid "Top sidebar"
+msgstr "上側のサイドバー"

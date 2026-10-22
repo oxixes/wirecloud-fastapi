@@ -3429,3 +3429,76 @@ msgstr "← Panel de administración"
 #: ../../../static/js/wirecloud/ui/UserManagementWindowMenu.js:1077
 msgid "← Back"
 msgstr "← Volver"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:149
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:198
+msgid "Bottom sidebar"
+msgstr "Barra lateral inferior"
+
+#: static/js/wirecloud/ui/ScreenSizesInputInterface.js:280
+msgid "Columns:"
+msgstr "Columnas:"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:183
+msgid "Dock to sidebar"
+msgstr "Acoplar a la barra lateral"
+
+#: static/js/wirecloud/ui/WorkspaceTabViewMenuItems.js:79
+msgid "Hidden widgets"
+msgstr "Widgets ocultos"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:111
+msgid "Hide for this screen size"
+msgstr "Ocultar para este tamaño de pantalla"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:146
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:186
+msgid "Left sidebar"
+msgstr "Barra lateral izquierda"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:142
+msgid "Move to sidebar"
+msgstr "Mover a la barra lateral"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:118
+msgid "Move to tab"
+msgstr "Mover a una pestaña"
+
+#: static/js/wirecloud/ui/ScreenSizesInputInterface.js:281
+msgid "Number of grid columns used at this screen size."
+msgstr "Número de columnas de la cuadrícula utilizadas para este tamaño de pantalla."
+
+#: static/js/wirecloud/ui/ScreenSizesInputInterface.js:310
+msgid ""
+"Number of grid rows. Positive values fill the available height and preserve "
+"empty rows; use 0 for an unbounded, vertically compacted layout."
+msgstr ""
+"Número de filas de la cuadrícula. Los valores positivos ocupan toda la altura"
+" disponible y conservan las filas vacías; utiliza 0 para una distribución sin"
+" límite vertical y con las filas compactadas."
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:172
+msgid "Push main content"
+msgstr "Desplazar el contenido principal"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:147
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:190
+msgid "Right sidebar"
+msgstr "Barra lateral derecha"
+
+#: static/js/wirecloud/ui/ScreenSizesInputInterface.js:309
+msgid "Rows:"
+msgstr "Filas:"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:164
+msgid "Show on top of content (overlay)"
+msgstr "Mostrar sobre el contenido (superposición)"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:161
+msgid "Sidebar display mode"
+msgstr "Modo de visualización de la barra lateral"
+
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:148
+#: static/js/wirecloud/ui/WidgetViewMenuItems.js:194
+msgid "Top sidebar"
+msgstr "Barra lateral superior"

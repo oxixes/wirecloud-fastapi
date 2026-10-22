@@ -325,17 +325,6 @@ msgstr ""
 "このサーバは、要求したドキュメント (%(request_path)s) にアクセスする権限があることを確認できませんでした。 間違った資格情報 "
 "(パスワードが間違っているなど)を入力したか、ブラウザ/アプリケーションが必要な資格情報の入力方法を理解していません。"
 
-#: ../../../../templates/401.html:5
-#, python-format
-msgid ""
-"This server could not verify that you are authorized to access the document "
-"you requested (%(request_path)s). Either you supplied the wrong credentials "
-"(e.g., bad password), or your browser/application does not understand how to "
-"supply the credentials required.{% endblocktrans"
-msgstr ""
-"このサーバーは、要求したドキュメント (%(request_path)s) へのアクセスが許可されていることを確認できませんでした。間違った認証情報 "
-"(間違ったパスワードなど) を入力したか、ブラウザ/アプリケーションが必要な認証情報の入力方法を理解していません。{% endblocktrans"
-
 #: ../../../../templates/wirecloud/workspace/missing_widget.html:12
 msgid ""
 "This widget is currently not available. Probably you or an administrator "

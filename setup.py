@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import runpy
 import subprocess
 from pathlib import Path
 
@@ -38,9 +39,21 @@ class _FrontendBuildMixin:
 
 
 class build_py(_FrontendBuildMixin, _build_py):
+    def _compile_translations(self) -> None:
+        project_root = Path(__file__).resolve().parent
+        source = project_root / "src"
+        compiler = runpy.run_path(str(source / "wirecloud" / "commons" / "utils" / "translation.py"))
+        count = 0
+        for po_file in sorted(source.glob("**/locale/*/LC_MESSAGES/*.po")):
+            mo_file = (Path(self.build_lib) / po_file.relative_to(source)).with_suffix(".mo")
+            compiler["compile_catalog"](po_file, mo_file)
+            count += 1
+        self.announce(f"Compiled {count} translation catalogs", level=2)
+
     def run(self):
         self._run_frontend_build()
         super().run()
+        self._compile_translations()
 
 
 class sdist(_FrontendBuildMixin, _sdist):

@@ -74,3 +74,7 @@ msgstr "X-WireCloud-Secure-Data: リクエストには処理するデータが�
 #, python-format
 msgid "X-WireCloud-Secure-Data: Unknown action \"%(action)s\"."
 msgstr "X-WireCloud-Secure-Data: 不明なアクション「%(action)s」。"
+
+#: ../../../routes.py:156
+msgid "Bad Gateway"
+msgstr "悪いゲートウェイ"

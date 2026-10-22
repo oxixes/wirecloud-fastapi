@@ -1,3 +1,4 @@
+import gettext
 import importlib.util
 import json
 import os
@@ -133,10 +134,11 @@ def test_build_py_and_sdist_run_call_frontend_and_super(monkeypatch):
 
     monkeypatch.setattr(module.build_py, "_run_frontend_build", lambda self: build_py_calls.append("frontend"))
     monkeypatch.setattr(module._build_py, "run", lambda self: build_py_calls.append("super"))
+    monkeypatch.setattr(module.build_py, "_compile_translations", lambda self: build_py_calls.append("translations"))
 
     cmd = module.build_py(Distribution())
     cmd.run()
-    assert build_py_calls == ["frontend", "super"]
+    assert build_py_calls == ["frontend", "super", "translations"]
 
     monkeypatch.setattr(module.sdist, "_run_frontend_build", lambda self: sdist_calls.append("frontend"))
     monkeypatch.setattr(module._sdist, "run", lambda self: sdist_calls.append("super"))
@@ -144,6 +146,45 @@ def test_build_py_and_sdist_run_call_frontend_and_super(monkeypatch):
     cmd = module.sdist(Distribution())
     cmd.run()
     assert sdist_calls == ["frontend", "super"]
+
+
+def test_build_py_compiles_all_catalogs_into_build_tree(monkeypatch, tmp_path):
+    from babel.messages.pofile import read_po
+    from setuptools import Distribution
+
+    module, _ = _load_setup_module(monkeypatch)
+    cmd = module.build_py(Distribution())
+    cmd.build_lib = str(tmp_path)
+    cmd._compile_translations()
+
+    source = PROJECT_ROOT / "src"
+    catalogs = sorted(source.glob("**/locale/*/LC_MESSAGES/*.po"))
+    assert catalogs
+    assert len(list(tmp_path.rglob("*.mo"))) == len(catalogs)
+    for po_file in catalogs:
+        mo_file = (tmp_path / po_file.relative_to(source)).with_suffix(".mo")
+        with mo_file.open("rb") as stream:
+            compiled = gettext.GNUTranslations(stream)
+        with po_file.open("rb") as stream:
+            catalog = read_po(stream, locale=po_file.parent.parent.name)
+        for message in catalog:
+            if message.id and isinstance(message.id, str) and message.string and not message.fuzzy:
+                assert compiled.gettext(message.id) == message.string
+
+
+def test_compiler_rejects_invalid_placeholders(tmp_path):
+    compiler = runpy.run_path(str(PROJECT_ROOT / "src" / "wirecloud" / "commons" / "utils" / "translation.py"))
+    source = tmp_path / "source"
+    po_file = source / "plugin" / "locale" / "es" / "LC_MESSAGES" / "plugin.po"
+    po_file.parent.mkdir(parents=True)
+    po_file.write_text(
+        'msgid ""\nmsgstr ""\n"Content-Type: text/plain; charset=UTF-8\\n"\n\n'
+        '#, python-format\nmsgid "Hello %(name)s"\nmsgstr "Hola %(other)s"\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="Invalid catalog"):
+        compiler["compile_catalog"](po_file, tmp_path / "output" / "plugin.mo")
+    assert not list(tmp_path.rglob("*.mo"))
 
 
 def test_generate_webpack_settings_with_settings_module(monkeypatch, tmp_path):
