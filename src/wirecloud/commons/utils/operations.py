@@ -1,18 +1,36 @@
-"""Invoke an existing authorized WireCloud operation from another transport.
+# -*- coding: utf-8 -*-
+# Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
 
-FastAPI handlers retain their decorators and permission checks. The caller must
-supply a server-verified principal and validated typed arguments; this helper
-does not accept operation names or URLs from external input.
-"""
+# This file is part of Wirecloud.
+
+# Wirecloud is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Wirecloud is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
+
 import inspect
 import json
+from typing import Any, Awaitable, Callable
 
 from fastapi import HTTPException, Request, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.params import Param, Body
 
+from wirecloud.commons.auth.schemas import UserAll
+from wirecloud.database import DBSession
 
-async def invoke_operation(operation, db, user, request, **arguments):
+
+async def invoke_operation(
+    operation: Callable[..., Awaitable[Any]], db: DBSession, user: UserAll, request: Request, **arguments: Any
+) -> Any:
     parameters = inspect.signature(operation).parameters
     values = {"db": db, "user": user, "request": request, **arguments}
     for name, parameter in parameters.items():

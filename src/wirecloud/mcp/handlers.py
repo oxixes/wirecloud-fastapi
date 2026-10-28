@@ -1,8 +1,24 @@
-"""Adapt validated WireCloud operations to the SDK's function-tool interface."""
+# -*- coding: utf-8 -*-
+# Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
+
+# This file is part of Wirecloud.
+
+# Wirecloud is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Wirecloud is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 import inspect
 import json
-from typing import Any, Callable
+from typing import Any, Awaitable, Callable
 
 from fastapi import HTTPException
 from mcp.server.mcpserver.exceptions import ToolError
@@ -14,10 +30,10 @@ from wirecloud.mcp.context import call_context
 from wirecloud.mcp.tools import Tool
 
 
-def make_handler(spec: Tool) -> Callable:
+def make_handler(spec: Tool) -> Callable[..., Awaitable[Any]]:
     """Expose the closed input model as a signature understood by the MCP SDK."""
 
-    async def handler(**arguments):
+    async def handler(**arguments: Any) -> Any:
         context = call_context.get()
         adapter = WireCloudAdapter(context.db, context.principal, context.request)
 

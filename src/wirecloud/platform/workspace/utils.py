@@ -450,9 +450,9 @@ async def _get_global_workspace_data(db: DBSession, request: Request, workspace:
 
         try:
             resource = await get_catalogue_resource(db, vendor, name, version)
-            operator_info = resource.get_processed_info(process_variables=True)
-            if not resource.is_available_for(user):
+            if resource is None or not resource.is_available_for(user):
                 raise ValueError()
+            operator_info = resource.get_processed_info(process_variables=True)
         except ValueError:
             operator.preferences = {}
             operator.properties = {}

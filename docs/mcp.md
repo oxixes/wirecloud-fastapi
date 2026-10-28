@@ -139,10 +139,13 @@ user has permission. Workspace deletion is restricted to owned workspaces.
 Sharing, publishing, account administration, impersonation, and permission
 management have no MCP tools.
 
-The initial authorization challenge requests read access. Calling an operation
-outside the granted scopes returns an HTTP OAuth scope challenge, allowing
-compatible clients to request additional consent. Clients without incremental
-authorization support should request their intended scopes when connecting.
+The initial authorization challenge requests all MCP scopes. Authorization
+requests that omit `scope` also default to all MCP scopes. Clients can explicitly
+request a smaller set. Calling an operation outside the granted scopes returns
+an HTTP OAuth scope challenge, allowing compatible clients to request additional
+consent. To change an existing connection, open **User menu → App connections**,
+select its permissions, and choose **Save permissions**. This also expands an
+existing read-only connection without reconnecting and takes effect immediately.
 
 See [session lifetime and revocation](oauth2.md#session-lifetime-and-revocation)
 for token expiry, logout behavior, and managing app connections.

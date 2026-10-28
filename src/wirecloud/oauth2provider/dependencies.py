@@ -1,11 +1,32 @@
-"""Scoped authentication for plugin endpoints; core API authentication is unaffected."""
+# -*- coding: utf-8 -*-
+# Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
 
-from fastapi import HTTPException
+# This file is part of Wirecloud.
 
-from wirecloud.oauth2provider.service import bearer_token, get_resource, resource_metadata_url, verify_access_token
+# Wirecloud is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Wirecloud is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
+
+from typing import Collection
+
+from fastapi import HTTPException, Request
+
+from wirecloud.database import DBSession
+from wirecloud.oauth2provider.service import OAuthPrincipal, bearer_token, get_resource, resource_metadata_url, verify_access_token
 
 
-async def require_access(request, db, audience, scopes=()):
+async def require_access(
+    request: Request, db: DBSession, audience: str, scopes: Collection[str] = ()
+) -> OAuthPrincipal:
     resource = get_resource(request, audience)
     if not set(scopes).issubset(resource.scopes):
         raise ValueError("Endpoint requires scopes not declared by its OAuth resource")

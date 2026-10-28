@@ -1,4 +1,20 @@
-"""Bounded finished-package ingestion. Never builds component source code."""
+# -*- coding: utf-8 -*-
+# Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
+
+# This file is part of Wirecloud.
+
+# Wirecloud is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Wirecloud is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 
@@ -8,19 +24,25 @@ import posixpath
 import stat
 import zipfile
 from datetime import timedelta
+from typing import Any, Optional
 
 from fastapi import HTTPException
 
 from wirecloud.commons.auth.tokens import digest, now, random_token
 from wirecloud.commons.utils.wgt import WgtFile, InvalidContents
 from wirecloud.commons.utils.template import TemplateParser, TemplateParseException
+from wirecloud.commons.utils.template.schemas.macdschemas import MACD
+from wirecloud.database import DBSession
+from wirecloud.oauth2provider import OAuthPrincipal
 
 INLINE_LIMIT = 2 * 1024 * 1024
 PACKAGE_LIMIT = 100 * 1024 * 1024
 EXTRACTED_LIMIT = 500 * 1024 * 1024
 
 
-def validate_package(content, _depth=0, _budget=None):
+def validate_package(
+    content: bytes, _depth: int = 0, _budget: Optional[list[int]] = None
+) -> tuple[WgtFile, MACD]:
     if not content or len(content) > PACKAGE_LIMIT:
         raise HTTPException(413, "Package must contain at most 100 MiB")
     if _depth > 4:
@@ -66,7 +88,7 @@ def validate_package(content, _depth=0, _budget=None):
         raise HTTPException(422, "Invalid WGT package: " + str(exc)) from exc
 
 
-def decode_package(encoded):
+def decode_package(encoded: str) -> bytes:
     if len(encoded) > 4 * ((INLINE_LIMIT + 2) // 3):
         raise HTTPException(413, "Inline packages are limited to 2 MiB; use a URL or binary upload")
     try:
@@ -78,14 +100,14 @@ def decode_package(encoded):
     return content
 
 
-async def ensure_upload_indexes(db):
+async def ensure_upload_indexes(db: DBSession) -> None:
     """Expire unused chunks and make shared-worker chunk ordering unambiguous."""
     for collection in ("mcp_uploads", "mcp_upload_chunks"):
         await db.client[collection].create_index("expires_at", expireAfterSeconds=0)
     await db.client.mcp_upload_chunks.create_index([("upload_id", 1), ("index", 1)], unique=True)
 
 
-async def store_upload(db, principal, content):
+async def store_upload(db: DBSession, principal: OAuthPrincipal, content: bytes) -> dict[str, Any]:
     validate_package(content)
     handle = random_token()
     # Mongo documents are bounded at 16 MiB. GridFS-style chunks keep uploads
@@ -108,7 +130,7 @@ async def store_upload(db, principal, content):
     return {"upload_id": handle, "size": len(content), "expires_in": 900}
 
 
-async def consume_upload(db, principal, handle):
+async def consume_upload(db: DBSession, principal: OAuthPrincipal, handle: str) -> bytes:
     record = await db.client.mcp_uploads.find_one_and_delete(
         {
             "_id": digest(handle),

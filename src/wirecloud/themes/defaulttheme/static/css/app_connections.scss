@@ -1,3 +1,20 @@
+// Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
+
+// This file is part of Wirecloud.
+
+// Wirecloud is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Wirecloud is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+
+// You should have received a copy of the GNU Affero General Public License
+// along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
+
 .window_menu.wc-app-connections {
     width: 780px;
     min-width: 0;
@@ -26,13 +43,32 @@
 
     .app-connection-permissions {
         margin: 0;
-        padding-left: 20px;
+        padding: 0;
+        list-style: none;
         line-height: 1.5;
+    }
+
+    .app-connection-permission {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin: 8px 0;
+        font-weight: normal;
+
+        > input {
+            flex: none;
+            margin-top: 4px;
+        }
+    }
+
+    .app-connection-help {
+        margin: 12px 0 0;
     }
 
     .app-connection-footer {
         display: flex;
         align-items: flex-start;
+        flex-wrap: wrap;
         gap: 16px;
 
         > .se-btn {
@@ -42,7 +78,7 @@
 
     .app-connection-details {
         flex: 1;
-        min-width: 0;
+        min-width: 140px;
 
         > summary {
             cursor: pointer;

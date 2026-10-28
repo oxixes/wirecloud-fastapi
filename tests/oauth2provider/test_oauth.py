@@ -238,7 +238,10 @@ async def test_modal_connections_json_is_user_scoped_and_csrf_protected(oauth_cl
     assert page.headers["cache-control"] == "no-store" and page.headers["vary"] == "Accept"
     data = page.json()
     assert data["connections"] == [{"id": principal.grant_id, "client_name": "Test AI", "client_id": client_id,
-        "resource_name": "Test resource", "permissions": ["Read accessible data"]}]
+        "resource_name": "Test resource", "permissions": ["Read accessible data"], "scope_options": [
+            {"scope": "wirecloud:read", "description": "Read accessible data", "selected": True},
+            {"scope": "wirecloud:workspace:write", "description": "Edit workspaces", "selected": False},
+        ]}]
     # Possessing a delegated access token cannot manage browser connections.
     async with AsyncClient(transport=ASGITransport(app=oauth_app), base_url="http://localhost") as other:
         assert (await other.get("/oauth2/connections", headers={**headers,

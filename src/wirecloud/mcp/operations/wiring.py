@@ -1,4 +1,24 @@
-"""Wiring authoring with explicit permissions, validation, and editor placement."""
+# -*- coding: utf-8 -*-
+# Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
+
+# This file is part of Wirecloud.
+
+# Wirecloud is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Wirecloud is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Mapping, Sequence
 
 import jsonpatch
 from fastapi import HTTPException
@@ -6,19 +26,25 @@ from fastapi import HTTPException
 from wirecloud.catalogue.crud import get_catalogue_resource, get_catalogue_resource_by_id
 from wirecloud.database import Id
 from wirecloud.mcp.layout import component_nodes, placement_patches
+from wirecloud.mcp import schemas
 from wirecloud.platform.wiring import routes
-from wirecloud.platform.wiring.schemas import WiringEntryPatch
+from wirecloud.platform.wiring.schemas import Wiring, WiringConnectionEndpoint, WiringEntryPatch
+from wirecloud.platform.workspace.models import Workspace, WorkspaceWiringOperator
 from wirecloud.platform.workspace import routes as workspace_routes
 from wirecloud.platform.workspace.utils import is_owner_or_has_permission
 
+if TYPE_CHECKING:
+    from wirecloud.catalogue.schemas import CatalogueResource
+    from wirecloud.mcp.adapter import WireCloudAdapter
 
-async def get_wiring(adapter, args):
+
+async def get_wiring(adapter: WireCloudAdapter, args: schemas.Workspace) -> dict[str, Any]:
     data = await adapter.call(workspace_routes.get_workspace_entry_with_id, workspace_id=Id(args.workspace_id))
     workspace = await adapter.workspace(args.workspace_id)
     return {"wiring": data.get("wiring", {}), "modification_timestamp": adapter.timestamp(workspace)}
 
 
-async def add_operator(adapter, args):
+async def add_operator(adapter: WireCloudAdapter, args: schemas.AddOperator) -> dict[str, Any]:
     workspace = await adapter.workspace(args.workspace_id)
     resource = await adapter.resource(args.resource)
     if resource.resource_type() != "operator":
@@ -43,7 +69,7 @@ async def add_operator(adapter, args):
     return {"operator_id": operator_id, "result": result}
 
 
-async def update_operator(adapter, args):
+async def update_operator(adapter: WireCloudAdapter, args: schemas.UpdateOperator) -> dict[str, Any]:
     workspace = await adapter.workspace(args.workspace_id)
     operator = get_operator(workspace, args.operator_id)
     resource = await adapter.resource(operator.name)
@@ -63,7 +89,7 @@ async def update_operator(adapter, args):
     return await apply_patches(adapter, workspace, patches)
 
 
-async def remove_operator(adapter, args):
+async def remove_operator(adapter: WireCloudAdapter, args: schemas.Operator) -> dict[str, Any]:
     workspace = await adapter.workspace(args.workspace_id)
     get_operator(workspace, args.operator_id)
     if not is_owner_or_has_permission(adapter.user, workspace, "WORKSPACE.OPERATOR.DELETE"):
@@ -78,7 +104,7 @@ async def remove_operator(adapter, args):
     return await apply_patches(adapter, workspace, patches)
 
 
-async def connect_components(adapter, args):
+async def connect_components(adapter: WireCloudAdapter, args: schemas.Connect) -> dict[str, Any]:
     workspace = await adapter.workspace(args.workspace_id)
     await validate_connection(adapter, workspace, args.source, args.target)
     patches = [
@@ -96,7 +122,7 @@ async def connect_components(adapter, args):
     return await apply_patches(adapter, workspace, patches)
 
 
-async def disconnect_components(adapter, args):
+async def disconnect_components(adapter: WireCloudAdapter, args: schemas.Disconnect) -> dict[str, Any]:
     workspace = await adapter.workspace(args.workspace_id)
     if not is_owner_or_has_permission(adapter.user, workspace, "WORKSPACE.WIRING.DELETE"):
         raise HTTPException(403, "Connection deletion permission is required")
@@ -106,7 +132,7 @@ async def disconnect_components(adapter, args):
     return await apply_patches(adapter, workspace, patches)
 
 
-async def layout_wiring(adapter, args):
+async def layout_wiring(adapter: WireCloudAdapter, args: schemas.LayoutWiring) -> dict[str, Any]:
     workspace = await adapter.workspace(args.workspace_id, edit=True)
     if not is_owner_or_has_permission(adapter.user, workspace, "WORKSPACE.WIRING.EDIT"):
         raise HTTPException(403, "Insufficient wiring permissions")
@@ -123,7 +149,9 @@ async def layout_wiring(adapter, args):
     return {"positioned": len(patches)}
 
 
-async def apply_patches(adapter, workspace, patches):
+async def apply_patches(
+    adapter: WireCloudAdapter, workspace: Workspace, patches: list[dict[str, Any]]
+) -> dict[str, Any]:
     return await adapter.call(
         routes.patch_wiring_entry,
         workspace_id=workspace.id,
@@ -132,19 +160,21 @@ async def apply_patches(adapter, workspace, patches):
     )
 
 
-async def add_missing_positions(adapter, workspace, patches):
+async def add_missing_positions(
+    adapter: WireCloudAdapter, workspace: Workspace, patches: list[dict[str, Any]]
+) -> None:
     current = workspace.wiring_status
     proposed = type(current).model_validate(jsonpatch.apply_patch(current.model_dump(), patches))
     patches.extend(await wiring_layout_patches(adapter, workspace, proposed))
 
 
-def get_operator(workspace, operator_id):
+def get_operator(workspace: Workspace, operator_id: str) -> WorkspaceWiringOperator:
     if operator_id not in workspace.wiring_status.operators:
         raise HTTPException(404, "Operator not found")
     return workspace.wiring_status.operators[operator_id]
 
 
-def operator_visual_removals(status, operator_id):
+def operator_visual_removals(status: Wiring, operator_id: str) -> list[dict[str, Any]]:
     patches = []
     descriptions = [("/visualdescription", status.visualdescription)] + [
         (f"/visualdescription/behaviours/{index}", behaviour)
@@ -161,7 +191,7 @@ def operator_visual_removals(status, operator_id):
     return patches
 
 
-def operator_connection_removals(status, operator_id):
+def operator_connection_removals(status: Wiring, operator_id: str) -> list[dict[str, Any]]:
     patches = []
     for index in range(len(status.connections) - 1, -1, -1):
         connection = status.connections[index]
@@ -173,7 +203,13 @@ def operator_connection_removals(status, operator_id):
     return patches
 
 
-async def wiring_layout_patches(adapter, workspace, status, moves=(), preserve_existing=True):
+async def wiring_layout_patches(
+    adapter: WireCloudAdapter,
+    workspace: Workspace,
+    status: Wiring,
+    moves: Sequence[schemas.WiringPlacement] = (),
+    preserve_existing: bool = True,
+) -> list[dict[str, Any]]:
     widgets = {widget.id: widget for tab in workspace.tabs.values() for widget in tab.widgets.values()}
     valid_nodes = {("widget", key) for key in widgets} | {("operator", key) for key in status.operators}
     nodes = component_nodes(status, valid_nodes, moves)
@@ -194,7 +230,9 @@ async def wiring_layout_patches(adapter, workspace, status, moves=(), preserve_e
     return placement_patches(status, nodes, heights, moves, preserve_existing)
 
 
-async def validate_connection(adapter, workspace, source, target):
+async def validate_connection(
+    adapter: WireCloudAdapter, workspace: Workspace, source: WiringConnectionEndpoint, target: WiringConnectionEndpoint
+) -> None:
     definitions = []
     for endpoint, direction in ((source, "outputs"), (target, "inputs")):
         if endpoint.type.value == "operator":
@@ -229,7 +267,7 @@ async def validate_connection(adapter, workspace, source, target):
         raise HTTPException(422, "Wiring endpoint types are incompatible")
 
 
-def validate_operator_preferences(resource, values):
+def validate_operator_preferences(resource: CatalogueResource, values: Mapping[str, Any]) -> None:
     definitions = {preference.name: preference for preference in resource.description.preferences}
     for name in values:
         if name not in definitions:

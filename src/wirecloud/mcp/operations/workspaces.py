@@ -1,4 +1,24 @@
-"""Workspace and tab authoring through existing WireCloud operations."""
+# -*- coding: utf-8 -*-
+# Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
+
+# This file is part of Wirecloud.
+
+# Wirecloud is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Wirecloud is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from fastapi import HTTPException
 
@@ -8,6 +28,7 @@ from wirecloud.commons.utils.template.schemas.macdschemas import (
     MACDParametrizationOptions,
 )
 from wirecloud.database import Id
+from wirecloud.mcp import schemas
 from wirecloud.mcp.utils import operation_request, paginate, safe_preferences
 from wirecloud.platform.workspace import routes
 from wirecloud.platform.workspace.crud import change_workspace
@@ -21,8 +42,11 @@ from wirecloud.platform.workspace.schemas import (
 )
 from wirecloud.platform.workspace.utils import is_owner_or_has_permission
 
+if TYPE_CHECKING:
+    from wirecloud.mcp.adapter import WireCloudAdapter
 
-async def get_session_info(adapter, args):
+
+async def get_session_info(adapter: WireCloudAdapter, args: schemas.Empty) -> dict[str, Any]:
     from wirecloud.mcp.tools import TOOLS
 
     principal = adapter.principal
@@ -35,18 +59,18 @@ async def get_session_info(adapter, args):
     }
 
 
-async def list_workspaces(adapter, args):
+async def list_workspaces(adapter: WireCloudAdapter, args: schemas.Page) -> dict[str, Any]:
     items = await adapter.call(routes.get_workspace_list_route)
     return paginate(items, args)
 
 
-async def get_workspace(adapter, args):
+async def get_workspace(adapter: WireCloudAdapter, args: schemas.Workspace) -> dict[str, Any]:
     data = await adapter.call(routes.get_workspace_entry_with_id, workspace_id=Id(args.workspace_id))
     workspace = await adapter.workspace(args.workspace_id)
     return {"workspace": data, "modification_timestamp": adapter.timestamp(workspace)}
 
 
-def workspace_input(args):
+def workspace_input(args: schemas.CreateWorkspace) -> dict[str, Any]:
     safe_preferences(args.preferences)
     data = {key: getattr(args, key) for key in ("name", "title", "preferences", "allow_renaming")}
     if not data["name"]:
@@ -54,24 +78,24 @@ def workspace_input(args):
     return data
 
 
-async def create_workspace(adapter, args):
+async def create_workspace(adapter: WireCloudAdapter, args: schemas.CreateWorkspace) -> dict[str, Any]:
     return await adapter.call(routes.create_workspace_collection, workspace=WorkspaceCreate(**workspace_input(args)))
 
 
-async def clone_workspace(adapter, args):
+async def clone_workspace(adapter: WireCloudAdapter, args: schemas.CloneWorkspace) -> dict[str, Any]:
     data = workspace_input(args)
     data["workspace"] = args.source_workspace_id
     return await adapter.call(routes.create_workspace_collection, workspace=WorkspaceCreate(**data))
 
 
-async def import_mashup(adapter, args):
+async def import_mashup(adapter: WireCloudAdapter, args: schemas.ImportMashup) -> dict[str, Any]:
     data = workspace_input(args)
     await adapter.resource(args.mashup)
     data["mashup"] = args.mashup
     return await adapter.call(routes.create_workspace_collection, workspace=WorkspaceCreate(**data))
 
 
-async def update_workspace(adapter, args):
+async def update_workspace(adapter: WireCloudAdapter, args: schemas.UpdateWorkspace) -> dict[str, Any]:
     data = args.model_dump(include={"name", "title", "description", "longdescription"})
     return await adapter.call(
         routes.create_workspace_entry,
@@ -80,14 +104,14 @@ async def update_workspace(adapter, args):
     )
 
 
-async def delete_workspace(adapter, args):
+async def delete_workspace(adapter: WireCloudAdapter, args: schemas.Edit) -> dict[str, Any]:
     workspace = await adapter.workspace(args.workspace_id, edit=True)
     if workspace.creator != adapter.user.id:
         raise HTTPException(403, "Only owned workspaces can be deleted through MCP")
     return await adapter.call(routes.delete_workspace_entry, workspace_id=workspace.id)
 
 
-async def create_tab(adapter, args):
+async def create_tab(adapter: WireCloudAdapter, args: schemas.CreateTab) -> dict[str, Any]:
     return await adapter.call(
         routes.create_tab_collection,
         workspace_id=Id(args.workspace_id),
@@ -95,7 +119,7 @@ async def create_tab(adapter, args):
     )
 
 
-async def update_tab(adapter, args):
+async def update_tab(adapter: WireCloudAdapter, args: schemas.UpdateTab) -> dict[str, Any]:
     return await adapter.call(
         routes.create_tab_entry,
         workspace_id=Id(args.workspace_id),
@@ -104,11 +128,11 @@ async def update_tab(adapter, args):
     )
 
 
-async def delete_tab(adapter, args):
+async def delete_tab(adapter: WireCloudAdapter, args: schemas.Tab) -> dict[str, Any]:
     return await adapter.call(routes.delete_tab_entry, workspace_id=Id(args.workspace_id), tab_id=args.tab_id)
 
 
-async def reorder_tabs(adapter, args):
+async def reorder_tabs(adapter: WireCloudAdapter, args: schemas.ReorderTabs) -> dict[str, Any]:
     workspace = await adapter.workspace(args.workspace_id, edit=True)
     if not is_owner_or_has_permission(adapter.user, workspace, "WORKSPACE.TAB.EDIT"):
         raise HTTPException(403, "Insufficient tab permissions")
@@ -120,7 +144,7 @@ async def reorder_tabs(adapter, args):
     return {"tab_ids": args.tab_ids}
 
 
-async def merge_mashup(adapter, args):
+async def merge_mashup(adapter: WireCloudAdapter, args: schemas.MergeMashup) -> dict[str, Any]:
     await adapter.resource(args.mashup)
     return await adapter.call(
         routes.process_mashup,
@@ -129,7 +153,7 @@ async def merge_mashup(adapter, args):
     )
 
 
-async def export_workspace(adapter, args):
+async def export_workspace(adapter: WireCloudAdapter, args: schemas.ExportWorkspace) -> dict[str, Any]:
     workspace = await adapter.workspace(args.workspace_id)
     options = MACDMashupWithParametrization(
         type="mashup",

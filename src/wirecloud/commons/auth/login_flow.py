@@ -1,25 +1,41 @@
-"""Browser login continuation shared by all WireCloud authentication providers."""
+# -*- coding: utf-8 -*-
+# Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
+
+# This file is part of Wirecloud.
+
+# Wirecloud is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Wirecloud is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 
 import hmac
 import inspect
 from contextlib import asynccontextmanager
-from typing import Optional, Literal
+from typing import Any, AsyncIterator, Callable, Optional, Literal
 from datetime import timedelta
 from urllib.parse import urlencode, urlsplit, parse_qsl, urlunsplit
 
-from fastapi import APIRouter, HTTPException, Request, Query
+from fastapi import APIRouter, FastAPI, HTTPException, Request, Query
 from fastapi.responses import RedirectResponse
 
 from wirecloud import settings
-from wirecloud.database import DBDep, commit, get_session
+from wirecloud.database import DBDep, DBSession, commit, get_session
 from wirecloud.commons.auth import tokens
 from wirecloud.platform.plugins import get_idm_get_authorization_url_functions
 
 
 @asynccontextmanager
-async def lifespan(app):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     provider = app.dependency_overrides.get(get_session, get_session)
     async for db in provider():
         await db.client.oauth_logins.create_index("expires_at", expireAfterSeconds=0)
@@ -30,12 +46,12 @@ async def lifespan(app):
 router = APIRouter(lifespan=lifespan)
 
 
-def accepts_context(function):
+def accepts_context(function: Callable[..., Any]) -> bool:
     parameters = inspect.signature(function).parameters
     return "login_context" in parameters or any(p.kind == p.VAR_KEYWORD for p in parameters.values())
 
 
-def local_target(target):
+def local_target(target: str) -> str:
     if not target.startswith("/") or target.startswith("//") or "\\" in target or any(ord(c) < 32 for c in target):
         raise HTTPException(400, "Invalid login return destination")
     return target
@@ -48,7 +64,7 @@ async def begin_login(
     return_to: str = "/",
     next_url: Optional[str] = Query(None, alias="next"),
     prompt: Optional[Literal["login", "select_account", "consent", "none"]] = None,
-):
+) -> RedirectResponse:
     return_to = local_target(next_url or return_to)
     state, browser, verifier = tokens.random_token(), tokens.random_token(), tokens.random_token()
     context = {
@@ -95,7 +111,9 @@ async def begin_login(
     return response
 
 
-async def consume_login_attempt(request, db, state=None):
+async def consume_login_attempt(
+    request: Request, db: DBSession, state: Optional[str] = None
+) -> dict[str, Any]:
     state = state or request.query_params.get("state", "")
     attempt = await db.client.oauth_logins.find_one_and_delete(
         {
@@ -111,7 +129,7 @@ async def consume_login_attempt(request, db, state=None):
     return attempt
 
 
-async def prepare_local_login(request, db):
+async def prepare_local_login(request: Request, db: DBSession) -> None:
     state = request.query_params.get("continue")
     if state:
         attempt = await db.client.oauth_logins.find_one(

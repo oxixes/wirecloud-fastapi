@@ -11,20 +11,36 @@
             <li>
                 <div class="oauth-connection-heading">
                     <div><h2>{{ connection.client_name }}</h2><p>{{ connection.resource_name }}</p></div>
-                    <form method="post">
-                        <input type="hidden" name="csrf" value="{{ csrf }}">
-                        <button class="se-btn btn-danger" data-se-button="danger" name="grant_id" value="{{ connection.id }}" aria-label="{{ trans('Revoke access for') }} {{ connection.client_name }}">{{ trans("Revoke") }}</button>
-                    </form>
                 </div>
-                <ul class="oauth-permissions">
-                    {% for permission in connection.permissions %}<li>{{ trans(permission) }}</li>{% endfor %}
-                </ul>
+                <form method="post" class="oauth-connection-form">
+                    <input type="hidden" name="csrf" value="{{ csrf }}">
+                    <input type="hidden" name="grant_id" value="{{ connection.id }}">
+                    {% if connection.scope_options %}
+                    <fieldset class="oauth-permission-options">
+                        <legend>{{ trans("Permissions") }}</legend>
+                        {% for option in connection.scope_options %}
+                        <label><input type="checkbox" name="scope" value="{{ option.scope }}"{% if option.selected %} checked{% endif %}> <span>{{ trans(option.description) }}</span></label>
+                        {% endfor %}
+                    </fieldset>
+                    <p>{{ trans("Changes apply immediately to this connection. Select at least one permission, or revoke access.") }}</p>
+                    {% else %}
+                    <ul class="oauth-permissions">
+                        {% for permission in connection.permissions %}<li>{{ trans(permission) }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                    <div class="oauth-actions">
+                        {% if connection.scope_options %}
+                        <button class="se-btn btn-primary" data-se-button="primary" name="action" value="update_permissions" aria-label="{{ trans('Save permissions for') }} {{ connection.client_name }}">{{ trans("Save permissions") }}</button>
+                        {% endif %}
+                        <button class="se-btn btn-danger" data-se-button="danger" name="action" value="revoke" aria-label="{{ trans('Revoke access for') }} {{ connection.client_name }}">{{ trans("Revoke") }}</button>
+                    </div>
+                </form>
                 <details class="oauth-details"><summary>{{ trans("Application ID") }}</summary><p>{{ connection.client_id }}</p></details>
             </li>
             {% endfor %}
         </ul>
         {% else %}
-        <div class="alert alert-info" data-se-alert="info"><h2>{{ trans("No connected applications") }}</h2><p>{{ trans("Applications you authorize will appear here. You can revoke their access at any time.") }}</p></div>
+        <div class="alert alert-info" data-se-alert="info"><h2>{{ trans("No connected applications") }}</h2><p>{{ trans("Applications you authorize will appear here. You can change their permissions or revoke their access at any time.") }}</p></div>
         {% endif %}
     </div>
 </section>

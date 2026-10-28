@@ -1,10 +1,28 @@
-"""MCP's ASGI endpoint, binary upload API, and native FastAPI lifespan."""
+# -*- coding: utf-8 -*-
+# Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
+
+# This file is part of Wirecloud.
+
+# Wirecloud is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Wirecloud is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from contextlib import asynccontextmanager
+from typing import AsyncIterator, Sequence
 from urllib.parse import urlsplit
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from mcp.server import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.routing import Route
 
@@ -18,7 +36,7 @@ upload_router = APIRouter()
 
 
 @asynccontextmanager
-async def lifespan(app):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     provider = app.dependency_overrides.get(get_session, get_session)
     async for db in provider():
         await packages.ensure_upload_indexes(db)
@@ -28,7 +46,7 @@ async def lifespan(app):
         yield
 
 
-def create_router(app, server, audience, origins):
+def create_router(app: FastAPI, server: MCPServer, audience: str, origins: Sequence[str]) -> APIRouter:
     """Keep the SDK endpoint at /mcp without a mount's trailing-slash redirect."""
     sdk_app = server.streamable_http_app(
         streamable_http_path="/mcp",
@@ -48,7 +66,7 @@ def create_router(app, server, audience, origins):
 
 
 @upload_router.post("/mcp/uploads", status_code=201)
-async def upload_package(request: Request, db: DBDep):
+async def upload_package(request: Request, db: DBDep) -> JSONResponse:
     audience = request.app.state.mcp_audience
     principal = await require_access(request, db, audience, (INSTALL,))
     if not (principal.user.has_perm("COMPONENT.INSTALL") or principal.user.is_superuser):

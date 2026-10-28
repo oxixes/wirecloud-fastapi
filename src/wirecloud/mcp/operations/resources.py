@@ -1,7 +1,26 @@
-"""Private component installation, removal, and documentation retrieval."""
+# -*- coding: utf-8 -*-
+# Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
+
+# This file is part of Wirecloud.
+
+# Wirecloud is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Wirecloud is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
+
+from __future__ import annotations
 
 import hashlib
 import os
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlsplit
 
 from fastapi import HTTPException
@@ -12,27 +31,31 @@ from wirecloud.catalogue.crud import get_catalogue_resource
 from wirecloud.catalogue.search import add_resource_to_index
 from wirecloud.commons.utils.template import TemplateParser
 from wirecloud.commons.utils.wgt import WgtFile
-from wirecloud.mcp import packages
+from wirecloud.mcp import packages, schemas
 from wirecloud.mcp.utils import operation_request, paginate
 from wirecloud.platform.localcatalogue import routes
 from wirecloud.platform.localcatalogue.utils import fix_dev_version, install_component
 from wirecloud.proxy.routes import WIRECLOUD_PROXY
 from wirecloud.proxy.schemas import ProxyRequestData
 
+if TYPE_CHECKING:
+    from wirecloud.catalogue.schemas import CatalogueResource
+    from wirecloud.mcp.adapter import WireCloudAdapter
+
 DOCUMENTATION_LIMIT = 65536
 
 
-async def list_resources(adapter, args):
+async def list_resources(adapter: WireCloudAdapter, args: schemas.Page) -> dict[str, Any]:
     data = await adapter.call(routes.get_resource_collection, process_urls=True)
     return paginate([dict(value, resource=key) for key, value in data.items()], args)
 
 
-async def get_resource(adapter, args):
+async def get_resource(adapter: WireCloudAdapter, args: schemas.Resource) -> dict[str, Any]:
     resource = await adapter.resource(args.resource)
     return jsonable_encoder(resource.get_processed_info(adapter.request, process_variables=True))
 
 
-async def get_resource_documentation(adapter, args):
+async def get_resource_documentation(adapter: WireCloudAdapter, args: schemas.Resource) -> dict[str, Any]:
     resource = await adapter.resource(args.resource)
     info = jsonable_encoder(resource.get_processed_info(adapter.request, process_variables=True))
     result = {
@@ -56,12 +79,12 @@ async def get_resource_documentation(adapter, args):
     return result
 
 
-async def validate_resource_package(adapter, args):
+async def validate_resource_package(adapter: WireCloudAdapter, args: schemas.ValidatePackage) -> dict[str, Any]:
     _, info = packages.validate_package(packages.decode_package(args.package_base64))
     return {"valid": True, "descriptor": jsonable_encoder(info)}
 
 
-async def uninstall_resource(adapter, args):
+async def uninstall_resource(adapter: WireCloudAdapter, args: schemas.Resource) -> dict[str, Any]:
     vendor, name, version = args.resource.split("/")
     if not (adapter.user.has_perm("COMPONENT.UNINSTALL") or adapter.user.is_superuser):
         raise HTTPException(403, "Component uninstall permission is required")
@@ -75,7 +98,7 @@ async def uninstall_resource(adapter, args):
     )
 
 
-async def install_resource(adapter, args):
+async def install_resource(adapter: WireCloudAdapter, args: schemas.Install) -> dict[str, Any]:
     if not (adapter.user.has_perm("COMPONENT.INSTALL") or adapter.user.is_superuser):
         raise HTTPException(403, "Component install permission is required")
 
@@ -114,7 +137,7 @@ async def install_resource(adapter, args):
     }
 
 
-async def read_package_source(adapter, args):
+async def read_package_source(adapter: WireCloudAdapter, args: schemas.Install) -> bytes:
     if args.url:
         return await download_package(adapter, args.url)
     if args.package_base64 is not None:
@@ -122,7 +145,7 @@ async def read_package_source(adapter, args):
     return await packages.consume_upload(adapter.db, adapter.principal, args.upload_id)
 
 
-async def download_package(adapter, url):
+async def download_package(adapter: WireCloudAdapter, url: str) -> bytes:
     parsed = urlsplit(url)
     if parsed.scheme not in ("https", "http") or not parsed.hostname or parsed.username or parsed.password:
         raise HTTPException(422, "An HTTP(S) package URL without embedded credentials is required")
@@ -153,7 +176,7 @@ async def download_package(adapter, url):
     return bytes(content)
 
 
-def check_immutable_contents(resource, content):
+def check_immutable_contents(resource: CatalogueResource, content: bytes) -> None:
     base_dir = catalogue_utils.wgt_deployer.get_base_dir(resource.vendor, resource.short_name, resource.version)
     stored_hash = hashlib.sha256()
     with open(os.path.join(base_dir, resource.template_uri), "rb") as stored:

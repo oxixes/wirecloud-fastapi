@@ -22,7 +22,7 @@ from starlette.responses import Response, StreamingResponse
 from oauth2provider.test_oauth import oauth_app, oauth_client
 from test_mcp import mcp_setup, token_for_client, adapter, package
 from wirecloud.catalogue.crud import get_catalogue_resource
-from wirecloud.database import Id
+from wirecloud.database import DBSession, Id
 from wirecloud.mcp.utils import redact
 from wirecloud.mcp.operations import preferences, wiring
 from wirecloud.mcp import packages
@@ -213,6 +213,37 @@ async def test_remove_operator_cleans_connections_and_behaviour_views_atomically
     assert len(status.visualdescription.connections) == 1
     assert len(status.visualdescription.behaviours[0].connections) == 1
     assert status.visualdescription.behaviours[0].title == "Saved view"
+
+
+@pytest.mark.parametrize("unavailable", ["missing", "private"])
+async def test_workspace_read_preserves_unavailable_operators_without_exposing_values(
+    scene: SimpleNamespace, db_session: DBSession, unavailable: str
+) -> None:
+    await scene.api.execute("update_operator", {
+        "workspace_id": scene.workspace_id,
+        "operator_id": scene.operator_id,
+        "preferences": {"message": "Stored operator value"},
+    })
+    workspace = await scene.api.workspace(scene.workspace_id)
+    stored_preferences = workspace.wiring_status.operators[scene.operator_id].preferences
+    assert stored_preferences
+    resource = await get_catalogue_resource(db_session, *scene.operator_resource.split("/"))
+    if unavailable == "missing":
+        await db_session.client.catalogue_resources.delete_one({"_id": resource.id})
+    else:
+        await db_session.client.catalogue_resources.update_one(
+            {"_id": resource.id}, {"$set": {"users": [], "groups": [], "public": False}}
+        )
+
+    result = await scene.api.execute("get_workspace", {"workspace_id": scene.workspace_id})
+    operator = result["workspace"]["wiring"]["operators"][scene.operator_id]
+    assert operator["name"] == scene.operator_resource
+    assert operator["preferences"] == {}
+    assert operator["properties"] == {}
+    assert result["workspace"]["tabs"][0]["widgets"][0]["id"] == scene.widget_id
+    assert result["modification_timestamp"] == scene.api.timestamp(workspace)
+    persisted = await scene.api.workspace(scene.workspace_id)
+    assert persisted.wiring_status.operators[scene.operator_id].preferences == stored_preferences
 
 
 async def test_layout_handles_repeated_and_missing_resource_descriptors(scene, db_session):

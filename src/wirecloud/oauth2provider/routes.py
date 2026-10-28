@@ -1,4 +1,20 @@
-"""WireCloud-owned OAuth endpoints. Resource plugins only register audiences."""
+# -*- coding: utf-8 -*-
+# Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
+
+# This file is part of Wirecloud.
+
+# Wirecloud is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Wirecloud is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 
@@ -7,21 +23,23 @@ import json
 import re
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
+from typing import Any, AsyncIterator, Optional
 from urllib.parse import urlencode, urlsplit
 
-from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi import APIRouter, FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 
 from wirecloud import settings
 from wirecloud.commons.auth.crud import get_token_expiration
-from wirecloud.commons.auth.utils import get_token_contents, get_user
+from wirecloud.commons.auth.schemas import UserAll
+from wirecloud.commons.auth.utils import Token, get_token_contents, get_user
 from wirecloud.database import DBDep, DBSession, Id, commit, get_session
 from wirecloud.oauth2provider import crud, service as auth
 from wirecloud.oauth2provider.pages import render_page
 
 
 @asynccontextmanager
-async def lifespan(app):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     provider = app.dependency_overrides.get(get_session, get_session)
     async for db in provider():
         await crud.ensure_indexes(db)
@@ -33,11 +51,11 @@ router = APIRouter(lifespan=lifespan)
 metadata_router = APIRouter()
 
 
-async def oauth_error_handler(request, exc):
+async def oauth_error_handler(request: Request, exc: auth.OAuthError) -> JSONResponse:
     return JSONResponse(exc.detail, exc.status_code, headers={"Cache-Control": "no-store"})
 
 
-async def browser_identity(request: Request, db: DBSession):
+async def browser_identity(request: Request, db: DBSession) -> tuple[Optional[UserAll], Token]:
     # A browser consent is never authenticated by a bearer token or URL argument.
     token = await get_token_contents(request.cookies.get("token", ""), request, db, csrf=False)
     user = await get_user(db, token, False)
@@ -49,7 +67,7 @@ async def browser_identity(request: Request, db: DBSession):
 @metadata_router.get("/.well-known/oauth-authorization-server")
 @metadata_router.get("/.well-known/oauth-authorization-server/oauth2")
 @metadata_router.get("/.well-known/oauth-authorization-server/{issuer_path:path}")
-async def authorization_metadata(request: Request):
+async def authorization_metadata(request: Request) -> dict[str, Any]:
     resources = getattr(request.app.state, "oauth2_resources", {})
     if not resources:
         raise HTTPException(404)
@@ -74,7 +92,7 @@ async def authorization_metadata(request: Request):
 
 @metadata_router.get("/.well-known/oauth-protected-resource")
 @metadata_router.get("/.well-known/oauth-protected-resource/{resource_path:path}")
-async def resource_metadata(request: Request, resource_path: str = ""):
+async def resource_metadata(request: Request, resource_path: str = "") -> dict[str, Any]:
     for resource in getattr(request.app.state, "oauth2_resources", {}).values():
         if urlsplit(resource.audience).path.rstrip("/") == "/" + resource_path.strip("/") or (
             not resource_path and len(getattr(request.app.state, "oauth2_resources", {})) == 1
@@ -90,7 +108,7 @@ async def resource_metadata(request: Request, resource_path: str = ""):
 
 
 @router.post("/register", status_code=201)
-async def register(request: Request, db: DBDep):
+async def register(request: Request, db: DBDep) -> JSONResponse:
     if not getattr(request.app.state, "oauth2_resources", {}) or not getattr(
         settings, "OAUTH2_DYNAMIC_REGISTRATION", True
     ):
@@ -122,7 +140,7 @@ async def register(request: Request, db: DBDep):
 
 
 @router.get("/authorize")
-async def authorize(request: Request, db: DBDep):
+async def authorize(request: Request, db: DBDep) -> RedirectResponse:
     q = request.query_params
     resource = auth.get_resource(request, q.get("resource", ""))
     client = await auth.get_client(db, q.get("client_id", ""))
@@ -172,7 +190,7 @@ async def authorize(request: Request, db: DBDep):
     return response
 
 
-async def attempt_for_browser(request: Request, db: DBSession, handle: str, csrf: str) -> dict:
+async def attempt_for_browser(request: Request, db: DBSession, handle: str, csrf: str) -> dict[str, Any]:
     attempt = await crud.get_authorization_attempt(db, auth.digest(handle), auth.now())
     if (
         attempt is None
@@ -184,7 +202,7 @@ async def attempt_for_browser(request: Request, db: DBSession, handle: str, csrf
 
 
 @router.get("/consent")
-async def consent(request: Request, db: DBDep, request_id: str, csrf: str):
+async def consent(request: Request, db: DBDep, request_id: str, csrf: str) -> Response:
     attempt = await attempt_for_browser(request, db, request_id, csrf)
     resource = auth.get_resource(request, attempt["audience"])
     user, token = await browser_identity(request, db)
@@ -213,7 +231,7 @@ async def consent(request: Request, db: DBDep, request_id: str, csrf: str):
 
 
 @router.post("/consent")
-async def approve(request: Request, db: DBDep):
+async def approve(request: Request, db: DBDep) -> RedirectResponse:
     form = await request.form(max_files=0, max_fields=5)
     attempt = await attempt_for_browser(request, db, str(form.get("request_id", "")), str(form.get("csrf", "")))
     user, token = await browser_identity(request, db)
@@ -274,7 +292,7 @@ async def approve(request: Request, db: DBDep):
 
 
 @router.post("/token")
-async def token_endpoint(request: Request, db: DBDep):
+async def token_endpoint(request: Request, db: DBDep) -> JSONResponse:
     form = await request.form(max_files=0, max_fields=12)
     client = await auth.authenticate_client(db, form, request.headers.get("authorization", ""))
     auth.get_resource(request, str(form.get("resource", "")))
@@ -289,7 +307,7 @@ async def token_endpoint(request: Request, db: DBDep):
 
 
 @router.post("/revoke")
-async def revoke(request: Request, db: DBDep):
+async def revoke(request: Request, db: DBDep) -> JSONResponse:
     form = await request.form(max_files=0, max_fields=5)
     client = await auth.authenticate_client(db, form, request.headers.get("authorization", ""))
     record = await crud.get_token_by_id(db, auth.digest(str(form.get("token", ""))))
@@ -300,7 +318,7 @@ async def revoke(request: Request, db: DBDep):
 
 
 @router.get("/connections")
-async def connections(request: Request, db: DBDep):
+async def connections(request: Request, db: DBDep) -> Response:
     user, token = await browser_identity(request, db)
     if user is None:
         if "application/json" in request.headers.get("accept", ""):
@@ -317,7 +335,7 @@ async def connections(request: Request, db: DBDep):
             "browser": auth.digest(browser),
             "session_id": token["jti"],
             "expires_at": auth.now() + timedelta(minutes=10),
-            "purpose": "revoke",
+            "purpose": "connections",
         }
     )
     rows = []
@@ -332,6 +350,10 @@ async def connections(request: Request, db: DBDep):
                 "client_id": grant["client_id"],
                 "resource_name": resource.name if resource else grant["audience"],
                 "permissions": [resource.scopes.get(scope, scope) if resource else scope for scope in grant["scopes"]],
+                "scope_options": [
+                    {"scope": scope, "description": description, "selected": scope in grant["scopes"]}
+                    for scope, description in resource.scopes.items()
+                ] if resource else [],
             }
         )
     await commit(db)
@@ -352,12 +374,15 @@ async def connections(request: Request, db: DBDep):
 
 
 @router.post("/connections")
-async def revoke_connection(request: Request, db: DBDep):
+async def manage_connection(request: Request, db: DBDep) -> Response:
     user, token = await browser_identity(request, db)
     if user is None:
         raise HTTPException(401)
-    form = await request.form(max_files=0, max_fields=3)
-    valid = await crud.consume_revocation_attempt(
+    form = await request.form(max_files=0, max_fields=128)
+    action = str(form.get("action", "revoke"))
+    if action not in ("revoke", "update_permissions"):
+        raise HTTPException(400, "Unknown connection action")
+    valid = await crud.consume_connection_attempt(
         db,
         auth.digest(str(form.get("csrf", ""))),
         auth.digest(request.cookies.get("wc_oauth_browser", "")),
@@ -366,8 +391,26 @@ async def revoke_connection(request: Request, db: DBDep):
     )
     if valid is None:
         raise HTTPException(403, "Invalid CSRF token")
-    await crud.revoke_grant(db, str(form.get("grant_id", "")), user_id=str(user.id))
+    grant_id = str(form.get("grant_id", ""))
+    if action == "update_permissions":
+        grant = await crud.get_unrevoked_grant(db, grant_id)
+        if grant is None or grant["user_id"] != str(user.id) or auth.utc(grant["expires_at"]) <= auth.now():
+            raise HTTPException(404, "Connection not found")
+        resource = auth.get_resource(request, grant["audience"])
+        scopes = {scope for value in form.getlist("scope") for scope in str(value).split()}
+        if not scopes or not scopes.issubset(resource.scopes):
+            raise HTTPException(400, "Select at least one available permission")
+        updated = await crud.update_grant_scopes(
+            db, grant_id, str(user.id), [scope for scope in resource.scopes if scope in scopes], auth.now()
+        )
+        if not updated:
+            raise HTTPException(404, "Connection not found")
+    else:
+        await crud.revoke_grant(db, grant_id, user_id=str(user.id))
     await commit(db)
     if "application/json" in request.headers.get("accept", ""):
-        return JSONResponse({"revoked": True}, headers={"Cache-Control": "no-store", "Vary": "Accept"})
+        return JSONResponse(
+            {"updated": True} if action == "update_permissions" else {"revoked": True},
+            headers={"Cache-Control": "no-store", "Vary": "Accept"},
+        )
     return RedirectResponse(request.url.path, 303)

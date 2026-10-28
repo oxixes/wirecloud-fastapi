@@ -1,13 +1,35 @@
-"""Deterministic wiring editor placement, independent of the MCP transport."""
+# -*- coding: utf-8 -*-
+# Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
+
+# This file is part of Wirecloud.
+
+# Wirecloud is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Wirecloud is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import annotations
 
 from heapq import heapify, heappop, heappush
+from typing import Any, Collection, Mapping, Sequence
 
 from fastapi import HTTPException
 
+from wirecloud.mcp.schemas import WiringPlacement
+from wirecloud.platform.wiring.schemas import Wiring, WiringConnection
 
-def component_nodes(status, valid_nodes, moves):
+
+def component_nodes(
+    status: Wiring, valid_nodes: set[tuple[str, str]], moves: Sequence[WiringPlacement]
+) -> set[tuple[str, str]]:
     """Include operators, displayed widgets, connected widgets, and explicit moves."""
     nodes = {("operator", key) for key in status.operators}
     nodes.update(
@@ -30,7 +52,9 @@ def component_nodes(status, valid_nodes, moves):
     return nodes & valid_nodes
 
 
-def graph_layers(nodes, connections):
+def graph_layers(
+    nodes: Collection[tuple[str, str]], connections: Sequence[WiringConnection]
+) -> dict[tuple[str, str], int]:
     """Lay out acyclic edges left to right; break feedback cycles deterministically."""
     edges = {node: set() for node in nodes}
     incoming = dict.fromkeys(nodes, 0)
@@ -57,7 +81,13 @@ def graph_layers(nodes, connections):
     return layers
 
 
-def placement_patches(status, nodes, heights, moves=(), preserve_existing=True):
+def placement_patches(
+    status: Wiring,
+    nodes: set[tuple[str, str]],
+    heights: Mapping[tuple[str, str], int],
+    moves: Sequence[WiringPlacement] = (),
+    preserve_existing: bool = True,
+) -> list[dict[str, Any]]:
     """Patch only positions, preserving collapsed state, endpoint order and other views."""
     components = status.visualdescription.components
     existing = {node: getattr(components, node[0]).get(node[1]) for node in nodes}
@@ -70,11 +100,14 @@ def placement_patches(status, nodes, heights, moves=(), preserve_existing=True):
     placed.update(manual)
     layers = graph_layers(nodes, status.connections)
 
-    def height(node):
+    def height(node: tuple[str, str]) -> int:
         component = existing[node]
         return 90 if component is not None and component.collapsed else heights.get(node, 240)
 
-    for node in sorted(nodes - placed.keys(), key=lambda node: (layers[node], node)):
+    def placement_order(node: tuple[str, str]) -> tuple[int, tuple[str, str]]:
+        return layers[node], node
+
+    for node in sorted(nodes - placed.keys(), key=placement_order):
         # Reserve an initial column for widget sources when adding isolated operators.
         column = layers[node] + (1 if node[0] == "operator" and not status.connections else 0)
         x, y = 20 + column * 420, 10

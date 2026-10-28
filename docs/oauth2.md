@@ -265,9 +265,14 @@ are checked by the resource plugin on every request.
 
 Users manage their connections from **User menu → App connections** in the
 desktop and mobile platform views. The menu opens a StyledElements modal within
-the current workspace, listing each application's resource, granted permissions,
-client ID, and a revocation action. The direct URL remains available as a standalone
-page at `/oauth2/connections`.
+the current workspace, listing each application's resource, permission checkboxes,
+client ID, and a revocation action. Select the desired permissions and choose
+**Save permissions** to expand or reduce access. Changes apply immediately to that
+connection's existing access and refresh tokens; current WireCloud user permissions
+still apply. Select at least one permission, or revoke the connection to remove
+access entirely. Client-requested scope narrowing is retained until the user next
+changes that connection's permissions. The direct URL remains available as a
+standalone page at `/oauth2/connections`, with the same editing controls.
 
 ## Authentication provider contract
 

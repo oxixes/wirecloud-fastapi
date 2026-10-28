@@ -9,7 +9,8 @@ let requests;
 test.beforeEach(() => {
     resetLegacyRuntime();
     loadLegacyScripts(['Utils', 'Event', 'ObjectWithEvents', 'StyledElements', 'Container', 'Fragment',
-        'GUIBuilder', 'Tooltip', 'Panel', 'Button', 'Alert'].map((name) => `src/wirecloud/commons/static/js/StyledElements/${name}.js`));
+        'GUIBuilder', 'Tooltip', 'Panel', 'Button', 'Alert', 'InputElement', 'ButtonsGroup', 'CheckBox']
+        .map((name) => `src/wirecloud/commons/static/js/StyledElements/${name}.js`));
     requests = [];
     global.Wirecloud = {
         Utils: StyledElements.Utils,
@@ -87,4 +88,57 @@ test('connection modal recovers from failed revocation by fetching fresh CSRF an
     respond(requests[2], [connection], 'fresh-csrf');
     click(menu.buttons[0].wrapperElement);
     assert.equal(requests[3].parameters.csrf, 'fresh-csrf');
+});
+
+test('permission editing saves checked scopes and reloads current state and CSRF', () => {
+    const menu = new Wirecloud.ui.AppConnectionsWindowMenu();
+    const editable = {...connection, scope_options: [
+        {scope: 'read', description: 'Read accessible data', selected: true},
+        {scope: 'write', description: 'Edit workspaces', selected: false}
+    ]};
+    respond(requests[0], [editable]);
+    const [read, write] = menu.permissionInputs;
+    const save = menu.buttons[1];
+    assert.equal(read.getValue(), true);
+    assert.equal(write.getValue(), false);
+    assert.equal(save.enabled, false);
+    write.setValue(true);
+    write.inputElement.dispatchEvent({type: 'change'});
+    assert.equal(save.enabled, true);
+    read.setValue(false);
+    read.inputElement.dispatchEvent({type: 'change'});
+    click(save.wrapperElement);
+    assert.deepEqual(requests[1].parameters, {
+        csrf: 'csrf-token', grant_id: 'grant-1', action: 'update_permissions', scope: 'write'
+    });
+    assert.ok(menu.buttons.every((button) => !button.enabled));
+    assert.ok(menu.permissionInputs.every((input) => !input.enabled));
+    requests[1].onSuccess({});
+    respond(requests[2], [{...editable, scope_options: editable.scope_options.map((option) => ({
+        ...option, selected: option.scope === 'write'
+    }))}], 'fresh-csrf');
+    assert.equal(menu.csrf, 'fresh-csrf');
+    assert.equal(menu.permissionInputs[0].getValue(), false);
+    assert.equal(menu.permissionInputs[1].getValue(), true);
+    assert.equal(menu.buttons[1].enabled, false);
+});
+
+test('permission editing disables saving an empty selection and recovers after a failed save', () => {
+    const menu = new Wirecloud.ui.AppConnectionsWindowMenu();
+    respond(requests[0], [{...connection, scope_options: [
+        {scope: 'read', description: 'Read accessible data', selected: true},
+        {scope: 'write', description: 'Edit workspaces', selected: false}
+    ]}]);
+    const [read, write] = menu.permissionInputs;
+    const save = menu.buttons[1];
+    read.setValue(false);
+    read.inputElement.dispatchEvent({type: 'change'});
+    assert.equal(save.enabled, false);
+    write.setValue(true);
+    write.inputElement.dispatchEvent({type: 'change'});
+    click(save.wrapperElement);
+    requests[1].onFailure({status: 500});
+    assert.match(menu.windowContent.textContent, /Unable to update/);
+    click(menu.retry.wrapperElement);
+    assert.equal(requests[2].method, 'GET');
 });

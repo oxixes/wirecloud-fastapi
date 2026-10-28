@@ -5,7 +5,9 @@ import json
 import sys
 import zipfile
 from types import SimpleNamespace
+from typing import Optional
 from unittest.mock import AsyncMock
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 
@@ -13,7 +15,7 @@ if sys.version_info < (3, 11):
     pytest.skip("MCP requires Python 3.11+", allow_module_level=True)
 pytest.importorskip("mcp")
 
-from fastapi import HTTPException
+from fastapi import FastAPI, HTTPException
 from httpx import ASGITransport, AsyncClient
 from starlette.requests import Request
 
@@ -28,7 +30,7 @@ from wirecloud.mcp.packages import validate_package, decode_package, store_uploa
 from wirecloud.mcp.plugins import WirecloudMCPPlugin
 from wirecloud.mcp.tools import SCOPES
 from wirecloud.platform.workspace.crud import get_workspace_by_id
-from wirecloud.database import Id
+from wirecloud.database import DBSession, Id
 
 
 def package(kind="widget", version="1.0.0", unsafe_path=None):
@@ -113,6 +115,51 @@ async def test_transport_authentication_and_real_sdk_client(mcp_setup, oauth_cli
             assert result.structured_content["user"]["id"] == str(principal.user.id)
     await invalidate_token(db_session, Id(session_id))
     assert (await oauth_client.post("/mcp", headers={"Authorization": "Bearer " + token}, json={})).status_code == 401
+
+
+@pytest.mark.parametrize("requested_scope", [None, "wirecloud:read"])
+async def test_connection_defaults_to_all_scopes_and_honors_explicit_scopes(
+    mcp_setup: tuple[FastAPI, WirecloudMCPPlugin],
+    oauth_client: AsyncClient,
+    db_session: DBSession,
+    requested_scope: Optional[str],
+) -> None:
+    challenge = await oauth_client.post("/mcp", json={})
+    assert challenge.status_code == 401
+    assert f'scope="{" ".join(SCOPES)}"' in challenge.headers["www-authenticate"]
+
+    await login_user(db_session, oauth_client)
+    registration = await oauth_client.post("/oauth2/register", json={
+        "redirect_uris": ["http://127.0.0.1:9000/callback"],
+    })
+    assert registration.status_code == 201
+    client_id = registration.json()["client_id"]
+    verifier = delegated.random_token()
+    params = {
+        "client_id": client_id,
+        "resource": AUDIENCE,
+        "redirect_uri": "http://127.0.0.1:9000/callback",
+        "response_type": "code",
+        "code_challenge_method": "S256",
+        "code_challenge": delegated.pkce(verifier),
+    }
+    if requested_scope is not None:
+        params["scope"] = requested_scope
+    start = await oauth_client.get("/oauth2/authorize", params=params)
+    assert start.status_code == 302
+    assert (await oauth_client.get(start.headers["location"])).status_code == 200
+    form = {key: values[0] for key, values in parse_qs(urlsplit(start.headers["location"]).query).items()}
+    approval = await oauth_client.post("/oauth2/consent", data={**form, "decision": "approve"})
+    assert approval.status_code == 302
+    code = parse_qs(urlsplit(approval.headers["location"]).query)["code"][0]
+    response = await exchange(oauth_client, client_id, verifier, code)
+    assert response.status_code == 200
+    tokens = response.json()
+    expected_scopes = set(requested_scope.split()) if requested_scope is not None else set(SCOPES)
+    assert set(tokens["scope"].split()) == expected_scopes
+    principal = await delegated.verify_access_token(db_session, tokens["access_token"], AUDIENCE)
+    assert principal is not None
+    assert principal.scopes == expected_scopes
 
 
 async def test_packages_workspace_widgets_wiring_export_and_logout(mcp_setup, oauth_client, db_session):
@@ -337,6 +384,36 @@ async def test_read_only_connection_receives_oauth_scope_challenge(mcp_setup, oa
     assert response.status_code == 403
     assert 'error="insufficient_scope"' in response.headers["www-authenticate"]
     assert 'scope="wirecloud:workspace:write"' in response.headers["www-authenticate"]
+
+
+async def test_connection_permissions_can_change_without_replacing_the_client_token(
+    mcp_setup: tuple[FastAPI, WirecloudMCPPlugin], oauth_client: AsyncClient, db_session: DBSession
+) -> None:
+    import httpx2
+    from mcp import Client
+    from mcp.client.streamable_http import streamable_http_client
+
+    app, _ = mcp_setup
+    principal, token, _ = await token_for_client(oauth_client, db_session, scopes=["wirecloud:read"])
+    headers = {"Authorization": "Bearer " + token}
+    payload = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {
+        "name": "create_workspace", "arguments": {"title": "Updated connection permissions"},
+    }}
+    assert (await oauth_client.post("/mcp", headers=headers, json=payload)).status_code == 403
+    for scopes in ("wirecloud:read wirecloud:workspace:write", "wirecloud:read"):
+        form = (await oauth_client.get("/oauth2/connections", headers={"Accept": "application/json"})).json()
+        response = await oauth_client.post("/oauth2/connections", headers={"Accept": "application/json"}, data={
+            "csrf": form["csrf"], "grant_id": principal.grant_id, "action": "update_permissions", "scope": scopes,
+        })
+        assert response.status_code == 200
+        if scopes == "wirecloud:read":
+            assert (await oauth_client.post("/mcp", headers=headers, json=payload)).status_code == 403
+        else:
+            async with httpx2.AsyncClient(transport=httpx2.ASGITransport(app=app), headers=headers) as http:
+                async with Client(streamable_http_client(AUDIENCE, http_client=http)) as client:
+                    created = await client.call_tool("create_workspace", {"title": "Updated connection permissions"})
+                    assert not created.is_error, created
+                    assert created.structured_content["id"]
 
 
 async def test_all_authoring_tools_through_the_official_sdk(mcp_setup, oauth_client, db_session):

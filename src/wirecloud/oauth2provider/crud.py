@@ -16,10 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Persistence for OAuth clients, authorization attempts, grants, and tokens."""
-
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from wirecloud.database import DBSession
 
@@ -41,19 +39,19 @@ async def increment_registration_attempts(db: DBSession, bucket: str, expires_at
     return previous["count"] if previous else 0
 
 
-async def create_client(db: DBSession, client: dict) -> None:
+async def create_client(db: DBSession, client: dict[str, Any]) -> None:
     await db.client.oauth_clients.insert_one(client)
 
 
-async def get_client_by_id(db: DBSession, client_id: str) -> Optional[dict]:
+async def get_client_by_id(db: DBSession, client_id: str) -> Optional[dict[str, Any]]:
     return await db.client.oauth_clients.find_one({"client_id": client_id})
 
 
-async def create_attempt(db: DBSession, attempt: dict) -> None:
+async def create_attempt(db: DBSession, attempt: dict[str, Any]) -> None:
     await db.client.oauth_attempts.insert_one(attempt)
 
 
-async def get_authorization_attempt(db: DBSession, attempt_id: str, current_time: datetime) -> Optional[dict]:
+async def get_authorization_attempt(db: DBSession, attempt_id: str, current_time: datetime) -> Optional[dict[str, Any]]:
     return await db.client.oauth_attempts.find_one({"_id": attempt_id, "expires_at": {"$gt": current_time}})
 
 
@@ -67,38 +65,48 @@ async def bind_authorization_attempt(db: DBSession, attempt_id: str, user_id: st
 
 async def consume_authorization_attempt(
     db: DBSession, attempt_id: str, user_id: str, session_id: str
-) -> Optional[dict]:
+) -> Optional[dict[str, Any]]:
     return await db.client.oauth_attempts.find_one_and_delete(
         {"_id": attempt_id, "user_id": user_id, "session_id": session_id}
     )
 
 
-async def consume_revocation_attempt(
+async def consume_connection_attempt(
     db: DBSession, attempt_id: str, browser: str, session_id: str, current_time: datetime
-) -> Optional[dict]:
+) -> Optional[dict[str, Any]]:
     return await db.client.oauth_attempts.find_one_and_delete(
         {
             "_id": attempt_id,
             "browser": browser,
             "session_id": session_id,
-            "purpose": "revoke",
+            "purpose": "connections",
             "expires_at": {"$gt": current_time},
         }
     )
 
 
-async def create_grant(db: DBSession, grant: dict) -> None:
+async def create_grant(db: DBSession, grant: dict[str, Any]) -> None:
     await db.client.oauth_grants.insert_one(grant)
 
 
-async def get_unrevoked_grant(db: DBSession, grant_id: str) -> Optional[dict]:
+async def get_unrevoked_grant(db: DBSession, grant_id: str) -> Optional[dict[str, Any]]:
     return await db.client.oauth_grants.find_one({"_id": grant_id, "revoked": False})
 
 
-async def get_grants_for_user(db: DBSession, user_id: str, current_time: datetime) -> list[dict]:
+async def get_grants_for_user(db: DBSession, user_id: str, current_time: datetime) -> list[dict[str, Any]]:
     return await db.client.oauth_grants.find(
         {"user_id": user_id, "revoked": False, "expires_at": {"$gt": current_time}}
     ).to_list()
+
+
+async def update_grant_scopes(
+    db: DBSession, grant_id: str, user_id: str, scopes: list[str], current_time: datetime
+) -> bool:
+    result = await db.client.oauth_grants.update_one(
+        {"_id": grant_id, "user_id": user_id, "revoked": False, "expires_at": {"$gt": current_time}},
+        {"$set": {"scopes": scopes}, "$inc": {"scope_version": 1}},
+    )
+    return bool(result.matched_count)
 
 
 async def revoke_grant(
@@ -112,7 +120,7 @@ async def revoke_grant(
     await db.client.oauth_grants.update_one(query, {"$set": {"revoked": True}})
 
 
-async def create_code(db: DBSession, code: dict) -> None:
+async def create_code(db: DBSession, code: dict[str, Any]) -> None:
     await db.client.oauth_codes.insert_one(code)
 
 
@@ -124,7 +132,7 @@ async def consume_code(
     audience: str,
     challenge: str,
     current_time: datetime,
-) -> Optional[dict]:
+) -> Optional[dict[str, Any]]:
     return await db.client.oauth_codes.find_one_and_delete(
         {
             "_id": code_id,
@@ -137,11 +145,11 @@ async def consume_code(
     )
 
 
-async def create_token(db: DBSession, token: dict) -> None:
+async def create_token(db: DBSession, token: dict[str, Any]) -> None:
     await db.client.oauth_tokens.insert_one(token)
 
 
-async def get_token_by_id(db: DBSession, token_id: str, kind: Optional[str] = None) -> Optional[dict]:
+async def get_token_by_id(db: DBSession, token_id: str, kind: Optional[str] = None) -> Optional[dict[str, Any]]:
     query = {"_id": token_id}
     if kind is not None:
         query["kind"] = kind

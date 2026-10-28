@@ -1,14 +1,33 @@
-"""Output redaction and safe input shared by MCP operations."""
+# -*- coding: utf-8 -*-
+# Copyright (c) 2026 Future Internet Consulting and Development Solutions S.L.
+
+# This file is part of Wirecloud.
+
+# Wirecloud is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Wirecloud is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+
+# You should have received a copy of the GNU Affero General Public License
+# along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
+from typing import Any, Iterable
 
 from fastapi import HTTPException, Request
+
+from wirecloud.mcp.schemas import Page
 
 BLOCKED_PREFERENCES = {"public", "sharelist", "requireauth", "searchable", "permissions", "owner", "creator"}
 PRIVATE_FIELDS = {"password", "idm_data", "token_data", "csrf_token", "variable_values", "forced_values"}
 
 
-def redact(value):
+def redact(value: Any) -> Any:
     if isinstance(value, dict):
         secret = value.get("secure") is True or value.get("hidden") is True
         blocked = PRIVATE_FIELDS
@@ -28,13 +47,13 @@ def redact(value):
     return value
 
 
-def safe_preferences(values):
+def safe_preferences(values: dict[str, str]) -> dict[str, str]:
     if set(values) & BLOCKED_PREFERENCES:
         raise HTTPException(403, "Sharing, authentication, and publishing settings are unavailable through MCP")
     return values
 
 
-def operation_request(original: Request, body=None, content_type="application/json") -> Request:
+def operation_request(original: Request, body: Any = None, content_type: str = "application/json") -> Request:
     """Call core operations without forwarding the client's cookies or bearer token."""
     scope = dict(original.scope)
     scope["headers"] = [
@@ -49,7 +68,7 @@ def operation_request(original: Request, body=None, content_type="application/js
     return request
 
 
-def paginate(items, args):
+def paginate(items: Iterable[dict[str, Any]], args: Page) -> dict[str, Any]:
     filtered = [item for item in items if args.query.casefold() in json.dumps(item).casefold()]
     end = args.offset + args.limit
     return {
