@@ -4,7 +4,6 @@ import io
 import json
 import sys
 import zipfile
-from contextlib import asynccontextmanager
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -23,7 +22,8 @@ from wirecloud import settings
 from wirecloud.oauth2provider import service as delegated
 from wirecloud.commons.auth.crud import invalidate_token
 from wirecloud.commons.utils.wgt import WgtDeployer
-from wirecloud.mcp.adapter import WireCloudAdapter, redact
+from wirecloud.mcp.adapter import WireCloudAdapter
+from wirecloud.mcp.utils import redact
 from wirecloud.mcp.packages import validate_package, decode_package, store_upload, consume_upload
 from wirecloud.mcp.plugins import WirecloudMCPPlugin
 from wirecloud.mcp.tools import SCOPES
@@ -67,11 +67,6 @@ async def mcp_setup(oauth_app, monkeypatch, db_session, tmp_path):
     monkeypatch.setattr(workspace_routes, "wgt_deployer", catalogue_utils.wgt_deployer)
     monkeypatch.setattr(widget_utils, "wgt_deployer", WgtDeployer(str(tmp_path / "widgets")))
     plugin = WirecloudMCPPlugin(oauth_app)
-    @asynccontextmanager
-    async def lifespan(app):
-        async with plugin.server.session_manager.run():
-            yield
-    oauth_app.router.lifespan_context = lifespan
     from asgi_lifespan import LifespanManager
     try:
         async with LifespanManager(oauth_app):
@@ -224,7 +219,7 @@ async def test_wiring_layout_requires_edit_permission_even_for_noop(mcp_setup, o
     principal, _, _ = await token_for_client(oauth_client, db_session)
     api = adapter(db_session, principal, app)
     created = await api.execute("create_workspace", {"title": "Layout permissions", "allow_renaming": True})
-    import wirecloud.mcp.adapter as module
+    from wirecloud.mcp.operations import wiring as module
     monkeypatch.setattr(module, "is_owner_or_has_permission", lambda *args: False)
     with pytest.raises(HTTPException) as blocked:
         await api.execute("layout_wiring", {"workspace_id": created["id"]})
@@ -307,7 +302,7 @@ async def test_another_worker_can_validate_existing_tokens(mcp_setup, oauth_clie
         yield db_session
     second.dependency_overrides[get_session] = session
     plugin = WirecloudMCPPlugin(second)
-    async with plugin.server.session_manager.run():
+    async with second.router.lifespan_context(second):
         async with AsyncClient(transport=ASGITransport(app=second), base_url="http://localhost") as client:
             response = await client.post("/mcp", headers={"Authorization": "Bearer " + token,
                 "Accept": "application/json, text/event-stream", "MCP-Protocol-Version": "2026-07-28", "MCP-Method": "tools/list"},
@@ -574,7 +569,7 @@ async def test_oauth_discovery_and_sdk_over_tcp_with_a_deployment_prefix(oauth_a
     app.dependency_overrides[get_session] = session
     plugin = WirecloudMCPPlugin(app)
     server = uvicorn.Server(uvicorn.Config(app, lifespan="off", log_level="error", access_log=False))
-    async with plugin.server.session_manager.run():
+    async with app.router.lifespan_context(app):
         task = asyncio.create_task(server.serve(sockets=[sock]))
         try:
             for _ in range(100):

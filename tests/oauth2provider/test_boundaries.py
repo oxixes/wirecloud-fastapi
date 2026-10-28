@@ -209,7 +209,7 @@ async def test_local_login_without_continuation_needs_no_pending_attempt(db_sess
 
 
 async def test_oauth_startup_creates_expiry_and_lookup_indexes(oauth_app, db_session):
-    async with OAuth2ProviderPlugin(oauth_app).lifespan():
+    async with oauth_app.router.lifespan_context(oauth_app):
         for collection in ("oauth_attempts", "oauth_codes", "oauth_tokens"):
             indexes = await db_session.client[collection].index_information()
             assert indexes["expires_at_1"]["expireAfterSeconds"] == 0
@@ -224,6 +224,28 @@ async def test_invalid_pkce_verifiers_do_not_consume_codes(oauth_client, db_sess
         response = await exchange(oauth_client, client_id, invalid, callback["code"])
         assert response.status_code == 400 and "Invalid PKCE verifier" in response.text
     assert (await exchange(oauth_client, client_id, verifier, callback["code"])).status_code == 200
+
+
+async def test_consent_rejects_a_session_removed_during_approval(oauth_client, db_session, monkeypatch):
+    from wirecloud.oauth2provider import routes
+
+    user, session = await login_user(db_session, oauth_client)
+    start = await pending_consent(oauth_client)
+    assert (await oauth_client.get(start.headers["location"])).status_code == 200
+    form = {key: values[0] for key, values in parse_qs(urlsplit(start.headers["location"]).query).items()}
+    browser_identity = routes.browser_identity
+
+    async def identity_before_session_removal(request, db):
+        identity = await browser_identity(request, db)
+        await db.client.tokens.delete_one({"_id": session})
+        return identity
+
+    monkeypatch.setattr(routes, "browser_identity", identity_before_session_removal)
+    response = await oauth_client.post("/oauth2/consent", data={**form, "decision": "approve"})
+    assert response.status_code == 400
+    assert response.json()["error"] == "invalid_grant"
+    assert await db_session.client.oauth_grants.count_documents({"user_id": str(user.id)}) == 0
+    assert await db_session.client.oauth_codes.count_documents({}) == 0
 
 
 async def test_connections_omit_a_grant_that_expires_while_listing(oauth_client, oauth_app, db_session, monkeypatch):

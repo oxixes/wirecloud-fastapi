@@ -1,4 +1,5 @@
 """Bounded finished-package ingestion. Never builds component source code."""
+
 from __future__ import annotations
 
 import base64
@@ -50,9 +51,18 @@ def validate_package(content, _depth=0, _budget=None):
         for embedded in getattr(info, "embedded", []):
             validate_package(package.read(embedded.src), _depth + 1, _budget)
         from wirecloud.catalogue.utils import check_packaged_resource
+
         check_packaged_resource(package, info)
         return package, info
-    except (ValueError, KeyError, OSError, zipfile.BadZipFile, RuntimeError, InvalidContents, TemplateParseException) as exc:
+    except (
+        ValueError,
+        KeyError,
+        OSError,
+        zipfile.BadZipFile,
+        RuntimeError,
+        InvalidContents,
+        TemplateParseException,
+    ) as exc:
         raise HTTPException(422, "Invalid WGT package: " + str(exc)) from exc
 
 
@@ -68,6 +78,13 @@ def decode_package(encoded):
     return content
 
 
+async def ensure_upload_indexes(db):
+    """Expire unused chunks and make shared-worker chunk ordering unambiguous."""
+    for collection in ("mcp_uploads", "mcp_upload_chunks"):
+        await db.client[collection].create_index("expires_at", expireAfterSeconds=0)
+    await db.client.mcp_upload_chunks.create_index([("upload_id", 1), ("index", 1)], unique=True)
+
+
 async def store_upload(db, principal, content):
     validate_package(content)
     handle = random_token()
@@ -76,16 +93,30 @@ async def store_upload(db, principal, content):
     key = digest(handle)
     expiry = now() + timedelta(minutes=15)
     for index, start in enumerate(range(0, len(content), 1024 * 1024)):
-        await db.client.mcp_upload_chunks.insert_one({"upload_id": key, "index": index,
-            "data": content[start:start + 1024 * 1024], "expires_at": expiry})
-    await db.client.mcp_uploads.insert_one({"_id": key, "user_id": str(principal.user.id),
-        "grant_id": principal.grant_id, "expires_at": expiry, "size": len(content)})
+        await db.client.mcp_upload_chunks.insert_one(
+            {"upload_id": key, "index": index, "data": content[start : start + 1024 * 1024], "expires_at": expiry}
+        )
+    await db.client.mcp_uploads.insert_one(
+        {
+            "_id": key,
+            "user_id": str(principal.user.id),
+            "grant_id": principal.grant_id,
+            "expires_at": expiry,
+            "size": len(content),
+        }
+    )
     return {"upload_id": handle, "size": len(content), "expires_in": 900}
 
 
 async def consume_upload(db, principal, handle):
-    record = await db.client.mcp_uploads.find_one_and_delete({"_id": digest(handle), "user_id": str(principal.user.id),
-        "grant_id": principal.grant_id, "expires_at": {"$gt": now()}})
+    record = await db.client.mcp_uploads.find_one_and_delete(
+        {
+            "_id": digest(handle),
+            "user_id": str(principal.user.id),
+            "grant_id": principal.grant_id,
+            "expires_at": {"$gt": now()},
+        }
+    )
     if record is None:
         raise HTTPException(404, "Upload not found or expired")
     chunks = await db.client.mcp_upload_chunks.find({"upload_id": record["_id"]}).sort("index", 1).to_list()

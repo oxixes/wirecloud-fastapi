@@ -63,6 +63,11 @@ async def set_token_expiration(db: DBSession, token_id: ObjectId, expiration: da
     await db.client.tokens.update_one(*query)
 
 
+async def get_token_expiration(db: DBSession, token_id: ObjectId) -> Optional[datetime]:
+    token = await db.client.tokens.find_one({"_id": token_id})
+    return token["expiration"] if token is not None else None
+
+
 async def invalidate_token(db: DBSession, token_id: ObjectId) -> None:
     query = {"_id": token_id}, {"$set": {"valid": False}}
     await db.client.tokens.update_one(*query)

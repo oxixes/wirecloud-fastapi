@@ -23,7 +23,8 @@ from oauth2provider.test_oauth import oauth_app, oauth_client
 from test_mcp import mcp_setup, token_for_client, adapter, package
 from wirecloud.catalogue.crud import get_catalogue_resource
 from wirecloud.database import Id
-from wirecloud.mcp.adapter import redact
+from wirecloud.mcp.utils import redact
+from wirecloud.mcp.operations import preferences, wiring
 from wirecloud.mcp import packages
 from wirecloud.mcp.schemas import Install, WiringPlacement
 from wirecloud.platform.wiring.schemas import WiringConnectionEndpoint
@@ -81,8 +82,8 @@ async def test_invalid_and_missing_workspaces_and_timestamps(scene):
     with assert_http(422, "Invalid modification timestamp"):
         await scene.api.execute("update_workspace", {"workspace_id": scene.workspace_id,
             "title": "Must not change", "expected_last_modified": "not-a-date"})
-    with assert_http(404, "Unknown operation"):
-        await scene.api.run("undefined_operation", SimpleNamespace())
+    with assert_http(404, "Unknown tool"):
+        await scene.api.execute("undefined_operation", {})
 
 
 async def test_shared_workspace_editor_cannot_delete_owner_workspace(scene, db_session):
@@ -98,7 +99,7 @@ async def test_tab_reordering_requires_permission_and_an_exact_permutation(scene
         await scene.api.execute("reorder_tabs", {"workspace_id": scene.workspace_id, "tab_ids": []})
     with assert_http(422, "every tab ID exactly once"):
         await scene.api.execute("reorder_tabs", {"workspace_id": scene.workspace_id, "tab_ids": ["missing"]})
-    monkeypatch.setattr("wirecloud.mcp.adapter.is_owner_or_has_permission", lambda *args: False)
+    monkeypatch.setattr("wirecloud.mcp.operations.workspaces.is_owner_or_has_permission", lambda *args: False)
     with assert_http(403, "tab permissions"):
         await scene.api.execute("reorder_tabs", {"workspace_id": scene.workspace_id, "tab_ids": [scene.tab_id]})
 
@@ -122,7 +123,7 @@ async def test_preference_targets_require_parent_identifiers(scene, args):
     # Validate the operation's target contract before trying to resolve IDs.
     from wirecloud.mcp.schemas import Preferences
     with assert_http(422, "Workspace and tab IDs"):
-        await scene.api.preference_operation("get_preferences", Preferences(**args))
+        await preferences.get_preferences(scene.api, Preferences(**args))
 
 
 async def test_missing_and_private_resources_cannot_be_inspected_or_installed(scene, db_session):
@@ -151,7 +152,7 @@ async def test_operator_type_existence_and_preference_permissions(scene):
         SimpleNamespace(name="locked", readonly=True), SimpleNamespace(name="hidden", readonly=False, hidden=True)]))
     for name in ("locked", "hidden"):
         with assert_http(403, "Read-only and hidden"):
-            scene.api.validate_operator_preferences(resource, {name: "new"})
+            wiring.validate_operator_preferences(resource, {name: "new"})
 
 
 def endpoint(kind, identifier, name):
@@ -166,20 +167,20 @@ async def test_connections_validate_component_existence_endpoint_names_and_types
             (endpoint("widget", "999", "output"), "Widget endpoint not found"),
             (endpoint("operator", scene.operator_id, "missing"), "Unknown component endpoint")]:
         with assert_http(404 if bad.id == "999" else 422, detail):
-            await scene.api.validate_connection(workspace, bad, target)
+            await wiring.validate_connection(scene.api, workspace, bad, target)
     resource = await get_catalogue_resource(db_session, *scene.widget_resource.split("/"))
     await db_session.client.catalogue_resources.update_one({"_id": resource.id}, {"$set": {"description.wiring.inputs.0.type": "number"}})
     with assert_http(422, "incompatible"):
-        await scene.api.validate_connection(workspace, source, target)
+        await wiring.validate_connection(scene.api, workspace, source, target)
     await db_session.client.catalogue_resources.delete_one({"_id": resource.id})
     with assert_http(404, "Endpoint resource not available"):
-        await scene.api.validate_connection(workspace, source, target)
+        await wiring.validate_connection(scene.api, workspace, source, target)
     with assert_http(422, "missing components"):
         await scene.api.execute("export_workspace", {"workspace_id": scene.workspace_id})
 
 
 async def test_remove_operator_cleans_connections_and_behaviour_views_atomically(scene, db_session, monkeypatch):
-    from wirecloud.mcp import adapter as module
+    from wirecloud.mcp.operations import wiring as module
     source = {"type": "operator", "id": scene.operator_id, "endpoint": "output"}
     target = {"type": "widget", "id": scene.widget_id, "endpoint": "input"}
     await scene.api.execute("connect_components", {"workspace_id": scene.workspace_id, "source": source, "target": target})
@@ -220,7 +221,7 @@ async def test_layout_handles_repeated_and_missing_resource_descriptors(scene, d
     workspace = await scene.api.workspace(scene.workspace_id)
     resource = await get_catalogue_resource(db_session, *scene.operator_resource.split("/"))
     await db_session.client.catalogue_resources.delete_one({"_id": resource.id})
-    patches = await scene.api.wiring_layout_patches(workspace, workspace.wiring_status,
+    patches = await wiring.wiring_layout_patches(scene.api, workspace, workspace.wiring_status,
         moves=[WiringPlacement(type="operator", id=scene.operator_id, x=1000, y=500)])
     assert any(patch["value"] == {"x": 1000, "y": 500} for patch in patches)
 

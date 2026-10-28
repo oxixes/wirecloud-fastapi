@@ -17,7 +17,6 @@
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
 from argparse import _SubParsersAction
-from contextlib import asynccontextmanager
 from typing import Any, Callable, Optional
 
 from fastapi import FastAPI
@@ -73,12 +72,3 @@ class WirecloudCommonsPlugin(WirecloudPlugin):
 
     def get_management_commands(self, subparsers: _SubParsersAction) -> dict[str, Callable]:
         return setup_commands(subparsers)
-
-    @asynccontextmanager
-    async def lifespan(self):
-        from wirecloud.database import get_session, commit
-        provider = self.app.dependency_overrides.get(get_session, get_session) if self.app is not None else get_session
-        async for db in provider():
-            await db.client.oauth_logins.create_index("expires_at", expireAfterSeconds=0)
-            await commit(db)
-        yield

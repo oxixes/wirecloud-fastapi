@@ -246,12 +246,27 @@ remain available for custom themes or unusually large components.
 
 ## Maintenance and verification
 
-The plugin adapter is its only dependency on WireCloud operation internals.
-It reuses authorized operation entrypoints, installers, serializers, cache
-invalidation, and search indexing. The plugin interface is not independently
-versioned: pin WireCloud and rerun tests when upgrading. Extracting this module
-into a separate distribution should retain that adapter boundary and installed
-app import path. Shared OAuth code remains in WireCloud.
+The backend follows the same registration, router, URL, and validator conventions
+as the bundled plugins. Runtime resources use [native router lifespans](plugins.md#runtime-resources).
+
+| Module | Responsibility |
+| --- | --- |
+| `plugins.py` | Register the feature, OAuth resource, middleware, and router. |
+| `routes.py` | Serve the SDK endpoint and binary uploads; start and stop runtime resources. |
+| `middleware.py`, `context.py` | Authenticate requests, issue scope challenges, and carry request identity. |
+| `server.py`, `handlers.py` | Bind the official SDK to closed schemas and translate operation errors. |
+| `tools.py`, `schemas.py` | Declare the supported tools, their operation functions, and input models. |
+| `adapter.py` | Enforce scopes, workspace access, concurrency, transactions, and audit logging. |
+| `operations/` | Implement workspace, widget, preference, resource, and wiring actions. |
+| `packages.py`, `layout.py`, `utils.py` | Validate and transfer packages, arrange wiring, and redact results. |
+| `validators.py` | Check configuration without importing the optional SDK. |
+
+The adapter and operation modules are the boundary with WireCloud internals.
+They reuse authorized entrypoints, installers, serializers, cache invalidation,
+and search indexing. The plugin interface is not independently versioned: pin
+WireCloud and rerun tests when upgrading. Extracting MCP into a separate
+distribution should retain that boundary and installed-app import path. Shared
+OAuth code remains in WireCloud.
 
 Run the existing test suite on the supported core interpreter. With the MCP
 extra installed on Python 3.11+, the suite additionally exercises the official

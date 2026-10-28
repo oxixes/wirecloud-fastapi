@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="{{ static('css/oauth2provider.css') }}">
     {% endblock %}
     {% block scripts %}
-    {% for script in oauth_scripts %}<script defer src="{{ static(script) }}"></script>{% endfor %}
+    <script defer src="{{ static('js/cache.js', view='oauth2') }}"></script>
     {% endblock %}
 </head>
 <body class="oauth-page">

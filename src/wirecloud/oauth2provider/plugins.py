@@ -1,47 +1,38 @@
-"""Optional OAuth authorization server shared by client-facing plugins."""
-from contextlib import asynccontextmanager
-from urllib.parse import urlsplit
+"""Register the optional OAuth authorization server and user-menu endpoint."""
 
-from wirecloud.database import commit, get_session
-from wirecloud.oauth2provider import routes, service
-from wirecloud.platform.plugins import AjaxEndpoint, ImproperlyConfigured, URLTemplate, WirecloudPlugin
+from typing import Callable, Optional
+
+from fastapi import FastAPI, Request
+
+from wirecloud.oauth2provider.middleware import AuthorizationCORSMiddleware
+from wirecloud.oauth2provider.routes import metadata_router, oauth_error_handler, router
+from wirecloud.oauth2provider.service import OAuthError
+from wirecloud.oauth2provider.urls import patterns
+from wirecloud.oauth2provider.validators import validate_oauth_settings
+from wirecloud.platform.plugins import AjaxEndpoint, WirecloudPlugin
 
 
 class OAuth2ProviderPlugin(WirecloudPlugin):
     features = {"OAuth2Provider": "1.0"}
-    urls = {f"oauth2provider.{name}": URLTemplate(urlpattern=f"/oauth2/{name}", defaults={})
-            for name in ("authorize", "token", "register", "revoke", "connections")}
+    urls = patterns
 
-    def __init__(self, app):
+    def __init__(self, app: Optional[FastAPI]):
         super().__init__(app)
         if app is None:
             return
-        app.include_router(routes.router, prefix="/oauth2", tags=["OAuth2"])
-        app.include_router(routes.metadata_router, tags=["OAuth2"])
-        app.add_exception_handler(service.OAuthError, routes.oauth_error_handler)
-        app.add_middleware(routes.AuthorizationCORSMiddleware)
 
-    def get_ajax_endpoints(self, view, request):
+        app.include_router(router, prefix="/oauth2", tags=["OAuth2"])
+        app.include_router(metadata_router, tags=["OAuth2"])
+        app.add_exception_handler(OAuthError, oauth_error_handler)
+        app.add_middleware(AuthorizationCORSMiddleware)
+
+    def get_ajax_endpoints(self, view: str, request: Request) -> tuple[AjaxEndpoint, ...]:
         if view not in ("classic", "smartphone"):
             return ()
+
         prefix = (request.scope.get("root_path") or "").rstrip("/")
-        return (AjaxEndpoint(id="OAUTH2_CONNECTIONS", url=prefix + self.urls["oauth2provider.connections"].urlpattern),)
+        connections_url = prefix + self.urls["oauth2provider.connections"].urlpattern
+        return (AjaxEndpoint(id="OAUTH2_CONNECTIONS", url=connections_url),)
 
-    def get_config_validators(self):
-        def validate(settings, offline=False):
-            base = getattr(settings, "OAUTH2_PUBLIC_URL", "")
-            if base and (not service.valid_redirect(base) or urlsplit(base).query):
-                raise ImproperlyConfigured("OAUTH2_PUBLIC_URL must be an HTTPS or loopback public base URL")
-            if not isinstance(getattr(settings, "OAUTH2_DYNAMIC_REGISTRATION", True), bool):
-                raise ImproperlyConfigured("OAUTH2_DYNAMIC_REGISTRATION must be a boolean")
-            for client in getattr(settings, "OAUTH2_CLIENTS", []):
-                service.validate_client(client)
-        return (validate,)
-
-    @asynccontextmanager
-    async def lifespan(self):
-        provider = self.app.dependency_overrides.get(get_session, get_session)
-        async for db in provider():
-            await service.ensure_indexes(db)
-            await commit(db)
-        yield
+    def get_config_validators(self) -> tuple[Callable, ...]:
+        return (validate_oauth_settings,)

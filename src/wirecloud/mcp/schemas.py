@@ -1,4 +1,5 @@
 """Closed tool inputs: administrative and sharing fields cannot pass through."""
+
 from __future__ import annotations
 
 from typing import Any, Literal, Optional
@@ -27,7 +28,9 @@ class Workspace(Arguments):
 
 
 class Edit(Workspace):
-    expected_last_modified: Optional[str] = Field(default=None, description="Modification timestamp returned by get_workspace; stale edits return a conflict")
+    expected_last_modified: Optional[str] = Field(
+        default=None, description="Modification timestamp returned by get_workspace; stale edits return a conflict"
+    )
 
 
 class CreateWorkspace(Arguments):
@@ -151,9 +154,15 @@ class WiringPlacement(Arguments):
 
 
 class LayoutWiring(Edit):
-    preserve_existing: bool = Field(default=True, description="Keep existing positions; set false to automatically rearrange the whole wiring graph")
-    positions: list[WiringPlacement] = Field(default_factory=list, max_length=500,
-        description="Optional explicit moves, applied together; omit for automatic placement")
+    preserve_existing: bool = Field(
+        default=True,
+        description="Keep existing positions; set false to automatically rearrange the whole wiring graph",
+    )
+    positions: list[WiringPlacement] = Field(
+        default_factory=list,
+        max_length=500,
+        description="Optional explicit moves, applied together; omit for automatic placement",
+    )
 
 
 class ImportMashup(CreateWorkspace):

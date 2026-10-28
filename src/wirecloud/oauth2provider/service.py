@@ -3,6 +3,7 @@
 No MCP or identity-provider dependencies belong in this module. A resource server
 registers its audience/scopes and receives a current WireCloud principal.
 """
+
 from __future__ import annotations
 
 import base64
@@ -20,7 +21,8 @@ from wirecloud import settings
 from wirecloud.commons.auth.crud import get_user_with_all_info, is_token_valid
 from wirecloud.commons.auth.schemas import UserAll
 from wirecloud.commons.auth.tokens import digest, now, pkce, random_token, utc
-from wirecloud.database import Id
+from wirecloud.database import DBSession, Id, commit
+from wirecloud.oauth2provider import crud
 
 
 class OAuthError(HTTPException):
@@ -55,13 +57,26 @@ class OAuthPrincipal:
 
 def register_resource(app, resource: OAuthResource):
     from wirecloud.platform.plugins import ImproperlyConfigured
+
     if "wirecloud.oauth2provider" not in settings.INSTALLED_APPS:
         raise ImproperlyConfigured("Enable wirecloud.oauth2provider to register OAuth resources")
+
     parsed = urlsplit(resource.audience)
-    if (not valid_redirect(resource.audience) or parsed.query or parsed.fragment
-            or not resource.scopes or not set(resource.default_scopes).issubset(resource.scopes)
-            or any(not scope or any(character.isspace() or character in '\\"' or ord(character) < 33 or ord(character) > 126
-                                       for character in scope) for scope in resource.scopes)):
+    if (
+        not valid_redirect(resource.audience)
+        or parsed.query
+        or parsed.fragment
+        or not resource.scopes
+        or not set(resource.default_scopes).issubset(resource.scopes)
+        or any(
+            not scope
+            or any(
+                character.isspace() or character in '\\"' or ord(character) < 33 or ord(character) > 126
+                for character in scope
+            )
+            for scope in resource.scopes
+        )
+    ):
         raise ImproperlyConfigured("OAuth resources require an HTTPS or loopback audience and valid scopes")
     resources = getattr(app.state, "oauth2_resources", {})
     if resource.audience in resources:
@@ -82,6 +97,7 @@ def public_base(request: Request) -> str:
     if configured:
         return configured.rstrip("/")
     from wirecloud.commons.auth.tokens import public_base as login_base
+
     return login_base(request)
 
 
@@ -114,22 +130,34 @@ def redirect_matches(registered, requested):
     original, actual = urlsplit(registered), urlsplit(requested)
     # RFC 8252 loopback callbacks use ephemeral ports. All other URI parts
     # remain exact, and the code is bound to the full selected callback URI.
-    return (original.scheme == actual.scheme == "http" and original.hostname in ("127.0.0.1", "::1")
-            and original.hostname == actual.hostname and original.path == actual.path and original.query == actual.query)
+    return (
+        original.scheme == actual.scheme == "http"
+        and original.hostname in ("127.0.0.1", "::1")
+        and original.hostname == actual.hostname
+        and original.path == actual.path
+        and original.query == actual.query
+    )
 
 
 def validate_client(data):
     redirects = data.get("redirect_uris", [])
-    if not isinstance(redirects, list) or not redirects or len(redirects) > 20 or any(
-        not isinstance(uri, str) or not valid_redirect(uri) for uri in redirects
+    if (
+        not isinstance(redirects, list)
+        or not redirects
+        or len(redirects) > 20
+        or any(not isinstance(uri, str) or not valid_redirect(uri) for uri in redirects)
     ):
         oauth_error("invalid_client_metadata", "Explicit HTTPS or loopback redirect URIs are required")
     method = data.get("token_endpoint_auth_method", "none")
     if method not in ("none", "client_secret_post", "client_secret_basic"):
         oauth_error("invalid_client_metadata", "Unsupported client authentication method")
-    return {"client_name": str(data.get("client_name", "Application"))[:150],
-            "redirect_uris": redirects, "token_endpoint_auth_method": method,
-            "grant_types": ["authorization_code", "refresh_token"], "response_types": ["code"]}
+    return {
+        "client_name": str(data.get("client_name", "Application"))[:150],
+        "redirect_uris": redirects,
+        "token_endpoint_auth_method": method,
+        "grant_types": ["authorization_code", "refresh_token"],
+        "response_types": ["code"],
+    }
 
 
 def bearer_token(request):
@@ -141,10 +169,21 @@ async def metadata_client(client_id):
     """Resolve public CIMD documents without allowing metadata SSRF/redirects."""
     try:
         import asyncio
+
         parsed = urlsplit(client_id)
-        if len(client_id) > 2048 or parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.fragment or parsed.port not in (None, 443):
+        if (
+            len(client_id) > 2048
+            or parsed.scheme != "https"
+            or not parsed.hostname
+            or parsed.username
+            or parsed.password
+            or parsed.fragment
+            or parsed.port not in (None, 443)
+        ):
             oauth_error("invalid_client", "Invalid client metadata URL")
-        addresses = await asyncio.wait_for(asyncio.get_running_loop().getaddrinfo(parsed.hostname, 443, type=socket.SOCK_STREAM), 5)
+        addresses = await asyncio.wait_for(
+            asyncio.get_running_loop().getaddrinfo(parsed.hostname, 443, type=socket.SOCK_STREAM), 5
+        )
         if not addresses or any(not ipaddress.ip_address(item[4][0]).is_global for item in addresses):
             raise ValueError()
         # Connect to the validated address, retaining the original Host and TLS name.
@@ -152,8 +191,9 @@ async def metadata_client(client_id):
         host = f"[{address}]" if ":" in address else address
         url = client_id.replace(parsed.netloc, host, 1)
         async with httpx.AsyncClient(timeout=5, follow_redirects=False) as client:
-            async with client.stream("GET", url, headers={"Host": parsed.netloc},
-                                     extensions={"sni_hostname": parsed.hostname}) as response:
+            async with client.stream(
+                "GET", url, headers={"Host": parsed.netloc}, extensions={"sni_hostname": parsed.hostname}
+            ) as response:
                 response.raise_for_status()
                 content = bytearray()
                 async for chunk in response.aiter_bytes():
@@ -161,16 +201,21 @@ async def metadata_client(client_id):
                     if len(content) > 65536:
                         raise ValueError()
         import json
+
         data = json.loads(content)
-        if not isinstance(data, dict) or data.get("client_id") != client_id or data.get("token_endpoint_auth_method", "none") != "none":
+        if (
+            not isinstance(data, dict)
+            or data.get("client_id") != client_id
+            or data.get("token_endpoint_auth_method", "none") != "none"
+        ):
             raise ValueError()
         return dict(validate_client(data), client_id=client_id)
     except (ValueError, OSError, asyncio.TimeoutError, httpx.HTTPError):
         oauth_error("invalid_client", "Cannot resolve client metadata")
 
 
-async def get_client(db, client_id):
-    client = await db.client.oauth_clients.find_one({"client_id": client_id})
+async def get_client(db: DBSession, client_id: str):
+    client = await crud.get_client_by_id(db, client_id)
     if client is None:
         for candidate in getattr(settings, "OAUTH2_CLIENTS", []):
             if candidate.get("client_id") == client_id:
@@ -185,7 +230,7 @@ async def get_client(db, client_id):
     return client
 
 
-async def authenticate_client(db, form, authorization=""):
+async def authenticate_client(db: DBSession, form, authorization=""):
     client_id = str(form.get("client_id", ""))
     secret = str(form.get("client_secret", ""))
     method = "client_secret_post" if secret else "none"
@@ -193,7 +238,10 @@ async def authenticate_client(db, form, authorization=""):
     if scheme.casefold() == "basic":
         try:
             from urllib.parse import unquote_plus
-            client_id, secret = (unquote_plus(v) for v in base64.b64decode(credentials, validate=True).decode().split(":", 1))
+
+            client_id, secret = (
+                unquote_plus(v) for v in base64.b64decode(credentials, validate=True).decode().split(":", 1)
+            )
             method = "client_secret_basic"
         except (ValueError, UnicodeError):
             oauth_error("invalid_client", "Invalid client authentication", 401)
@@ -205,8 +253,8 @@ async def authenticate_client(db, form, authorization=""):
     return client
 
 
-async def active_grant(db, grant_id):
-    grant = await db.client.oauth_grants.find_one({"_id": grant_id, "revoked": False})
+async def active_grant(db: DBSession, grant_id: str):
+    grant = await crud.get_unrevoked_grant(db, grant_id)
     if grant is None or utc(grant["expires_at"]) <= now() or not await is_token_valid(db, Id(grant["session_id"])):
         return None
     user = await get_user_with_all_info(db, Id(grant["user_id"]))
@@ -215,8 +263,8 @@ async def active_grant(db, grant_id):
     return grant, user
 
 
-async def verify_access_token(db, token, audience):
-    record = await db.client.oauth_tokens.find_one({"_id": digest(token), "kind": "access"})
+async def verify_access_token(db: DBSession, token: str, audience: str):
+    record = await crud.get_token_by_id(db, digest(token), kind="access")
     if record is None or utc(record["expires_at"]) <= now():
         return None
     result = await active_grant(db, record["grant_id"])
@@ -225,28 +273,50 @@ async def verify_access_token(db, token, audience):
     grant, user = result
     if grant["audience"] != audience:
         return None
-    return OAuthPrincipal(user, grant["client_id"], grant["_id"], grant["session_id"],
-                              audience, frozenset(record["scopes"]))
+    return OAuthPrincipal(
+        user, grant["client_id"], grant["_id"], grant["session_id"], audience, frozenset(record["scopes"])
+    )
 
 
-async def issue_tokens(db, grant, scopes):
+async def issue_tokens(db: DBSession, grant, scopes):
     access, refresh = random_token(), random_token()
     expiration = min(now() + timedelta(minutes=15), utc(grant["expires_at"]))
     for token, kind, expiry in ((access, "access", expiration), (refresh, "refresh", utc(grant["expires_at"]))):
-        await db.client.oauth_tokens.insert_one({"_id": digest(token), "kind": kind, "grant_id": grant["_id"],
-                                                  "scopes": list(scopes), "expires_at": expiry, "used": False})
-    return {"access_token": access, "refresh_token": refresh, "token_type": "Bearer",
-            "expires_in": max(0, int((expiration - now()).total_seconds())), "scope": " ".join(scopes)}
+        await crud.create_token(
+            db,
+            {
+                "_id": digest(token),
+                "kind": kind,
+                "grant_id": grant["_id"],
+                "scopes": list(scopes),
+                "expires_at": expiry,
+                "used": False,
+            }
+        )
+    return {
+        "access_token": access,
+        "refresh_token": refresh,
+        "token_type": "Bearer",
+        "expires_in": max(0, int((expiration - now()).total_seconds())),
+        "scope": " ".join(scopes),
+    }
 
 
-async def exchange_code(db, client, form):
+async def exchange_code(db: DBSession, client, form):
     verifier = str(form.get("code_verifier", ""))
-    if not 43 <= len(verifier) <= 128 or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~" for c in verifier):
+    if not 43 <= len(verifier) <= 128 or any(
+        c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~" for c in verifier
+    ):
         oauth_error("invalid_grant", "Invalid PKCE verifier")
-    code = await db.client.oauth_codes.find_one_and_delete({
-        "_id": digest(str(form.get("code", ""))), "client_id": client["client_id"],
-        "redirect_uri": str(form.get("redirect_uri", "")), "audience": str(form.get("resource", "")),
-        "challenge": pkce(verifier), "expires_at": {"$gt": now()}})
+    code = await crud.consume_code(
+        db,
+        digest(str(form.get("code", ""))),
+        client["client_id"],
+        str(form.get("redirect_uri", "")),
+        str(form.get("resource", "")),
+        pkce(verifier),
+        now(),
+    )
     if code is None:
         oauth_error("invalid_grant", "Invalid or expired code")
     result = await active_grant(db, code["grant_id"])
@@ -255,9 +325,9 @@ async def exchange_code(db, client, form):
     return await issue_tokens(db, result[0], result[0]["scopes"])
 
 
-async def exchange_refresh(db, client, form):
+async def exchange_refresh(db: DBSession, client, form):
     token_id = digest(str(form.get("refresh_token", "")))
-    record = await db.client.oauth_tokens.find_one({"_id": token_id, "kind": "refresh"})
+    record = await crud.get_token_by_id(db, token_id, kind="refresh")
     if record is None:
         oauth_error("invalid_grant", "Invalid refresh token")
     result = await active_grant(db, record["grant_id"])
@@ -269,19 +339,9 @@ async def exchange_refresh(db, client, form):
     scopes = str(form.get("scope", " ".join(record["scopes"]))).split()
     if not set(scopes).issubset(record["scopes"]):
         oauth_error("invalid_scope", "Refresh cannot increase access")
-    consumed = await db.client.oauth_tokens.find_one_and_update(
-        {"_id": token_id, "used": False, "expires_at": {"$gt": now()}}, {"$set": {"used": True}})
-    if consumed is None:
-        await db.client.oauth_grants.update_one({"_id": grant["_id"]}, {"$set": {"revoked": True}})
-        from wirecloud.database import commit
+    consumed = await crud.consume_refresh_token(db, token_id, now())
+    if not consumed:
+        await crud.revoke_grant(db, grant["_id"])
         await commit(db)
         oauth_error("invalid_grant", "Refresh token reuse; connection revoked")
     return await issue_tokens(db, grant, scopes)
-
-
-async def ensure_indexes(db):
-    for collection in ("oauth_attempts", "oauth_codes", "oauth_tokens"):
-        await db.client[collection].create_index("expires_at", expireAfterSeconds=0)
-    await db.client.oauth_clients.create_index("client_id", unique=True)
-    await db.client.oauth_grants.create_index("user_id")
-    await db.client.oauth_grants.create_index("session_id")

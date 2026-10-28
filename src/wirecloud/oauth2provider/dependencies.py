@@ -1,4 +1,5 @@
 """Scoped authentication for plugin endpoints; core API authentication is unaffected."""
+
 from fastapi import HTTPException
 
 from wirecloud.oauth2provider.service import bearer_token, get_resource, resource_metadata_url, verify_access_token
@@ -13,9 +14,13 @@ async def require_access(request, db, audience, scopes=()):
     if scopes:
         challenge += ', scope="' + " ".join(scopes) + '"'
     if principal is None:
-        raise HTTPException(401, {"error": "invalid_token"}, headers={
-            "WWW-Authenticate": challenge, "Cache-Control": "no-store"})
+        raise HTTPException(
+            401, {"error": "invalid_token"}, headers={"WWW-Authenticate": challenge, "Cache-Control": "no-store"}
+        )
     if not set(scopes).issubset(principal.scopes):
-        raise HTTPException(403, {"error": "insufficient_scope"}, headers={
-            "WWW-Authenticate": challenge + ', error="insufficient_scope"', "Cache-Control": "no-store"})
+        raise HTTPException(
+            403,
+            {"error": "insufficient_scope"},
+            headers={"WWW-Authenticate": challenge + ', error="insufficient_scope"', "Cache-Control": "no-store"},
+        )
     return principal

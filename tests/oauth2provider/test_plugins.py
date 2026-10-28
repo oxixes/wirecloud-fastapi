@@ -122,8 +122,8 @@ async def test_consent_escapes_client_content_and_uses_theme_assets(oauth_client
     scripts = html.fromstring(response.text).xpath("//script")
     assert scripts and all(script.get("src", "").startswith("/static/js/") and not script.text for script in scripts)
     assert all("defer" in script.attrib for script in scripts)
-    assert any("StyledElements/Panel.js" in script.get("src") for script in scripts)
-    assert any("oauth2provider/pages.js" in script.get("src") for script in scripts)
+    assert len(scripts) == 1
+    assert scripts[0].get("src") == "/static/js/cache.js?themeactive=defaulttheme&view=oauth2"
     assert "unsafe-inline" not in response.headers["content-security-policy"]
     assert response.headers["cache-control"] == "no-store"
 
@@ -141,4 +141,7 @@ async def test_child_theme_inherits_oauth_pages(oauth_client, db_session, monkey
     assert response.status_code == 200
     assert 'themeactive=fiwaretheme' in response.text
     assert 'No connected applications' in response.text
+    from lxml import html
+    assert html.fromstring(response.text).xpath("//script/@src") == [
+        "/static/js/cache.js?themeactive=fiwaretheme&view=oauth2"]
     assert theme.get_theme_static_path("fiwaretheme", "css/oauth2provider.css").endswith("defaulttheme/static/css/oauth2provider.css")

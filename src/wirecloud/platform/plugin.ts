@@ -137,6 +137,10 @@ const STYLED_ELEMENTS_FILES: string[] = [
 ]
 
 const get_scripts: (view: string) => string[] = (view: string): string[] => {
+    if (view === 'oauth2') {
+        return [];
+    }
+
     const common = [...SHIM_FILES,
             'js/StyledElements/Utils.js',
             'js/wirecloud/Utils.js',

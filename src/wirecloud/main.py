@@ -30,7 +30,7 @@ except ImportError:
 
     sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
 
-from contextlib import asynccontextmanager, AsyncExitStack
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
@@ -45,10 +45,7 @@ from wirecloud import docs
 async def lifespan(application: FastAPI):
     await validate_settings()
     try:
-        async with AsyncExitStack() as stack:
-            for plugin in application.state.wirecloud_plugins:
-                await stack.enter_async_context(plugin.lifespan())
-            yield
+        yield
     finally:
         await close()
 
@@ -56,7 +53,7 @@ async def lifespan(application: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 install_all_middlewares(app)
-app.state.wirecloud_plugins = get_plugins(app)
+get_plugins(app)
 
 def custom_openapi():
     if app.openapi_schema:

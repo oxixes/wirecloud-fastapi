@@ -1,4 +1,5 @@
 """Deterministic wiring editor placement, independent of the MCP transport."""
+
 from __future__ import annotations
 
 from heapq import heapify, heappop, heappush
@@ -9,10 +10,14 @@ from fastapi import HTTPException
 def component_nodes(status, valid_nodes, moves):
     """Include operators, displayed widgets, connected widgets, and explicit moves."""
     nodes = {("operator", key) for key in status.operators}
-    nodes.update((kind, key) for kind in ("widget", "operator")
-                 for key in getattr(status.visualdescription.components, kind))
-    nodes.update((endpoint.type.value, endpoint.id) for connection in status.connections
-                 for endpoint in (connection.source, connection.target))
+    nodes.update(
+        (kind, key) for kind in ("widget", "operator") for key in getattr(status.visualdescription.components, kind)
+    )
+    nodes.update(
+        (endpoint.type.value, endpoint.id)
+        for connection in status.connections
+        for endpoint in (connection.source, connection.target)
+    )
     seen = set()
     for move in moves:
         node = (move.type, move.id)
@@ -57,8 +62,11 @@ def placement_patches(status, nodes, heights, moves=(), preserve_existing=True):
     components = status.visualdescription.components
     existing = {node: getattr(components, node[0]).get(node[1]) for node in nodes}
     manual = {(move.type, move.id): {"x": move.x, "y": move.y} for move in moves}
-    placed = {node: component.position.model_dump() for node, component in existing.items()
-              if preserve_existing and component is not None and component.position is not None}
+    placed = {
+        node: component.position.model_dump()
+        for node, component in existing.items()
+        if preserve_existing and component is not None and component.position is not None
+    }
     placed.update(manual)
     layers = graph_layers(nodes, status.connections)
 
@@ -71,10 +79,13 @@ def placement_patches(status, nodes, heights, moves=(), preserve_existing=True):
         column = layers[node] + (1 if node[0] == "operator" and not status.connections else 0)
         x, y = 20 + column * 420, 10
         while True:
-            blockers = [other for other, position in placed.items()
-                        if abs(position["x"] - x) < 380
-                        and y < position["y"] + height(other) + 40
-                        and position["y"] < y + height(node) + 40]
+            blockers = [
+                other
+                for other, position in placed.items()
+                if abs(position["x"] - x) < 380
+                and y < position["y"] + height(other) + 40
+                and position["y"] < y + height(node) + 40
+            ]
             if not blockers:
                 break
             y = max(placed[other]["y"] + height(other) + 40 for other in blockers)
@@ -89,6 +100,11 @@ def placement_patches(status, nodes, heights, moves=(), preserve_existing=True):
         kind, identifier = node
         escaped = identifier.replace("~", "~0").replace("/", "~1")
         path = f"/visualdescription/components/{kind}/{escaped}"
-        patches.append({"op": "add", "path": path + "/position" if component is not None else path,
-                        "value": position if component is not None else {"position": position}})
+        patches.append(
+            {
+                "op": "add",
+                "path": path + "/position" if component is not None else path,
+                "value": position if component is not None else {"position": position},
+            }
+        )
     return patches

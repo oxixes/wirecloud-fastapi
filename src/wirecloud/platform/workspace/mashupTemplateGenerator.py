@@ -24,7 +24,7 @@ from wirecloud.commons.auth.crud import get_username_by_id, get_user_with_all_in
 from wirecloud.commons.utils.template.base import Contact
 from wirecloud.commons.utils.template.schemas.macdschemas import MACDMashupWithParametrization, MACDTab, \
     MACDMashupEmbedded, MACDMashupWiring, IntegerStr, MACDParametrizationOptions, MACDParametrizationOptionsStatus, \
-    MACDParametrizationOptionsSource, MACDMashupResourcePreference, MACDMashupResourcePropertyBase, \
+    MACDParametrizationOptionsSource, MACDMashupResourcePreference, MACDMashupResourceProperty, \
     MACDMashupResourceLayout, MACDMashupResource
 from wirecloud.database import DBSession
 from wirecloud.platform.iwidget.models import WidgetInstance
@@ -126,7 +126,7 @@ async def process_widget_instance(db: DBSession, request: Optional[Request], iwi
             value = await cache_manager.get_variable_value_from_varname(db, request, "iwidget", iwidget.id,
                                                                         prop.name)
 
-        properties[prop.name] = MACDMashupResourcePropertyBase(
+        properties[prop.name] = MACDMashupResourceProperty(
             readonly=status != MACDParametrizationOptionsStatus.normal,
             value=value
         )

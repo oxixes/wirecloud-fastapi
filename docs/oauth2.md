@@ -31,8 +31,9 @@ HTTPS is required for registered resources, except for loopback development.
 
 Docker equivalents are `WIRECLOUD_OAUTH2_PUBLIC_URL`, `WIRECLOUD_AUTH_PUBLIC_URL`,
 and `WIRECLOUD_OAUTH2_DYNAMIC_REGISTRATION`. Add `wirecloud.oauth2provider` to
-`WIRECLOUD_INSTALLED_APPS`. The module itself needs no extra Python dependency or
-JavaScript build beyond the normal platform assets. Restart WireCloud after enabling
+`WIRECLOUD_INSTALLED_APPS`. The module needs no extra Python dependency. Include it
+in the build-time installed-app list and run `npm run build:js` (or the full
+`npm run build`) to generate its OAuth page bundles. Restart WireCloud after enabling
 the module. Startup creates idempotent indexes for its OAuth collections; core login
 owns the browser login-attempt collection. Existing users and workspaces require no
 data migration.
@@ -305,9 +306,12 @@ theme's static-file inheritance. Strings use the existing translation system.
 
 Pages use StyledElements `Panel`, `Button`, `Alert`, and `Container` components.
 Their appearance comes from the active theme's existing StyledElements styles;
-OAuth-specific CSS controls page layout and spacing. Deferred same-origin scripts
-enhance the rendered HTML, using the existing library files without an additional
-bundle build. The native forms also work if JavaScript is unavailable.
+OAuth-specific CSS controls page layout and spacing. The module's `plugin.ts`
+registers StyledElements and the page enhancer for the `oauth2` JavaScript view.
+Webpack produces `main-<theme>-oauth2.js` for each theme, served through
+`js/cache.js?view=oauth2`. The template loads this bundle with `defer`.
+Development builds use external source maps to respect the pages' strict CSP.
+The native forms also work if JavaScript is unavailable.
 
 Pages escape client-controlled content. Their CSP permits same-origin scripts,
 theme styles, fonts, and images, with inline scripts and event handlers blocked.
