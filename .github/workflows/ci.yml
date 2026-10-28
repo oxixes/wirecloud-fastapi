@@ -41,6 +41,7 @@ jobs:
           python -m pytest tests -q \
             --cov=wirecloud.oauth2provider \
             --cov=wirecloud.mcp \
+            --cov=wirecloud.commons.auth.crud \
             --cov=wirecloud.commons.auth.login_flow \
             --cov=wirecloud.commons.auth.tokens \
             --cov-branch \

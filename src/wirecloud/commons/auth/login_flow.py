@@ -30,7 +30,7 @@ from fastapi.responses import RedirectResponse
 
 from wirecloud import settings
 from wirecloud.database import DBDep, DBSession, commit, get_session
-from wirecloud.commons.auth import tokens
+from wirecloud.commons.auth import crud, tokens
 from wirecloud.platform.plugins import get_idm_get_authorization_url_functions
 
 
@@ -38,7 +38,7 @@ from wirecloud.platform.plugins import get_idm_get_authorization_url_functions
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     provider = app.dependency_overrides.get(get_session, get_session)
     async for db in provider():
-        await db.client.oauth_logins.create_index("expires_at", expireAfterSeconds=0)
+        await crud.ensure_login_attempt_indexes(db)
         await commit(db)
     yield
 
@@ -75,7 +75,7 @@ async def begin_login(
         "browser": tokens.digest(browser),
         "expires_at": tokens.now() + timedelta(minutes=10),
     }
-    await db.client.oauth_logins.insert_one(dict(context, _id=tokens.digest(context["state"])))
+    await crud.create_login_attempt(db, dict(context, _id=tokens.digest(context["state"])))
     await commit(db)
     base = tokens.public_base(request)
     if getattr(settings, "OID_CONNECT_ENABLED", False):
@@ -115,12 +115,8 @@ async def consume_login_attempt(
     request: Request, db: DBSession, state: Optional[str] = None
 ) -> dict[str, Any]:
     state = state or request.query_params.get("state", "")
-    attempt = await db.client.oauth_logins.find_one_and_delete(
-        {
-            "_id": tokens.digest(state),
-            "browser": tokens.digest(request.cookies.get("wc_login_browser", "")),
-            "expires_at": {"$gt": tokens.now()},
-        }
+    attempt = await crud.consume_login_attempt(
+        db, tokens.digest(state), tokens.digest(request.cookies.get("wc_login_browser", "")), tokens.now()
     )
     if attempt is None:
         raise HTTPException(400, "Invalid or expired login state")
@@ -132,9 +128,7 @@ async def consume_login_attempt(
 async def prepare_local_login(request: Request, db: DBSession) -> None:
     state = request.query_params.get("continue")
     if state:
-        attempt = await db.client.oauth_logins.find_one(
-            {"_id": tokens.digest(state), "expires_at": {"$gt": tokens.now()}}
-        )
+        attempt = await crud.get_login_attempt(db, tokens.digest(state), tokens.now())
         if attempt is None or not hmac.compare_digest(
             attempt["browser"], tokens.digest(request.cookies.get("wc_login_browser", ""))
         ):
