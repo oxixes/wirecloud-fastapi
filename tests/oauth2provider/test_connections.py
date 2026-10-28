@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Collection
 
 import pytest
@@ -26,11 +26,43 @@ from lxml import html
 
 from oauth2provider.test_oauth import oauth_app, oauth_client, login_user, authorize_client, exchange, AUDIENCE
 from wirecloud.database import DBSession
-from wirecloud.oauth2provider import service
+from wirecloud.oauth2provider import crud, service
 
 READ = "wirecloud:read"
 WRITE = "wirecloud:workspace:write"
 HEADERS = {"Accept": "application/json"}
+
+
+async def test_unknown_connection_action_does_not_consume_csrf_or_change_access(
+    oauth_client: AsyncClient, db_session: DBSession, connection: dict[str, str]
+) -> None:
+    page = (await oauth_client.get("/oauth2/connections", headers=HEADERS)).json()
+    form = {"csrf": page["csrf"], "grant_id": connection["grant_id"], "action": "unknown", "scope": WRITE}
+    response = await oauth_client.post("/oauth2/connections", headers=HEADERS, data=form)
+    assert response.status_code == 400 and response.json()["detail"] == "Unknown connection action"
+    principal = await service.verify_access_token(db_session, connection["access_token"], AUDIENCE)
+    assert principal.scopes == {READ}
+    response = await oauth_client.post("/oauth2/connections", headers=HEADERS, data={**form, "action": "update_permissions"})
+    assert response.status_code == 200
+
+
+async def test_permission_edit_cannot_restore_a_connection_revoked_during_the_request(
+    oauth_client: AsyncClient, db_session: DBSession, connection: dict[str, str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    update = crud.update_grant_scopes
+
+    async def revoked_before_update(
+        db: DBSession, grant_id: str, user_id: str, scopes: list[str], current_time: datetime
+    ) -> bool:
+        await crud.revoke_grant(db, grant_id)
+        return await update(db, grant_id, user_id, scopes, current_time)
+
+    monkeypatch.setattr(crud, "update_grant_scopes", revoked_before_update)
+    response = await save_permissions(oauth_client, connection["grant_id"], [WRITE])
+    assert response.status_code == 404
+    grant = await db_session.client.oauth_grants.find_one({"_id": connection["grant_id"]})
+    assert grant["revoked"] and grant["scopes"] == [READ]
+    assert await service.verify_access_token(db_session, connection["access_token"], AUDIENCE) is None
 
 
 @pytest.fixture
