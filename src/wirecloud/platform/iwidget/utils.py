@@ -124,7 +124,8 @@ async def set_initial_values(db: DBSession, iwidget: WidgetInstance,
 def update_layouts(iwidget: WidgetInstance, layouts: dict[str, Optional[WidgetLayoutUpdate]]) -> None:
     # For each key -> value: value is None deletes iwidget.layouts[key] (ignore if missing); otherwise merge
     # the non-None fields of the update into the existing WidgetLayout (or into a fresh WidgetLayout() when
-    # the key is new). Invalid (non-decimal) keys are rejected by the schema itself (422).
+    # the key is new). An explicit dock=None clears docking. Invalid (non-decimal) keys are rejected by
+    # the schema itself (422).
     for key, value in layouts.items():
         if value is None:
             iwidget.layouts.pop(key, None)
@@ -132,6 +133,8 @@ def update_layouts(iwidget: WidgetInstance, layouts: dict[str, Optional[WidgetLa
 
         current = iwidget.layouts.get(key, WidgetLayout())
         changes = value.model_dump(exclude_none=True)
+        if "dock" in value.model_fields_set:
+            changes["dock"] = value.dock
         iwidget.layouts[key] = current.model_copy(update=changes)
 
 
