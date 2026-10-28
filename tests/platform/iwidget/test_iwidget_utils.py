@@ -197,6 +197,26 @@ def test_update_layouts_merge_and_delete():
     assert iwidget.layouts["1"].w == 2
 
 
+@pytest.mark.parametrize("changes, expected_dock", [
+    ({"w": 7}, "left"),
+    ({"w": 7, "dock": None}, None),
+    ({"w": 7, "dock": "right"}, "right"),
+])
+def test_update_layouts_dock(changes, expected_dock):
+    iwidget = WidgetInstance(id="w1", layouts={
+        "2": WidgetLayout(x=5, y=0, w=3, h=13, dock="left", dock_mode="push", dock_open=True),
+    })
+
+    utils.update_layouts(iwidget, {"2": WidgetLayoutUpdate(**changes)})
+
+    layout = iwidget.layouts["2"]
+    assert layout.dock == expected_dock
+    assert layout.w == 7
+    assert (layout.x, layout.y, layout.h) == (5, 0, 13)
+    assert layout.dock_mode == "push"
+    assert layout.dock_open is True
+
+
 def test_first_id_widget_instance():
     widgets = {
         "tab-0-0": WidgetInstance(id="tab-0-0"),

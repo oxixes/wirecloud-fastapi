@@ -3,13 +3,16 @@
 from types import SimpleNamespace
 
 import pytest
+from bson import ObjectId
 
 from wirecloud import main as main_module
 from wirecloud.main import app
 from wirecloud.commons.auth.utils import get_user_csrf, get_user_no_csrf
 from wirecloud.platform.iwidget import routes
-from wirecloud.platform.iwidget.models import WidgetPermissions
+from wirecloud.platform.iwidget.models import WidgetInstance, WidgetLayout, WidgetPermissions
 from wirecloud.platform.iwidget.schemas import WidgetInstanceData
+from wirecloud.platform.workspace import crud as workspace_crud
+from wirecloud.platform.workspace.models import Tab, Workspace
 
 
 async def _noop_close():
@@ -371,6 +374,41 @@ async def test_widget_instance_entry_routes(app_client, db_session, monkeypatch)
     monkeypatch.setattr(routes, "update_widget_instance", lambda *_args, **_kwargs: _none())
     post_ok = await app_client.post("/api/workspace/507f1f77bcf86cd799439011/tab/tab-0/widget_instances/w1", json=payload)
     assert post_ok.status_code == 204
+
+
+@pytest.mark.parametrize("collection", [False, True], ids=["entry", "collection"])
+async def test_snap_to_grid_persists_after_reload(app_client, db_session, monkeypatch, auth_state, collection):
+    auth_state["user"].id = ObjectId(auth_state["user"].id)
+    widget = WidgetInstance(id="w1", layouts={
+        "2": WidgetLayout(x=0, y=0, w=3, h=4, dock="left"),
+        "0": WidgetLayout(dock="right"),
+    })
+    workspace = Workspace(
+        _id=ObjectId(), name="snap-to-grid", title="Snap to grid",
+        creator=auth_state["user"].id,
+        tabs={"tab-0": Tab(id="tab-0", name="tab", title="Tab", widgets={"w1": widget})},
+    )
+    await workspace_crud.insert_workspace(db_session, workspace)
+
+    async def _skip_search_index(*_args, **_kwargs):
+        return None
+
+    monkeypatch.setattr(workspace_crud, "update_workspace_in_index", _skip_search_index)
+    url = f"/api/workspace/{workspace.id}/tab/tab-0/widget_instances/"
+    layout = {
+        "x": 5, "y": 0, "w": 7, "h": 13, "minimized": False,
+        "titlevisible": True, "fulldragboard": False, "visible": True, "dock": None,
+    }
+    if collection:
+        response = await app_client.put(url, json=[{"id": "w1", "layouts": {"2": layout}}])
+    else:
+        response = await app_client.post(url + "w1", json={"layouts": {"2": layout}})
+    assert response.status_code == 204
+
+    reloaded = await app_client.get(url + "w1")
+    assert reloaded.status_code == 200
+    assert reloaded.json()["layouts"]["2"] == {**layout, "dock_mode": "overlay", "dock_open": False}
+    assert reloaded.json()["layouts"]["0"]["dock"] == "right"
 
 
 async def test_delete_widget_instance_entry_route(app_client, db_session, monkeypatch):

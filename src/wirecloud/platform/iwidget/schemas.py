@@ -34,7 +34,7 @@ class WidgetLayoutUpdate(BaseModel):          # partial update, every field opti
     titlevisible: Optional[bool] = None
     fulldragboard: Optional[bool] = None
     visible: Optional[bool] = None
-    dock: Optional[str] = None
+    dock: Optional[str] = Field(default=None, description="Dock position. Null undocks the widget; omit to keep its current docking.")
     dock_mode: Optional[str] = None
     dock_open: Optional[bool] = None
 
