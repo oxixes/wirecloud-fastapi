@@ -411,6 +411,8 @@ async def test_snap_to_grid_persists_after_reload(app_client, db_session, monkey
         assert reloaded.json()["layouts"]["2"] == {**layout, "dock_mode": "overlay", "dock_open": False}
         assert reloaded.json()["layouts"]["0"]["dock"] == "right"
     finally:
+        # The mock database is shared by the whole test session, so leaving this
+        # workspace behind breaks the tests that list every workspace
         await db_session.client.workspaces.delete_one({"_id": workspace.id})
 
 
