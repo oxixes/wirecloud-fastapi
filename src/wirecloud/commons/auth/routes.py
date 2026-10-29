@@ -77,6 +77,26 @@ admin_router = APIRouter()
     response_class=RedirectResponse,
     status_code=302,
     response_description=docs.begin_login_response_description,
+    responses={
+        302: {
+            "headers": {
+                "Location": {"description": docs.login_redirect_location_description, "schema": {"type": "string"}},
+                "Set-Cookie": {"description": docs.begin_login_browser_cookie_description, "schema": {"type": "string"}},
+            },
+        },
+        400: {
+            "description": docs.begin_login_bad_request_response_description,
+            "content": {"application/json": {
+                "schema": docs.login_http_error_schema, "example": docs.begin_login_bad_request_response_example,
+            }},
+        },
+        503: {
+            "description": docs.begin_login_unavailable_response_description,
+            "content": {"application/json": {
+                "schema": docs.login_http_error_schema, "example": docs.begin_login_unavailable_response_example,
+            }},
+        },
+    },
 )
 async def begin_login(
     request: Request,
@@ -134,12 +154,39 @@ async def begin_login(
     "/oidc/callback",
     summary=docs.oidc_login_summary,
     description=docs.oidc_login_description,
-    response_class=HTMLResponse,
+    response_class=Response,
+    status_code=302,
     response_description=docs.oidc_login_response_description,
     responses={
+        302: {
+            "headers": {
+                "Location": {"description": docs.login_redirect_location_description, "schema": {"type": "string"}},
+                "Set-Cookie": {"description": docs.login_session_cookie_description, "schema": {"type": "string"}},
+            },
+        },
+        400: {
+            "description": docs.oidc_login_bad_request_response_description,
+            "content": {"application/json": {
+                "schema": {"oneOf": [docs.login_http_error_schema, {"$ref": "#/components/schemas/HTTPError"}]},
+                "examples": docs.oidc_login_bad_request_response_examples,
+            }},
+        },
+        401: root_docs.generate_error_response_openapi_description(
+            docs.oidc_login_unauthorized_response_description, "Invalid user"),
+        500: root_docs.generate_error_response_openapi_description(
+            docs.oidc_login_configuration_error_response_description,
+            "OIDC provider is not configured correctly! Contact your administrator."),
+        502: root_docs.generate_error_response_openapi_description(
+            docs.oidc_login_provider_error_response_description, "Identity provider request failed"),
         422: root_docs.generate_validation_error_response_openapi_description(
             docs.oidc_login_validation_error_response_description)
-    }
+    },
+    openapi_extra={"parameters": [
+        {"name": "state", "in": "query", "required": True,
+         "description": docs.oidc_login_state_description, "schema": {"type": "string"}},
+        {"name": "wc_login_browser", "in": "cookie", "required": True,
+         "description": docs.oidc_login_browser_cookie_description, "schema": {"type": "string"}},
+    ]},
 )
 async def oidc_login(request: Request, db: DBDep, code: str = Query(description=docs.oidc_login_code_description)):
     if not getattr(settings, "OID_CONNECT_ENABLED", False):
@@ -288,13 +335,18 @@ async def oidc_login(request: Request, db: DBDep, code: str = Query(description=
     },
     openapi_extra={
         "requestBody": {
+            "required": True,
+            "description": docs.login_credentials_description,
             "content": {
                 "application/json": {
-                    "schema": {"$ref": "#/components/schemas/UserLogin"}
+                    "schema": {"$ref": "#/components/schemas/UserLogin"},
+                    "example": docs.login_credentials_example,
                 },
                 "application/x-www-form-urlencoded": {
-                    "schema": {"$ref": "#/components/schemas/UserLogin"}
-                }
+                    "schema": {"$ref": "#/components/schemas/UserLogin"},
+                    "example": docs.login_credentials_example,
+                },
+                "multipart/form-data": {"schema": {"$ref": "#/components/schemas/UserLogin"}},
             }
         }
     }
@@ -339,7 +391,13 @@ async def api_login(request: Request, db: DBDep):
     summary=docs.login_page_summary,
     description=docs.login_page_description,
     response_class=HTMLResponse,
-    response_description=docs.login_page_response_description
+    response_description=docs.login_page_response_description,
+    openapi_extra={"parameters": [
+        {"name": "return_to", "in": "query", "required": False,
+         "description": docs.login_return_to_description, "schema": {"type": "string"}},
+        {"name": "state", "in": "query", "required": False,
+         "description": docs.login_state_description, "schema": {"type": "string"}},
+    ]},
 )
 async def login_page(request: Request):
     return render_wirecloud(request, page="registration/login", title="Login", extra_context={"form": {"errors": False}})
@@ -352,26 +410,45 @@ async def login_page(request: Request):
     response_class=HTMLResponse,
     response_description=docs.login_response_description,
     responses={
-        401: root_docs.generate_error_response_openapi_description(
-            docs.login_unauthorized_response_description,
-            "Invalid username or password"),
-        406: root_docs.generate_not_acceptable_response_openapi_description(
-            docs.login_not_acceptable_response_description,
-            ["application/json", "application/x-www-form-urlencoded", "multipart/form-data"]),
+        200: {"description": docs.login_invalid_credentials_response_description},
+        302: {
+            "description": docs.login_response_description,
+            "headers": {
+                "Location": {"description": docs.login_redirect_location_description, "schema": {"type": "string"}},
+                "Set-Cookie": {"description": docs.login_session_cookie_description, "schema": {"type": "string"}},
+            },
+        },
+        400: {
+            "description": docs.login_bad_request_response_description,
+            "content": {"application/json": {
+                "schema": docs.login_http_error_schema, "example": docs.begin_login_bad_request_response_example,
+            }},
+        },
         415: root_docs.generate_unsupported_media_type_response_openapi_description(
             docs.login_unsupported_media_type_response_description),
         422: root_docs.generate_validation_error_response_openapi_description(
             docs.login_validation_error_response_description)
     },
     openapi_extra={
+        "parameters": [
+            {"name": "return_to", "in": "query", "required": False,
+             "description": docs.login_return_to_description, "schema": {"type": "string"}},
+            {"name": "state", "in": "query", "required": False,
+             "description": docs.login_state_description, "schema": {"type": "string"}},
+        ],
         "requestBody": {
+            "required": True,
+            "description": docs.login_credentials_description,
             "content": {
                 "application/json": {
-                    "schema": {"$ref": "#/components/schemas/UserLogin"}
+                    "schema": {"$ref": "#/components/schemas/UserLogin"},
+                    "example": docs.login_credentials_example,
                 },
                 "application/x-www-form-urlencoded": {
-                    "schema": {"$ref": "#/components/schemas/UserLogin"}
-                }
+                    "schema": {"$ref": "#/components/schemas/UserLogin"},
+                    "example": docs.login_credentials_example,
+                },
+                "multipart/form-data": {"schema": {"$ref": "#/components/schemas/UserLogin"}},
             }
         }
     }
@@ -436,8 +513,21 @@ async def login(request: Request, db: DBDep):
     "/logout",
     summary=docs.logout_summary,
     description=docs.logout_description,
-    response_class=HTMLResponse,
-    response_description=docs.logout_response_description
+    response_class=Response,
+    status_code=302,
+    response_description=docs.logout_response_description,
+    responses={
+        302: {"headers": {
+            "Location": {"description": docs.login_redirect_location_description, "schema": {"type": "string"}},
+            "Set-Cookie": {"description": docs.logout_cookie_description, "schema": {"type": "string"}},
+        }},
+        401: root_docs.generate_error_response_openapi_description(
+            docs.logout_unauthorized_response_description, "You are not logged in"),
+    },
+    openapi_extra={"parameters": [
+        {"name": "state", "in": "query", "required": False,
+         "description": docs.login_state_description, "schema": {"type": "string"}},
+    ]},
 )
 async def logout(request: Request, db: DBDep, session: SessionDepNoCSRF, user: UserDepNoCSRF):
     if not session:
@@ -480,7 +570,12 @@ async def logout(request: Request, db: DBDep, session: SessionDepNoCSRF, user: U
         200: {"content": {"application/json": {"example": docs.token_refresh_response_model_example}}},
         401: root_docs.generate_error_response_openapi_description(
             docs.token_refresh_unauthorized_response_description,
-            "You are not logged in")
+            "You are not logged in"),
+        500: root_docs.generate_error_response_openapi_description(
+            docs.token_refresh_configuration_error_response_description,
+            "OIDC provider is not configured correctly! Contact your administrator."),
+        502: root_docs.generate_error_response_openapi_description(
+            docs.token_refresh_provider_error_response_description, "Identity provider request failed"),
     }
 )
 async def token_refresh(request: Request, db: DBDep, session: SessionDep, user: UserDep):

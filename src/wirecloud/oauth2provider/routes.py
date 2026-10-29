@@ -23,18 +23,19 @@ import json
 import re
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
-from typing import Any, AsyncIterator, Optional
+from typing import Annotated, Any, AsyncIterator, Optional
 from urllib.parse import urlencode, urlsplit
 
-from fastapi import APIRouter, FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi import APIRouter, FastAPI, Request, HTTPException, Query
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
+from pydantic import Field
 
 from wirecloud import settings
 from wirecloud.commons.auth.crud import get_token_expiration
 from wirecloud.commons.auth.schemas import UserAll
 from wirecloud.commons.auth.utils import Token, get_token_contents, get_user
 from wirecloud.database import DBDep, DBSession, Id, commit, get_session
-from wirecloud.oauth2provider import crud, service as auth
+from wirecloud.oauth2provider import crud, docs, service as auth
 from wirecloud.oauth2provider.pages import render_page
 
 
@@ -64,9 +65,61 @@ async def browser_identity(request: Request, db: DBSession) -> tuple[Optional[Us
     return user, token
 
 
-@metadata_router.get("/.well-known/oauth-authorization-server")
-@metadata_router.get("/.well-known/oauth-authorization-server/oauth2")
-@metadata_router.get("/.well-known/oauth-authorization-server/{issuer_path:path}")
+@metadata_router.get(
+    "/.well-known/oauth-authorization-server",
+    summary=docs.authorization_metadata_summary,
+    description=docs.authorization_metadata_description,
+    response_description=docs.authorization_metadata_response_description,
+    responses={
+        200: {
+            "description": docs.authorization_metadata_response_description,
+            "content": {"application/json": {"example": docs.authorization_metadata_response_example}},
+        },
+        404: {
+            "description": docs.not_found_response_description,
+            "content": {
+                "application/json": {"schema": docs.http_error_schema, "example": docs.not_found_response_example},
+            },
+        },
+    },
+)
+@metadata_router.get(
+    "/.well-known/oauth-authorization-server/oauth2",
+    summary=docs.authorization_metadata_summary,
+    description=docs.authorization_metadata_description,
+    response_description=docs.authorization_metadata_response_description,
+    responses={
+        200: {
+            "description": docs.authorization_metadata_response_description,
+            "content": {"application/json": {"example": docs.authorization_metadata_response_example}},
+        },
+        404: {
+            "description": docs.not_found_response_description,
+            "content": {
+                "application/json": {"schema": docs.http_error_schema, "example": docs.not_found_response_example},
+            },
+        },
+    },
+)
+@metadata_router.get(
+    "/.well-known/oauth-authorization-server/{issuer_path:path}",
+    summary=docs.authorization_metadata_summary,
+    description=docs.authorization_metadata_description,
+    response_description=docs.authorization_metadata_response_description,
+    responses={
+        200: {
+            "description": docs.authorization_metadata_response_description,
+            "content": {"application/json": {"example": docs.authorization_metadata_response_example}},
+        },
+        404: {
+            "description": docs.not_found_response_description,
+            "content": {
+                "application/json": {"schema": docs.http_error_schema, "example": docs.not_found_response_example},
+            },
+        },
+    },
+    openapi_extra={"parameters": docs.authorization_metadata_path_parameters},
+)
 async def authorization_metadata(request: Request) -> dict[str, Any]:
     resources = getattr(request.app.state, "oauth2_resources", {})
     if not resources:
@@ -90,9 +143,46 @@ async def authorization_metadata(request: Request) -> dict[str, Any]:
     return result
 
 
-@metadata_router.get("/.well-known/oauth-protected-resource")
-@metadata_router.get("/.well-known/oauth-protected-resource/{resource_path:path}")
-async def resource_metadata(request: Request, resource_path: str = "") -> dict[str, Any]:
+@metadata_router.get(
+    "/.well-known/oauth-protected-resource",
+    summary=docs.resource_metadata_summary,
+    description=docs.resource_metadata_description,
+    response_description=docs.resource_metadata_response_description,
+    responses={
+        200: {
+            "description": docs.resource_metadata_response_description,
+            "content": {"application/json": {"example": docs.resource_metadata_response_example}},
+        },
+        404: {
+            "description": docs.not_found_response_description,
+            "content": {
+                "application/json": {"schema": docs.http_error_schema, "example": docs.not_found_response_example},
+            },
+        },
+    },
+)
+@metadata_router.get(
+    "/.well-known/oauth-protected-resource/{resource_path:path}",
+    summary=docs.resource_metadata_summary,
+    description=docs.resource_metadata_description,
+    response_description=docs.resource_metadata_response_description,
+    responses={
+        200: {
+            "description": docs.resource_metadata_response_description,
+            "content": {"application/json": {"example": docs.resource_metadata_response_example}},
+        },
+        404: {
+            "description": docs.not_found_response_description,
+            "content": {
+                "application/json": {"schema": docs.http_error_schema, "example": docs.not_found_response_example},
+            },
+        },
+    },
+)
+async def resource_metadata(
+    request: Request,
+    resource_path: Annotated[str, Field(description=docs.resource_metadata_path_description)] = "",
+) -> dict[str, Any]:
     for resource in getattr(request.app.state, "oauth2_resources", {}).values():
         if urlsplit(resource.audience).path.rstrip("/") == "/" + resource_path.strip("/") or (
             not resource_path and len(getattr(request.app.state, "oauth2_resources", {})) == 1
@@ -107,7 +197,42 @@ async def resource_metadata(request: Request, resource_path: str = "") -> dict[s
     raise HTTPException(404)
 
 
-@router.post("/register", status_code=201)
+@router.post(
+    "/register",
+    summary=docs.register_summary,
+    description=docs.register_description,
+    status_code=201,
+    response_class=JSONResponse,
+    response_description=docs.register_response_description,
+    responses={
+        201: {
+            "description": docs.register_response_description,
+            "headers": docs.no_store_headers,
+            "content": {
+                "application/json": {"schema": docs.register_response_schema, "example": docs.register_response_example},
+            },
+        },
+        400: {
+            "description": docs.oauth_bad_request_response_description,
+            "content": {
+                "application/json": {"schema": docs.oauth_error_schema, "example": docs.oauth_bad_request_response_example},
+            },
+        },
+        404: {
+            "description": docs.not_found_response_description,
+            "content": {
+                "application/json": {"schema": docs.http_error_schema, "example": docs.not_found_response_example},
+            },
+        },
+        429: {
+            "description": docs.register_rate_limit_response_description,
+            "content": {
+                "application/json": {"schema": docs.http_error_schema, "example": docs.register_rate_limit_response_example},
+            },
+        },
+    },
+    openapi_extra={"requestBody": docs.register_request_body},
+)
 async def register(request: Request, db: DBDep) -> JSONResponse:
     if not getattr(request.app.state, "oauth2_resources", {}) or not getattr(
         settings, "OAUTH2_DYNAMIC_REGISTRATION", True
@@ -139,7 +264,30 @@ async def register(request: Request, db: DBDep) -> JSONResponse:
     return JSONResponse(response, 201, headers={"Cache-Control": "no-store"})
 
 
-@router.get("/authorize")
+@router.get(
+    "/authorize",
+    summary=docs.authorize_summary,
+    description=docs.authorize_description,
+    status_code=302,
+    response_class=RedirectResponse,
+    response_description=docs.authorize_response_description,
+    responses={
+        302: {"description": docs.authorize_response_description, "headers": docs.redirect_headers},
+        400: {
+            "description": docs.oauth_bad_request_response_description,
+            "content": {
+                "application/json": {"schema": docs.oauth_error_schema, "example": docs.oauth_bad_request_response_example},
+            },
+        },
+        401: {
+            "description": docs.invalid_client_response_description,
+            "content": {
+                "application/json": {"schema": docs.oauth_error_schema, "example": docs.invalid_client_response_example},
+            },
+        },
+    },
+    openapi_extra={"parameters": docs.authorize_parameters},
+)
 async def authorize(request: Request, db: DBDep) -> RedirectResponse:
     q = request.query_params
     resource = auth.get_resource(request, q.get("resource", ""))
@@ -201,8 +349,35 @@ async def attempt_for_browser(request: Request, db: DBSession, handle: str, csrf
     return attempt
 
 
-@router.get("/consent")
-async def consent(request: Request, db: DBDep, request_id: str, csrf: str) -> Response:
+@router.get(
+    "/consent",
+    summary=docs.consent_summary,
+    description=docs.consent_description,
+    response_class=HTMLResponse,
+    response_description=docs.consent_response_description,
+    responses={
+        200: {"description": docs.consent_response_description, "headers": docs.no_store_headers},
+        302: {"description": docs.consent_login_redirect_response_description, "headers": docs.redirect_headers},
+        400: {
+            "description": docs.oauth_bad_request_response_description,
+            "content": {
+                "application/json": {"schema": docs.oauth_error_schema, "example": docs.oauth_bad_request_response_example},
+            },
+        },
+        403: {
+            "description": docs.browser_permission_denied_response_description,
+            "content": {
+                "application/json": {"schema": docs.http_error_schema, "example": docs.browser_permission_denied_response_example},
+            },
+        },
+    },
+    openapi_extra={"parameters": docs.consent_parameters},
+)
+async def consent(
+    request: Request, db: DBDep,
+    request_id: str = Query(..., description=docs.consent_request_id_description),
+    csrf: str = Query(..., description=docs.consent_csrf_description),
+) -> Response:
     attempt = await attempt_for_browser(request, db, request_id, csrf)
     resource = auth.get_resource(request, attempt["audience"])
     user, token = await browser_identity(request, db)
@@ -230,7 +405,39 @@ async def consent(request: Request, db: DBDep, request_id: str, csrf: str) -> Re
     )
 
 
-@router.post("/consent")
+@router.post(
+    "/consent",
+    summary=docs.approve_summary,
+    description=docs.approve_description,
+    status_code=302,
+    response_class=RedirectResponse,
+    response_description=docs.approve_response_description,
+    responses={
+        302: {
+            "description": docs.approve_response_description,
+            "headers": {**docs.redirect_headers, **docs.no_store_headers},
+        },
+        400: {
+            "description": docs.oauth_bad_request_response_description,
+            "content": {
+                "application/json": {"schema": docs.oauth_error_schema, "example": docs.oauth_bad_request_response_example},
+            },
+        },
+        401: {
+            "description": docs.browser_auth_required_response_description,
+            "content": {
+                "application/json": {"schema": docs.http_error_schema, "example": docs.browser_auth_required_response_example},
+            },
+        },
+        403: {
+            "description": docs.browser_permission_denied_response_description,
+            "content": {
+                "application/json": {"schema": docs.http_error_schema, "example": docs.browser_permission_denied_response_example},
+            },
+        },
+    },
+    openapi_extra={"parameters": docs.authenticated_browser_parameters, "requestBody": docs.approve_request_body},
+)
 async def approve(request: Request, db: DBDep) -> RedirectResponse:
     form = await request.form(max_files=0, max_fields=5)
     attempt = await attempt_for_browser(request, db, str(form.get("request_id", "")), str(form.get("csrf", "")))
@@ -291,7 +498,38 @@ async def approve(request: Request, db: DBDep) -> RedirectResponse:
     )
 
 
-@router.post("/token")
+@router.post(
+    "/token",
+    summary=docs.token_endpoint_summary,
+    description=docs.token_endpoint_description,
+    response_class=JSONResponse,
+    response_description=docs.token_endpoint_response_description,
+    responses={
+        200: {
+            "description": docs.token_endpoint_response_description,
+            "headers": docs.no_store_headers,
+            "content": {
+                "application/json": {
+                    "schema": docs.token_endpoint_response_schema,
+                    "example": docs.token_endpoint_response_example,
+                },
+            },
+        },
+        400: {
+            "description": docs.oauth_bad_request_response_description,
+            "content": {
+                "application/json": {"schema": docs.oauth_error_schema, "example": docs.oauth_bad_request_response_example},
+            },
+        },
+        401: {
+            "description": docs.invalid_client_response_description,
+            "content": {
+                "application/json": {"schema": docs.oauth_error_schema, "example": docs.invalid_client_response_example},
+            },
+        },
+    },
+    openapi_extra={"parameters": [docs.client_auth_parameter], "requestBody": docs.token_endpoint_request_body},
+)
 async def token_endpoint(request: Request, db: DBDep) -> JSONResponse:
     form = await request.form(max_files=0, max_fields=12)
     client = await auth.authenticate_client(db, form, request.headers.get("authorization", ""))
@@ -306,7 +544,32 @@ async def token_endpoint(request: Request, db: DBDep) -> JSONResponse:
     return JSONResponse(result, headers={"Cache-Control": "no-store", "Pragma": "no-cache"})
 
 
-@router.post("/revoke")
+@router.post(
+    "/revoke",
+    summary=docs.revoke_summary,
+    description=docs.revoke_description,
+    response_class=JSONResponse,
+    response_description=docs.revoke_response_description,
+    responses={
+        200: {
+            "description": docs.revoke_response_description,
+            "headers": docs.no_store_headers,
+            "content": {
+                "application/json": {
+                    "schema": {"type": "object", "maxProperties": 0},
+                    "example": docs.revoke_success_response_example,
+                },
+            },
+        },
+        401: {
+            "description": docs.invalid_client_response_description,
+            "content": {
+                "application/json": {"schema": docs.oauth_error_schema, "example": docs.invalid_client_response_example},
+            },
+        },
+    },
+    openapi_extra={"parameters": [docs.client_auth_parameter], "requestBody": docs.revoke_request_body},
+)
 async def revoke(request: Request, db: DBDep) -> JSONResponse:
     form = await request.form(max_files=0, max_fields=5)
     client = await auth.authenticate_client(db, form, request.headers.get("authorization", ""))
@@ -317,7 +580,40 @@ async def revoke(request: Request, db: DBDep) -> JSONResponse:
     return JSONResponse({}, headers={"Cache-Control": "no-store"})
 
 
-@router.get("/connections")
+@router.get(
+    "/connections",
+    summary=docs.connections_summary,
+    description=docs.connections_description,
+    response_class=HTMLResponse,
+    response_description=docs.connections_response_description,
+    responses={
+        200: {
+            "description": docs.connections_response_description,
+            "headers": docs.no_store_headers,
+            "content": {
+                "text/html": {"schema": {"type": "string"}},
+                "application/json": {"schema": docs.connections_response_schema, "example": docs.connections_response_example},
+            },
+        },
+        302: {
+            "description": docs.connections_login_redirect_response_description,
+            "headers": docs.redirect_headers,
+        },
+        401: {
+            "description": docs.browser_auth_required_response_description,
+            "content": {
+                "application/json": {"schema": docs.http_error_schema, "example": docs.browser_auth_required_response_example},
+            },
+        },
+        403: {
+            "description": docs.browser_permission_denied_response_description,
+            "content": {
+                "application/json": {"schema": docs.http_error_schema, "example": docs.browser_permission_denied_response_example},
+            },
+        },
+    },
+    openapi_extra={"parameters": [docs.accept_parameter, docs.browser_session_parameter]},
+)
 async def connections(request: Request, db: DBDep) -> Response:
     user, token = await browser_identity(request, db)
     if user is None:
@@ -373,7 +669,72 @@ async def connections(request: Request, db: DBDep) -> Response:
     return response
 
 
-@router.post("/connections")
+@router.post(
+    "/connections",
+    summary=docs.manage_connection_summary,
+    description=docs.manage_connection_description,
+    status_code=303,
+    response_class=Response,
+    response_description=docs.manage_connection_response_description,
+    responses={
+        200: {
+            "description": docs.manage_connection_success_response_description,
+            "headers": docs.no_store_headers,
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "oneOf": [
+                            {
+                                "type": "object", "required": ["updated"],
+                                "properties": {"updated": {"type": "boolean", "enum": [True]}},
+                            },
+                            {
+                                "type": "object", "required": ["revoked"],
+                                "properties": {"revoked": {"type": "boolean", "enum": [True]}},
+                            },
+                        ],
+                    },
+                    "examples": docs.manage_connection_success_response_examples,
+                },
+            },
+        },
+        303: {
+            "description": docs.manage_connection_redirect_response_description,
+            "headers": docs.redirect_headers,
+        },
+        400: {
+            "description": docs.manage_connection_bad_request_response_description,
+            "content": {
+                "application/json": {
+                    "schema": {"oneOf": [docs.http_error_schema, docs.oauth_error_schema]},
+                    "example": docs.manage_connection_bad_request_response_example,
+                },
+            },
+        },
+        401: {
+            "description": docs.browser_auth_required_response_description,
+            "content": {
+                "application/json": {"schema": docs.http_error_schema, "example": docs.browser_auth_required_response_example},
+            },
+        },
+        403: {
+            "description": docs.browser_permission_denied_response_description,
+            "content": {
+                "application/json": {"schema": docs.http_error_schema, "example": docs.browser_permission_denied_response_example},
+            },
+        },
+        404: {
+            "description": docs.not_found_response_description,
+            "content": {
+                "application/json": {"schema": docs.http_error_schema, "example": docs.not_found_response_example},
+            },
+        },
+    },
+    openapi_extra={
+        "parameters": [docs.accept_parameter, *docs.authenticated_browser_parameters],
+        "requestBody": docs.manage_connection_request_body,
+    },
+)
 async def manage_connection(request: Request, db: DBDep) -> Response:
     user, token = await browser_identity(request, db)
     if user is None:

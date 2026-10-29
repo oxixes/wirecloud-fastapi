@@ -19,7 +19,7 @@
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable
 
-from wirecloud.mcp import schemas
+from wirecloud.mcp import docs, schemas
 from wirecloud.mcp.operations import preferences, resources, widgets, wiring, workspaces
 
 READ = "wirecloud:read"
@@ -29,11 +29,11 @@ INSTALL = "wirecloud:component:install"
 UNINSTALL = "wirecloud:component:uninstall"
 
 SCOPES = {
-    READ: "Read accessible workspaces, components, and documentation; export workspaces",
-    WRITE: "Create and edit workspaces, tabs, components, layouts, preferences, and wiring",
-    DELETE: "Delete owned workspaces and remove permitted workspace contents",
-    INSTALL: "Install finished component packages for your account",
-    UNINSTALL: "Uninstall components from your personal collection",
+    READ: docs.scope_read_description,
+    WRITE: docs.scope_write_description,
+    DELETE: docs.scope_delete_description,
+    INSTALL: docs.scope_install_description,
+    UNINSTALL: docs.scope_uninstall_description,
 }
 
 
@@ -55,209 +55,205 @@ TOOLS = [
         workspaces.get_session_info,
         schemas.Empty,
         (READ,),
-        "Get the current user, grant scopes, and WireCloud capabilities.",
+        docs.get_session_info_description,
     ),
     Tool(
         workspaces.list_workspaces,
         schemas.Page,
         (READ,),
-        "List accessible workspaces with optional text filtering and pagination.",
+        docs.list_workspaces_description,
     ),
     Tool(
         workspaces.get_workspace,
         schemas.Workspace,
         (READ,),
-        "Inspect workspace tabs, widgets, wiring, and the modification timestamp. Secure values are " "redacted.",
+        docs.get_workspace_description,
     ),
     Tool(
         workspaces.create_workspace,
         schemas.CreateWorkspace,
         (WRITE,),
-        "Create a private workspace.",
+        docs.create_workspace_description,
     ),
     Tool(
         workspaces.clone_workspace,
         schemas.CloneWorkspace,
         (WRITE,),
-        "Clone an accessible workspace into a new private workspace.",
+        docs.clone_workspace_description,
     ),
     Tool(
         workspaces.update_workspace,
         schemas.UpdateWorkspace,
         (WRITE,),
-        "Rename a workspace or edit its descriptions.",
+        docs.update_workspace_description,
     ),
     Tool(
         workspaces.delete_workspace,
         schemas.Edit,
         (WRITE, DELETE),
-        "Delete a workspace owned by the current user.",
+        docs.delete_workspace_description,
         destructive=True,
     ),
     Tool(
         workspaces.create_tab,
         schemas.CreateTab,
         (WRITE,),
-        "Create a tab in an editable workspace.",
+        docs.create_tab_description,
     ),
     Tool(
         workspaces.update_tab,
         schemas.UpdateTab,
         (WRITE,),
-        "Rename a tab or change its visibility.",
+        docs.update_tab_description,
     ),
     Tool(
         workspaces.reorder_tabs,
         schemas.ReorderTabs,
         (WRITE,),
-        "Reorder all tabs using their existing IDs.",
+        docs.reorder_tabs_description,
     ),
     Tool(
         workspaces.delete_tab,
         schemas.Tab,
         (WRITE, DELETE),
-        "Delete a tab and its removable widget instances.",
+        docs.delete_tab_description,
         destructive=True,
     ),
     Tool(
         widgets.add_widget,
         schemas.AddWidget,
         (WRITE,),
-        "Add an installed widget to a tab with responsive layouts.",
+        docs.add_widget_description,
     ),
     Tool(
         widgets.update_widget,
         schemas.UpdateWidget,
         (WRITE,),
-        "Change a widget's title, resource version, responsive layouts, or tab.",
+        docs.update_widget_description,
     ),
     Tool(
         widgets.remove_widget,
         schemas.Widget,
         (WRITE, DELETE),
-        "Remove a widget instance from a workspace.",
+        docs.remove_widget_description,
         destructive=True,
     ),
     Tool(
         widgets.set_widget_variables,
         schemas.WidgetVariables,
         (WRITE,),
-        "Update permitted widget preferences or properties, preserving omitted values.",
+        docs.set_widget_variables_description,
     ),
     Tool(
         preferences.get_preferences,
         schemas.Preferences,
         (READ,),
-        "Read platform, workspace, or tab preferences.",
+        docs.get_preferences_description,
     ),
     Tool(
         preferences.update_preferences,
         schemas.UpdatePreferences,
         (WRITE,),
-        "Update user-editable preferences. Sharing and publishing settings are excluded.",
+        docs.update_preferences_description,
     ),
     Tool(
         wiring.get_wiring,
         schemas.Workspace,
         (READ,),
-        "Inspect operators, connections, and endpoint definitions with secure values redacted.",
+        docs.get_wiring_description,
     ),
     Tool(
         wiring.add_operator,
         schemas.AddOperator,
         (WRITE,),
-        "Add an installed operator to workspace wiring with automatic editor placement.",
+        docs.add_operator_description,
     ),
     Tool(
         wiring.update_operator,
         schemas.UpdateOperator,
         (WRITE,),
-        "Update named operator preferences, preserving all omitted values.",
+        docs.update_operator_description,
     ),
     Tool(
         wiring.remove_operator,
         schemas.Operator,
         (WRITE, DELETE),
-        "Remove an operator and its removable connections.",
+        docs.remove_operator_description,
         destructive=True,
     ),
     Tool(
         wiring.connect_components,
         schemas.Connect,
         (WRITE,),
-        "Connect a widget or operator output to a compatible input endpoint; automatically place components "
-        "missing editor positions.",
+        docs.connect_components_description,
     ),
     Tool(
         wiring.disconnect_components,
         schemas.Disconnect,
         (WRITE, DELETE),
-        "Remove a connection by its current index.",
+        docs.disconnect_components_description,
         destructive=True,
     ),
     Tool(
         wiring.layout_wiring,
         schemas.LayoutWiring,
         (WRITE,),
-        "Arrange the wiring editor without supplying coordinates. By default fill missing positions; set "
-        "preserve_existing=false to rearrange the whole graph after wiring. Optionally supply multiple "
-        "explicit positions in one call. Dashboard layouts and behaviour layouts are unchanged.",
+        docs.layout_wiring_description,
     ),
     Tool(
         resources.list_resources,
         schemas.Page,
         (READ,),
-        "Search accessible component packages, descriptors, and versions.",
+        docs.list_resources_description,
     ),
     Tool(
         resources.get_resource,
         schemas.Resource,
         (READ,),
-        "Read a component descriptor, including preference and wiring endpoint definitions.",
+        docs.get_resource_description,
     ),
     Tool(
         resources.get_resource_documentation,
         schemas.Resource,
         (READ,),
-        "Read the accessible component's description, usage documentation reference, and changelog.",
+        docs.get_resource_documentation_description,
     ),
     Tool(
         resources.validate_resource_package,
         schemas.ValidatePackage,
         (INSTALL,),
-        "Validate a finished base64 WGT package without installing or building it.",
+        docs.validate_resource_package_description,
     ),
     Tool(
         resources.install_resource,
         schemas.Install,
         (INSTALL,),
-        "Install an externally built WGT from URL, base64 bytes, or an upload handle, privately for the "
-        "current user.",
+        docs.install_resource_description,
     ),
     Tool(
         resources.uninstall_resource,
         schemas.Resource,
         (UNINSTALL,),
-        "Uninstall a component version from the current user's collection.",
+        docs.uninstall_resource_description,
         destructive=True,
     ),
     Tool(
         workspaces.import_mashup,
         schemas.ImportMashup,
         (WRITE,),
-        "Create a private workspace from an accessible installed mashup package.",
+        docs.import_mashup_description,
     ),
     Tool(
         workspaces.merge_mashup,
         schemas.MergeMashup,
         (WRITE,),
-        "Merge an accessible installed mashup into an editable workspace.",
+        docs.merge_mashup_description,
     ),
     Tool(
         workspaces.export_workspace,
         schemas.ExportWorkspace,
         (READ,),
-        "Export a workspace as a mashup descriptor without publishing or including stored secrets.",
+        docs.export_workspace_description,
     ),
 ]
 

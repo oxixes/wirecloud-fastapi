@@ -27,7 +27,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 from starlette.routing import Route
 
 from wirecloud.database import DBDep, commit, get_session
-from wirecloud.mcp import packages
+from wirecloud.mcp import docs, packages
 from wirecloud.mcp.middleware import MCPAuthenticationMiddleware
 from wirecloud.mcp.tools import INSTALL
 from wirecloud.oauth2provider import require_access
@@ -65,7 +65,75 @@ def create_router(app: FastAPI, server: MCPServer, audience: str, origins: Seque
     return router
 
 
-@upload_router.post("/mcp/uploads", status_code=201)
+@upload_router.post(
+    "/mcp/uploads",
+    status_code=201,
+    response_class=JSONResponse,
+    summary=docs.upload_package_summary,
+    description=docs.upload_package_description,
+    response_description=docs.upload_package_response_description,
+    responses={
+        201: {
+            "headers": {"Cache-Control": {
+                "description": docs.upload_package_cache_description,
+                "schema": {"type": "string"}, "example": "no-store",
+            }},
+            "content": {"application/json": {
+                "schema": {
+                    "type": "object", "required": ["upload_id", "size", "expires_in"],
+                    "properties": {
+                        "upload_id": {"type": "string", "description": docs.upload_package_upload_id_description},
+                        "size": {"type": "integer", "description": docs.upload_package_size_description},
+                        "expires_in": {"type": "integer", "description": docs.upload_package_expires_in_description},
+                    },
+                },
+                "example": docs.upload_package_response_example,
+            }},
+        },
+        401: {
+            "description": docs.upload_package_unauthorized_response_description,
+            "headers": {"WWW-Authenticate": {
+                "description": docs.upload_package_challenge_description,
+                "schema": {"type": "string"}, "example": docs.upload_package_challenge_example,
+            }},
+            "content": {"application/json": {
+                "schema": docs.upload_package_error_schema, "example": docs.upload_package_unauthorized_response_example,
+            }},
+        },
+        403: {
+            "description": docs.upload_package_forbidden_response_description,
+            "headers": {"WWW-Authenticate": {
+                "description": docs.upload_package_challenge_description, "schema": {"type": "string"},
+            }},
+            "content": {"application/json": {
+                "schema": docs.upload_package_error_schema, "examples": docs.upload_package_forbidden_response_examples,
+            }},
+        },
+        413: {
+            "description": docs.upload_package_too_large_response_description,
+            "content": {"application/json": {
+                "schema": docs.upload_package_error_schema, "example": docs.upload_package_too_large_response_example,
+            }},
+        },
+        422: {
+            "description": docs.upload_package_invalid_response_description,
+            "content": {"application/json": {
+                "schema": docs.upload_package_error_schema, "example": docs.upload_package_invalid_response_example,
+            }},
+        },
+    },
+    openapi_extra={
+        "parameters": [{
+            "name": "Authorization", "in": "header", "required": True,
+            "description": docs.upload_package_authorization_description, "schema": {"type": "string"},
+        }],
+        "requestBody": {
+            "required": True,
+            "description": docs.upload_package_body_description,
+            "content": {"application/octet-stream": {"schema": {"type": "string", "format": "binary"}}},
+        },
+    },
+)
 async def upload_package(request: Request, db: DBDep) -> JSONResponse:
     audience = request.app.state.mcp_audience
     principal = await require_access(request, db, audience, (INSTALL,))
