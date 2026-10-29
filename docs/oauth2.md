@@ -24,7 +24,8 @@ OAUTH2_CLIENTS = []
 
 `OAUTH2_PUBLIC_URL` identifies the authorization server's public deployment base;
 its issuer is that base plus `/oauth2`. `AUTH_PUBLIC_URL` tells core login which
-public base to use for login continuation and identity-provider callbacks. These
+public base to use for identity-provider callbacks. Local sign-in uses the
+website's normal `/login` form on the visited origin. These settings
 may be omitted when the request origin and ASGI `root_path` already identify the
 external deployment correctly. Include any deployment prefix in both values.
 HTTPS is required for registered resources, except for loopback development.
@@ -280,6 +281,7 @@ WireCloud's `/auth/login` entry point owns login continuation. Provider plugins
 contribute the existing authorization-URL, token-exchange, user-info, and logout
 hooks. Providers can accept the optional `login_context` argument on URL and
 token hooks. It carries state, nonce, PKCE verifier, and the return destination.
+OIDC attempts are stored as typed login records by the auth CRUD layer.
 WireCloud binds state to the browser and consumes it once; providers validate
 their own protocol tokens. The Keycloak plugin validates the ID token's
 signature, issuer, audience, nonce, and subject binding, and submits PKCE.
@@ -294,7 +296,10 @@ Older hooks without `login_context` remain callable. Providers adopting PKCE
 must implement the context-aware exchange and their protocol's token validation.
 All browser OIDC callbacks require a WireCloud-generated state; integrations
 must start login through `/auth/login`, rather than constructing provider URLs
-or treating OAuth `state` as a return address.
+or treating OAuth `state` as a return address. Local username/password sign-in
+uses `/login` with a validated local `return_to` path and does not depend on an
+expiring OIDC continuation or cookie. External clients still return to the
+OAuth consent screen after signing in.
 
 ## Theme integration
 

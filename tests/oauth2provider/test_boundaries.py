@@ -12,7 +12,7 @@ from oauth2provider.test_oauth import (
 )
 from oauth2provider.test_edge_cases import metadata_transport
 from wirecloud import settings
-from wirecloud.commons.auth import login_flow
+from wirecloud.commons.auth import routes as auth_routes
 from wirecloud.oauth2provider import require_access, service
 from wirecloud.oauth2provider.plugins import OAuth2ProviderPlugin
 from wirecloud.platform.plugins import ImproperlyConfigured, URLTemplate
@@ -186,26 +186,19 @@ def test_oauth_plugin_validates_preconfigured_clients():
 
 
 async def test_oidc_provider_missing_or_async_legacy_hooks(oauth_client, monkeypatch):
-    import wirecloud.platform.plugins as plugins
     monkeypatch.setattr(settings, "OID_CONNECT_ENABLED", True)
     monkeypatch.setattr(settings, "OID_CONNECT_PLUGIN", "legacy")
-    monkeypatch.setattr(login_flow, "get_idm_get_authorization_url_functions", lambda: {})
+    monkeypatch.setattr(auth_routes, "get_idm_get_authorization_url_functions", lambda: {})
     assert (await oauth_client.get("/auth/login")).status_code == 503
     async def authorize():
         return URLTemplate(urlpattern="https://id.example/auth?client_id=wc", defaults={})
-    monkeypatch.setattr(login_flow, "get_idm_get_authorization_url_functions", lambda: {"legacy": authorize})
-    monkeypatch.setattr(plugins, "get_idm_get_token_functions", lambda: {"legacy": lambda code: None})
+    monkeypatch.setattr(auth_routes, "get_idm_get_authorization_url_functions", lambda: {"legacy": authorize})
+    monkeypatch.setattr(auth_routes, "get_idm_get_token_functions", lambda: {"legacy": lambda code: None})
     response = await oauth_client.get("/auth/login", params={"next": "/oauth2/connections", "prompt": "select_account"})
     assert response.status_code == 302
     query = parse_qs(urlsplit(response.headers["location"]).query)
     assert query["prompt"] == ["select_account"]
     assert "code_challenge" not in query
-
-
-async def test_local_login_without_continuation_needs_no_pending_attempt(db_session):
-    request = Request({"type": "http", "query_string": b""})
-    await login_flow.prepare_local_login(request, db_session)
-    assert not hasattr(request.state, "login_return_to")
 
 
 async def test_oauth_startup_creates_expiry_and_lookup_indexes(oauth_app, db_session):

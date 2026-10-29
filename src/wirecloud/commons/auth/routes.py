@@ -16,15 +16,19 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from fastapi import APIRouter, Request, Query, Body, Path
-from fastapi.responses import HTMLResponse, Response
-from datetime import datetime, timezone
+from contextlib import asynccontextmanager
+from typing import AsyncIterator, Literal, Optional
+
+from fastapi import APIRouter, FastAPI, HTTPException, Request, Query, Body, Path
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from datetime import datetime, timedelta, timezone
 from pydantic import ValidationError
 import jwt
 import asyncio
-from urllib.parse import urlparse
+import inspect
+from urllib.parse import parse_qsl, urlencode, urlparse, urlsplit, urlunsplit
 
-from wirecloud.commons.auth.models import Group
+from wirecloud.commons.auth.models import DBLoginAttempt, Group
 from wirecloud.commons.search import add_user_to_index, add_group_to_index
 from wirecloud.database import Id
 from wirecloud.commons.auth.schemas import UserLogin, UserToken, UserWithPassword, UserTokenType, User, UserCreate, \
@@ -35,25 +39,95 @@ from wirecloud.commons.auth.crud import get_user_with_password, set_login_date_f
     create_group_if_not_exists, remove_user_from_all_groups, set_token_expiration, remove_user_idm_data, \
     get_user_with_all_info_by_username, get_token_idm_session, update_user_with_all_info, delete_user, \
     get_group_by_name, get_user_by_id, create_group_db, add_group_to_users, remove_group_to_users, update_group, \
-    delete_group, create_organization_db, get_all_organization_groups, update_path_for_descendants, delete_organization
+    delete_group, create_organization_db, get_all_organization_groups, update_path_for_descendants, delete_organization, \
+    ensure_login_attempt_indexes, create_login_attempt
 from wirecloud.commons.auth.utils import check_password, SessionDepNoCSRF, SessionDep, \
-    UserDep, UserDepNoCSRF, RealUserDep, hash_password
-from wirecloud.database import DBDep, commit
+    UserDep, UserDepNoCSRF, RealUserDep, hash_password, accepts_context, consume_login_attempt, validate_login_return_to
+from wirecloud.database import DBDep, commit, get_session
 from wirecloud.commons.utils.http import build_error_response, build_validation_error_response, produces, consumes, \
     get_redirect_response, get_absolute_reverse_url, resolve_url_name, authentication_required
 from wirecloud import settings
 from wirecloud import docs as root_docs
-from wirecloud.commons.auth import docs
+from wirecloud.commons.auth import docs, tokens
 from wirecloud.platform.plugins import get_idm_get_token_functions, get_idm_get_user_functions, \
-    get_idm_backchannel_logout_functions
+    get_idm_backchannel_logout_functions, get_idm_get_authorization_url_functions
 from wirecloud.platform.routes import render_wirecloud
 from wirecloud.platform.workspace.crud import get_workspace_by_username_and_name
 from wirecloud.translation import gettext as _
-from wirecloud.commons.auth.login_flow import consume_login_attempt, prepare_local_login, accepts_context
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    provider = app.dependency_overrides.get(get_session, get_session)
+    async for db in provider():
+        await ensure_login_attempt_indexes(db)
+        await commit(db)
+    yield
+
 
 router = APIRouter()
-base_router = APIRouter()
+base_router = APIRouter(lifespan=lifespan)
 admin_router = APIRouter()
+
+
+@base_router.get(
+    "/auth/login",
+    summary=docs.begin_login_summary,
+    description=docs.begin_login_description,
+    response_class=RedirectResponse,
+    status_code=302,
+    response_description=docs.begin_login_response_description,
+)
+async def begin_login(
+    request: Request,
+    db: DBDep,
+    return_to: str = Query("/", description=docs.begin_login_return_to_description),
+    next_url: Optional[str] = Query(None, alias="next", description=docs.begin_login_next_description),
+    prompt: Optional[Literal["login", "select_account", "consent", "none"]] = Query(
+        None, description=docs.begin_login_prompt_description
+    ),
+) -> RedirectResponse:
+    return_to = validate_login_return_to(next_url or return_to)
+    if not settings.OID_CONNECT_ENABLED:
+        destination = get_absolute_reverse_url("wirecloud.login_form", request)
+        return RedirectResponse(destination + "?" + urlencode({"return_to": return_to}), 302)
+
+    provider = getattr(settings, "OID_CONNECT_PLUGIN", "")
+    functions = get_idm_get_authorization_url_functions()
+    if provider not in functions:
+        raise HTTPException(503, "Authentication provider is unavailable")
+
+    state, browser = "wc." + tokens.random_token(), tokens.random_token()
+    attempt = DBLoginAttempt(
+        id=tokens.digest(state), state=state, nonce=tokens.random_token(), code_verifier=tokens.random_token(),
+        return_to=return_to, browser=tokens.digest(browser), expires_at=tokens.now() + timedelta(minutes=10),
+    )
+    await create_login_attempt(db, attempt)
+    await commit(db)
+    context = attempt.model_dump(exclude={"id"})
+    base = tokens.public_base(request)
+    exchange = get_idm_get_token_functions().get(provider)
+    context["pkce"] = exchange is not None and accepts_context(exchange)
+    context["redirect_uri"] = base + "/oidc/callback"
+    function = functions[provider]
+    result = function(login_context=context) if accepts_context(function) else function()
+    if inspect.isawaitable(result):
+        result = await result
+    parts = urlsplit(result.urlpattern)
+    query = dict(parse_qsl(parts.query))
+    query.update(state=state, nonce=attempt.nonce, redirect_uri=context["redirect_uri"])
+    if prompt:
+        query["prompt"] = prompt
+    if context["pkce"]:
+        query.update(code_challenge=tokens.pkce(attempt.code_verifier), code_challenge_method="S256")
+    destination = urlunsplit(parts._replace(query=urlencode(query)))
+    response = RedirectResponse(
+        destination, 302, headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"}
+    )
+    response.set_cookie(
+        "wc_login_browser", browser, httponly=True, secure=base.startswith("https:"), samesite="lax", max_age=600
+    )
+    return response
 
 
 @base_router.get(
@@ -304,7 +378,8 @@ async def login_page(request: Request):
 )
 @consumes(["application/json", "application/x-www-form-urlencoded", "multipart/form-data"])
 async def login(request: Request, db: DBDep):
-    await prepare_local_login(request, db)
+    if "return_to" in request.query_params:
+        request.state.login_return_to = validate_login_return_to(request.query_params["return_to"])
     try:
         if request.state.mimetype == "application/x-www-form-urlencoded" or request.state.mimetype == "multipart/form-data":
             login_data = UserLogin.model_validate(await request.form(max_files=0, max_fields=50))
@@ -348,8 +423,6 @@ async def login(request: Request, db: DBDep):
 
     csrf_token = jwt.encode(csrf_token_contents, settings.JWT_KEY, algorithm="HS256")
 
-    if request.query_params.get("continue"):
-        await consume_login_attempt(request, db, request.query_params["continue"])
     response = get_redirect_response(request)
     response.set_cookie(key="token", value=token, httponly=True, secure=getattr(settings, "WIRECLOUD_HTTPS", False), samesite="strict", expires=expiration)
     response.set_cookie(key="csrf_token", value=csrf_token, httponly=False, secure=getattr(settings, "WIRECLOUD_HTTPS", False), samesite="strict", expires=expiration)

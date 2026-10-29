@@ -42,10 +42,18 @@ user_login_password_description = "The user's password"
 user_token_token_description = "The user's token"
 user_token_token_type_description = "The type of token"
 
+# GET /auth/login
+begin_login_summary = "Begin browser login"
+begin_login_description = "Redirects to local sign-in or starts the configured OIDC provider login with browser-bound state."
+begin_login_response_description = "Redirect to the local login form or the configured identity provider."
+begin_login_return_to_description = "Local path to return to after signing in, including any deployment prefix."
+begin_login_next_description = "Alternative local return path, overriding return_to when supplied."
+begin_login_prompt_description = "Optional OIDC prompt sent to the configured identity provider."
+
 # GET /oidc/callback/
 oidc_login_summary = "OIDC login callback"
 oidc_login_description = "Handles the OIDC login callback, validates the authorization code, and sets the session cookie."
-oidc_login_response_description = "Response to the OIDC login request, which sets the session cookie and redirects to the home page or the specified redirect URL in the `state` parameter."
+oidc_login_response_description = "Sets the session cookie and redirects to the local return path stored in the validated login attempt."
 oidc_login_code_description = "The OIDC authorization code received from the OIDC provider"
 oidc_login_validation_error_response_description = "Validation error in the OIDC login request, such as missing or invalid parameters"
 
@@ -69,8 +77,8 @@ login_page_response_description = "HTML content of the login page, which include
 
 # POST /login
 login_summary = "Login"
-login_description = "Logs in a user by validating their credentials and setting the session cookie. If the user is authenticated, they are redirected to the home page or a specified URL in the `state` or `next` parameter."
-login_response_description = "Response to the login request, which sets the session cookie and redirects to the home page or the specified URL in the `state` or `next` parameter."
+login_description = "Validates local credentials and sets session cookies. Redirects to a validated local return_to path, the legacy state destination, or the home page. Local sign-in does not require a pending OIDC login attempt."
+login_response_description = "Sets the session cookies and redirects to the validated local destination or the home page."
 login_unauthorized_response_description = "HTML content of the login page with an error message if the provided credentials are invalid."
 login_not_acceptable_response_description = "Invalid request content type."
 login_unsupported_media_type_response_description = "Unsupported request media type."

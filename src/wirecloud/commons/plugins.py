@@ -25,7 +25,6 @@ from fastapi.exceptions import RequestValidationError
 from wirecloud.commons.auth.routes import router as auth_router
 from wirecloud.commons.auth.routes import base_router as auth_base_router
 from wirecloud.commons.auth.schemas import UserLogin
-from wirecloud.commons.auth.login_flow import router as login_flow_router
 from wirecloud.commons.commands import setup_commands
 from wirecloud.commons.exceptions import ErrorResponse
 from wirecloud.commons.routes import router as commons_router
@@ -51,7 +50,6 @@ class WirecloudCommonsPlugin(WirecloudPlugin):
 
         app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
         app.include_router(auth_base_router, prefix="", tags=["Auth"])
-        app.include_router(login_flow_router, tags=["Auth"])
         app.include_router(commons_router, prefix="", tags=["Other"])
 
         # Register exception handlers

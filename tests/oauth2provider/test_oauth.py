@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from wirecloud import settings
-from wirecloud.commons.auth import login_flow, routes
+from wirecloud.commons.auth import routes, utils as auth_utils
 from wirecloud.oauth2provider import service as delegated, routes as oauth_routes
 from wirecloud.oauth2provider.pages import page_headers
 from wirecloud.oauth2provider.plugins import OAuth2ProviderPlugin
@@ -26,11 +26,10 @@ SCOPES = {"wirecloud:read": "Read accessible data", "wirecloud:workspace:write":
 @pytest.fixture
 async def oauth_app(monkeypatch, db_session):
     # Authorization state and rate-limit buckets must not leak between tests.
-    for collection in ("oauth_attempts", "oauth_clients", "oauth_codes", "oauth_tokens", "oauth_grants", "oauth_logins"):
+    for collection in ("oauth_attempts", "oauth_clients", "oauth_codes", "oauth_tokens", "oauth_grants", "login_attempts"):
         await db_session.client[collection].delete_many({})
     app = FastAPI()
     OAuth2ProviderPlugin(app)
-    app.include_router(login_flow.router)
     app.include_router(routes.base_router)
     delegated.register_resource(app, delegated.OAuthResource(AUDIENCE, SCOPES, "Test resource", ("wirecloud:read",)))
 
@@ -269,12 +268,11 @@ async def test_provider_neutral_login_continuation(oauth_client, db_session, mon
     from wirecloud.platform.plugins import URLTemplate
     monkeypatch.setattr(settings, "OID_CONNECT_ENABLED", True)
     monkeypatch.setattr(settings, "OID_CONNECT_PLUGIN", "future-provider")
-    monkeypatch.setattr(login_flow, "get_idm_get_authorization_url_functions",
+    monkeypatch.setattr(routes, "get_idm_get_authorization_url_functions",
         lambda: {"future-provider": lambda: URLTemplate(urlpattern="https://identity.example/authorize?client_id=wc", defaults={})})
-    import wirecloud.platform.plugins as plugins
     async def exchange_provider(code, refresh_token, redirect_uri, login_context=None):
         return {}
-    monkeypatch.setattr(plugins, "get_idm_get_token_functions", lambda: {"future-provider": exchange_provider})
+    monkeypatch.setattr(routes, "get_idm_get_token_functions", lambda: {"future-provider": exchange_provider})
     response = await oauth_client.get("/auth/login", params={"return_to": "/oauth2/connections"})
     assert response.status_code == 302
     query = parse_qs(urlsplit(response.headers["location"]).query)
@@ -283,11 +281,11 @@ async def test_provider_neutral_login_continuation(oauth_client, db_session, mon
     scope = {"type": "http", "headers": [(b"cookie", ("wc_login_browser=" + oauth_client.cookies["wc_login_browser"]).encode())],
         "query_string": ("state=" + query["state"][0]).encode()}
     request = Request(scope)
-    context = await login_flow.consume_login_attempt(request, db_session)
+    context = await auth_utils.consume_login_attempt(request, db_session)
     assert request.state.login_return_to == "/oauth2/connections"
     assert delegated.pkce(context["code_verifier"]) == query["code_challenge"][0]
     with pytest.raises(Exception, match="Invalid or expired login state"):
-        await login_flow.consume_login_attempt(request, db_session)
+        await auth_utils.consume_login_attempt(request, db_session)
     assert (await oauth_client.get("/auth/login", params={"return_to": "//evil.example"})).status_code == 400
 
 
@@ -320,7 +318,7 @@ async def test_complete_authorization_through_a_new_provider(oauth_client, db_se
     async def provider_user(token_data):
         return {"preferred_username": username, "sub": "external-user", "email": "future@example.com"}
     token_hooks = {"another-provider": provider_token}
-    monkeypatch.setattr(login_flow, "get_idm_get_authorization_url_functions",
+    monkeypatch.setattr(routes, "get_idm_get_authorization_url_functions",
         lambda: {"another-provider": lambda: URLTemplate(urlpattern="https://another.example/authorize", defaults={})})
     monkeypatch.setattr(plugins, "get_idm_get_token_functions", lambda: token_hooks)
     monkeypatch.setattr(routes, "get_idm_get_token_functions", lambda: token_hooks)
@@ -352,15 +350,16 @@ async def test_local_login_continuation(oauth_client, db_session, monkeypatch):
     user, _ = await login_user(db_session, oauth_client)
     oauth_client.cookies.clear()
     start = await oauth_client.get("/auth/login", params={"return_to": "/oauth2/connections"})
-    assert "/login?continue=" in start.headers["location"]
+    assert "/login?return_to=" in start.headers["location"]
     from wirecloud.commons import search
     from unittest.mock import AsyncMock
     monkeypatch.setattr(search, "es_client", AsyncMock())
     login = await oauth_client.post(start.headers["location"], json={"username": user.username, "password": "password"})
     assert login.status_code == 302, login.text
     assert login.headers["location"] == "/oauth2/connections"
-    replay = await oauth_client.post(start.headers["location"], json={"username": user.username, "password": "password"})
-    assert replay.status_code == 400
+    repeated = await oauth_client.post(start.headers["location"], json={"username": user.username, "password": "password"})
+    assert repeated.status_code == 302 and repeated.headers["location"] == "/oauth2/connections"
+    assert await db_session.client.login_attempts.count_documents({}) == 0
 
 
 async def test_expired_code_and_scope_escalation(oauth_client, db_session):

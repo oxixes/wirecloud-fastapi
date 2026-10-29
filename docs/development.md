@@ -73,13 +73,13 @@ python -m pytest tests
 ```
 
 The `oauth-mcp-python-*` CI artifacts contain JUnit results and branch coverage
-for OAuth, MCP, and the shared login helpers. Both matrix jobs require 100% line
+for OAuth, MCP, and the authentication module. Both matrix jobs require 100% line
 and branch coverage for these modules. To run the same coverage gate locally:
 
 ```bash
 python -m pytest tests \
   --cov=wirecloud.oauth2provider --cov=wirecloud.mcp \
-  --cov=wirecloud.commons.auth.login_flow --cov=wirecloud.commons.auth.tokens \
+  --cov=wirecloud.commons.auth \
   --cov-branch --cov-fail-under=100 --cov-report=term-missing
 ```
 

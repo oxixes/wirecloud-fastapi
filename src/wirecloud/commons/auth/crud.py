@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Wirecloud.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Any, Optional
+from typing import Optional
 from datetime import datetime, timezone
 
 from bson import ObjectId
@@ -24,29 +24,27 @@ from bson import ObjectId
 from wirecloud.commons.auth.schemas import User, UserWithPassword, Permission, UserAll, UserCreate, GroupCreate, \
     OrganizationCreate
 from wirecloud.commons.auth.models import DBUser as UserModel
+from wirecloud.commons.auth.models import DBLoginAttempt
 from wirecloud.commons.auth.models import Group as GroupModel, Group
 from wirecloud.commons.auth.models import DBPlatformPreference as PlatformPreferenceModel
 from wirecloud.database import DBSession, Id
 
 
 async def ensure_login_attempt_indexes(db: DBSession) -> None:
-    await db.client.oauth_logins.create_index("expires_at", expireAfterSeconds=0)
+    await db.client.login_attempts.create_index("expires_at", expireAfterSeconds=0)
 
 
-async def create_login_attempt(db: DBSession, attempt: dict[str, Any]) -> None:
-    await db.client.oauth_logins.insert_one(attempt)
-
-
-async def get_login_attempt(db: DBSession, attempt_id: str, current_time: datetime) -> Optional[dict[str, Any]]:
-    return await db.client.oauth_logins.find_one({"_id": attempt_id, "expires_at": {"$gt": current_time}})
+async def create_login_attempt(db: DBSession, attempt: DBLoginAttempt) -> None:
+    await db.client.login_attempts.insert_one(attempt.model_dump(by_alias=True))
 
 
 async def consume_login_attempt(
     db: DBSession, attempt_id: str, browser: str, current_time: datetime
-) -> Optional[dict[str, Any]]:
-    return await db.client.oauth_logins.find_one_and_delete(
+) -> Optional[DBLoginAttempt]:
+    attempt = await db.client.login_attempts.find_one_and_delete(
         {"_id": attempt_id, "browser": browser, "expires_at": {"$gt": current_time}}
     )
+    return DBLoginAttempt.model_validate(attempt) if attempt is not None else None
 
 
 async def create_token(db: DBSession, expiration: datetime, user_id: Id, idm_session: Optional[str] = None) -> ObjectId:

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from wirecloud.commons import urls
-from wirecloud.platform.plugins import URLTemplate
 
 
 def test_get_urlpatterns_default_and_oidc(monkeypatch):
@@ -9,17 +8,12 @@ def test_get_urlpatterns_default_and_oidc(monkeypatch):
     try:
         monkeypatch.setattr(urls.settings, "OID_CONNECT_ENABLED", False)
         monkeypatch.setattr(urls.settings, "OID_CONNECT_PLUGIN", "")
-        monkeypatch.setattr(urls, "get_idm_get_authorization_url_functions", lambda: {})
         plain = urls.get_urlpatterns()
-        assert plain["login"].urlpattern == "/auth/login"
+        assert plain["login"].urlpattern == "/login"
+        assert plain["wirecloud.begin_login"].urlpattern == "/auth/login"
 
         monkeypatch.setattr(urls.settings, "OID_CONNECT_ENABLED", True)
         monkeypatch.setattr(urls.settings, "OID_CONNECT_PLUGIN", "keycloak")
-        monkeypatch.setattr(
-            urls,
-            "get_idm_get_authorization_url_functions",
-            lambda: {"keycloak": (lambda: URLTemplate(urlpattern="/oidc/login", defaults={"x": "1"}))},
-        )
         updated = urls.get_urlpatterns()
         assert updated["login"].urlpattern == "/auth/login"
 
